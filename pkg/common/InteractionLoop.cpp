@@ -67,7 +67,7 @@ void InteractionLoop::action(){
 	#pragma omp parallel for schedule(guided) num_threads(ompThreads>0 ? min(ompThreads,omp_get_max_threads()) : omp_get_max_threads())
 	#endif
 	for(long i=0; i<size; i++){
-		const shared_ptr<Interaction>& I=(*interactions)[i];
+		const shared_ptr<Interaction>& I=(*scene->interactions)[i];
 		if(removeUnseenIntrs && !I->isReal() && I->iterLastSeen<scene->iter) {
 			eraseAfterLoop(I->getId1(),I->getId2());
 			continue;
@@ -76,7 +76,6 @@ void InteractionLoop::action(){
 		const shared_ptr<Body>& b2_=Body::byId(I->getId2(),scene);
 		
 		if(!b1_ || !b2_){
-			LOG_ERROR("Body #"<<(b1_?I->getId2():I->getId1())<<" vanished, erasing intr #"<<I->getId1()<<"+#"<<I->getId2()<<"!");
 			scene->interactions->requestErase(I);
 			continue;
 		}
