@@ -80,6 +80,7 @@ OPTION(ENABLE_DEFORM "Enable Deformation Engine" OFF)
 OPTION(ENABLE_FEMLIKE "Enable deformable solids" ON)
 OPTION(CHOLMOD_GPU "Enable GPU acceleration flow engine direct solver" OFF)
 OPTION(ENABLE_THERMAL "Enable thermal engine (experimental)" ON)
+OPTION(ENABLE_PARTIALSAT "Enable the partially saturated clay engine" OFF)
 #Set -DPYTHON_VERSION numeric option below:
 set(PYTHON_VERSION -1 CACHE STRING "Force python version to the given one. Defaults to -DPYTHON_VERSION=-1 which automatically uses the newest available python version on the system.")
 #===========================================================
@@ -635,6 +636,13 @@ ELSE(ENABLE_THERMAL AND ENABLE_PFVFLOW)
   SET(DISABLED_FEATS "${DISABLED_FEATS} THERMAL")
 ENDIF(ENABLE_THERMAL AND ENABLE_PFVFLOW)
 
+IF(ENABLE_PARTIALSAT)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPARTIALSAT")
+  SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} PARTIALSAT")
+ELSE(ENABLE_PARTIALSAT)
+  SET(DISABLED_FEATS "${DISABLED_FEATS} PAERTIALSAT")
+ENDIF(ENABLE_PARTIALSAT)
+
 IF(ENABLE_PROFILING)
   SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} PROFILING")
   ADD_DEFINITIONS("-DUSE_TIMING_DELTAS -DISC_TIMING")
@@ -820,7 +828,7 @@ CONFIGURE_FILE(py/__init__.py.in "${CMAKE_BINARY_DIR}/__init__.py")
 # Create header files for PFV from FlowEngine.hpp.in-template.
 # All @TEMPLATE_FLOW_NAME@ are replacing by a given names
 
-SET (TEMPLATE_FLOW_NAMES DFNFlowEngineT DummyFlowEngineT FlowEngineT FlowEngine_PeriodicInfo SoluteFlowEngineT UnsaturatedEngineT TwoPhaseFlowEngineT)
+SET (TEMPLATE_FLOW_NAMES DFNFlowEngineT DummyFlowEngineT FlowEngineT FlowEngine_PeriodicInfo SoluteFlowEngineT UnsaturatedEngineT TwoPhaseFlowEngineT PartialSatClayEngineT)
 FOREACH(TF ${TEMPLATE_FLOW_NAMES})
   SET (TEMPLATE_FLOW_NAME ${TF})
   CONFIGURE_FILE(pkg/pfv/FlowEngine.hpp.in "${CMAKE_BINARY_DIR}/pkg/pfv/FlowEngine_${TF}.hpp" @ONLY)

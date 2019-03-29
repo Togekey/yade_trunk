@@ -38,6 +38,7 @@ The files are
 // #include<pkg/dem/TesselationWrapper.hpp>
 #include<lib/triangulation/FlowBoundingSphere.hpp>
 #include<lib/triangulation/PeriodicFlow.hpp>
+#include<lib/triangulation/PartialSatLinSolv.hpp>
 #include<pkg/pfv/FlowEngine.hpp>
 #include<pkg/common/Sphere.hpp>
 #include<core/Clump.hpp>
@@ -72,6 +73,9 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		//copy positions in a buffer for faster and/or parallel access
 		virtual void setPositionsBuffer(bool current);
 		virtual void trickPermeability(Solver* /*flow*/) {};
+		virtual void setCellsDSDP(Solver& flow) {};
+		virtual void updateSaturation(Solver& flow) {};
+		virtual void initializeSaturations(Solver& flow) {};
 
 	public :
 		int retriangulationLastIter;

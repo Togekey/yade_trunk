@@ -59,6 +59,8 @@ class FlowBoundingSphere : public Network<_Tesselation>
 		bool sphericalVertexAreaCalculated = 0;
 		double thermalPorosity;
 
+		bool partialSatEngine;
+
 		//Handling imposed pressures/fluxes on elements in the form of {point,value} pairs, IPCells contains the cell handles corresponding to point
 		vector<pair<Point,Real> > imposedP;
 		vector<CellHandle> IPCells;

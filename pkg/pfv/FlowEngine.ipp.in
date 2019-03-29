@@ -348,16 +348,6 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 				}
 			}
 		}
-
-
-
-/*		flow.tesselation().facetCells.clear();*/
-/*		flow.tesselation().facetCells.reserve(flow.tesselation().Triangulation().number_of_finite_facets());*/
-/*		FiniteFacetsIterator facet_end = flow.tesselation().Triangulation().finite_facets_end();*/
-/*		for (FiniteFacetsIterator f_it=flow.tesselation().Triangulation().finite_facets_begin(); f_it != facet_end;f_it++){*/
-/*			flow.tesselation().facetCells.push_back(std::pair<CellHandle,int> (f_it->first,f_it->second));*/
-/*			//f_it->info().id=k++;*/
-/*		}*/
 	}
 
 
