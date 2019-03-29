@@ -33,17 +33,17 @@ triax=TriaxialStressController(
 newton=NewtonIntegrator(damping=0.2)
 
 O.engines=[
-        ForceResetter(),
-        InsertionSortCollider([Bo1_Sphere_Aabb(),Bo1_Box_Aabb()]),
-        InteractionLoop(
-                [Ig2_Sphere_Sphere_ScGeom(),Ig2_Box_Sphere_ScGeom()],
-                [Ip2_FrictMat_FrictMat_FrictPhys()],
-                [Law2_ScGeom_FrictPhys_CundallStrack()],label="iloop"
-        ),
-        FlowEngine(dead=1,label="flow"),#introduced as a dead engine for the moment, see 2nd section
-        GlobalStiffnessTimeStepper(active=1,timeStepUpdateInterval=100,timestepSafetyCoefficient=0.8),
-        triax,
-        newton
+	ForceResetter(),
+	InsertionSortCollider([Bo1_Sphere_Aabb(),Bo1_Box_Aabb()]),
+	InteractionLoop(
+		[Ig2_Sphere_Sphere_ScGeom(),Ig2_Box_Sphere_ScGeom()],
+		[Ip2_FrictMat_FrictMat_FrictPhys()],
+		[Law2_ScGeom_FrictPhys_CundallStrack()],label="iloop"
+	),
+	FlowEngine(dead=1,label="flow"),#introduced as a dead engine for the moment, see 2nd section
+	GlobalStiffnessTimeStepper(active=1,timeStepUpdateInterval=100,timestepSafetyCoefficient=0.8),
+	triax,
+	newton
 ]
 
 triax.goal1=triax.goal2=triax.goal3=-10000
