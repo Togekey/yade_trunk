@@ -43,12 +43,11 @@ public:
 
 	///Linear system solve
 	virtual int setLinearSystem(Real dt=0);
-	virtual int setLinearSystemFullGS(Real dt=0);
 	virtual void copyCellsToLin(Real dt=0);
 	virtual void interpolate(Tesselation& Tes, Tesselation& NewTes);
 	virtual void computeFacetForcesWithCache(bool onlyCache=false);
 	virtual	void computePermeability();
-	virtual	void gaussSeidel(Real dt=0);
+	double getCellSaturation(double x, double y, double z);
 };
 
 } //namespace CGTF

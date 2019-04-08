@@ -53,6 +53,8 @@ PartialSatLinSolv<_Tesselation>::PartialSatLinSolv(): BaseFlowSolver() {}
 template<class _Tesselation>
 int PartialSatLinSolv<_Tesselation>::setLinearSystem(Real dt)
 {
+
+	cout << "setting system in partialsatsolv" << endl;
 	#ifdef SUITESPARSE_VERSION_4
 	if (!multithread && factorExists && useSolver==4){
 		if (getCHOLMODPerfTimings) gettimeofday (&start, NULL);	
@@ -75,11 +77,6 @@ int PartialSatLinSolv<_Tesselation>::setLinearSystem(Real dt)
 	#endif
 
 	if (getCHOLMODPerfTimings) gettimeofday (&start, NULL);
-/*	FOREACH(const shared_ptr<Engine> e, Omega::instance().getScene()->engines) {*/
-/*		if (e->getClassName() == "FlowEngine") {*/
-/*			flow = dynamic_cast<FlowEngineT*>(e.get());*/
-/*		}*/
-/*	}*/
 
 	RTriangulation& Tri = T[currentTes].Triangulation();
 	int n_cells=Tri.number_of_finite_cells();
@@ -250,10 +247,11 @@ void PartialSatLinSolv<_Tesselation>::copyCellsToLin (Real dt)
 		if (fluidBulkModulus>0) T_bv[ii-1] += T_cells[ii]->info().p()/(fluidBulkModulus*dt*T_cells[ii]->info().invVoidVolume());
 		if (partialSatEngine) T_bv[ii-1] += T_cells[ii]->info().p() * T_cells[ii]->info().dsdp / (dt * T_cells[ii]->info().invVoidVolume() );
 	}
+	cout << "partial sat solver, cells copied over with partialSatEng" << partialSatEngine << endl;
 }
 
 
-// TODO: NEEDS TO BE EDITED TO INTERPOLATE SATURATION BETWEEN TRIANGULATIONS
+// TODO: NEEDS TO BE EDITED TO INTERPOLATE SATURATION BETWEEN TRIANGULATIONS -> DONE?
 template <class _Tesselation>
 void PartialSatLinSolv<_Tesselation>::interpolate(Tesselation& Tes, Tesselation& NewTes)
 {
@@ -287,6 +285,7 @@ void PartialSatLinSolv<_Tesselation>::interpolate(Tesselation& Tes, Tesselation&
 			oldCell = Tri.locate(CGT::Sphere(center[0],center[1],center[2]));
 			if (!newCell->info().Pcondition) newCell->info().getInfo(oldCell->info());
 			if (!newCell->info().Tcondition && thermalEngine) newCell->info().temp() = oldCell->info().temp();
+			newCell->info().sat() = oldCell->info().sat();
 		}
 }
 
@@ -551,6 +550,15 @@ void PartialSatLinSolv<_Tesselation>::computePermeability()
 		if (!rAverage) cout << "------Hydraulic Radius is used for permeability computation------" << endl << endl;
 		else cout << "------Average Radius is used for permeability computation------" << endl << endl;
 		cout << "-----computed_Permeability-----" << endl;}
+}
+
+template <class _Tesselation> 
+double PartialSatLinSolv<_Tesselation>::getCellSaturation (double X, double Y, double Z)
+{
+	if (noCache && T[!currentTes].Max_id()<=0) return 0;//the engine never solved anything
+	RTriangulation& Tri = T[noCache?(!currentTes):currentTes].Triangulation();
+	CellHandle cell = Tri.locate(CGT::Sphere(X,Y,Z));
+	return cell->info().sat();
 }
 
 

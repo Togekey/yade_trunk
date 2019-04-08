@@ -50,6 +50,8 @@ class PartialSatCellInfo : public FlowCellInfo_PartialSatClayEngineT
 		porosity=1.0;
 		dsdp = 0;
 	}
+
+	inline double& sat (void) {return saturation;}
 	
 };
 
@@ -88,10 +90,16 @@ class PartialSatClayEngine : public PartialSatClayEngineT
 	void updateSaturation(FlowSolver& flow);
 	void triangulate(FlowSolver& flow);
 	double diagonalSaturationContribution(CellHandle cell);
-	double RHSSaturationContribution(CellHandle cell);
+	double RHSSaturationContribution(CellHandle cell);	
+	void initSolver(FlowSolver& flow);
 	virtual void action();
 
 	virtual ~PartialSatClayEngine();
+
+
+	double getCellSaturation(Vector3r pos){return solver->getCellSaturation(pos[0], pos[1], pos[2]);}
+	CELL_SCALAR_GETTER(Real,.sat(),cellSaturation);
+	CELL_SCALAR_SETTER(double,.sat(),setCellSaturation);
 
 	//FlowEngineT* flow;
 	
@@ -101,7 +109,7 @@ class PartialSatClayEngine : public PartialSatClayEngineT
 	//if we overload action() like this, this engine is doing nothing in a standard timestep, it can still have useful functions
 //	virtual void action() {};
 
-	void savePhaseVtk(const char* folder, bool withBoundaries);
+	void saveUnsatVtk(const char* folder, bool withBoundaries);
 //	void computeOnePhaseFlow() {scene = Omega::instance().getScene().get(); if (!solver) cerr<<"no solver!"<<endl; solver->gaussSeidel(scene->dt);initSolver(*solver);}
 
 
@@ -112,12 +120,15 @@ class PartialSatClayEngine : public PartialSatClayEngineT
 	((double,lmbda,0.2,,"Lambda parameter for Van Genuchten model"))
 	((double, pAir,0,,"Air pressure for calculation of capillary pressure (Pair - Pwater)"))
 	((double, Po,1.5,,"Po parameter for Van Genuchten model"))
-	((double, partialSatEngine,0,,"Activates the partial sat clay engine"))
+	((double, partialSatEngine,1,,"Activates the partial sat clay engine"))
 	
 	,/*PartialSatClayEngineT()*/,
 	solver = shared_ptr<FlowSolver> (new FlowSolver);
 	,
+	.def("setCellSaturation",&PartialSatClayEngine::setCellSaturation,(boost::python::arg("id"),boost::python::arg("temperature")),"set temperature in cell 'id'.")
+	.def("getCellSaturation",&PartialSatClayEngine::getCellSaturation,(boost::python::arg("pos")),"Measure cell saturation in position pos[0],pos[1],pos[2]")
 //	.def("getCellSaturation",&TwoPhaseFlowEngine::getCellSaturation,"Get saturation of cell")
+	.def("saveUnsatVtk",&PartialSatClayEngine::saveUnsatVtk,(boost::python::arg("folder")="./VTK",boost::python::arg("withBoundaries")=false),"Save pressure and saturation field in vtk format. Specify a folder name for output. The cells adjacent to the bounding spheres are generated conditionally based on :yref:`withBoundaries` (not compatible with periodic boundaries)")
 	)
 	DECLARE_LOGGER;
 };

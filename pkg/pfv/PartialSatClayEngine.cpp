@@ -11,9 +11,8 @@
 #include "PartialSatClayEngine.hpp"
 #include <boost/range/algorithm_ext/erase.hpp>
 
-YADE_PLUGIN((PartialSatClayEngine));
-
 CREATE_LOGGER(PartialSatClayEngine);
+YADE_PLUGIN((PartialSatClayEngine));
 
 PartialSatClayEngine::~PartialSatClayEngine(){}
 
@@ -32,6 +31,7 @@ void PartialSatClayEngine::action(){
 	  initializeVolumes(*solver);
 	  backgroundSolver=solver;
 	  backgroundCompleted=true;
+          if (partialSatEngine) initializeSaturations(*solver);
 	}
 	#ifdef YADE_OPENMP
 	solver->ompThreads = ompThreads>0? ompThreads : omp_get_max_threads();
@@ -58,7 +58,10 @@ void PartialSatClayEngine::action(){
 		solver->gaussSeidel(scene->dt);
 		timingDeltas->checkpoint ( "Factorize + Solve" );
 		solver->computeFacetForcesWithCache();
-		if (partialSatEngine) updateSaturation(*solver);
+		if (partialSatEngine) {
+			initializeSaturations(*solver);
+			//updateSaturation(*solver);
+		}
 	}
         timingDeltas->checkpoint ( "compute_Forces" );
         ///Application of vicscous forces
@@ -202,8 +205,7 @@ void PartialSatClayEngine::updateSaturation(FlowSolver& flow)
     	for (long i=0; i<size; i++){
 		CellHandle& cell = Tes.cellHandles[i];
 		if (cell->info().Pcondition) continue;
-		double totalPoreFlux = 0;
-		double sum;
+		double sum=0;
 		for (int j=0; j<4; j++){
 			CellHandle neighborCell = cell->neighbor(j);
 			sum += cell->info().kNorm()[j] * (cell->info().p() - neighborCell->info().p());
@@ -213,7 +215,7 @@ void PartialSatClayEngine::updateSaturation(FlowSolver& flow)
 }
 
 
-void PartialSatClayEngine::savePhaseVtk(const char* folder, bool withBoundaries)
+void PartialSatClayEngine::saveUnsatVtk(const char* folder, bool withBoundaries)
 {
 	vector<int> allIds;//an ordered list of cell ids (from begin() to end(), for vtk table lookup), some ids will appear multiple times since boundary cells are splitted into multiple tetrahedra 
 	vector<int> fictiousN;
@@ -246,12 +248,84 @@ void PartialSatClayEngine::savePhaseVtk(const char* folder, bool withBoundaries)
 	//SAVE_CELL_INFO(porosity)
 }
 
-
-void PartialSatClayEngine::triangulate( FlowSolver& flow )
+void PartialSatClayEngine::initSolver ( FlowSolver& flow )
 {
-        Tesselation& Tes = flow.tesselation();
-
+       	flow.Vtotalissimo=0; flow.VSolidTot=0; flow.vPoral=0; flow.sSolidTot=0;
+        flow.slipBoundary=slipBoundary;
+        flow.kFactor = permeabilityFactor;
+        flow.debugOut = debug;
+        flow.useSolver = useSolver;
+	#ifdef CHOLMOD_LIBS
+	flow.numSolveThreads = numSolveThreads;
+	flow.numFactorizeThreads = numFactorizeThreads;
+	#endif
+	flow.factorizeOnly = false;
+	flow.meanKStat = meanKStat;
+        flow.viscosity = viscosity;
+        flow.tolerance=tolerance;
+        flow.relax=relax;
+        flow.clampKValues = clampKValues;
+	flow.maxKdivKmean = maxKdivKmean;
+	flow.minKdivKmean = minKdivKmean;
+        flow.meanKStat = meanKStat;
+        flow.permeabilityMap = permeabilityMap;
+        flow.fluidBulkModulus = fluidBulkModulus;
+	flow.fluidRho = fluidRho;
+	flow.fluidCp = fluidCp;
+	flow.thermalEngine = thermalEngine;
+	flow.multithread = multithread;
+	flow.getCHOLMODPerfTimings=getCHOLMODPerfTimings;
+//         flow.tesselation().Clear();
+        flow.tesselation().maxId=-1;
+	flow.blockedCells.clear();
+	flow.sphericalVertexAreaCalculated=false;
+        flow.xMin = 1000.0, flow.xMax = -10000.0, flow.yMin = 1000.0, flow.yMax = -10000.0, flow.zMin = 1000.0, flow.zMax = -10000.0;
+	flow.partialSatEngine = partialSatEngine;
 }
+
+//void PartialSatClayEngine::buildTriangulation ( double pZero, Solver& flow )
+//{
+// 	if (first) flow.currentTes=0;
+//        else {  flow.currentTes=!flow.currentTes; if (debug) cout << "--------RETRIANGULATION-----------" << endl;}
+//	flow.resetNetwork();
+//	initSolver(flow);
+
+//        addBoundary ( flow );
+//        triangulate ( flow );
+//        if ( debug ) cout << endl << "Tesselating------" << endl << endl;
+//        flow.tesselation().compute();
+//        flow.defineFictiousCells();
+//	// For faster loops on cells define this vector
+//	flow.tesselation().cellHandles.clear();
+//	flow.tesselation().cellHandles.reserve(flow.tesselation().Triangulation().number_of_finite_cells());
+//	FiniteCellsIterator cell_end = flow.tesselation().Triangulation().finite_cells_end();
+//	int k=0;
+//	for ( FiniteCellsIterator cell = flow.tesselation().Triangulation().finite_cells_begin(); cell != cell_end; cell++ ){
+//		flow.tesselation().cellHandles.push_back(cell);
+//		cell->info().id=k++;}//define unique numbering now, corresponds to position in cellHandles
+//        flow.displayStatistics ();
+//	if(!blockHook.empty()){ LOG_INFO("Running blockHook: "<<blockHook); pyRunString(blockHook); }
+//        flow.computePermeability();
+
+//	if (multithread && fluidBulkModulus>0) initializeVolumes(flow);  // needed for multithreaded compressible flow (old site, fixed bug https://bugs.launchpad.net/yade/+bug/1687355)
+//	trickPermeability(&flow); //This virtual function does nothing yet, derived class may overload it to make permeability different (see DFN engine)
+//        porosity = flow.vPoralPorosity/flow.vTotalPorosity;
+
+//        boundaryConditions ( flow );
+//        flow.initializePressure ( pZero );
+//	if (thermalEngine) {
+//		//initializeVolumes(flow);
+//		thermalBoundaryConditions ( flow ); 
+//		flow.initializeTemperatures ( tZero );
+//		flow.sphericalVertexAreaCalculated=false;
+//	}
+
+//	
+//        if ( !first && !multithread && (useSolver==0 || fluidBulkModulus>0 || doInterpolate || thermalEngine)) flow.interpolate ( flow.T[!flow.currentTes], flow.tesselation() );
+//        if ( waveAction ) flow.applySinusoidalPressure ( flow.tesselation().Triangulation(), sineMagnitude, sineAverage, 30 );
+//	else if (boundaryPressure.size()!=0) flow.applyUserDefinedPressure ( flow.tesselation().Triangulation(), boundaryXPos , boundaryPressure);
+//        if (normalLubrication || shearLubrication || viscousShear) flow.computeEdgesSurfaces();
+//}
 
 //double PartialSatClayEngine::dsdp(CellHandle cell, double pw)
 //{
