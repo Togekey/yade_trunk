@@ -112,7 +112,7 @@ class FlowBoundingSphere : public Network<_Tesselation>
 		vector <Matrix3r> normalStressInteraction;
 		
 		void Localize();
-		void computePermeability();
+		virtual void computePermeability();
 		virtual void gaussSeidel (Real dt=0);
 		virtual void resetNetwork();
 		virtual void resetLinearSystem();//reset both A and B in the linear system A*P=B, done typically after updating the mesh 
@@ -139,7 +139,7 @@ class FlowBoundingSphere : public Network<_Tesselation>
 		void initializePressure ( double pZero );
 		void initializeTemperatures ( double tZero );
 		bool reApplyBoundaryConditions ();
-		void computeFacetForcesWithCache(bool onlyCache=false);
+		virtual void computeFacetForcesWithCache(bool onlyCache=false);
 		void saveVtk (const char* folder, bool withBoundaries);
 		//write vertices, cells, return ids and no. of fictious neighbors, allIds is an ordered list of cell ids (from begin() to end(), for vtk table lookup),
 		// some ids will appear multiple times if withBoundaries==true since boundary cells are splitted into multiple tetrahedra 
@@ -180,7 +180,7 @@ class FlowBoundingSphere : public Network<_Tesselation>
 		void sliceField (const char *filename);
 		void comsolField();
 
-		void interpolate ( Tesselation& Tes, Tesselation& NewTes );
+		virtual void interpolate ( Tesselation& Tes, Tesselation& NewTes );
 		virtual void averageRelativeCellVelocity();
 		void averageFluidVelocity();
 		void applySinusoidalPressure(RTriangulation& Tri, double amplitude, double averagePressure, double loadIntervals);

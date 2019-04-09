@@ -91,7 +91,7 @@ class PartialSatClayEngine : public PartialSatClayEngineT
 	void triangulate(FlowSolver& flow);
 	double diagonalSaturationContribution(CellHandle cell);
 	double RHSSaturationContribution(CellHandle cell);	
-	void initSolver(FlowSolver& flow);
+	virtual void initSolver(FlowSolver& flow);
 	virtual void action();
 
 	virtual ~PartialSatClayEngine();

@@ -53,8 +53,6 @@ PartialSatLinSolv<_Tesselation>::PartialSatLinSolv(): BaseFlowSolver() {}
 template<class _Tesselation>
 int PartialSatLinSolv<_Tesselation>::setLinearSystem(Real dt)
 {
-
-	cout << "setting system in partialsatsolv" << endl;
 	#ifdef SUITESPARSE_VERSION_4
 	if (!multithread && factorExists && useSolver==4){
 		if (getCHOLMODPerfTimings) gettimeofday (&start, NULL);	
@@ -245,9 +243,9 @@ void PartialSatLinSolv<_Tesselation>::copyCellsToLin (Real dt)
 	for (int ii=1; ii<=ncols; ii++) {
 		T_bv[ii-1]=T_b[ii-1]-T_cells[ii]->info().dv();
 		if (fluidBulkModulus>0) T_bv[ii-1] += T_cells[ii]->info().p()/(fluidBulkModulus*dt*T_cells[ii]->info().invVoidVolume());
-		if (partialSatEngine) T_bv[ii-1] += T_cells[ii]->info().p() * T_cells[ii]->info().dsdp / (dt * T_cells[ii]->info().invVoidVolume() );
+		if (partialSatEngine && !isnan(T_cells[ii]->info().invVoidVolume())) T_bv[ii-1] += T_cells[ii]->info().p() * T_cells[ii]->info().dsdp / (dt * T_cells[ii]->info().invVoidVolume() );
+		cout << "T_cells->dsdp " << T_cells[ii]->info().dsdp << endl;
 	}
-	cout << "partial sat solver, cells copied over with partialSatEng" << partialSatEngine << endl;
 }
 
 

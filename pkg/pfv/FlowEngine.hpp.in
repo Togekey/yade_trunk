@@ -87,7 +87,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		int ReTrg;
 		int ellapsedIter;
 		int permUpdateIters;
-		void initSolver (FlowSolver& flow);
+		virtual void initSolver (FlowSolver& flow);
 		#ifdef LINSOLV
 		void setForceMetis (bool force);
 		bool getForceMetis ();

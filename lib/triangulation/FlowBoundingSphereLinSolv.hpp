@@ -72,6 +72,7 @@ public:
 	using FlowType::controlCavityVolumeChange;
 	using FlowType::cavityDV;
 	using FlowType::thermalPorosity;
+	using FlowType::partialSatEngine;
 
 	//! TAUCS DECs
 	vector<FiniteCellsIterator> orderedCells;
@@ -202,7 +203,7 @@ public:
 	void copyCellsToGs(Real dt);
 	
 	void copyLinToCells();
-	void copyCellsToLin(Real dt);
+	virtual void copyCellsToLin(Real dt);
 	void swapFwd (double* v, int i);
 	void swapFwd (int* v, int i);
 	void sortV(int k1, int k2, int* is, double* ds);
