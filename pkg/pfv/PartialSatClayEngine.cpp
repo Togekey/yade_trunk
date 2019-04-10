@@ -31,7 +31,10 @@ void PartialSatClayEngine::action(){
 	  initializeVolumes(*solver);
 	  backgroundSolver=solver;
 	  backgroundCompleted=true;
-          if (partialSatEngine) initializeSaturations(*solver);
+          if (partialSatEngine) {
+		initializeSaturations(*solver);
+		if (particleSwelling) setOriginalParticleVolumes();
+	  }
 	}
 	#ifdef YADE_OPENMP
 	solver->ompThreads = ompThreads>0? ompThreads : omp_get_max_threads();
@@ -62,6 +65,10 @@ void PartialSatClayEngine::action(){
 			initializeSaturations(*solver);
 			//updateSaturation(*solver);
 		}
+	}
+	if (particleSwelling) {
+		collectParticleSaturation(*solver);
+		swellParticles();
 	}
         timingDeltas->checkpoint ( "compute_Forces" );
         ///Application of vicscous forces
@@ -159,7 +166,9 @@ void PartialSatClayEngine::setCellsDSDP(FlowSolver& flow)
 //	#pragma omp parallel for num_threads(ompThreads>0 ? ompThreads : 1)
     	for (long i=0; i<size; i++){
 		CellHandle& cell = Tes.cellHandles[i];
-        	cell->info().dsdp = dsdp(cell);
+		const double deriv = dsdp(cell);
+        	if (!isnan(deriv)) cell->info().dsdp = deriv;
+		else cell->info().dsdp = 0;
 	}
 }	
 
@@ -167,8 +176,8 @@ double PartialSatClayEngine::dsdp(CellHandle& cell)
 {
 	// analytical derivative of van genuchten
 	double pc = pAir - cell->info().p();
-	double term1 = -lmbda*pow((pow((pc/Po),(1./1.-lmbda)) + 1.),-lmbda-1.);
-	double term2 = pow(pc/Po,1./(1.-lmbda)-1.);
+	double term1 = pow((pow((pc/Po),(1./1.-lmbda))+1.),(-lmbda-1.));
+	double term2 = lmbda*pow((pc/Po),(1./(1.-lmbda)-1.));
 	double term3 = Po*(1.-lmbda);
 	return term1 * term2 / term3; 
 
@@ -214,6 +223,64 @@ void PartialSatClayEngine::updateSaturation(FlowSolver& flow)
 	}
 }
 
+void PartialSatClayEngine::collectParticleSaturation(FlowSolver& flow){
+	shared_ptr<BodyContainer>& bodies = scene->bodies;
+	Tesselation& Tes = flow.T[flow.currentTes];
+	const long size = Tes.cellHandles.size();
+	#pragma omp parallel for num_threads(ompThreads>0 ? ompThreads : 1)
+    	for (long i=0; i<size; i++){
+		CellHandle& cell = Tes.cellHandles[i];
+		if (cell->info().isGhost || cell->info().Pcondition) continue; // Do we need special cases for fictious cells?
+		for (int v=0;v<4;v++){
+			//if (cell->vertex(v)->info().isFictious) continue;
+			const long int id = cell->vertex(v)->info().id();
+			const shared_ptr<Body>& b =(*bodies)[id];
+			if (b->shape->getClassIndex()!=Sphere::getClassIndexStatic() || !b) continue;
+			auto* state = b->state.get();
+			state->suctionSum += pAir - cell->info().p();
+			state->incidentCells += 1;
+		}
+	}
+
+}
+
+void PartialSatClayEngine::setOriginalParticleVolumes(){
+	const shared_ptr<BodyContainer>& bodies=scene->bodies;
+	const long size=bodies->size();
+	#pragma omp parallel for
+	for (long i=0; i<size; i++){
+		const shared_ptr<Body>& b=(*bodies)[i];
+		if (b->shape->getClassIndex()!=Sphere::getClassIndexStatic() || !b) continue;
+		Sphere* sphere = dynamic_cast<Sphere*>(b->shape.get());
+		const double volume = 4./3. * M_PI*pow(sphere->radius,3);
+		auto* state = b->state.get();
+		state->volumeOriginal = volume;
+	}
+}
+
+
+void PartialSatClayEngine::swellParticles(){
+	const shared_ptr<BodyContainer>& bodies=scene->bodies;
+	const long size=bodies->size();
+	const double suction0 = pAir - pZero;
+	#pragma omp parallel for
+	for (long i=0; i<size; i++){
+		const shared_ptr<Body>& b=(*bodies)[i];
+		if (b->shape->getClassIndex()!=Sphere::getClassIndexStatic() || !b) continue;
+		Sphere* sphere = dynamic_cast<Sphere*>(b->shape.get());
+		//const double volume = 4./3. * M_PI*pow(sphere->radius,3);
+		auto* state = b->state.get();
+		const double avgSuction = state->suctionSum/state->incidentCells;
+		state->incidentCells = 0; // reset to 0 for next time step
+		const double volStrain = betam/alpham * (exp(-alpham*suction0) - exp(-alpham*avgSuction));
+		const double vNew = state->volumeOriginal*(volStrain + 1.);
+		const double rNew = pow(3.*vNew/(4.*M_PI),1./3.);
+		sphere->radius = rNew;
+	}
+
+}
+
+//////// Post processing tools //////
 
 void PartialSatClayEngine::saveUnsatVtk(const char* folder, bool withBoundaries)
 {
@@ -281,6 +348,50 @@ void PartialSatClayEngine::initSolver ( FlowSolver& flow )
 	flow.sphericalVertexAreaCalculated=false;
         flow.xMin = 1000.0, flow.xMax = -10000.0, flow.yMin = 1000.0, flow.yMax = -10000.0, flow.zMin = 1000.0, flow.zMax = -10000.0;
 	flow.partialSatEngine = partialSatEngine;
+}
+
+void PartialSatClayEngine::buildTriangulation ( double pZero, Solver& flow )
+{
+ 	if (first) flow.currentTes=0;
+        else {  flow.currentTes=!flow.currentTes; if (debug) cout << "--------RETRIANGULATION-----------" << endl;}
+	flow.resetNetwork();
+	initSolver(flow);
+
+        addBoundary ( flow );
+        triangulate ( flow );
+        if ( debug ) cout << endl << "Tesselating------" << endl << endl;
+        flow.tesselation().compute();
+        flow.defineFictiousCells();
+	// For faster loops on cells define this vector
+	flow.tesselation().cellHandles.clear();
+	flow.tesselation().cellHandles.reserve(flow.tesselation().Triangulation().number_of_finite_cells());
+	FiniteCellsIterator cell_end = flow.tesselation().Triangulation().finite_cells_end();
+	int k=0;
+	for ( FiniteCellsIterator cell = flow.tesselation().Triangulation().finite_cells_begin(); cell != cell_end; cell++ ){
+		flow.tesselation().cellHandles.push_back(cell);
+		cell->info().id=k++;}//define unique numbering now, corresponds to position in cellHandles
+        flow.displayStatistics ();
+	if(!blockHook.empty()){ LOG_INFO("Running blockHook: "<<blockHook); pyRunString(blockHook); }
+        flow.computePermeability();
+
+	if (multithread && fluidBulkModulus>0) initializeVolumes(flow);  // needed for multithreaded compressible flow (old site, fixed bug https://bugs.launchpad.net/yade/+bug/1687355)
+	trickPermeability(&flow); //This virtual function does nothing yet, derived class may overload it to make permeability different (see DFN engine)
+        porosity = flow.vPoralPorosity/flow.vTotalPorosity;
+
+        boundaryConditions ( flow );
+        flow.initializePressure ( pZero );
+	if (thermalEngine) {
+		//initializeVolumes(flow);
+		thermalBoundaryConditions ( flow ); 
+		flow.initializeTemperatures ( tZero );
+		flow.sphericalVertexAreaCalculated=false;
+	}
+
+	
+        if ( !first && !multithread && (useSolver==0 || fluidBulkModulus>0 || doInterpolate || thermalEngine || partialSatEngine)) flow.interpolate ( flow.T[!flow.currentTes], flow.tesselation() );
+        if ( waveAction ) flow.applySinusoidalPressure ( flow.tesselation().Triangulation(), sineMagnitude, sineAverage, 30 );
+	else if (boundaryPressure.size()!=0) flow.applyUserDefinedPressure ( flow.tesselation().Triangulation(), boundaryXPos , boundaryPressure);
+        if (normalLubrication || shearLubrication || viscousShear) flow.computeEdgesSurfaces();
 }
 
 //void PartialSatClayEngine::buildTriangulation ( double pZero, Solver& flow )

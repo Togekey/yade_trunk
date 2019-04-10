@@ -91,6 +91,12 @@ class PartialSatClayEngine : public PartialSatClayEngineT
 	void triangulate(FlowSolver& flow);
 	double diagonalSaturationContribution(CellHandle cell);
 	double RHSSaturationContribution(CellHandle cell);	
+	void collectParticleSaturation(FlowSolver& flow);
+	void swellParticles();
+	void setOriginalParticleVolumes();
+
+
+	virtual void buildTriangulation(double pZero, Solver& flow);
 	virtual void initSolver(FlowSolver& flow);
 	virtual void action();
 
@@ -120,8 +126,10 @@ class PartialSatClayEngine : public PartialSatClayEngineT
 	((double,lmbda,0.2,,"Lambda parameter for Van Genuchten model"))
 	((double, pAir,0,,"Air pressure for calculation of capillary pressure (Pair - Pwater)"))
 	((double, Po,1.5,,"Po parameter for Van Genuchten model"))
-	((double, partialSatEngine,1,,"Activates the partial sat clay engine"))
-	
+	((bool, partialSatEngine,1,,"Activates the partial sat clay engine"))
+	((double,alpham,2.6048e-08,,"alpha parameter for particle volumetric strain model MPa^-1"))
+	((double,betam,2.10206e-08,,"beta parameter for particle volumetric strain model MPa^-1"))
+	((bool,particleSwelling,1,,"set false to neglect particle swelling"))
 	,/*PartialSatClayEngineT()*/,
 	solver = shared_ptr<FlowSolver> (new FlowSolver);
 	,

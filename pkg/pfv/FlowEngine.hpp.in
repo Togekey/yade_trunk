@@ -96,7 +96,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		#endif
 		void triangulate (Solver& flow);
 		void addBoundary (Solver& flow);
-		void buildTriangulation (double pZero, Solver& flow);
+		virtual void buildTriangulation (double pZero, Solver& flow);
 		void buildTriangulation (Solver& flow);
 		void updateVolumes (Solver& flow);
 		void applyForces (Solver& flow);

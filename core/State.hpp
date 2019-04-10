@@ -84,6 +84,11 @@ class State: public Serializable, public Indexable{
         	((Real,delRadius,0,,"radius change due to thermal expansion"))
 		((bool,isCavity,true,,"flag used for unbounding cavity bodies"))
 #endif
+#ifdef PARTIALSAT
+		((Real,suctionSum,0,,"sum of suctions associated with incident cells"))
+		((Real,incidentCells,0,,"number of incident cells"))
+		((Real,volumeOriginal,0,,"original particle volume stored for strain increments"))
+#endif
 		,
 		/* additional initializers */
 			((pos,se3.position))

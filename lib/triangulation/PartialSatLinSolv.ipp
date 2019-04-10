@@ -136,7 +136,7 @@ int PartialSatLinSolv<_Tesselation>::setLinearSystem(Real dt)
 				for (int j=0;j<4;j++) if (!cell->neighbor(j)->info().blocked) vs[T_nnz]+= (cell->info().kNorm())[j];
 // 				vs[T_nnz] = (cell->info().kNorm())[0]+ (cell->info().kNorm())[1]+ (cell->info().kNorm())[2]+ (cell->info().kNorm())[3];
 				if (fluidBulkModulus>0) vs[T_nnz] += (1.f/(dt*fluidBulkModulus*cell->info().invVoidVolume()));
-				if (partialSatEngine) vs[T_nnz] += cell->info().dsdp/(cell->info().invVoidVolume()*dt);;
+				if (partialSatEngine && !isnan(cell->info().dsdp)) vs[T_nnz] += cell->info().dsdp/(cell->info().invVoidVolume()*dt);;
 				++T_nnz;
 			}
 			for (int j=0; j<4; j++) {
@@ -244,7 +244,6 @@ void PartialSatLinSolv<_Tesselation>::copyCellsToLin (Real dt)
 		T_bv[ii-1]=T_b[ii-1]-T_cells[ii]->info().dv();
 		if (fluidBulkModulus>0) T_bv[ii-1] += T_cells[ii]->info().p()/(fluidBulkModulus*dt*T_cells[ii]->info().invVoidVolume());
 		if (partialSatEngine && !isnan(T_cells[ii]->info().invVoidVolume())) T_bv[ii-1] += T_cells[ii]->info().p() * T_cells[ii]->info().dsdp / (dt * T_cells[ii]->info().invVoidVolume() );
-		cout << "T_cells->dsdp " << T_cells[ii]->info().dsdp << endl;
 	}
 }
 
@@ -385,7 +384,7 @@ void PartialSatLinSolv<_Tesselation>::computeFacetForcesWithCache(bool onlyCache
 }
 
 
-// TODO: needs to be edited to consider relative and intrinsice permeability changes during saturation
+// TODO: needs to be edited to consider relative and intrinsic permeability changes during saturation
 template <class _Tesselation> 
 void PartialSatLinSolv<_Tesselation>::computePermeability()
 {
