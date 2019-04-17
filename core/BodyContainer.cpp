@@ -32,7 +32,8 @@ Body::id_t BodyContainer::insertAtId(shared_ptr<Body> b, Body::id_t candidate){
 	const shared_ptr<Scene>& scene=Omega::instance().getScene(); 
 	b->iterBorn=scene->iter;
 	b->timeBorn=scene->time;
-	b->id=candidate;
+	b->id=candidate; 
+  body[b->id] = b; 
 	scene->doSort = true;
 	return b->id;
 }
