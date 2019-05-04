@@ -1,3 +1,5 @@
+//Deepak kn, deepak.kn1990@gmail.com 
+// A dummy body container to serialize and send/recv in MPI messages. 
 #pragma once
 #include <vector>
 #include <core/Body.hpp>
@@ -5,21 +7,19 @@
 #include <core/BodyContainer.hpp>
 #include <core/Omega.hpp>
 #include <lib/base/Logging.hpp>
-#include <lib/serialization/Serializable.hpp>
 #include <mpi.h>
-
 
 class MPIBodyContainer :  public Serializable{
 
   public:
 
-    int procRank; // MPI_Comm_rank(MPI_COMM_WORLD, &rank) commented for testing.;
+    int subdomainRank; // MPI_Comm_rank(MPI_COMM_WORLD, &procRank) commented for testing.;
 
     void insertBody(int id) {
       const shared_ptr<Scene>& scene = Omega::instance().getScene();
       shared_ptr<BodyContainer>& bodycontainer = scene-> bodies;
       shared_ptr<Body> b = (*bodycontainer)[id];
-      // if empty put body
+      // if empty,  put body
       if (bContainer.size() == 0 ){ bContainer.push_back(b); }
       //check if body already exists
       else {
@@ -35,7 +35,7 @@ class MPIBodyContainer :  public Serializable{
 
     virtual ~MPIBodyContainer(){};
 
-    void insertBodyList(boost::python::list&  idList) {
+    void insertBodyListPy(boost::python::list&  idList) {
       // insert a list of bodies
       unsigned int listSize = boost::python::len(idList);
       for (unsigned int i=0; i != listSize; ++i) {
@@ -43,35 +43,48 @@ class MPIBodyContainer :  public Serializable{
 	      insertBody(b_id);
       }
     }
+    
+    void insertBodyList(std::vector<Body::id_t>& idList ){ 
+      for (unsigned int i=0; i != idList.size(); ++i) {
+	insertBody(idList[i]); 
+      }
+    }
 
     unsigned int getCount() {
       return bContainer.size();
     }
 
-    shared_ptr<Body> getBodyat(int id){
-      return bContainer[id];
+    shared_ptr<Body> getBodyat(int pos){
+      return bContainer[pos];
     }
+    
+//     shared_ptr<Body> getBodybyId(int id ){
+//       
+//     }
 
-
-    void setBodiesToBodyContainer() { // to be used when deserializing a recieved container.
-	    const shared_ptr<Scene>& scene = Omega::instance().getScene();
-	    shared_ptr<BodyContainer>& bodyContainer = scene->bodies;
-	    for (std::vector<shared_ptr <Body>> ::iterator bIter = bContainer.begin(); bIter != bContainer.end(); ++ bIter) {
-	      shared_ptr<Body> newBody = *(bIter);
-	      bodyContainer->insertAtId(newBody, newBody->id);
-	    }
+    
+    std::vector<Body::id_t> getIds(){
+      std::vector<Body::id_t> ids; 
+      for (unsigned int i=0; i != bContainer.size(); ++i) {
+	const shared_ptr<Body>& b = bContainer[i]; 
+	ids.push_back(b->id); 
+      }
+      return ids; 
     }
+    
 
   YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(MPIBodyContainer,Serializable,"a dummy container to serialize and send. ",
   ((vector<shared_ptr<Body>>, bContainer,,,"a dummy body container to serialize"))
   ,
+//   MPI_Comm_rank(MPI_COMM_WORLD, &procRank); cannot call in constructor
   ,
   .def("insertBody",&MPIBodyContainer::insertBody,(boost::python::arg("bodyId")),  "insert a body (by id) in this container")
-  .def("insertBodyList", &MPIBodyContainer::insertBodyList, (boost::python::arg("listOfIds")), "inset a list of bodies (by ids)")
+  .def("insertBodyListPy", &MPIBodyContainer::insertBodyListPy, (boost::python::arg("listOfIds")), "inset a list of bodies (by ids)")
   .def("clearContainer", &MPIBodyContainer::clearContainer, "clear bodies in the container")
   .def("getCount", &MPIBodyContainer::getCount, "get container count")
-  .def("getBodyat", &MPIBodyContainer::getBodyat, "get body at id")
+  .def_readonly("subdomainRank", &MPIBodyContainer::subdomainRank, "origin rank of this container") 
   );
+  
   DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(MPIBodyContainer);
