@@ -1,0 +1,97 @@
+image: registry.gitlab.com/remche/docker-yade
+stages:
+  - cmake
+  - build
+  - test
+  - doc
+  - pages
+
+cmake:
+  stage: cmake
+#  only:
+#    - master
+#    - merge_request
+ script:
+    - mkdir build && cd build
+    - cmake -DSUFFIX=-ci -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_PREFIX=../install -DCHUNKSIZE=4 -DDISABLE_SAVE_TEMPS=1 ..
+  tags:
+  - lightweight
+  artifacts:
+    paths:
+      - build
+      
+make:
+  stage: build
+#  only:
+#    - master
+#    - merge_request
+  script:
+    - export JOBSNUM=$(case $CI_RUNNER_DESCRIPTION in "y_4pak_64cpu_256RAM_4TB_docker") echo "40" ;; "c_4pak_64cpu_256RAM_4TB_docker") echo "40" ;; "c_6pak_48cpu_128RAM_4TB_docker") echo "42" ;; "y_6pak_48cpu_128RAM_4TB_docker") echo "42" ;; "yade-runner") echo "12" ;; "yade-runner-01") echo "1" ;; *) echo "12";; esac)
+    - echo $JOBSNUM
+    - cd build
+    - make -j $JOBSNUM
+    - make install
+    - make clean
+  artifacts:
+    paths:
+      - install
+  dependencies: 
+    - cmake      
+
+test:
+  stage: test
+#  only:
+#    - master
+#    - merge_request
+ script:
+    - install/bin/yade-ci --test
+  tags:
+  - lightweight
+  dependencies:
+    - make
+
+check:
+  stage: test
+  only:
+    - master
+    - merge_request
+  script:
+    - install/bin/yade-ci --checks
+  tags:
+  - lightweight
+  dependencies:
+    - make
+
+doc:
+  stage: doc
+  only:
+    - master
+    - merge_request
+  script:
+    - cd build
+    - xvfb-run -s "-screen 0 1600x1200x24" make doc
+  dependencies:
+    - cmake
+    - make
+  tags:
+  - lightweight
+  artifacts:
+    paths:
+      - install
+      
+pages:
+  stage: pages
+  only:
+    - master
+  script:
+    - mv install/share/doc/yade-ci/html public
+    - mv install/share/doc/yade-ci/Yade.pdf public
+    - mv install/share/doc/yade-ci/Yade.epub public
+  dependencies:
+    - doc
+  tags:
+  - lightweight
+  artifacts:
+    paths:
+      - public
+
