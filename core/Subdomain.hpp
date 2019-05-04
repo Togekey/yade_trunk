@@ -1,5 +1,6 @@
 // (c) 2018 Bruno Chareyre <bruno.chareyre@grenoble-inp.fr>
- 
+//  deepak, 03/05/19 --> added some helper functions. 
+
 #pragma once
 
 #include<core/Body.hpp>
@@ -9,6 +10,8 @@
 #include <pkg/common/Aabb.hpp>
 #include <pkg/common/Dispatching.hpp>
 #include <mpi.h>
+#include <core/MPIBodyContainer.hpp>
+
 
 class NewtonIntegrator;
 
@@ -155,10 +158,77 @@ class Subdomain: public Shape {
 	
 	void mpiWaitReceived(unsigned otherSubdomain){ MPI_Wait(&mpiReqs[otherSubdomain],MPI_STATUS_IGNORE);}
 	
+	
 
 	
 	//WARNING: precondition: the members bounds have been dispatched already, else we re-use old values. Carefull if subdomain is not at the end of O.bodies
 	void setMinMax();
+        
+        // Functions dpk   
+        
+        //functions (master) 
+        
+	void recvBodyContainersFromWorkers(); 
+	void setBodiesToBodyContainer(std::vector<shared_ptr<MPIBodyContainer> >&, bool);
+	void initMasterContainer(); 
+	void setBodyIntrs(); 
+        bool allocContainerMaster; 
+        bool bodiesSet; 
+        
+        //functions common 
+        
+        void mergeOp(); 
+        
+        // functions (workers) 
+        
+	void sendContainerString(); 
+	void recvContainerString(); 
+	void processContainerStrings(); 
+        void sendAllBodiesToMaster();
+        void setCommunicationContainers(); 
+        
+        //communications util functions 
+        
+        void sendStringBlocking(std::string& , int,  int ); //string, rank, tag
+        void sendString(std::string& , int , int,  MPI_Request& ); //non blocking send
+        void recvBuff(char*  ,int , int ,  MPI_Request& ); // non blcoking recv 
+        int  probeIncoming(int ); //non blocking probe, for getting char/string size
+        void processReqs(std::vector<MPI_Request>&, int  ); // process Requests (MPI_Waitall(request, status))
+        void resetReqs(std::vector<MPI_Request>& ); // clear the vector of mpiReqs. 
+        int probeIncomingBlocking(int); // blocking probe -> gets size of char/string 
+        void recvBuffBlocking(char* , int , int , int );  // blockng recv (char/string)
+        void processReqsAll(std::vector<MPI_Request>& , std::vector<MPI_Status>& ); // clears vecs of MPI_Status & MPI_Request
+        
+        //Util functions -> serialization, deserializtion, setting body ids to a subdomain (aka to the member std::vector<Body::d_t> ids) and another function for  clearing it
+        
+         std::string serializeMPIBodyContainer(const shared_ptr<MPIBodyContainer>&);  //serialize and return string
+	 shared_ptr<MPIBodyContainer> deSerializeMPIBodyContainer(const char* , int ); //deserialize return MPIBodyContainer
+	 std::string fillContainerGetString(shared_ptr<MPIBodyContainer>&, std::vector<Body::id_t>& ); 
+	 void setIDstoSubdomain(boost::python::list& );  // exposed to yadempi.py, function to change/reset the ids in a subdomain
+	 void clearSubdomainIds();  // clears the member ids (std::vector <Body::id_t>
+	 void getRankSize();  
+	 void clearRecvdCharBuff(std::vector<char*>& ); // frees std::vector<char*>
+         
+         
+        //declarations dpk 
+         
+	vector<MPI_Status>  mpiStatus; 
+	std::vector<std::pair<std::string, int> > sendContainer;  // list containing the serialized data (string) to be sent with the destination rank.
+	int subdomainRank, commSize; 
+	int TAG_STRING = 420, TAG_COUNT = 20, TAG_WALL_INTR=100, TAG_FORCE=200, TAG_BODY=111; 
+	bool commContainer=false; 
+	bool containersRecvd = false; 
+	std::vector<shared_ptr<MPIBodyContainer> > recvdBodyContainers; 
+	std::vector<bool> commFlag; 
+	const int master = 0; 
+	std::vector<int> wallIdsM; 
+	bool initDone = false;
+	std::vector<int> recvdStringSizes; // a buffer to hold the size of the incoming messages (char buffers). 
+	std::vector<MPI_Request> recvReqs; // used for MPI_Irecv 
+	std::vector<char*> recvdCharBuff;  
+        std::vector<int> recvRanks; 
+        std::vector<int> remoteCount; 
+         
 		
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Subdomain,Shape,"The bounding box of a mpi subdomain",
 // 		((testType, testArray,testType({0,0}),,""))
