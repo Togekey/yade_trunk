@@ -450,7 +450,8 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 		if (id>=solver->tesselation().cellHandles.size()) {LOG_ERROR("id out of range, max value is "<<solver->T[solver->currentTes].cellHandles.size()); return ids;}
 		for (unsigned int i=0;i<4;i++) {
 			const CellHandle& neighbourCell = solver->tesselation().cellHandles[id]->neighbor(i);
-			if (!Tri.is_infinite(neighbourCell)) ids.append(neighbourCell->info().id);}
+            if (consInfCell==true) ids.append(neighbourCell->info().id);
+			else if (!Tri.is_infinite(neighbourCell)) ids.append(neighbourCell->info().id);}
 		return ids;}
 
 	//TODO
@@ -506,6 +507,7 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	((bool,recursiveInvasion,true,,"If true the invasion stops only when no entry pc is less than current capillary pressure, implying simultaneous invasion of many pores. Else only one pore invasion per invasion step."))
 	((bool,initialWetting,true,,"Initial wetting saturated (=true) or non-wetting saturated (=false)"))
 	((bool, isPhaseTrapped,true,,"If True, both phases can be entrapped by the other, which would correspond to snap-off. If false, both phases are always connected to their reservoirs, thus no snap-off."))
+    ((bool, consInfCell,false,,"If True, infinite cells are considered in getNeighbors()."))
 	((bool, isInvadeBoundary, true,,"Invasion side boundary condition. If True, pores of side boundary can be invaded; if False, the pore throats connecting side boundary are closed, those pores are excluded in saturation calculation."))	
 	((bool, drainageFirst, true,,"If true, activate drainage first (initial saturated), then imbibition; if false, activate imbibition first (initial unsaturated), then drainage."))
 	((double,dtDynTPF,0.0,,"Parameter which stores the smallest time step, based on the residence time"))
