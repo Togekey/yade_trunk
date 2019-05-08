@@ -234,12 +234,12 @@ void wireNoSpheres(){wireSome("noSpheres");}
 bool pointInsidePolygon(py::tuple xy, py::object vertices){
 	Real testx=py::extract<double>(xy[0])(),testy=py::extract<double>(xy[1])();
 	char** vertData; int rows, cols; PyArrayObject* vert=(PyArrayObject*)vertices.ptr();
-	int result=PyArray_As2D((PyObject**)&vert /* is replaced */ ,&vertData,&rows,&cols,PyArray_DOUBLE);
+	int result=PyArray_As2D((PyObject**)&vert /* is replaced */ ,&vertData,&rows,&cols,NPY_DOUBLE);
 	if(result!=0) throw invalid_argument("Unable to cast vertices to 2d array");
 	if(cols!=2 || rows<3) throw invalid_argument("Vertices must have 2 columns (x and y) and at least 3 rows.");
 	int i /*current node*/, j/*previous node*/; bool inside=false;
 	for(i=0,j=rows-1; i<rows; j=i++){
-		double vx_i=*(double*)(vert->data+i*vert->strides[0]), vy_i=*(double*)(vert->data+i*vert->strides[0]+vert->strides[1]), vx_j=*(double*)(vert->data+j*vert->strides[0]), vy_j=*(double*)(vert->data+j*vert->strides[0]+vert->strides[1]);
+		double vx_i=*(double*)(PyArray_DATA(vert)+i*(signed long)(PyArray_STRIDE(vert,0))), vy_i=*(double*)(PyArray_DATA(vert)+i*PyArray_STRIDE(vert,0)+PyArray_STRIDE(vert,1)), vx_j=*(double*)(PyArray_DATA(vert)+j*PyArray_STRIDE(vert,0)), vy_j=*(double*)(PyArray_DATA(vert)+j*PyArray_STRIDE(vert,0)+PyArray_STRIDE(vert,1));
 		if (((vy_i>testy)!=(vy_j>testy)) && (testx < (vx_j-vx_i) * (testy-vy_i) / (vy_j-vy_i) + vx_i) ) inside=!inside;
 	}
 	Py_DECREF(vert);

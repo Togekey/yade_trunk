@@ -90,5 +90,14 @@ find_package_message(NUMPY
     "Found NumPy: version \"${NUMPY_VERSION}\" ${NUMPY_INCLUDE_DIRS}"
     "${NUMPY_INCLUDE_DIRS}${NUMPY_VERSION}")
 
+#===========================================================
+# This is to disable the warning "Using deprecated NumPy API, disable it by " But we must fix yade first.
+IF(NUMPY_VERSION VERSION_GREATER 1.7 OR NUMPY_VERSION VERSION_EQUAL 1.7)
+  MESSAGE(STATUS "NumPy version >= 1.7 declaring NPY_NO_DEPRECATED_API to avoid warnings.")
+  ADD_DEFINITIONS("-DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION")
+  MESSAGE(STATUS "NumPy version >= 1.7 FIXME - we must fix yade to declare that.")
+ENDIF()
+#===========================================================
+
 set(NUMPY_FOUND TRUE)
 
