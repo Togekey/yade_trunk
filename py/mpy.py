@@ -88,39 +88,41 @@ def wprint(m):
 from yade import *
 from yade.wrapper import *
 
-timings={}
+class Timing_comm():
+	def __init__(self):
+		self.timings={}
+		
+	def clear(self):
+		self.timings={}
+		
+	def enable_timing(comm_function):
+		def wrapper(self,timing_name, *args, **kwargs):
+			#pre-exec
+			timing_name=str(rank)+"_"+timing_name
+			ti=time.time()
+			#exec
+			rvalue=comm_function(self, *args, **kwargs)
+			#post-exec
+			if(not timing_name in self.timings.keys()):
+				self.timings[timing_name]=[0,0]
+			self.timings[timing_name][0]+=1
+			self.timings[timing_name][1]+=time.time()-ti
+			return rvalue
+		return wrapper
+	
+	@enable_timing
+	def send(self, *args, **kwargs):
+		return comm.send(*args,**kwargs)
+	
+	@enable_timing
+	def bcast(self, *args, **kwargs):
+		return comm.bcast(*args,**kwargs)
+	
+	@enable_timing
+	def allreduce(self, *args, **kwargs):
+		return comm.allreduce(*args,**kwargs)
 
-
-def send(timing_name,*args,**kwargs):
-	timing_name=str(rank)+"_"+timing_name
-	ti=time.time()
-	comm.send(*args,**kwargs)
-	if(not timing_name in timings.keys()):
-		timings[timing_name]=[0,0]
-	timings[timing_name][0]+=1
-	timings[timing_name][1]+=time.time()-ti
-
-def bcast(timing_name,*args,**kwargs):
-	timing_name=str(rank)+"_"+timing_name
-	ti=time.time()
-	rvalue=comm.bcast(*args,**kwargs)
-	if(not timing_name in timings.keys()):
-		timings[timing_name]=[0,0]
-	timings[timing_name][0]+=1
-	timings[timing_name][1]+=time.time()-ti
-	return rvalue
-
-def allreduce(timing_name,*args,**kwargs):
-	timing_name=str(rank)+"_"+timing_name
-	ti=time.time()
-	rvalue=comm.allreduce(*args,**kwargs)
-	if(not timing_name in timings.keys()):
-		timings[timing_name]=[0,0]
-	timings[timing_name][0]+=1
-	timings[timing_name][1]+=time.time()-ti
-	return rvalue
-
-
+timing_comm = Timing_comm()
 
 def receiveForces(subdomains):
 	'''
@@ -153,7 +155,7 @@ def checkColliderActivated():
 	return true if collision detection needs activation in at least one of them, else false  
 	'''
 	needsCollide = int(utils.typedEngine("InsertionSortCollider").isActivated())
-	needsCollide = allreduce("checkcollider",needsCollide,op=MPI.SUM)
+	needsCollide = timing_comm.allreduce("checkcollider",needsCollide,op=MPI.SUM)
 	if(needsCollide!=0):
 		if rank==0: mprint("triggers collider at iter "+str(O.iter) +": paused")
 		return True
@@ -201,7 +203,7 @@ def updateDomainBounds(subdomains): #subdomains is the list of subdomains by bod
 			if worker!=rank:
 				wprint("sending "+str([subD.boundsMin,subD.boundsMax]))
 				#comm.isend([subD.boundsMin,subD.boundsMax], dest=worker, tag=_SUBDOMAINSIZE_)
-				send("updateDomainBounds",[subD.boundsMin,subD.boundsMax], dest=worker, tag=_SUBDOMAINSIZE_)
+				timing_comm.send("updateDomainBounds",[subD.boundsMin,subD.boundsMax], dest=worker, tag=_SUBDOMAINSIZE_)
 				#sharedBounds.append(req) #keep track of non-blocking messages sent 
 	for sdId in subdomains:
 		if O.bodies[sdId].subdomain!=rank:
@@ -387,7 +389,7 @@ def isendRecvForces():
 			forces0=[[id,O.forces.f(id),O.forces.t(id)] for id in  O.subD.mirrorIntersections[0]]
 			#wprint ("worker "+str(rank)+": sending "+str(len(forces0))+" "+str("forces to 0 "))
 			#O.freqs.append(comm.isend(forces0, dest=0, tag=_FORCES_))
-			send("isendRecvForces",forces0, dest=0, tag=_FORCES_)
+			timing_comm.send("isendRecvForces",forces0, dest=0, tag=_FORCES_)
 		else: #master
 			receiveForces(O.subD.intersections[0])
 
@@ -504,7 +506,7 @@ def splitScene():
 		#distribute work
 		sceneAsString=O.sceneToString()
 		for worker in range(1,numThreads):
-			send("splitScene_distribute_work",sceneAsString, dest=worker, tag=_SCENE_) #sent with scene.subdomain=1, better make subdomain index a passed value so we could pass the sae string to every worker (less serialization+deserialization)
+			timing_comm.send("splitScene_distribute_work",sceneAsString, dest=worker, tag=_SCENE_) #sent with scene.subdomain=1, better make subdomain index a passed value so we could pass the sae string to every worker (less serialization+deserialization)
 			
 	else:
 		O.stringToScene(comm.recv(source=0, tag=_SCENE_)) #receive a scene pre-processed by master (i.e. with appropriate body.subdomain's)  
@@ -543,7 +545,7 @@ def splitScene():
 		for worker in range(1,numThreads):#FIXME: we actually don't need so much data since at this stage the states are unchanged and the list is used to re-bound intersecting bodies, this is only done in the initialization phase, though
 			#states= [[id,O.bodies[id].state,O.bodies[id].shape] for id in intersections[worker]]
 			wprint("sending mirror intersections to "+str(worker)+" ("+str(len(subD.intersections[worker]))+" bodies)")
-			send("splitScene_master_domain",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
+			timing_comm.send("splitScene_master_domain",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
 			#comm.send(states, dest=worker, tag=_ID_STATE_SHAPE_) #sent with scene.subdomain=1
 	else:
 		# from master
@@ -571,7 +573,7 @@ def splitScene():
 		for worker in subD.intersections[rank]:
 			if worker==0: continue #we do not send positions to master, only forces
 			#wprint("sending "+str(len(subD.intersections[worker]))+" states to "+str(worker))
-			send("splitScene_intersections",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
+			timing_comm.send("splitScene_intersections",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
 			#wprint("sent")
 
 		nn=0
@@ -638,7 +640,7 @@ def mpirun(nSteps,mergeSplit=False):
 
 	comm.barrier()
 	time.sleep((numThreads-rank)*0.1)
-	for k,v in timings.items():
+	for k,v in timing_comm.timings.items():
 		print k,"	",v
 	comm.barrier()
 	if YADE_TIMING:
