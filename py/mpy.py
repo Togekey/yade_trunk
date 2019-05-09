@@ -121,6 +121,14 @@ class Timing_comm():
 	@enable_timing
 	def allreduce(self, *args, **kwargs):
 		return comm.allreduce(*args,**kwargs)
+	
+	@enable_timing
+	def Gather(self, *args, **kwargs):
+		return comm.Gather(*args, **kwargs)
+	
+	@enable_timing
+	def Gatherv(self, *args, **kwargs):
+		return comm.Gatherv(*args, **kwargs)
 
 timing_comm = Timing_comm()
 
@@ -420,7 +428,7 @@ def mergeScene():
 
 		sizes=np.empty(numThreads,dtype=int)
 		# Master get sizes from all workers
-		comm.Gather(size,sizes,root=0)
+		timing_comm.Gather("mergeScene_sizes",size,sizes,root=0)
 		
 		
 		if(rank==0):
@@ -443,7 +451,7 @@ def mergeScene():
 
 		# data sent = [data, size of data] (for each worker)
 		# data recv = [allocated target_array, array of different sizes, displacement, data type]
-		comm.Gatherv([send_buff, size], [dat, sizes, dspl, MPI.DOUBLE], root=0)
+		timing_comm.Gatherv("mergeScene_data",[send_buff, size], [dat, sizes, dspl, MPI.DOUBLE], root=0)
 		
 			#comm.send(len(send_buff), dest=0, tag=_SCENE_SIZE_)
 			
