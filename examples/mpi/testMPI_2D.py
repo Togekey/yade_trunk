@@ -22,7 +22,7 @@ The number of subdomains depends on argument 'n' of mpiexec. Since rank=0 is not
 
 '''
 
-NSTEPS=2000 #turn it >0 to see time iterations, else only initilization TODO!HACK
+NSTEPS=1000 #turn it >0 to see time iterations, else only initilization TODO!HACK
 #NSTEPS=50 #turn it >0 to see time iterations, else only initilization
 N=50; M=50; #(columns, rows) per thread
 
@@ -65,11 +65,11 @@ for sd in range(0,numThreads-1):
 
 WALL_ID=O.bodies.append(box(center=(numThreads*N*0.5,-0.5,0),extents=(2*numThreads*N,0,2),fixed=True))
 
-collider.verletDist = 0.01
+collider.verletDist = 0.5
 newton.gravity=(0,-10,0) #else nothing would move
 tsIdx=O.engines.index(timeStepper) #remove the automatic timestepper. Very important: we don't want subdomains to use many different timesteps...
 O.engines=O.engines[0:tsIdx]+O.engines[tsIdx+1:]
-O.dt=0.0002 #this very small timestep will make it possible to run 2000 iter without merging
+O.dt=0.001 #this very small timestep will make it possible to run 2000 iter without merging
 #O.dt=0.1*PWaveTimeStep() #very important, we don't want subdomains to use many different timesteps...
 
 
