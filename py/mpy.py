@@ -88,6 +88,39 @@ def wprint(m):
 from yade import *
 from yade.wrapper import *
 
+timings={}
+
+
+def send(timing_name,*args,**kwargs):
+	timing_name=str(rank)+"_"+timing_name
+	ti=time.time()
+	comm.send(*args,**kwargs)
+	if(not timing_name in timings.keys()):
+		timings[timing_name]=[0,0]
+	timings[timing_name][0]+=1
+	timings[timing_name][1]+=time.time()-ti
+
+def bcast(timing_name,*args,**kwargs):
+	timing_name=str(rank)+"_"+timing_name
+	ti=time.time()
+	rvalue=comm.bcast(*args,**kwargs)
+	if(not timing_name in timings.keys()):
+		timings[timing_name]=[0,0]
+	timings[timing_name][0]+=1
+	timings[timing_name][1]+=time.time()-ti
+	return rvalue
+
+def allreduce(timing_name,*args,**kwargs):
+	timing_name=str(rank)+"_"+timing_name
+	ti=time.time()
+	rvalue=comm.allreduce(*args,**kwargs)
+	if(not timing_name in timings.keys()):
+		timings[timing_name]=[0,0]
+	timings[timing_name][0]+=1
+	timings[timing_name][1]+=time.time()-ti
+	return rvalue
+
+
 
 def receiveForces(subdomains):
 	'''
@@ -119,13 +152,11 @@ def checkColliderActivated():
 	'''
 	return true if collision detection needs activation in at least one of them, else false  
 	'''
-	for sd in range(numThreads):
-		if sd==rank: needsCollide = utils.typedEngine("InsertionSortCollider").isActivated()
-		else: needsCollide=None
-		needsCollide=comm.bcast(needsCollide,root=sd) #collective communication
-		if needsCollide:
-			if rank==0: mprint("rank "+str(sd)+" triggers collider at iter "+str(O.iter) +": paused")
-			return True
+	needsCollide = int(utils.typedEngine("InsertionSortCollider").isActivated())
+	needsCollide = allreduce("checkcollider",needsCollide,op=MPI.SUM)
+	if(needsCollide!=0):
+		if rank==0: mprint("triggers collider at iter "+str(O.iter) +": paused")
+		return True
 	return False
 
 
@@ -170,7 +201,7 @@ def updateDomainBounds(subdomains): #subdomains is the list of subdomains by bod
 			if worker!=rank:
 				wprint("sending "+str([subD.boundsMin,subD.boundsMax]))
 				#comm.isend([subD.boundsMin,subD.boundsMax], dest=worker, tag=_SUBDOMAINSIZE_)
-				comm.send([subD.boundsMin,subD.boundsMax], dest=worker, tag=_SUBDOMAINSIZE_)
+				send("updateDomainBounds",[subD.boundsMin,subD.boundsMax], dest=worker, tag=_SUBDOMAINSIZE_)
 				#sharedBounds.append(req) #keep track of non-blocking messages sent 
 	for sdId in subdomains:
 		if O.bodies[sdId].subdomain!=rank:
@@ -356,7 +387,7 @@ def isendRecvForces():
 			forces0=[[id,O.forces.f(id),O.forces.t(id)] for id in  O.subD.mirrorIntersections[0]]
 			#wprint ("worker "+str(rank)+": sending "+str(len(forces0))+" "+str("forces to 0 "))
 			#O.freqs.append(comm.isend(forces0, dest=0, tag=_FORCES_))
-			comm.send(forces0, dest=0, tag=_FORCES_)
+			send("isendRecvForces",forces0, dest=0, tag=_FORCES_)
 		else: #master
 			receiveForces(O.subD.intersections[0])
 
@@ -377,25 +408,67 @@ O.splittedOnce=False #after the first split we have additional bodies (Subdomain
 def mergeScene():
 	if O.splitted:
 		if rank>0:
-			comm.send(O.subD.getStateValuesFromIds([b.id for b in O.bodies if b.subdomain==rank]), dest=0, tag=_POS_VEL_)
-			comm.send([b.bound for b in O.bodies if b.subdomain==rank], dest=0, tag=_BOUNDS_) #optional, for collider.targetInter>0
-		else: #master
-			for worker in range(1,numThreads):
+			# Workers
+			send_buff=np.asarray(O.subD.getStateBoundsValuesFromIds([b.id for b in O.bodies if b.subdomain==rank]))
+			size=np.array(len(send_buff),dtype=int)
+		else:
+			#Master
+			send_buff=np.array([0])
+			size=np.array(0,dtype=int)
+
+		sizes=np.empty(numThreads,dtype=int)
+		# Master get sizes from all workers
+		comm.Gather(size,sizes,root=0)
+		
+		
+		if(rank==0):
+			# MASTER
+			print "Size:", sizes
+
+			# Alloc sizes for workers 
+			dat=np.ones(sizes.sum(),dtype=np.float64)
+
+			# Displacement indexes where data should be stored/received in targeted array
+			# dspl should be visible by everyone
+			dspl=np.empty(numThreads, dtype=int)
+			dspl[0] = 0
+			for i in range(1, len(sizes)):
+				dspl[i] = dspl[i-1] + sizes[i-1];
+			print dspl
+		else:
+			dspl=None
+			dat=None
+
+		# data sent = [data, size of data] (for each worker)
+		# data recv = [allocated target_array, array of different sizes, displacement, data type]
+		comm.Gatherv([send_buff, size], [dat, sizes, dspl, MPI.DOUBLE], root=0)
+		
+			#comm.send(len(send_buff), dest=0, tag=_SCENE_SIZE_)
+			
+			#send("mergeScene_1",O.subD.getStateValuesFromIds([b.id for b in O.bodies if b.subdomain==rank]), dest=0, tag=_POS_VEL_)
+			#comm.Send(send_buff,dest=0,tag=_POS_VEL_)
+			#send("mergeScene_2",[b.bound for b in O.bodies if b.subdomain==rank], dest=0, tag=_BOUNDS_) #optional, for collider.targetInter>0
+		if(rank==0): #master
+			for worker_id in range(1, numThreads):
 				# get pos/vel
-				dat = comm.recv(source=worker,tag=_POS_VEL_)
-				bounds = comm.recv(source=worker,tag=_BOUNDS_) #optional
+				#size=comm.recv(source=worker,tag=_SCENE_SIZE_)
+				#dat=np.empty(size,dtype=np.float64)
+				#comm.Recv(dat,source=worker,tag=_POS_VEL_)
+				#bounds = comm.recv(source=worker,tag=_BOUNDS_) #optional
 				# generate corresponding ids (order is the same for both master and worker)
-				ids = [b.id for b in O.bodies if b.subdomain==worker]
-				O.subD.setStateValuesFromIds(ids,dat)
-				for k in range(len(ids)):
-					O.bodies[ids[k]].bound = bounds[k]
+				ids = [b.id for b in O.bodies if b.subdomain==worker_id]
+				shift = dspl[worker_id];
+				if (worker_id != numThreads-1):
+					shift_plus_one = dspl[worker_id+1];
+				else:		
+					shift_plus_one = len(dat);
+				O.subD.setStateBoundsValuesFromIds(ids,dat[shift: shift_plus_one]);
 				reboundRemoteBodies(ids)
 		# turn mpi engines off
 		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = True
 		O.splitted=False
 		collider.doSort = True
 		#O.save('mergedScene.yade')
-
 
 def splitScene():
 	'''
@@ -429,9 +502,9 @@ def splitScene():
 			#END Garbage
 		
 		#distribute work
+		sceneAsString=O.sceneToString()
 		for worker in range(1,numThreads):
-			sceneAsString=O.sceneToString()
-			comm.send(sceneAsString, dest=worker, tag=_SCENE_) #sent with scene.subdomain=1, better make subdomain index a passed value so we could pass the sae string to every worker (less serialization+deserialization)
+			send("splitScene_distribute_work",sceneAsString, dest=worker, tag=_SCENE_) #sent with scene.subdomain=1, better make subdomain index a passed value so we could pass the sae string to every worker (less serialization+deserialization)
 			
 	else:
 		O.stringToScene(comm.recv(source=0, tag=_SCENE_)) #receive a scene pre-processed by master (i.e. with appropriate body.subdomain's)  
@@ -470,7 +543,7 @@ def splitScene():
 		for worker in range(1,numThreads):#FIXME: we actually don't need so much data since at this stage the states are unchanged and the list is used to re-bound intersecting bodies, this is only done in the initialization phase, though
 			#states= [[id,O.bodies[id].state,O.bodies[id].shape] for id in intersections[worker]]
 			wprint("sending mirror intersections to "+str(worker)+" ("+str(len(subD.intersections[worker]))+" bodies)")
-			comm.send(subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
+			send("splitScene_master_domain",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
 			#comm.send(states, dest=worker, tag=_ID_STATE_SHAPE_) #sent with scene.subdomain=1
 	else:
 		# from master
@@ -498,7 +571,7 @@ def splitScene():
 		for worker in subD.intersections[rank]:
 			if worker==0: continue #we do not send positions to master, only forces
 			#wprint("sending "+str(len(subD.intersections[worker]))+" states to "+str(worker))
-			comm.send(subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
+			send("splitScene_intersections",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
 			#wprint("sent")
 
 		nn=0
@@ -563,7 +636,11 @@ def mpirun(nSteps,mergeSplit=False):
 				mergeScene()
 				splitScene()
 
-			
+	comm.barrier()
+	time.sleep((numThreads-rank)*0.1)
+	for k,v in timings.items():
+		print k,"	",v
+	comm.barrier()
 	if YADE_TIMING:
 		from yade import timing
 		time.sleep((numThreads-rank)*0.1) #avoid mixing the final output, timing.stats() is independent of the sleep
