@@ -49,6 +49,7 @@ ERASE_REMOTE = True #erase bodies not interacting wit a given subdomain? else ke
 OPTIMIZE_COM=True
 USE_CPP_MPI=True and OPTIMIZE_COM
 YADE_TIMING=True #report timing.stats()?
+MERGE_W_INTERACTIONS = True 
 
 
 #tags for mpi messages
@@ -416,6 +417,13 @@ O.splittedOnce=False #after the first split we have additional bodies (Subdomain
 
 def mergeScene():
 	if O.splitted:
+            if MERGE_W_INTERACTIONS: 
+                O.subD.mergeOp()
+                sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = True
+                O.splitted=False
+                collider.doSort = True                
+            else:
+                
 		if rank>0:
 			# Workers
 			send_buff=np.asarray(O.subD.getStateBoundsValuesFromIds([b.id for b in O.bodies if b.subdomain==rank]))
@@ -494,6 +502,7 @@ def splitScene():
 			#END Garbage
 		
 		#distribute work
+		#O.interactions.clear() # force on the wall becomes 0 if we clear interactions here
 		sceneAsString=O.sceneToString()
 		for worker in range(1,numThreads):
 			timing_comm.send("splitScene_distribute_work",sceneAsString, dest=worker, tag=_SCENE_) #sent with scene.subdomain=1, better make subdomain index a passed value so we could pass the sae string to every worker (less serialization+deserialization)
@@ -502,6 +511,7 @@ def splitScene():
 		O.stringToScene(comm.recv(source=0, tag=_SCENE_)) #receive a scene pre-processed by master (i.e. with appropriate body.subdomain's)  
 		wprint("worker 1 received",len(O.bodies),"bodies (verletDist=",collider.verletDist,")")
 		O._sceneObj.subdomain = rank
+		O.interactions.clear() # clear all the interactions from the previos merge and be consistent with the original split : master sends bodies without the interactions.
 		
 		
 		domainBody=None
@@ -515,7 +525,7 @@ def splitScene():
 		O.subD = domainBody.shape
 		O.subD.subdomains = subdomains
 	subD = O.subD #alias
-	
+	subD.getRankSize()
 	#update bounds wrt. updated subdomain(s) min/max and unbounded bodies
 	unboundRemoteBodies()
 	collider.boundDispatcher.__call__()
@@ -592,9 +602,11 @@ def splitScene():
 		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].waitForces()",label="waitForcesRunner")]
 		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkColliderActivated(): O.pause()",label="collisionChecker")]
 	else:
-		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = False
-	
-	# mark scene splitted
+		if MERGE_W_INTERACTIONS:
+		  sendRecvStatesRunner.dead = False; waitForcesRunner.dead = True; isendRecvForcesRunner.dead = True  # force on the bottom wall gets doubled when we use isendRecvForcesRunner,why?
+		else:
+		  sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = False
+		
 	O.splitted=True
 	O.splittedOnce=True
 
