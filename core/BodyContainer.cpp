@@ -33,7 +33,7 @@ Body::id_t BodyContainer::insertAtId(shared_ptr<Body> b, Body::id_t candidate){
 	b->iterBorn=scene->iter;
 	b->timeBorn=scene->time;
 	b->id=candidate; 
-  body[b->id] = b; 
+	body[b->id] = b; 
 	scene->doSort = true;
 	return b->id;
 }

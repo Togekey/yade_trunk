@@ -13,7 +13,6 @@
 #include <core/MPIBodyContainer.hpp>
 
 
-class NewtonIntegrator;
 
 class Subdomain: public Shape {
 	public:
@@ -169,11 +168,11 @@ class Subdomain: public Shape {
         //functions (master) 
         
 	void recvBodyContainersFromWorkers(); 
-	void setBodiesToBodyContainer(std::vector<shared_ptr<MPIBodyContainer> >&, bool);
+	void setBodiesToBodyContainer(std::vector<shared_ptr<MPIBodyContainer> >&, bool); // bodycontainers, set body on deleted bodies?
 	void initMasterContainer(); 
-	void setBodyIntrs(); 
-        bool allocContainerMaster; 
-        bool bodiesSet; 
+	void setBodyIntrsMerge(); // isMerge? 
+        bool allocContainerMaster = false;   // flag 
+        bool bodiesSet = false;  // flag 
         
         //functions common 
         
@@ -183,20 +182,21 @@ class Subdomain: public Shape {
         
 	void sendContainerString(); 
 	void recvContainerString(); 
+        void processContainerStrings(std::vector<char*>& , std::vector<int>& ); 
 	void processContainerStrings(); 
         void sendAllBodiesToMaster();
         void setCommunicationContainers(); 
         
         //communications util functions 
         
-        void sendStringBlocking(std::string& , int,  int ); //string, rank, tag
-        void sendString(std::string& , int , int,  MPI_Request& ); //non blocking send
-        void recvBuff(char*  ,int , int ,  MPI_Request& ); // non blcoking recv 
-        int  probeIncoming(int ); //non blocking probe, for getting char/string size
-        void processReqs(std::vector<MPI_Request>&, int  ); // process Requests (MPI_Waitall(request, status))
-        void resetReqs(std::vector<MPI_Request>& ); // clear the vector of mpiReqs. 
-        int probeIncomingBlocking(int); // blocking probe -> gets size of char/string 
-        void recvBuffBlocking(char* , int , int , int );  // blockng recv (char/string)
+        void sendStringBlocking(std::string& , int,  int );                                //string, rank, tag
+        void sendString(std::string& , int , int,  MPI_Request& );                        //non blocking send
+        void recvBuff(char*  ,int , int ,  MPI_Request& );                               // non blcoking recv 
+        int  probeIncoming(int, int );                                                       //non blocking probe, for getting char/string size
+        void processReqs(std::vector<MPI_Request>&, int  );                            // process Requests (MPI_Waitall(request, status))
+        void resetReqs(std::vector<MPI_Request>& );                                   // clear the vector of mpiReqs. 
+        int probeIncomingBlocking(int, int);                                              // blocking probe -> gets size of char/string : source rank, message tag. 
+        void recvBuffBlocking(char* , int , int , int );                            // blockng recv : char buff, buff size, message tag, source rank  
         void processReqsAll(std::vector<MPI_Request>& , std::vector<MPI_Status>& ); // clears vecs of MPI_Status & MPI_Request
         
         //Util functions -> serialization, deserializtion, setting body ids to a subdomain (aka to the member std::vector<Body::d_t> ids) and another function for  clearing it
@@ -253,7 +253,9 @@ class Subdomain: public Shape {
 		.def("mpiRecvStates",&Subdomain::mpiRecvStates,(boost::python::arg("otherSubdomain")),"mpi-recv states from another domain  (blocking)")
 		.def("mpiIrecvStates",&Subdomain::mpiIrecvStates,(boost::python::arg("otherSubdomain")),"mpi-Irecv states from another domain  (non-blocking)")
 		.def("mpiWaitReceived",&Subdomain::mpiWaitReceived,(boost::python::arg("otherSubdomain")),"mpi-Wait states from another domain (upon return the buffer is set)")		
+                .def("mergeOp",&Subdomain::mergeOp,"merge with setting interactions")		
 		.add_property("intersections",&Subdomain::intrs_get,&Subdomain::intrs_set,"lists of bodies from this subdomain intersecting other subdomains. WARNING: only assignement and concatenation allowed")
+                .def("getRankSize", &Subdomain::getRankSize, "set subdomain ranks, used for communications -> merging, sending bodies etc.")
 		.add_property("mirrorIntersections",&Subdomain::mIntrs_get,&Subdomain::mIntrs_set,"lists of bodies from other subdomains intersecting this one. WARNING: only assignement and concatenation allowed")
 	);
 	DECLARE_LOGGER;
