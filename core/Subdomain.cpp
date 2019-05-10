@@ -289,7 +289,7 @@ void Subdomain::setBodyIntrsMerge() {
 	std::vector<shared_ptr<Body> >&  container = bodies->body; // the real bodycontainer aka std::vector<shared_ptr<Body> >
 	for (auto bIter = container.begin(); bIter != container.end(); ++bIter) {
 	    const shared_ptr<Body> b = *(bIter);
-	    std::cout << "size of intrs = " << b->intrs.size() << std::endl; 
+// 	    std::cout << "size of intrs = " << b->intrs.size() << std::endl; 
             for (auto mapIter = b->intrs.begin(); mapIter != b->intrs.end(); ++mapIter){
 	      interactionContainer -> insertInteractionMPI(mapIter->second); 
 	    }
