@@ -192,7 +192,7 @@ class PhaseCluster : public Serializable
 		boost::python::list getInterfaces(int cellId=-1){
 			boost::python::list ints;
 			for (vector<Interface>::iterator it =  interfaces.begin(); it!=interfaces.end(); it++)
-				if (CellId==-1 or unsigned(CellId)==it->first.first)
+				if (cellId==-1 or unsigned(cellId)==it->first.first)
 				      ints.append(boost::python::make_tuple(it->first.first,it->first.second,it->second));
 			return ints;
 		}
