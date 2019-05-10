@@ -70,7 +70,10 @@ rank_color_id = int(len(red)/numThreads*rank)
 rank_color = [str(red[rank_color_id]),str(green[rank_color_id]),str(blue[rank_color_id])]
 
 def mprint(*args): #this one will print regardless of VERBOSE_OUTPUT
-	m='\033[38;2;'+rank_color[0]+';'+rank_color[1]+';'+rank_color[2]+'m'
+	m='\033['
+	if rank==0:
+		m+='1;' #bold for master
+	m+='38;2;'+rank_color[0]+';'+rank_color[1]+';'+rank_color[2]+'m'
 	if rank==0:
 		m+='Master: '
 	else:
