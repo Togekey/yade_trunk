@@ -189,10 +189,11 @@ class PhaseCluster : public Serializable
 			for (vector<CellHandle>::iterator it =  pores.begin(); it!=pores.end(); it++) res.push_back((*it)->info().id);
 			return res;}
 			
-		boost::python::list getInterfaces(){
+		boost::python::list getInterfaces(int cellId=-1){
 			boost::python::list ints;
 			for (vector<Interface>::iterator it =  interfaces.begin(); it!=interfaces.end(); it++)
-				ints.append(boost::python::make_tuple(it->first.first,it->first.second,it->second));
+				if (CellId==-1 or unsigned(CellId)==it->first.first)
+				      ints.append(boost::python::make_tuple(it->first.first,it->first.second,it->second));
 			return ints;
 		}
 		Real getFlux(unsigned nf) {
@@ -228,7 +229,7 @@ class PhaseCluster : public Serializable
 		#endif
 		,
 		.def("getPores",&PhaseCluster::getPores,"get the list of pores by index")
-		.def("getInterfaces",&PhaseCluster::getInterfaces,"get the list of interfacial pore-throats associated to a cluster, listed as [id1,id2,area] where id2 is the neighbor pore outside the cluster.")
+		.def("getInterfaces",&PhaseCluster::getInterfaces,(boost::python::arg("CellId")=-1),"get the list of interfacial pore-throats associated to a cluster, listed as [id1,id2,area] where id2 is the neighbor pore outside the cluster. If CellId>=0 only the interfaces adjacent to this inner cell are returned.")
 		.def("getFlux",&PhaseCluster::getFlux,(boost::python::arg("interface")),"get flux at an interface (i.e. velocity of the menicus), the index to be used is the rank of the interface in the same order as in getInterfaces().")
 		.def("setCapPressure",&PhaseCluster::setCapPressure,(boost::python::arg("numf"),boost::python::arg("pCap")),"set local capillary pressure")
 		.def("getCapPressure",&PhaseCluster::getCapPressure,(boost::python::arg("numf")),"get local capillary pressure")
