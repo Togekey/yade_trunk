@@ -38,7 +38,7 @@ bool InteractionContainer::insert(const shared_ptr<Interaction>& i){
 	return true;
 }
 
-bool InteractionContainer::insertInteractionMPI(shared_ptr<Interaction> i){
+bool InteractionContainer::insertInteractionMPI(shared_ptr<Interaction>& i){
 	
 	assert(bodies);  
 	Body::id_t id1 = i->getId1(); 
@@ -74,37 +74,6 @@ bool InteractionContainer::insertInteractionMPI(shared_ptr<Interaction> i){
 	return setvalue; 
 }
 
-
-
-// bool InteractionContainer::insertInteractionMPI(shared_ptr<Body>& inBody, const shared_ptr<Body>& recvdBody){
-// 	
-// 	// check if the body exists: 
-// 	if (!(*bodies)[inBody->id]){
-// 	  LOG_ERROR("candidate body does not exist in the body container");
-// 	  return false; 
-// 	}
-// 	// copy the interaction from recvd body 
-// 	inBody->intrs = recvdBody->intrs; 
-// 	for (auto it = recvdBody->intrs.begin(); it != recvdBody->intrs.end(); ++it){
-// 	  shared_ptr<Interaction> bInteraction = it->second;
-// 	  Body::id_t id1 = bInteraction->id1; 
-// 	  Body::id_t id2 = bInteraction->id2; 
-// 	  if (id1 > id2) {swap (id1, id2); } 
-// 	  assert((Body::id_t)bodies->size()>id1); // the bodies must exist already
-// 	  assert((Body::id_t)bodies->size()>id2); 
-// 	  const shared_ptr<Body>& b1=(*bodies)[id1];
-// 	  const shared_ptr<Body>& b2=(*bodies)[id2];
-// 	  
-// 	  if(!b1->intrs.insert(Body::MapId2IntrT::value_type(id2,bInteraction)).second) return false; // already exists
-// 	  if(!b2->intrs.insert(Body::MapId2IntrT::value_type(id1,bInteraction)).second) return false; 
-// 	
-// 	  linIntrs.resize(++currSize); // currSize updated
-// 	  linIntrs[currSize-1]=bInteraction; // assign last element
-// 	  bInteraction->linIx=currSize-1; // store the index back-reference in the interaction (so that it knows how to erase/move itself) 
-// 	}
-// 	  return true; 
-// 	  std::cout << "size of intr container = "  << linIntrs.size() << std::endl; 
-// }
 
 
 
