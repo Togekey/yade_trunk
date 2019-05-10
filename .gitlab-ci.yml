@@ -34,16 +34,16 @@ cmake_MR:
     paths:
       - build
 
-cmake_MPI:
-  stage: cmake
-  only:
-    - mpi
-  script:
-    - mkdir build && cd build
-    - cmake -DSUFFIX=-ci -DCMAKE_VERBOSE_MAKEFILE=ON -DCHUNKSIZE=4 -DCMAKE_INSTALL_PREFIX=../install -DDISABLE_SAVE_TEMPS=1 ..
-  artifacts:
-    paths:
-      - build
+#cmake_MPI:
+  #stage: cmake
+  #only:
+    #- mpi
+  #script:
+    #- mkdir build && cd build
+    #- cmake -DSUFFIX=-ci -DCMAKE_VERBOSE_MAKEFILE=ON -DCHUNKSIZE=4 -DCMAKE_INSTALL_PREFIX=../install -DDISABLE_SAVE_TEMPS=1 ..
+  #artifacts:
+    #paths:
+      #- build
 
 
 # Perhaps two more will added later
@@ -59,7 +59,7 @@ make:
   only:
     - master
     - merge_request
-    - mpi
+    #- mpi
   script:
 # in merge_request use the faster  linker: ld.gold. We save 2 minutes on every build.
 # in master        use the regular linker: ld.bfd.  Very rarely we might encounter linker errors. It's worth the faster build in merge_request.
@@ -101,7 +101,7 @@ test:
   only:
     - master
     - merge_request 
-    - mpi
+    #- mpi
   script:
     - install/bin/yade-ci --test
   dependencies:
