@@ -148,6 +148,8 @@ void Subdomain::mergeOp() {
 	}
 }
 
+//TODO:: add function to set interaction--> set selected interactions.
+
 void Subdomain::setCommunicationContainers() {
 
     //here, we setup the serialized MPIBodyContainer (MPIBodyContainer to string). it is std::vector<std::pair<container(string), sendRank/recvRank> >
