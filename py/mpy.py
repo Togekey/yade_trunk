@@ -142,6 +142,10 @@ class Timing_comm():
 	@enable_timing
 	def Gatherv(self, *args, **kwargs):
 		return comm.Gatherv(*args, **kwargs)
+	
+	@enable_timing
+	def Allgather(self, *args, **kwargs):
+		return comm.Allgather(*args, **kwargs)
 
 timing_comm = Timing_comm()
 
@@ -204,38 +208,21 @@ def updateDomainBounds(subdomains): #subdomains is the list of subdomains by bod
 	Update bounds of current subdomain, broadcast, and receive updated bounds from other subdomains
 	Precondition: collider.boundDispatcher.__call__() 
 	'''
-	wprint( "updating bounds: "+str(subdomains))
-	sharedBounds=[None] #initialize with None for master process, to aligned with rank
-	buf = []	
-	
-	for sdId in subdomains:
-		if O.bodies[sdId].subdomain!=rank:
-			wprint("receiving from "+str(O.bodies[sdId].subdomain))
-			buf.append(bytearray(1<<8))
-			#comm.isend([subD.boundsMin,subD.boundsMax], dest=worker, tag=_SUBDOMAINSIZE_)
-			req=comm.irecv(buf[-1],O.bodies[sdId].subdomain, tag=_SUBDOMAINSIZE_)
-			sharedBounds.append(req)
-		else: sharedBounds.append(None) #to keep buf aligned with rank
-	if rank!=0:#this is not master process, update bounds and share
+	wprint( "Updating bounds: "+str(subdomains))
+	if(rank==0):
+		send_buff=np.zeros(6)*np.nan
+	else:
 		subD=O.bodies[subdomains[rank-1]].shape #shorthand to shape of current subdomain
 		subD.setMinMax()
-		for worker in range(numThreads):
-			if worker!=rank:
-				wprint("sending "+str([subD.boundsMin,subD.boundsMax]))
-				#comm.isend([subD.boundsMin,subD.boundsMax], dest=worker, tag=_SUBDOMAINSIZE_)
-				timing_comm.send("updateDomainBounds",[subD.boundsMin,subD.boundsMax], dest=worker, tag=_SUBDOMAINSIZE_)
-				#sharedBounds.append(req) #keep track of non-blocking messages sent 
-	for sdId in subdomains:
-		if O.bodies[sdId].subdomain!=rank:
-			minmax=sharedBounds[O.bodies[sdId].subdomain].wait()
-			#minmax=comm.recv(source=O.bodies[sdId].subdomain, tag=_SUBDOMAINSIZE_)
-			wprint( "receiving mn,mx from "+str(O.bodies[sdId].subdomain))
-			wprint( "received mn,mx="+str(minmax[0])+" "+str(minmax[1])+" from "+str(O.bodies[sdId].subdomain))
-			O.bodies[sdId].shape.boundsMin, O.bodies[sdId].shape.boundsMax = minmax[0],minmax[1]
-	wprint( "receiving bounds")	
-	#for req in sharedBounds: req.Wait()
-	wprint( "bounds updated")
+		send_buff=np.append(subD.boundsMin,subD.boundsMax)
+	recv_buff = np.empty(6*numThreads)
+	timing_comm.Allgather("updateDomainBounds",send_buff,recv_buff)
 	
+	for r in range(1,numThreads):
+		O.bodies[subdomains[r-1]].shape.boundsMin = recv_buff[6*r:6*r+3]
+		O.bodies[subdomains[r-1]].shape.boundsMax = recv_buff[3+6*r:6+6*r]
+		if(VERBOSE_OUTPUT):#condition here to avoid concatenation overhead
+			mprint("Updated ", O.bodies[subdomains[r-1]].subdomain, " with min=", O.bodies[subdomains[r-1]].shape.boundsMin," and max=", O.bodies[subdomains[r-1]].shape.boundsMax)
 
 def maskedPFacet(pf, boolArray):
 	'''
