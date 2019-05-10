@@ -437,20 +437,20 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	void savePoreNetwork(const char* folder);
 // 	void saveVtk(const char* folder, bool withBoundaries) {bool initT=solver->noCache; solver->noCache=false; solver->saveVtk(folder,withBoundaries); solver->noCache=initT;}
 		
-	boost::python::list cellporeThroatRadius(unsigned int id){ // Temporary function to allow for simulations in Python, can be easily accessed in c++
+	boost::python::list cellporeThroatRadius(unsigned int id){
 	  boost::python::list ids;
 	  if (id>=solver->T[solver->currentTes].cellHandles.size()) {LOG_ERROR("id out of range, max value is "<<solver->T[solver->currentTes].cellHandles.size()); return ids;}
 	  for (unsigned int i=0;i<4;i++) ids.append(solver->T[solver->currentTes].cellHandles[id]->info().poreThroatRadius[i]);
 	return ids;
 	}
 
-	boost::python::list getNeighbors(unsigned int id){ // Temporary function to allow for simulations in Python, can be easily accessed in c++
+	boost::python::list getNeighbors(unsigned int id, bool withInfCell){
 		boost::python::list ids;
 		const RTriangulation& Tri = solver->tesselation().Triangulation();
 		if (id>=solver->tesselation().cellHandles.size()) {LOG_ERROR("id out of range, max value is "<<solver->T[solver->currentTes].cellHandles.size()); return ids;}
 		for (unsigned int i=0;i<4;i++) {
 			const CellHandle& neighbourCell = solver->tesselation().cellHandles[id]->neighbor(i);
-            if (consInfCell==true) ids.append(neighbourCell->info().id);
+			if (withInfCell==true) ids.append(neighbourCell->info().id);
 			else if (!Tri.is_infinite(neighbourCell)) ids.append(neighbourCell->info().id);}
 		return ids;}
 
@@ -462,9 +462,6 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	  for (unsigned int i=0;i<4;i++) ids.append(solver->T[solver->currentTes].cellHandles[id]->info().entrySaturation[i]);
 	return ids;
 	}
-
-
-	
 	
 	//FIXME, needs to trigger initSolver() Somewhere, else changing flow.debug or other similar things after first calculation has no effect
 	//FIXME, I removed indexing cells from inside UnsatEngine (SoluteEngine shouldl be ok (?)) in order to get pressure computed, problem is they are not indexed at all if flow is not calculated
@@ -507,7 +504,6 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	((bool,recursiveInvasion,true,,"If true the invasion stops only when no entry pc is less than current capillary pressure, implying simultaneous invasion of many pores. Else only one pore invasion per invasion step."))
 	((bool,initialWetting,true,,"Initial wetting saturated (=true) or non-wetting saturated (=false)"))
 	((bool, isPhaseTrapped,true,,"If True, both phases can be entrapped by the other, which would correspond to snap-off. If false, both phases are always connected to their reservoirs, thus no snap-off."))
-    ((bool, consInfCell,false,,"If True, infinite cells are considered in getNeighbors()."))
 	((bool, isInvadeBoundary, true,,"Invasion side boundary condition. If True, pores of side boundary can be invaded; if False, the pore throats connecting side boundary are closed, those pores are excluded in saturation calculation."))	
 	((bool, drainageFirst, true,,"If true, activate drainage first (initial saturated), then imbibition; if false, activate imbibition first (initial unsaturated), then drainage."))
 	((double,dtDynTPF,0.0,,"Parameter which stores the smallest time step, based on the residence time"))
@@ -580,7 +576,7 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	.def("initialization",&TwoPhaseFlowEngine::initialization,"Initialize invasion setup. Build network, compute pore geometry info and initialize reservoir boundary conditions. ")
 	.def("updatePressure",&TwoPhaseFlowEngine::updatePressure,"Apply the values of :yref:`FlowEngine::bndCondValue` to the boundary cells. Note: boundary pressure will be updated automatically in many cases, this function is for some low-level manipulations.")
 	.def("getPoreThroatRadiusList",&TwoPhaseFlowEngine::cellporeThroatRadius,(boost::python::arg("cell_ID")),"get 4 pore throat radii of a cell.")
-	.def("getNeighbors",&TwoPhaseFlowEngine::getNeighbors,"get 4 neigboring cells")
+	.def("getNeighbors",&TwoPhaseFlowEngine::getNeighbors,(boost::python::arg("id"),boost::python::arg("withInfCell")=True),"get 4 neigboring cells, optionally exclude the infinite cells if withInfCell is False")
 	.def("getCellHasInterface",&TwoPhaseFlowEngine::cellHasInterface,"indicates whether a NW-W interface is present within the cell")
 	.def("getCellInSphereRadius",&TwoPhaseFlowEngine::cellInSphereRadius,"get the radius of the inscribed sphere in a pore unit")
 	.def("setPoreBodyRadius",&TwoPhaseFlowEngine::setPoreBodyRadius,"set the entry pore body radius.")
