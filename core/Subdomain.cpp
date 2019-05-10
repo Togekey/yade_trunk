@@ -142,7 +142,7 @@ void Subdomain::getRankSize() {
 
 void Subdomain::mergeOp() {
     
-        if (subdomainRank == master) {std::cout << "In merge operation " << std::endl; } 
+        //if (subdomainRank == master) {std::cout << "In merge operation " << std::endl; } 
 	sendAllBodiesToMaster();
 	recvBodyContainersFromWorkers();
 	if (subdomainRank==master){
@@ -255,7 +255,8 @@ void Subdomain::recvBodyContainersFromWorkers() {
 
 // set all body properties from the worker MPIBodyContainer
 
-void Subdomain::setBodiesToBodyContainer(std::vector<shared_ptr<MPIBodyContainer> >& containers, bool setDeletedBodies) { // to be used when deserializing a recieved container.
+void Subdomain::setBodiesToBodyContainer(std::vector<shared_ptr<MPIBodyContainer> >& containers, bool setDeletedBodies) {
+	    // to be used when deserializing a recieved container.
 	    Scene* scene = Omega::instance().getScene().get();
 	    shared_ptr<BodyContainer>& bodyContainer = scene->bodies;
 	    for (unsigned int i=0; i != containers.size(); ++i){
@@ -271,6 +272,8 @@ void Subdomain::setBodiesToBodyContainer(std::vector<shared_ptr<MPIBodyContainer
 		       if (!b->bound){b->bound = shared_ptr<Bound> (new Bound); }
 		       b->bound = newBody->bound;
 		       b->intrs = newBody->intrs; 
+		       b->setBounded(true); 
+		       //do we need materials here?
 	      }
 	    }
 	  }
@@ -281,7 +284,7 @@ void Subdomain::setBodiesToBodyContainer(std::vector<shared_ptr<MPIBodyContainer
 
 
 void Subdomain::setBodyIntrsMerge() {
-
+	// Set all interactions from the recieved bodies : bodies have to be set in the body container firs! 
     if (!bodiesSet) {LOG_ERROR("MASTER PROC : Bodies are not set in Body container."); return;  }
 	 Scene* scene= Omega::instance().getScene().get();
 	shared_ptr<BodyContainer>& bodies = scene->bodies;
