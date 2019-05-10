@@ -7,6 +7,8 @@
 #include <core/Scene.hpp>
 #include <core/BodyContainer.hpp>
 #include <core/State.hpp>
+#include <core/InteractionContainer.hpp>
+#include <core/Interaction.hpp>
 #include <pkg/common/Sphere.hpp>
 #include <core/MPIBodyContainer.hpp>
 #include <lib/serialization/ObjectIO.hpp>
@@ -92,7 +94,6 @@ void Bo1_Subdomain_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, 
 	LOG_WARN("Bo1_Subdomain_Aabb::go not implemented for periodic boundaries");
 }
 
-
 /********************dpk********************/
 
 std::string Subdomain::serializeMPIBodyContainer(const shared_ptr<MPIBodyContainer>& container) {
@@ -138,13 +139,21 @@ void Subdomain::getRankSize() {
 }
 
 // driver function for merge operation // workers send bodies, master recieves, sets the bodies into bodycaontainer, sets interactions in interactionContainer.
+
 void Subdomain::mergeOp() {
+    
+        if (subdomainRank == master) {std::cout << "In merge operation " << std::endl; } 
 	sendAllBodiesToMaster();
 	recvBodyContainersFromWorkers();
 	if (subdomainRank==master){
-	  bool setDeletedBodies = false; setBodiesToBodyContainer(recvdBodyContainers, setDeletedBodies);
-		setBodyIntrs();
-		bodiesSet = false; // reset flag for next merge op.
+	  shared_ptr<Scene> scene = Omega::instance().getScene();
+	  scene->interactions->clear(); 
+	  bool setDeletedBodies = false;
+	  processContainerStrings();
+	  setBodiesToBodyContainer(recvdBodyContainers, setDeletedBodies);
+	  setBodyIntrsMerge();
+	  bodiesSet = false; // reset flag for next merge op. 
+	  containersRecvd = false; 
 	}
 }
 
@@ -182,7 +191,7 @@ void Subdomain::setCommunicationContainers() {
 void Subdomain::sendContainerString() {
 	//send the containers.
 	if (subdomainRank == master) {return ; }
-	if (! commContainer ){ LOG_ERROR("communication containers are not set!"); }
+	if (! commContainer ){ LOG_ERROR("communication containers are not set!"); return; }
 	for (unsigned int i=0; i != sendContainer.size(); ++i) {
 	  MPI_Request request;
 	  sendString(sendContainer[i].first, sendContainer[i].second, TAG_STRING+sendContainer[i].second, request);
@@ -190,12 +199,11 @@ void Subdomain::sendContainerString() {
 	}
 }
 
-
 void Subdomain::processContainerStrings() {
 	//convert the recieved string buffers to MPIBodyContainer.
 	recvdBodyContainers.clear();
 	if (! containersRecvd) {LOG_ERROR ("containerStrings not recvd. Fail!"); return ; }
-	for (unsigned int i=0; i != recvRanks.size(); ++i) {
+	for (unsigned int i=0; i != recvdStringSizes.size(); ++i) {
 	  char *cbuf = recvdCharBuff[i]; int sz = recvdStringSizes[i];
 	  cbuf[sz] = '\0';
 	  shared_ptr<MPIBodyContainer> cntr(deSerializeMPIBodyContainer(cbuf, sz));
@@ -205,13 +213,15 @@ void Subdomain::processContainerStrings() {
 	clearRecvdCharBuff(recvdCharBuff);
 }
 
+
 void Subdomain::sendAllBodiesToMaster() {
   // send all bodies from this subdomain to the master. Can be used for merge.
   // (note to self: this can be improved based on the bisection decomposition.)
 	if(subdomainRank == master) {return;}
+	mpiReqs.clear();
 	shared_ptr<MPIBodyContainer> container(shared_ptr<MPIBodyContainer> (new MPIBodyContainer()));
 	std::string s = fillContainerGetString(container, ids);
-	sendStringBlocking(s, 0, TAG_BODY+0);
+	sendStringBlocking(s, master, TAG_BODY+master); 
 }
 
 /********Functions exclusive to the master*************/
@@ -220,29 +230,33 @@ void Subdomain::sendAllBodiesToMaster() {
 
 void Subdomain::initMasterContainer(){
 	if (subdomainRank != master) {return; }
-	 recvdBodyContainers.resize(commSize);
-	 recvRanks.resize(commSize);
-	 recvdCharBuff.resize(commSize);
+	 recvRanks.resize(commSize-1); 
+         for (unsigned int i=1; i != static_cast<unsigned int> (commSize); ++i){recvRanks.push_back(i); }
 	 allocContainerMaster = true;
 }
 
 void Subdomain::recvBodyContainersFromWorkers() {
-	if (subdomainRank != master ) {return ; }
-	if (! allocContainerMaster){ initMasterContainer(); }
-	for (int sourceRank=1; sourceRank != commSize; ++sourceRank){
-	 int sz =  probeIncomingBlocking(sourceRank);
-	 char *cbuf = new char[sz];
-	  //recvStringBlocking(recvContainer[sourceRank].first, recvContainer[sourceRank].second,TAG_BODY + subdomainRank,mpiStatus[sourceRank]);
-	 recvBuffBlocking(cbuf, sz , TAG_STRING+subdomainRank, sourceRank);
-	 recvdCharBuff.push_back(cbuf);
+	
+        if (subdomainRank != master ) {   return; }
+        else if (subdomainRank == master){
+        recvRanks.clear(); clearRecvdCharBuff(recvdCharBuff); recvdStringSizes.clear(); 
+	if (! allocContainerMaster){ initMasterContainer(); std::cout << "init Done MASTER " << subdomainRank << std::endl;}
+	for (int sourceRank=1; sourceRank != commSize; ++sourceRank){ 
+         int sz =  probeIncomingBlocking(sourceRank, TAG_BODY+subdomainRank);
+         recvdStringSizes.push_back(sz); 
+         int sztmp = sz+1; 
+	 char *cbuf = new char[sztmp]; 
+	 recvBuffBlocking(cbuf, sz , TAG_BODY+subdomainRank, sourceRank);
+ 	 recvdCharBuff.push_back(cbuf);
 	}
+        containersRecvd = true; 
+    }
 }
 
 // set all body properties from the worker MPIBodyContainer
 
 void Subdomain::setBodiesToBodyContainer(std::vector<shared_ptr<MPIBodyContainer> >& containers, bool setDeletedBodies) { // to be used when deserializing a recieved container.
-
-	    const shared_ptr<Scene>& scene = Omega::instance().getScene();
+	    Scene* scene = Omega::instance().getScene().get();
 	    shared_ptr<BodyContainer>& bodyContainer = scene->bodies;
 	    for (unsigned int i=0; i != containers.size(); ++i){
 	      shared_ptr<MPIBodyContainer>& mpiContainer = containers[i];
@@ -251,32 +265,35 @@ void Subdomain::setBodiesToBodyContainer(std::vector<shared_ptr<MPIBodyContainer
 		shared_ptr<Body> newBody = *(bIter);
 		// check if the body already exists in the existing bodycontainer
 		const Body::id_t& id = newBody->id;
-		if ((!(*bodyContainer)[id]) &&  setDeletedBodies) {bodyContainer->insertAtId(newBody, newBody->id);} // insert to the bodycontainer
-		else{ (*bodyContainer)[id] = newBody;} // copy shared pointer.}
+		if ((!(*bodyContainer)[id]) &&  setDeletedBodies) {bodyContainer->insertAtId(newBody, newBody->id);} // insert to the bodycontainer at deleted body
+		else{ shared_ptr<Body>& b = (*bodyContainer)[id]; 
+		       b->state = newBody->state;
+		       if (!b->bound){b->bound = shared_ptr<Bound> (new Bound); }
+		       b->bound = newBody->bound;
+		       b->intrs = newBody->intrs; 
 	      }
 	    }
-			containers.clear(); //free the vector of MPIBodyContainers;
-			bodiesSet = true;
-    }
+	  }
+        containers.clear(); 
+        bodiesSet = true;
+        
+}
 
 
+void Subdomain::setBodyIntrsMerge() {
 
-
-void Subdomain::setBodyIntrs() {
-	if (!bodiesSet) {LOG_ERROR("MASTER PROC : Bodies are not set in Body container."); return;  }
-	shared_ptr<Scene> scene= Omega::instance().getScene();
+    if (!bodiesSet) {LOG_ERROR("MASTER PROC : Bodies are not set in Body container."); return;  }
+	 Scene* scene= Omega::instance().getScene().get();
 	shared_ptr<BodyContainer>& bodies = scene->bodies;
 	shared_ptr<InteractionContainer>& interactionContainer = scene -> interactions;
 	std::vector<shared_ptr<Body> >&  container = bodies->body; // the real bodycontainer aka std::vector<shared_ptr<Body> >
 	for (auto bIter = container.begin(); bIter != container.end(); ++bIter) {
 	    const shared_ptr<Body> b = *(bIter);
-	    //shared_ptr<Interaction>& bIntr = b->intrs.second;
-      std::map<Body::id_t, shared_ptr<Interaction> >:: iterator mIter;
-      while (mIter != b->intrs.end()){
-	    interactionContainer-> insert(mIter->second);
-	    mIter ++;
+	    std::cout << "size of intrs = " << b->intrs.size() << std::endl; 
+            for (auto mapIter = b->intrs.begin(); mapIter != b->intrs.end(); ++mapIter){
+	      interactionContainer -> insertInteractionMPI(mapIter->second); 
+	    }
       }
-	}
 }
 
 /*********************communication functions**************/
@@ -287,9 +304,9 @@ void Subdomain::sendStringBlocking(std::string& s, int destRank, int tag) {
 	MPI_Send(s.data(), s.size(), MPI_CHAR, destRank, tag, MPI_COMM_WORLD);
 }
 
-int Subdomain::probeIncomingBlocking(int sourceRank) {
+int Subdomain::probeIncomingBlocking(int sourceRank, int tag) {
 	MPI_Status status;
-	MPI_Probe(sourceRank, TAG_STRING + subdomainRank, MPI_COMM_WORLD, &status);
+	MPI_Probe(sourceRank, tag, MPI_COMM_WORLD, &status);
 	int sz;
 	MPI_Get_count(&status, MPI_CHAR, &sz);
 	return sz;
@@ -306,16 +323,15 @@ void Subdomain::recvBuffBlocking(char* cbuf, int cbufSz, int tag, int sourceRank
 
 void Subdomain::sendString(std::string& s, int destRank, int tag,  MPI_Request& request){
 
-	//char* cbuf  = &s[0]; int len = s.size();
 	int len = s.size();
 	MPI_Isend(s.data(), len, MPI_CHAR,  destRank, tag , MPI_COMM_WORLD, &request);  //
 
 }
 
-int Subdomain::probeIncoming(int sourceRank) {
+int Subdomain::probeIncoming(int sourceRank, int tag) {
 	int flag=0; MPI_Status status;
 	while (! flag) {
-	  MPI_Iprobe(sourceRank, TAG_STRING + subdomainRank, MPI_COMM_WORLD, &flag, &status);
+	  MPI_Iprobe(sourceRank, tag, MPI_COMM_WORLD, &flag, &status);
 	}
 	int sz;
 	MPI_Get_count(&status, MPI_CHAR, &sz);
@@ -354,6 +370,7 @@ void Subdomain::processReqsAll(std::vector<MPI_Request>& mpiReqs, std::vector<MP
 
 
 void Subdomain::clearRecvdCharBuff(std::vector<char*>& rcharBuff) {
+    
 	for (std::vector<char*>::iterator cIter = rcharBuff.begin(); cIter != rcharBuff.end(); ++cIter){
 	    delete (*cIter);
 	  }
