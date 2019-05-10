@@ -1,6 +1,5 @@
 
 
-
 '''
 This module defines mpirun(), a parallel implementation of run() using a distributed memory approach. Message passing is done with mpi4py mainly, however some messages are also handled in c++ (with openmpi).
 
@@ -525,7 +524,7 @@ def splitScene():
 		O.subD = domainBody.shape
 		O.subD.subdomains = subdomains
 	subD = O.subD #alias
-	subD.getRankSize()
+	subD.getRankSize() # this one sets the ranks and comm size for the merge communication in CPP (MPI_Comm_rank, MPI_Comm_size)
 	#update bounds wrt. updated subdomain(s) min/max and unbounded bodies
 	unboundRemoteBodies()
 	collider.boundDispatcher.__call__()
