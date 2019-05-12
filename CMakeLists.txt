@@ -430,6 +430,20 @@ IF(ENABLE_MPI)
     SET (LINKLIBS "${LINKLIBS};${MPI_CXX_LIBRARIES};")
     MESSAGE(STATUS "MPI found")
     SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} MPI")
+    # sometimes mpi.h is not found. cmake should find it, but didn't. I'm not sure why. Here I put all directotries where it can be found.
+    # it is an OR operation from ubuntu, debian and opensuse of this: https://packages.debian.org/search?suite=sid&arch=any&mode=path&searchon=contents&keywords=include%2Fmpi.h
+    find_path(MPI_H_INCLUDE_DIR mpi.h /usr/include/openmpi /usr/lib/openmpi /usr/lib/x86_64-linux-gnu /usr/lib64/mpi/gcc/openmpi 
+    /usr/include/aarch64-linux-gnu /usr/include/arm-linux-gnueabihf /usr/include/i386-kfreebsd-gnu /usr/include/i386-linux-gnu
+    /usr/include/mips64el-linux-gnuabi64 /usr/include/openblas /usr/include/powerpc64-linux-gnu /usr/include/powerpc64le-linux-gnu
+    /usr/include/s390x-linux-gnu /usr/include/sparc64-linux-gnu /usr/include/x86_64-kfreebsd-gnu /usr/include/x86_64-linux-gnu
+    /usr/lib/aarch64-linux-gnu /usr/lib/alpha-linux-gnu /usr/lib/arm-linux-gnueabi /usr/lib/arm-linux-gnueabihf
+    /usr/lib/hppa-linux-gnu /usr/lib/i386-gnu /usr/lib/i386-kfreebsd-gnu /usr/lib/i386-linux-gnu
+    /usr/lib/m68k-linux-gnu /usr/lib/mips-linux-gnu /usr/lib/mips64el-linux-gnuabi64 /usr/lib/mipsel-linux-gnu
+    /usr/lib/powerpc-linux-gnu /usr/lib/powerpc-linux-gnuspe /usr/lib/powerpc64-linux-gnu /usr/lib/powerpc64le-linux-gnu
+    /usr/lib/riscv64-linux-gnu /usr/lib/s390x-linux-gnu /usr/lib/sh4-linux-gnu /usr/lib/sparc64-linux-gnu
+    /usr/lib/x86_64-kfreebsd-gnu /usr/lib/x86_64-linux-gnux32
+    )
+    INCLUDE_DIRECTORIES(${MPI_H_INCLUDE_DIR})
   ELSE(MPI_FOUND)
     MESSAGE(STATUS "MPI NOT FOUND, YADE-OpenFOAM coupling disabled")
     SET (DISABLED_FEATS "${DISABLED_FEATS} MPI")
