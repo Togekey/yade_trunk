@@ -13,67 +13,69 @@ CREATE_LOGGER(InteractionContainer);
 bool InteractionContainer::insert(const shared_ptr<Interaction>& i){
 	assert(bodies);
 	boost::mutex::scoped_lock lock(drawloopmutex);
-	
+
 	Body::id_t id1=i->getId1();
 	Body::id_t id2=i->getId2();
-	
-	if (id1>id2) swap(id1,id2); 
-	
+
+	if (id1>id2) swap(id1,id2);
+
 	assert((Body::id_t)bodies->size()>id1); // the bodies must exist already
-	assert((Body::id_t)bodies->size()>id2); 
-	
+	assert((Body::id_t)bodies->size()>id2);
+
 	const shared_ptr<Body>& b1=(*bodies)[id1];
 	const shared_ptr<Body>& b2=(*bodies)[id2];
-	
+
 	if(!b1->intrs.insert(Body::MapId2IntrT::value_type(id2,i)).second) return false; // already exists
-	if(!b2->intrs.insert(Body::MapId2IntrT::value_type(id1,i)).second) return false; 
-	
+	if(!b2->intrs.insert(Body::MapId2IntrT::value_type(id1,i)).second) return false;
+
 	linIntrs.resize(++currSize); // currSize updated
 	linIntrs[currSize-1]=i; // assign last element
 	i->linIx=currSize-1; // store the index back-reference in the interaction (so that it knows how to erase/move itself)
-	
-	const shared_ptr<Scene>& scene=Omega::instance().getScene(); 
+
+	const shared_ptr<Scene>& scene=Omega::instance().getScene();
 	i->iterBorn=scene->iter;
-	
+
 	return true;
 }
 
-bool InteractionContainer::insertInteractionMPI(shared_ptr<Interaction>& i){
-	
-	assert(bodies);  
-	Body::id_t id1 = i->getId1(); 
-	Body::id_t id2 = i->getId2(); 
-	if (id1 > id2 ) swap(id1, id2); 
-	//if (id1 > id2)
-	if (!(*bodies)[id1] || !(*bodies)[id2]) {
-	  LOG_ERROR("Bodies not found in body container --> " << id1 << "  " << id2); 
-	  return false; 
-	}
-	// check if interaction already exists in the container 
-	int c=0; bool setvalue = false; 
-	for (unsigned int inters=0; inters != linIntrs.size(); ++inters) {
-	  if (! linIntrs.size()) {
-	    linIntrs.resize(++currSize); 
-	    linIntrs[currSize-1] = i; 
-	    i -> linIx = currSize-1;  
-	    setvalue = true; 
-	    return setvalue; 
-	  }
-	  shared_ptr<Interaction>& iTest = linIntrs[inters]; 
-	   Body::id_t tId1 = iTest->getId1(); 
-	   Body::id_t tId2 = iTest->getId2();
-	  if ( (id1 == tId1) && (id2 == tId2) ) {c+=1;}	  
-	}
-	if (!c) {
-	  linIntrs.resize(++currSize);
-	  linIntrs[currSize-1] = i; 
-	  i -> linIx = currSize-1; 
-	  setvalue = true; 
-	}
-	
-	return setvalue; 
-}
 
+
+
+bool InteractionContainer::insertInteractionMPI(shared_ptr<Interaction>& i){
+// 	if (! i->isReal()){return false; }
+	assert(bodies);
+	Body::id_t id1 = i->getId1();
+	Body::id_t id2 = i->getId2();
+	if (id1 > id2 ) {swap(id1, id2); } 
+	
+	if (!(*bodies)[id1] || !(*bodies)[id2]) {
+	  LOG_ERROR("Bodies not found in body container --> " << id1 << "  " << id2);
+	  return false;
+	}
+	
+	const shared_ptr<Body>& b1=(*bodies)[id1];
+	const shared_ptr<Body>& b2=(*bodies)[id2]; 
+	
+	if (b1 -> getIsSubdomain() || b2 -> getIsSubdomain() ) {return false; }
+
+	if(!b1->intrs.insert(Body::MapId2IntrT::value_type(id2,i)).second) return false; // already exists
+	if(!b2->intrs.insert(Body::MapId2IntrT::value_type(id1,i)).second) return false;
+	
+	//check if this interaction already exists : 
+	linIntrs.resize(++currSize); // currSize updated
+	linIntrs[currSize-1]=i; // assign last element
+	i->linIx=currSize-1; // store the index back-reference in the interaction (so that it knows how to erase/move itself
+	const shared_ptr<Scene>& scene=Omega::instance().getScene();
+	i->iterMadeReal=scene->iter; 
+	
+	
+
+// 	std::cout << "Interaction contaier size now = " << linIntrs.size() << std::endl; 
+	return true; 
+	
+	
+	
+}
 
 
 
@@ -93,7 +95,7 @@ bool InteractionContainer::erase(Body::id_t id1,Body::id_t id2, int linPos){
 	boost::mutex::scoped_lock lock(drawloopmutex);
 	if (id1>id2) swap(id1,id2);
 	if(id2>=(Body::id_t)bodies->size()) return false;
-	
+
 	const shared_ptr<Body>& b1((*bodies)[id1]);
 	const shared_ptr<Body>& b2((*bodies)[id2]);
 	int linIx=-1;
@@ -106,10 +108,10 @@ bool InteractionContainer::erase(Body::id_t id1,Body::id_t id2, int linPos){
 			assert(linIx==linPos);
 			//erase from body, we also erase from linIntrs below
 			b1->intrs.erase(I);
-			if (b2) { 
+			if (b2) {
 				Body::MapId2IntrT::iterator I2(b2->intrs.find(id1));
-				if (not(I2==b2->intrs.end())) { 
-					b2->intrs.erase(I2); 
+				if (not(I2==b2->intrs.end())) {
+					b2->intrs.erase(I2);
 				}
 			}
 		}
@@ -129,7 +131,7 @@ bool InteractionContainer::erase(Body::id_t id1,Body::id_t id2, int linPos){
 
 const shared_ptr<Interaction>& InteractionContainer::find(Body::id_t id1,Body::id_t id2){
 	assert(bodies);
-	if (id1>id2) swap(id1,id2); 
+	if (id1>id2) swap(id1,id2);
 	// those checks could be perhaps asserts, but pyInteractionContainer has no access to the body container...
 	if(id2>=(Body::id_t)bodies->size()){ empty=shared_ptr<Interaction>(); return empty; }
 	const shared_ptr<Body>& b1((*bodies)[id1]);
@@ -142,7 +144,7 @@ const shared_ptr<Interaction>& InteractionContainer::find(Body::id_t id1,Body::i
 bool InteractionContainer::insert(Body::id_t id1,Body::id_t id2)
 {
 	shared_ptr<Interaction> i(new Interaction(id1,id2) );
-	return insert(i);	
+	return insert(i);
 }
 
 void InteractionContainer::requestErase(Body::id_t id1, Body::id_t id2){
@@ -189,7 +191,7 @@ void InteractionContainer::preLoad(InteractionContainer&){ interaction.clear(); 
 void InteractionContainer::postLoad__calledFromScene(const shared_ptr<BodyContainer>& bb){
 	bodies=&bb->body;
 	clear();
-	FOREACH(const shared_ptr<Interaction>& I, interaction){ 
+	FOREACH(const shared_ptr<Interaction>& I, interaction){
 		Body::id_t id1=I->getId1(), id2=I->getId2();
 		if (!(*bodies)[id1] || !(*bodies)[id2]) {
 			return;
