@@ -138,22 +138,24 @@ void Subdomain::getRankSize() {
 	  MPI_Comm_size(MPI_COMM_WORLD, &commSize);
 }
 
-// driver function for merge operation // workers send bodies, master recieves, sets the bodies into bodycaontainer, sets interactions in interactionContainer.
+// driver function for merge operation // workers send bodies, master recieves, sets the bodies into bodycontainer, sets interactions in interactionContainer.
 
 void Subdomain::mergeOp() {
-    
-        //if (subdomainRank == master) {std::cout << "In merge operation " << std::endl; } 
+
+        //if (subdomainRank == master) {std::cout << "In merge operation " << std::endl; }
 	sendAllBodiesToMaster();
 	recvBodyContainersFromWorkers();
 	if (subdomainRank==master){
-	  shared_ptr<Scene> scene = Omega::instance().getScene();
-	  scene->interactions->clear(); 
+	  Scene* scene = Omega::instance().getScene().get();
 	  bool setDeletedBodies = false;
 	  processContainerStrings();
-	  setBodiesToBodyContainer(recvdBodyContainers, setDeletedBodies);
-	  setBodyIntrsMerge();
-	  bodiesSet = false; // reset flag for next merge op. 
-	  containersRecvd = false; 
+	  // clear existing interactions:
+	  scene->interactions->clear();
+	  scene->forces.reset(scene->iter, true); 
+	  setBodiesToBodyContainer(scene, recvdBodyContainers,setDeletedBodies);
+	  //setBodyIntrsMerge(scene);
+	  bodiesSet = false; // reset flag for next merge op.
+	  containersRecvd = false;
 	}
 }
 
@@ -221,7 +223,7 @@ void Subdomain::sendAllBodiesToMaster() {
 	mpiReqs.clear();
 	shared_ptr<MPIBodyContainer> container(shared_ptr<MPIBodyContainer> (new MPIBodyContainer()));
 	std::string s = fillContainerGetString(container, ids);
-	sendStringBlocking(s, master, TAG_BODY+master); 
+	sendStringBlocking(s, master, TAG_BODY+master);
 }
 
 /********Functions exclusive to the master*************/
@@ -230,73 +232,84 @@ void Subdomain::sendAllBodiesToMaster() {
 
 void Subdomain::initMasterContainer(){
 	if (subdomainRank != master) {return; }
-	 recvRanks.resize(commSize-1); 
+	 recvRanks.resize(commSize-1);
          for (unsigned int i=1; i != static_cast<unsigned int> (commSize); ++i){recvRanks.push_back(i); }
 	 allocContainerMaster = true;
 }
 
 void Subdomain::recvBodyContainersFromWorkers() {
-	
+
         if (subdomainRank != master ) {   return; }
         else if (subdomainRank == master){
-        recvRanks.clear(); clearRecvdCharBuff(recvdCharBuff); recvdStringSizes.clear(); 
+        recvRanks.clear(); clearRecvdCharBuff(recvdCharBuff); recvdStringSizes.clear();
 	if (! allocContainerMaster){ initMasterContainer(); std::cout << "init Done MASTER " << subdomainRank << std::endl;}
-	for (int sourceRank=1; sourceRank != commSize; ++sourceRank){ 
+	for (int sourceRank=1; sourceRank != commSize; ++sourceRank){
          int sz =  probeIncomingBlocking(sourceRank, TAG_BODY+subdomainRank);
-         recvdStringSizes.push_back(sz); 
-         int sztmp = sz+1; 
-	 char *cbuf = new char[sztmp]; 
+         recvdStringSizes.push_back(sz);
+         int sztmp = sz+1;
+	 char *cbuf = new char[sztmp];
 	 recvBuffBlocking(cbuf, sz , TAG_BODY+subdomainRank, sourceRank);
  	 recvdCharBuff.push_back(cbuf);
 	}
-        containersRecvd = true; 
+        containersRecvd = true;
     }
 }
 
 // set all body properties from the worker MPIBodyContainer
 
-void Subdomain::setBodiesToBodyContainer(std::vector<shared_ptr<MPIBodyContainer> >& containers, bool setDeletedBodies) {
+void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MPIBodyContainer> >& containers, bool setDeletedBodies) {
 	    // to be used when deserializing a recieved container.
-	    Scene* scene = Omega::instance().getScene().get();
 	    shared_ptr<BodyContainer>& bodyContainer = scene->bodies;
+	    shared_ptr<InteractionContainer>& interactionContainer = scene->interactions; 
 	    for (unsigned int i=0; i != containers.size(); ++i){
 	      shared_ptr<MPIBodyContainer>& mpiContainer = containers[i];
 	      std::vector<shared_ptr<Body> >& bContainer = mpiContainer->bContainer;
 	      for (auto bIter = bContainer.begin(); bIter != bContainer.end(); ++ bIter) {
 		shared_ptr<Body> newBody = *(bIter);
 		// check if the body already exists in the existing bodycontainer
-		const Body::id_t& id = newBody->id;
-		if ((!(*bodyContainer)[id]) &&  setDeletedBodies) {bodyContainer->insertAtId(newBody, newBody->id);} // insert to the bodycontainer at deleted body
-		else{ shared_ptr<Body>& b = (*bodyContainer)[id]; 
+		const Body::id_t& idx = newBody->id;
+		if ((!(*bodyContainer)[idx]) &&  setDeletedBodies) {
+		  bodyContainer->insertAtId(newBody, newBody->id);  // insert the body 
+		} 
+		else{ shared_ptr<Body>& b = (*bodyContainer)[idx];
 		       b->state = newBody->state;
 		       if (!b->bound){b->bound = shared_ptr<Bound> (new Bound); }
 		       b->bound = newBody->bound;
-		       b->intrs = newBody->intrs; 
-		       b->setBounded(true); 
-		       //do we need materials here?
+		       b->setBounded(true);
+// 		       b->intrs = newBody->intrs; 
+		       //set the interactions alltogether later
+		       //do we need materials here?		       
 	      }
+	      //set the interactions in the interaction container first. 
+	      shared_ptr<Body>& b = (*bodyContainer)[idx]; 
+	      //clear the inter of this body first.
+	      b->intrs.clear(); 
+	      for (auto mapIter = newBody->intrs.begin(); mapIter != newBody->intrs.end(); ++mapIter){
+		interactionContainer -> insertInteractionMPI(mapIter->second); 
+	      }
+	      newBody.reset();
 	    }
 	  }
-        containers.clear(); 
+        containers.clear();
         bodiesSet = true;
-        
+	std::cout << "InteractionContainer size CPP = " << interactionContainer->size() << std::endl; 
 }
 
 
-void Subdomain::setBodyIntrsMerge() {
-	// Set all interactions from the recieved bodies : bodies have to be set in the body container firs! 
+void Subdomain::setBodyIntrsMerge(Scene* scene) {
+	// Set all interactions from the recieved bodies : bodies have to be set in the body container firs!
     if (!bodiesSet) {LOG_ERROR("MASTER PROC : Bodies are not set in Body container."); return;  }
-	 Scene* scene= Omega::instance().getScene().get();
 	shared_ptr<BodyContainer>& bodies = scene->bodies;
 	shared_ptr<InteractionContainer>& interactionContainer = scene -> interactions;
 	std::vector<shared_ptr<Body> >&  container = bodies->body; // the real bodycontainer aka std::vector<shared_ptr<Body> >
 	for (auto bIter = container.begin(); bIter != container.end(); ++bIter) {
 	    const shared_ptr<Body> b = *(bIter);
-// 	    std::cout << "size of intrs = " << b->intrs.size() << std::endl; 
+// 	    std::cout << "size of intrs = " << b->intrs.size() << std::endl;
             for (auto mapIter = b->intrs.begin(); mapIter != b->intrs.end(); ++mapIter){
-	      interactionContainer -> insertInteractionMPI(mapIter->second); 
+	      interactionContainer -> insertInteractionMPI(mapIter->second);
 	    }
-      }
+    }
+	interactionContainer -> dirty = false;
 }
 
 /*********************communication functions**************/
@@ -373,7 +386,7 @@ void Subdomain::processReqsAll(std::vector<MPI_Request>& mpiReqs, std::vector<MP
 
 
 void Subdomain::clearRecvdCharBuff(std::vector<char*>& rcharBuff) {
-    
+
 	for (std::vector<char*>::iterator cIter = rcharBuff.begin(); cIter != rcharBuff.end(); ++cIter){
 	    delete (*cIter);
 	  }
