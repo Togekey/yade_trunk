@@ -185,6 +185,8 @@ class Subdomain: public Shape {
         void processContainerStrings(std::vector<char*>& , std::vector<int>& ); 
 	void processContainerStrings(); 
         void sendAllBodiesToMaster();
+		void sendBodies(const int receiver, const vector<Body::id_t >& idsToSend);
+		void receiveBodies(const int sender);
         void setCommunicationContainers(); 
         
         //communications util functions 
@@ -204,6 +206,7 @@ class Subdomain: public Shape {
          std::string serializeMPIBodyContainer(const shared_ptr<MPIBodyContainer>&);  //serialize and return string
 	 shared_ptr<MPIBodyContainer> deSerializeMPIBodyContainer(const char* , int ); //deserialize return MPIBodyContainer
 	 std::string fillContainerGetString(shared_ptr<MPIBodyContainer>&, std::vector<Body::id_t>& ); 
+	 std::string idsToSerializedMPIBodyContainer(const std::vector<Body::id_t>& ids);
 	 void setIDstoSubdomain(boost::python::list& );  // exposed to yadempi.py, function to change/reset the ids in a subdomain
 	 void clearSubdomainIds();  // clears the member ids (std::vector <Body::id_t>
 	 void getRankSize();  
@@ -226,6 +229,7 @@ class Subdomain: public Shape {
 	std::vector<int> recvdStringSizes; // a buffer to hold the size of the incoming messages (char buffers). 
 	std::vector<MPI_Request> recvReqs; // used for MPI_Irecv 
 	std::vector<char*> recvdCharBuff;  
+	std::vector<std::string> stringBuff;
         std::vector<int> recvRanks; 
         std::vector<int> remoteCount; 
          
@@ -254,6 +258,8 @@ class Subdomain: public Shape {
 		.def("mpiIrecvStates",&Subdomain::mpiIrecvStates,(boost::python::arg("otherSubdomain")),"mpi-Irecv states from another domain  (non-blocking)")
 		.def("mpiWaitReceived",&Subdomain::mpiWaitReceived,(boost::python::arg("otherSubdomain")),"mpi-Wait states from another domain (upon return the buffer is set)")		
                 .def("mergeOp",&Subdomain::mergeOp,"merge with setting interactions")		
+		.def("sendBodies",&Subdomain::sendBodies,(boost::python::arg("sender"),boost::python::arg("receiver"),boost::python::arg("idsToSend")), "Copy the bodies from MPI sender rank to MPI receiver rank")
+		.def("receiveBodies",&Subdomain::receiveBodies,(boost::python::arg("sender")), "Receive the bodies from MPI sender rank to MPI receiver rank")
 		.add_property("intersections",&Subdomain::intrs_get,&Subdomain::intrs_set,"lists of bodies from this subdomain intersecting other subdomains. WARNING: only assignement and concatenation allowed")
                 .def("getRankSize", &Subdomain::getRankSize, "set subdomain ranks, used for communications -> merging, sending bodies etc.")
 		.add_property("mirrorIntersections",&Subdomain::mIntrs_get,&Subdomain::mIntrs_set,"lists of bodies from other subdomains intersecting this one. WARNING: only assignement and concatenation allowed")
