@@ -48,7 +48,9 @@ ERASE_REMOTE = True #erase bodies not interacting wit a given subdomain? else ke
 OPTIMIZE_COM=True
 USE_CPP_MPI=True and OPTIMIZE_COM
 YADE_TIMING=True #report timing.stats()?
-MERGE_W_INTERACTIONS = True 
+MERGE_SPLIT = False
+MERGE_W_INTERACTIONS = True
+COPY_MIRROR_BODIES_WHEN_COLLIDE = False
 
 
 #tags for mpi messages
@@ -201,7 +203,7 @@ def reboundRemoteBodies(ids):
 	'''
 	for id in ids:
 		b = O.bodies[id]
-		if not isinstance(b.shape,GridNode): b.bounded=True 
+		if b and not isinstance(b.shape,GridNode): b.bounded=True 
 
 def updateDomainBounds(subdomains): #subdomains is the list of subdomains by body ids
 	'''
@@ -523,9 +525,46 @@ def splitScene():
 		if domainBody==None: print "SUBDOMAIN NOT FOUND FOR RANK=",rank
 		O.subD = domainBody.shape
 		O.subD.subdomains = subdomains
-	subD = O.subD #alias
-	subD.getRankSize() # this one sets the ranks and comm size for the merge communication in CPP (MPI_Comm_rank, MPI_Comm_size)
+	O.subD.getRankSize() # this one sets the ranks and comm size for the merge communication in CPP (MPI_Comm_rank, MPI_Comm_size)
 	#update bounds wrt. updated subdomain(s) min/max and unbounded bodies
+	updateMirrorIntersections()
+			
+	if ERASE_REMOTE and rank>0: #workers suppress external bodies from scene, master will keep all bodies anyway 
+		numBodies = len(O.bodies)
+		for id in range(numBodies):
+			if not O.bodies[id].bounded and O.bodies[id].subdomain!=rank:
+				connected = False #a gridNode could be needed as part of interacting facet/connection even if not overlaping a specific subdomain. Assume connections are always bounded for now, we thus only check nodes.
+				if isinstance(O.bodies[id].shape,GridNode):
+					for f in O.bodies[id].shape.getPFacets():
+						if f.bounded: connected = True
+					for c in O.bodies[id].shape.getConnections():
+						if c.bounded: connected = True
+				if not connected: O.bodies.erase(id)
+	collider.doSort = True
+	collider.__call__()
+				
+	idx = O.engines.index(utils.typedEngine("NewtonIntegrator"))
+	if not O.splittedOnce: 
+		# append states communicator after Newton
+		O.engines=O.engines[:idx+1]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].sendRecvStates()",label="sendRecvStatesRunner")]+O.engines[idx+1:]
+		
+		# append force communicator before Newton
+		O.engines=O.engines[:idx]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].isendRecvForces()",label="isendRecvForcesRunner")]+O.engines[idx:]
+		
+		# append engine waiting until forces are effectively sent to master
+		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].waitForces()",label="waitForcesRunner")]
+		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkColliderActivated(): O.pause()",label="collisionChecker")]
+	else:
+		if MERGE_W_INTERACTIONS:
+		  sendRecvStatesRunner.dead = False; waitForcesRunner.dead = True; isendRecvForcesRunner.dead = True  # force on the bottom wall gets doubled when we use isendRecvForcesRunner,why?
+		else:
+		  sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = False
+		
+	O.splitted=True
+	O.splittedOnce=True
+
+def updateMirrorIntersections():
+	subD=O.subD
 	unboundRemoteBodies()
 	collider.boundDispatcher.__call__()
 	updateDomainBounds(subD.subdomains) #triggers communications
@@ -572,59 +611,64 @@ def splitScene():
 			sd=subD.intersections[rank][nn]
 			nn+=1
 			intrs=req[1].wait()
-			subD.mirrorIntersections= subD.mirrorIntersections[0:req[0]]+[intrs]+subD.mirrorIntersections[req[0]+1:]
+			subD.mirrorIntersections = subD.mirrorIntersections[0:req[0]]+[intrs]+subD.mirrorIntersections[req[0]+1:]
 			reboundRemoteBodies(intrs)
-			
-	if ERASE_REMOTE and rank>0: #workers suppress external bodies from scene, master will keep all bodies anyway 
-		numBodies = len(O.bodies)
-		for id in range(numBodies):
-			if not O.bodies[id].bounded and O.bodies[id].subdomain!=rank:
-				connected = False #a gridNode could be needed as part of interacting facet/connection even if not overlaping a specific subdomain. Assume connections are always bounded for now, we thus only check nodes.
-				if isinstance(O.bodies[id].shape,GridNode):
-					for f in O.bodies[id].shape.getPFacets():
-						if f.bounded: connected = True
-					for c in O.bodies[id].shape.getConnections():
-						if c.bounded: connected = True
-				if not connected: O.bodies.erase(id)
+		
+		"""
+		" NOTE: FK, what to do here:
+		" 1- all threads loop on reqs, i.e the intersecting subdomains of the current subdomain.
+		" 2- during this loop, check whether the current subdomain needs bodies from the intersecting ones
+		" 3- in all cases, isend the ids needed, (if no ids needed send empty array)
+		" 3.1- build a ranks list "requestedSomethingFrom" to loop later on to receive data
+		" 4- loop again on reqs to get the ids needed by other subdomains (with blocking recv as we used isend)
+		" 5- if the data recved is empty (nothing requested), do nothing. Else isend the bodies (c++)
+		" 6- loop on "requestedSomethingFrom" ranks and recv the bodies (blocking, c++, using MPI_Probe to know the message size)
+		" 7- comm.barrier(), just in case
+		"""
+		if(COPY_MIRROR_BODIES_WHEN_COLLIDE and O.splittedOnce):
+			requestedSomethingFrom=[]
+			reqs=[[req[0]] for req in reqs]
+			for req in reqs:
+				bodiesToImport=[]
+				worker=req[0]
+				if(worker==0):continue
+				for mirrorBodyId in subD.mirrorIntersections[worker]:
+					if not isinstance(O.bodies[mirrorBodyId],Body):
+						bodiesToImport+=[mirrorBodyId]
+				if(len(bodiesToImport)>0):
+					wprint("I request ids ",bodiesToImport, " from ",worker)
+					requestedSomethingFrom.append(worker)
+				req.append(comm.isend(bodiesToImport, worker, tag=_MIRROR_INTERSECTIONS_))
+			for req in reqs:
+				worker=req[0]
+				requestedIds=comm.recv(None, worker, tag=_MIRROR_INTERSECTIONS_)
+				if(len(requestedIds)>0):
+					wprint("I will now send ",requestedIds," to ",worker)
+					subD.sendBodies(worker,requestedIds)
+			for worker in requestedSomethingFrom:
+				subD.receiveBodies(worker)
 	collider.doSort = True
 	collider.__call__()
-				
-	idx = O.engines.index(utils.typedEngine("NewtonIntegrator"))
-	if not O.splittedOnce: 
-		# append states communicator after Newton
-		O.engines=O.engines[:idx+1]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].sendRecvStates()",label="sendRecvStatesRunner")]+O.engines[idx+1:]
-		
-		# append force communicator before Newton
-		O.engines=O.engines[:idx]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].isendRecvForces()",label="isendRecvForcesRunner")]+O.engines[idx:]
-		
-		# append engine waiting until forces are effectively sent to master
-		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].waitForces()",label="waitForcesRunner")]
-		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkColliderActivated(): O.pause()",label="collisionChecker")]
-	else:
-		if MERGE_W_INTERACTIONS:
-		  sendRecvStatesRunner.dead = False; waitForcesRunner.dead = True; isendRecvForcesRunner.dead = True  # force on the bottom wall gets doubled when we use isendRecvForcesRunner,why?
-		else:
-		  sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = False
-		
-	O.splitted=True
-	O.splittedOnce=True
-
+	comm.barrier()
 
 ##### RUN MPI #########
-def mpirun(nSteps,mergeSplit=False):
+def mpirun(nSteps):
 	initStep = O.iter
 	if not O.splitted: splitScene()
 	if YADE_TIMING:
 		O.timingEnabled=True
-	if not mergeSplit: #run until collider is activated then stop		
+	if not (MERGE_SPLIT or COPY_MIRROR_BODIES_WHEN_COLLIDE): #run until collider is activated then stop		
 		O.run(nSteps,True)
-	else: #merge/split for each collider update
+	else: #merge/split or body_copy for each collider update
 		collisionChecker.dead=True
 		while (O.iter-initStep)<nSteps:
 			O.step()
 			if checkColliderActivated() and (O.iter-initStep)<nSteps:
-				mergeScene()
-				splitScene()
+				if(MERGE_SPLIT):
+					mergeScene()
+					splitScene()
+				elif(COPY_MIRROR_BODIES_WHEN_COLLIDE):
+					updateMirrorIntersections()
 	timing_comm.print_all()
 	if YADE_TIMING:
 		from yade import timing

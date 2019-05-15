@@ -121,6 +121,12 @@ string Subdomain::fillContainerGetString(shared_ptr<MPIBodyContainer>& container
 	return containerString;
 }
 
+string Subdomain::idsToSerializedMPIBodyContainer(const std::vector<Body::id_t>& ids){
+	shared_ptr<MPIBodyContainer> container(shared_ptr<MPIBodyContainer> (new MPIBodyContainer()));
+	container->insertBodyList(ids);
+	return serializeMPIBodyContainer(container);
+}
+
 void Subdomain::clearSubdomainIds(){
 	ids.clear();
 }
@@ -226,6 +232,31 @@ void Subdomain::sendAllBodiesToMaster() {
 	sendStringBlocking(s, master, TAG_BODY+master);
 }
 
+void Subdomain::sendBodies(const int receiver, const vector<Body::id_t >& idsToSend) {
+  // FIXME:BLABLABLA
+// 	cout<<"sending from "<<subdomainRank<<" to "<<receiver<<" ids [";
+// 	for(auto const& i: idsToSend) cout<<i<<" ";
+// 	cout<<"]"<<endl;
+	shared_ptr<MPIBodyContainer> container(shared_ptr<MPIBodyContainer> (new MPIBodyContainer()));
+	std::string s = idsToSerializedMPIBodyContainer(idsToSend);
+	stringBuff.push_back(s);
+	MPI_Request req;
+	MPI_Isend(stringBuff.back().data(), s.size(), MPI_CHAR, receiver, TAG_BODY, MPI_COMM_WORLD, &req);
+}
+
+void Subdomain::receiveBodies(const int sender){
+// 	cout<<"receiving in "<<subdomainRank<<" from "<<sender<<" ";
+	int recv_size = probeIncomingBlocking(sender, TAG_BODY);
+	char *cbuf = new char[recv_size+1]; 
+	recvBuffBlocking(cbuf, recv_size , TAG_BODY, sender);
+	cbuf[recv_size]='\0';
+	shared_ptr<MPIBodyContainer> mpiBC(deSerializeMPIBodyContainer(cbuf, recv_size));
+// 	cout<<mpiBC->bContainer.size()<<" bodies"<<endl;
+	std::vector<shared_ptr<MPIBodyContainer> > mpiBCVect(1,mpiBC); //setBodiesToBodyContainer needs a vector of MPIBodyContainer, so create one of size 1.
+	Scene* scene = Omega::instance().getScene().get();
+	setBodiesToBodyContainer(scene,mpiBCVect,true);
+}
+
 /********Functions exclusive to the master*************/
 
 //TODO:: set interactions to master's interaction container from the recvd worker MPIBodyContainers.
@@ -269,6 +300,7 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 		// check if the body already exists in the existing bodycontainer
 		const Body::id_t& idx = newBody->id;
 		if ((!(*bodyContainer)[idx]) &&  setDeletedBodies) {
+// 			cout<<"Worker"<<subdomainRank<<": I set body n°"<<newBody->id<<endl;
 		  bodyContainer->insertAtId(newBody, newBody->id);  // insert the body 
 		} 
 		else{ shared_ptr<Body>& b = (*bodyContainer)[idx];

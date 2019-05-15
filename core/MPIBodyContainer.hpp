@@ -44,7 +44,7 @@ class MPIBodyContainer :  public Serializable{
       }
     }
     
-    void insertBodyList(std::vector<Body::id_t>& idList ){ 
+    void insertBodyList(const std::vector<Body::id_t>& idList ){ 
       for (unsigned int i=0; i != idList.size(); ++i) {
 	insertBody(idList[i]); 
       }

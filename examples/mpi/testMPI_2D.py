@@ -31,6 +31,11 @@ if("-ms" in sys.argv):
 	mergeSplit=True
 else: mergeSplit=False
 
+if("-bc" in sys.argv):
+	sys.argv.remove("-bc")
+	bodyCopy=True
+else: bodyCopy=False
+
 #################
 # Check MPI world
 # This is to know if it was run with or without mpiexec (see preamble of this script)
@@ -101,8 +106,11 @@ else: #######  MPI  ######
 	mp.ERASE_REMOTE=True #erase bodies not interacting wit a given subdomain?
 	mp.OPTIMIZE_COM=True #L1-optimization: pass a list of double instead of a list of states
 	mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
+	mp.MERGE_W_INTERACTIONS=False
+	mp.MERGE_SPLIT=mergeSplit
+	mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = bodyCopy and not mergeSplit
 
-	mp.mpirun(NSTEPS,mergeSplit)
+	mp.mpirun(NSTEPS)
 	print "num. bodies:",len([b for b in O.bodies]),len(O.bodies)
 	if rank==0:
 		mp.mprint( "Total force on floor="+str(O.forces.f(WALL_ID)[1]))
