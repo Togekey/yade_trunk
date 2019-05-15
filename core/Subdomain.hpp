@@ -168,9 +168,9 @@ class Subdomain: public Shape {
         //functions (master) 
         
 	void recvBodyContainersFromWorkers(); 
-	void setBodiesToBodyContainer(std::vector<shared_ptr<MPIBodyContainer> >&, bool); // bodycontainers, set body on deleted bodies?
+  void setBodiesToBodyContainer(Scene* , std::vector<shared_ptr<MPIBodyContainer> >&, bool);
 	void initMasterContainer(); 
-	void setBodyIntrsMerge(); // isMerge? 
+	void setBodyIntrsMerge(Scene*); // isMerge? 
         bool allocContainerMaster = false;   // flag 
         bool bodiesSet = false;  // flag 
         
