@@ -24,6 +24,19 @@ stages:
   only:
     - branches
 
+
+# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
+# 6.1. build debian packages
+.debpackages_template: &debpackages_definition
+  <<: *platforms_definition
+  stage: debpackages
+  script:
+    - echo AAA
+
+debpackages_18_04:
+  <<: *debpackages_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
+  
 # stage: cmake uses ccache for faster compilation. ccache works only with -DCHUNKSIZE=1
 # Important: to get ccache to work an external volume must be mounted by gitlab-runner (in config file: /etc/gitlab-runner/config.toml)
 #            into docker directory /root/.ccache. By default in /etc/gitlab-runner/config.toml there is already this line:
@@ -272,15 +285,3 @@ pages:
   artifacts:
     paths:
       - public
-
-# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
-# 6.1. build debian packages
-.debpackages_template: &debpackages_definition
-  <<: *platforms_definition
-  stage: debpackages
-  script:
-    - echo AAA
-
-debpackages_18_04:
-  <<: *check_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
