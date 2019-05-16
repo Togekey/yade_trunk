@@ -16,6 +16,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream_buffer.hpp>
+
 // #include <lib/pyutil/numpy_boost.hpp>
 
 YADE_PLUGIN((Subdomain));
@@ -157,15 +158,17 @@ void Subdomain::mergeOp() {
 	  processContainerStrings();
 	  // clear existing interactions:
 	  scene->interactions->clear();
-	  scene->forces.reset(scene->iter, true); 
 	  setBodiesToBodyContainer(scene, recvdBodyContainers,setDeletedBodies);
 	  //setBodyIntrsMerge(scene);
 	  bodiesSet = false; // reset flag for next merge op.
 	  containersRecvd = false;
+	  scene->interactions->dirty = true; 
+	  scene->doSort = true; 
+	  
 	}
 }
 
-//TODO:: add function to set interaction--> set selected interactions.
+//TODO:: add function to set interaction--> set selected interactions ?
 
 void Subdomain::setCommunicationContainers() {
 
@@ -259,7 +262,7 @@ void Subdomain::receiveBodies(const int sender){
 
 /********Functions exclusive to the master*************/
 
-//TODO:: set interactions to master's interaction container from the recvd worker MPIBodyContainers.
+
 
 void Subdomain::initMasterContainer(){
 	if (subdomainRank != master) {return; }
@@ -308,7 +311,6 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 		       if (!b->bound){b->bound = shared_ptr<Bound> (new Bound); }
 		       b->bound = newBody->bound;
 		       b->setBounded(true);
-// 		       b->intrs = newBody->intrs; 
 		       //set the interactions alltogether later
 		       //do we need materials here?		       
 	      }
@@ -318,6 +320,9 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 	      b->intrs.clear(); 
 	      for (auto mapIter = newBody->intrs.begin(); mapIter != newBody->intrs.end(); ++mapIter){
 		interactionContainer -> insertInteractionMPI(mapIter->second); 
+	      }	      
+	      if (setDeletedBodies){
+		b->subdomain = subdomainRank; 
 	      }
 	      newBody.reset();
 	    }
@@ -327,7 +332,7 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 	std::cout << "InteractionContainer size CPP = " << interactionContainer->size() << std::endl; 
 }
 
-
+//unused. 
 void Subdomain::setBodyIntrsMerge(Scene* scene) {
 	// Set all interactions from the recieved bodies : bodies have to be set in the body container firs!
     if (!bodiesSet) {LOG_ERROR("MASTER PROC : Bodies are not set in Body container."); return;  }
