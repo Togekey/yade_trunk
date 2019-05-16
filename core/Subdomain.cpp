@@ -162,8 +162,6 @@ void Subdomain::mergeOp() {
 	  //setBodyIntrsMerge(scene);
 	  bodiesSet = false; // reset flag for next merge op.
 	  containersRecvd = false;
-	  scene->interactions->dirty = true; 
-	  scene->doSort = true; 
 	  
 	}
 }
@@ -327,6 +325,7 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 	      newBody.reset();
 	    }
 	  }
+	interactionContainer->dirty = true;  //notify the collider about the new interactions/new body. 
         containers.clear();
         bodiesSet = true;
 	std::cout << "InteractionContainer size CPP = " << interactionContainer->size() << std::endl; 
