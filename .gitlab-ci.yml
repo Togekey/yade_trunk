@@ -30,7 +30,7 @@ stages:
     - apt update && apt install devscripts atool -y
     - git clone https://gitlab.com/yade-dev/yadedaily.git debian
     - ls -l
-    - gbp buildpackage --git-ignore-branch
+    - gbp buildpackage --git-ignore-branch --git-ignore-new
 
 debpackages_18_04:
   <<: *debpackages_definition
