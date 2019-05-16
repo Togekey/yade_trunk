@@ -13,10 +13,10 @@
 
 stages:
   - debpackages
-  # - cmake
-  # - build
-  # - test
-  # - pages
+  - cmake
+  - build
+  - test
+  - pages
 
 # If you want to compile everything also on merge_request, change this template.
 # If you want to compile on one platform see [1] note below.
