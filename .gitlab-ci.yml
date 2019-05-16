@@ -27,7 +27,7 @@ stages:
   <<: *platforms_definition
   stage: debpackages
   script:
-    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com:yade-dev/yadedaily.git
+    - git clone git@gitlab.com:yade-dev/yadedaily.git
     - apt update && apt install devscripts
 
 debpackages_18_04:
