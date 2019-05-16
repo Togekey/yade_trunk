@@ -29,6 +29,7 @@ stages:
   script:
     - git clone https://gitlab.com/yade-dev/yadedaily.git
     - apt update && apt install devscripts
+    - ls -l
 
 debpackages_18_04:
   <<: *debpackages_definition
