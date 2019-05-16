@@ -27,9 +27,10 @@ stages:
   <<: *platforms_definition
   stage: debpackages
   script:
-    - git clone https://gitlab.com/yade-dev/yadedaily.git
-    - apt update && apt install devscripts
+    - apt update && apt install devscripts atool -y
+    - git clone https://gitlab.com/yade-dev/yadedaily.git debian
     - ls -l
+    - gbp buildpackage --git-ignore-branch
 
 debpackages_18_04:
   <<: *debpackages_definition
