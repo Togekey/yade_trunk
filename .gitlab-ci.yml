@@ -22,8 +22,7 @@ stages:
 # If you want to compile on one platform see [1] note below.
 .plaftorms_template: &platforms_definition
   only:
-    - master
-    - merge_request
+    - branches
 
 # stage: cmake uses ccache for faster compilation. ccache works only with -DCHUNKSIZE=1
 # Important: to get ccache to work an external volume must be mounted by gitlab-runner (in config file: /etc/gitlab-runner/config.toml)
