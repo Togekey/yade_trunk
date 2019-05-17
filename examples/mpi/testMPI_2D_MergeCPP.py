@@ -19,7 +19,7 @@ The number of subdomains depends on argument 'n' of mpiexec. Since rank=0 is not
 
 '''
 
-NSTEPS=1509#turn it >0 to see time iterations, else only initilization TODO!HACK
+NSTEPS=2000#turn it >0 to see time iterations, else only initilization TODO!HACK
 #NSTEPS=50 #turn it >0 to see time iterations, else only initilization
 N=100; M=100; #(columns, rows) per thread
 
@@ -76,6 +76,18 @@ def collectTiming():
 	from yade import timing
 	f.write(str(numThreads)+" "+str(os.getenv('OMPI_COMM_WORLD_SIZE'))+" "+os.getenv('OMP_NUM_THREADS')+" "+str(N*M*(numThreads-1))+" "+str(N)+" "+str(M)+" "+str(timing.runtime())+"\n")
 	f.close()
+
+
+
+def collectMergeInfo(numbodies, numIntersWall, numMerges , floorForce, numRealIntrs):
+	created = os.path.isfile("collectMerge.dat")
+	f=open('collectMerge.dat','a')
+	if not created: f.write("numbodies numIntersWall numMerges floorForce \n")
+	f.write(str(numbodies)+"    "+str(numIntersWall)+"    "+str(numMerges)+"    "+str(floorForce)+ "    "+ str(numRealIntrs) + "\n")
+	f.close()
+
+
+
 
 
 if rank is None: #######  Single-core  ######
@@ -136,8 +148,11 @@ else: #######  MPI  ######
             print "num interactions = " , len(O.interactions) 
             O.step()
  	    mp.mprint( "Total force on floor based on inters ="+str(O.forces.f(WALL_ID)[1]))
+            spIds = [b.id for b in O.bodies if type(b.shape)==Sphere]; 
 	    b = O.bodies[WALL_ID]; 
-	    print "len of intrs of  WALL_ID ---> id = ", b.id, "  num inters =  ", len(b.intrs()); 
+	    mp.mprint ("len of intrs of  WALL_ID ---> id = ", b.id, "  num inters =  ", len(b.intrs())); 
+            mp.mprint ("num merges = ", mp.NUM_MERGES)
+            collectMergeInfo(len(spIds), len(b.intrs()),mp.NUM_MERGES,O.forces.f(WALL_ID)[1],O.interactions.countReal())
             O.save('mergedScene.yade')
 	mp.MPI.Finalize()
 #exit()
