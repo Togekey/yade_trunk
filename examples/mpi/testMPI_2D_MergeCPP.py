@@ -19,7 +19,7 @@ The number of subdomains depends on argument 'n' of mpiexec. Since rank=0 is not
 
 '''
 
-NSTEPS=10000 #turn it >0 to see time iterations, else only initilization TODO!HACK
+NSTEPS=1509#turn it >0 to see time iterations, else only initilization TODO!HACK
 #NSTEPS=50 #turn it >0 to see time iterations, else only initilization
 N=100; M=100; #(columns, rows) per thread
 
@@ -64,7 +64,7 @@ newton.gravity=(0,-10,0) #else nothing would move
 tsIdx=O.engines.index(timeStepper) #remove the automatic timestepper. Very important: we don't want subdomains to use many different timesteps...
 O.engines=O.engines[0:tsIdx]+O.engines[tsIdx+1:]
 #O.dt=0.00002 #this very small timestep will make it possible to run 2000 iter without merging
-O.dt=0.1*PWaveTimeStep() #very important, we don't want subdomains to use many different timesteps... 
+O.dt=0.0005#very important, we don't want subdomains to use many different timesteps... 
 print "num bodies = ", len(O.bodies)
 
 
@@ -86,26 +86,58 @@ if rank is None: #######  Single-core  ######
 	timing.stats()
 	collectTiming()
 	print "num. bodies:",len([b for b in O.bodies]),len(O.bodies)
-	print "Total force on floor=",O.forces.f(WALL_ID)[1]
+	print "Total force on floor=",O.forces.f(WALL_ID)[1] 
+        print "num interactions = ", len(O.interactions)
+        fl = open('intrs_serial.txt', 'w')
+        for i in O.interactions:
+	  a = i.id1; b = i.id2
+	  if a > b : a,b = b,a
+	  fl.write('%s %s\n' % (a,b))
+	fl.close()
+        O.step() 
+	print "Total force on floor at 2 =",O.forces.f(WALL_ID)[1] 
+
+	O.save('mergeSerial.yade')
+	b = O.bodies[WALL_ID]
+	print "num interactions on floor = ", len(b.intrs())
 else: #######  MPI  ######
 	#import yade's mpi module
 	#from yade import mpy as mp TODO!HACK
 	from yade import mpy as mp
 	# customize
-	mp.ACCUMULATE_FORCES=True #trigger force summation on master's body (here WALL_ID)
+	mp.ACCUMULATE_FORCES=True  #trigger force summation on master's body (here WALL_ID)
 	mp.VERBOSE_OUTPUT=False
 	mp.ERASE_REMOTE=True #erase bodies not interacting wit a given subdomain?
 	mp.OPTIMIZE_COM=True #L1-optimization: pass a list of double instead of a list of states
 	mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
 	mp.MERGE_W_INTERACTIONS=True
-
-	mp.mpirun(NSTEPS,True)
+        mp.MERGE_SPLIT=True 
+        mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = False 
+        mp.WALL_ID = WALL_ID
+	mp.mpirun(NSTEPS)
 	print "num. bodies:",len([b for b in O.bodies]),len(O.bodies)
 	if rank==0:
-		mp.mprint( "Total force on floor="+str(O.forces.f(WALL_ID)[1]))
+		fl = open('intrs_parallel.txt', 'w')
+		for i in O.interactions:
+		  a = i.id1; b = i.id2
+		  if a > b : a,b = b,a
+		  fl.write('%s %s\n' % (a,b))
+		fl.close()
 		collectTiming()
+		
 	else: mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
 	mp.mergeScene()
-	if rank==0: O.save('mergedScene.yade')
+	if rank==0: 
+            # just for saving and checking the state after merge.
+            #
+            print "force recieved from workers  = ", O.forces.f(WALL_ID)[1] 
+            O.forces.reset()
+            collider.__call__()
+            print "num interactions = " , len(O.interactions) 
+            O.step()
+ 	    mp.mprint( "Total force on floor based on inters ="+str(O.forces.f(WALL_ID)[1]))
+	    b = O.bodies[WALL_ID]; 
+	    print "len of intrs of  WALL_ID ---> id = ", b.id, "  num inters =  ", len(b.intrs()); 
+            O.save('mergedScene.yade')
 	mp.MPI.Finalize()
 #exit()
