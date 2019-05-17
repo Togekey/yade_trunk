@@ -141,8 +141,11 @@ void Subdomain::setIDstoSubdomain(boost::python::list& idList ){
 }
 
 void Subdomain::getRankSize() {
-	  MPI_Comm_rank(MPI_COMM_WORLD, &subdomainRank);
-	  MPI_Comm_size(MPI_COMM_WORLD, &commSize);
+	  if (!ranksSet){
+	    MPI_Comm_rank(MPI_COMM_WORLD, &subdomainRank);
+	    MPI_Comm_size(MPI_COMM_WORLD, &commSize); 
+	    ranksSet = true; 
+	  } else {return; }
 }
 
 // driver function for merge operation // workers send bodies, master recieves, sets the bodies into bodycontainer, sets interactions in interactionContainer.
@@ -159,7 +162,6 @@ void Subdomain::mergeOp() {
 	  // clear existing interactions:
 	  scene->interactions->clear();
 	  setBodiesToBodyContainer(scene, recvdBodyContainers,setDeletedBodies);
-	  //setBodyIntrsMerge(scene);
 	  bodiesSet = false; // reset flag for next merge op.
 	  containersRecvd = false;
 	  
@@ -287,8 +289,8 @@ void Subdomain::recvBodyContainersFromWorkers() {
     }
 }
 
-// set all body properties from the worker MPIBodyContainer
 
+// set all body properties from the worker MPIBodyContainer
 void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MPIBodyContainer> >& containers, bool setDeletedBodies) {
 	    // to be used when deserializing a recieved container.
 	    shared_ptr<BodyContainer>& bodyContainer = scene->bodies;
@@ -300,28 +302,27 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 		shared_ptr<Body> newBody = *(bIter);
 		// check if the body already exists in the existing bodycontainer
 		const Body::id_t& idx = newBody->id;
+		std::map<Body::id_t, shared_ptr<Interaction> > intrsToSet = newBody->intrs; 
 		if ((!(*bodyContainer)[idx]) &&  setDeletedBodies) {
 // 			cout<<"Worker"<<subdomainRank<<": I set body n°"<<newBody->id<<endl;
 		  bodyContainer->insertAtId(newBody, newBody->id);  // insert the body 
 		} 
 		else{ shared_ptr<Body>& b = (*bodyContainer)[idx];
-		       b->state = newBody->state;
+		       shared_ptr<Material> tmp_mat = b->material; 
+		       b = newBody; 
+// 		       b->state = newBody->state;
 		       if (!b->bound){b->bound = shared_ptr<Bound> (new Bound); }
 		       b->bound = newBody->bound;
 		       b->setBounded(true);
-		       //set the interactions alltogether later
-		       //do we need materials here?		       
+		       b->material = tmp_mat; 
 	      }
 	      //set the interactions in the interaction container first. 
 	      shared_ptr<Body>& b = (*bodyContainer)[idx]; 
 	      //clear the inter of this body first.
-	      b->intrs.clear(); 
-	      for (auto mapIter = newBody->intrs.begin(); mapIter != newBody->intrs.end(); ++mapIter){
+	      b->intrs.clear();       
+	      for (auto mapIter = intrsToSet.begin(); mapIter != intrsToSet.end(); ++mapIter){
 		interactionContainer -> insertInteractionMPI(mapIter->second); 
-	      }	      
-	      if (setDeletedBodies){
-		b->subdomain = subdomainRank; 
-	      }
+	      }	
 	      newBody.reset();
 	    }
 	  }
@@ -345,7 +346,7 @@ void Subdomain::setBodyIntrsMerge(Scene* scene) {
 	      interactionContainer -> insertInteractionMPI(mapIter->second);
 	    }
     }
-	interactionContainer -> dirty = false;
+	interactionContainer -> dirty = true;
 }
 
 /*********************communication functions**************/
