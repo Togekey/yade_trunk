@@ -1,5 +1,6 @@
 // (c) 2018 Bruno Chareyre <bruno.chareyre@grenoble-inp.fr>
 //  deepak, 03/05/19 --> added some helper functions. 
+//  francois kneib
 
 #pragma once
 
@@ -168,11 +169,11 @@ class Subdomain: public Shape {
         //functions (master) 
         
 	void recvBodyContainersFromWorkers(); 
-  void setBodiesToBodyContainer(Scene* , std::vector<shared_ptr<MPIBodyContainer> >&, bool);
+	void setBodiesToBodyContainer(Scene* , std::vector<shared_ptr<MPIBodyContainer> >&, bool); //scene, vector of mpibodycontainers, set deleted bodies ?
 	void initMasterContainer(); 
-	void setBodyIntrsMerge(Scene*); // isMerge? 
+	void setBodyIntrsMerge(Scene*); 
         bool allocContainerMaster = false;   // flag 
-        bool bodiesSet = false;  // flag 
+
         
         //functions common 
         
@@ -185,8 +186,8 @@ class Subdomain: public Shape {
         void processContainerStrings(std::vector<char*>& , std::vector<int>& ); 
 	void processContainerStrings(); 
         void sendAllBodiesToMaster();
-		void sendBodies(const int receiver, const vector<Body::id_t >& idsToSend);
-		void receiveBodies(const int sender);
+	void sendBodies(const int receiver, const vector<Body::id_t >& idsToSend);
+	void receiveBodies(const int sender);
         void setCommunicationContainers(); 
         
         //communications util functions 
@@ -194,10 +195,10 @@ class Subdomain: public Shape {
         void sendStringBlocking(std::string& , int,  int );                                //string, rank, tag
         void sendString(std::string& , int , int,  MPI_Request& );                        //non blocking send
         void recvBuff(char*  ,int , int ,  MPI_Request& );                               // non blcoking recv 
-        int  probeIncoming(int, int );                                                       //non blocking probe, for getting char/string size
+        int  probeIncoming(int, int );                                                  //non blocking probe, for getting char/string size
         void processReqs(std::vector<MPI_Request>&, int  );                            // process Requests (MPI_Waitall(request, status))
         void resetReqs(std::vector<MPI_Request>& );                                   // clear the vector of mpiReqs. 
-        int probeIncomingBlocking(int, int);                                              // blocking probe -> gets size of char/string : source rank, message tag. 
+        int probeIncomingBlocking(int, int);                                         // blocking probe -> gets size of char/string : source rank, message tag. 
         void recvBuffBlocking(char* , int , int , int );                            // blockng recv : char buff, buff size, message tag, source rank  
         void processReqsAll(std::vector<MPI_Request>& , std::vector<MPI_Status>& ); // clears vecs of MPI_Status & MPI_Request
         
@@ -232,6 +233,8 @@ class Subdomain: public Shape {
 	std::vector<std::string> stringBuff;
         std::vector<int> recvRanks; 
         std::vector<int> remoteCount; 
+	bool ranksSet=false; 
+	bool bodiesSet = false;  // flag 
          
 		
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Subdomain,Shape,"The bounding box of a mpi subdomain",
