@@ -1,5 +1,3 @@
-
-
 '''
 This module defines mpirun(), a parallel implementation of run() using a distributed memory approach. Message passing is done with mpi4py mainly, however some messages are also handled in c++ (with openmpi).
 
@@ -503,7 +501,7 @@ def splitScene():
 			#END Garbage
 		
 		#distribute work
-		#O.interactions.clear() # force on the wall becomes 0 if we clear interactions here
+		O.interactions.clear() # clear all the interactions from the previos merge and be consistent with the original split : master sends bodies without the interactions.
 		sceneAsString=O.sceneToString()
 		for worker in range(1,numThreads):
 			timing_comm.send("splitScene_distribute_work",sceneAsString, dest=worker, tag=_SCENE_) #sent with scene.subdomain=1, better make subdomain index a passed value so we could pass the sae string to every worker (less serialization+deserialization)
@@ -512,7 +510,7 @@ def splitScene():
 		O.stringToScene(comm.recv(source=0, tag=_SCENE_)) #receive a scene pre-processed by master (i.e. with appropriate body.subdomain's)  
 		wprint("worker 1 received",len(O.bodies),"bodies (verletDist=",collider.verletDist,")")
 		O._sceneObj.subdomain = rank
-		O.interactions.clear() # clear all the interactions from the previos merge and be consistent with the original split : master sends bodies without the interactions.
+		
 		
 		
 		domainBody=None
@@ -555,10 +553,7 @@ def splitScene():
 		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].waitForces()",label="waitForcesRunner")]
 		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkColliderActivated(): O.pause()",label="collisionChecker")]
 	else:
-		if MERGE_W_INTERACTIONS:
-		  sendRecvStatesRunner.dead = False; waitForcesRunner.dead = True; isendRecvForcesRunner.dead = True  # force on the bottom wall gets doubled when we use isendRecvForcesRunner,why?
-		else:
-		  sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = False
+		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = False
 		
 	O.splitted=True
 	O.splittedOnce=True
