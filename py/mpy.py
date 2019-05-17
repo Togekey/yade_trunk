@@ -501,11 +501,11 @@ def splitScene():
 			#END Garbage
 		
 		#distribute work
-		O.interactions.clear() # clear all the interactions from the previos merge and be consistent with the original split : master sends bodies without the interactions.
+		
 		sceneAsString=O.sceneToString()
 		for worker in range(1,numThreads):
 			timing_comm.send("splitScene_distribute_work",sceneAsString, dest=worker, tag=_SCENE_) #sent with scene.subdomain=1, better make subdomain index a passed value so we could pass the sae string to every worker (less serialization+deserialization)
-			
+		O.interactions.clear() # clear the interactions in the master proc.  
 	else:
 		O.stringToScene(comm.recv(source=0, tag=_SCENE_)) #receive a scene pre-processed by master (i.e. with appropriate body.subdomain's)  
 		wprint("worker 1 received",len(O.bodies),"bodies (verletDist=",collider.verletDist,")")
