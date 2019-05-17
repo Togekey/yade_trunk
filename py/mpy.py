@@ -48,7 +48,8 @@ USE_CPP_MPI=True and OPTIMIZE_COM
 YADE_TIMING=True #report timing.stats()?
 MERGE_SPLIT = False
 MERGE_W_INTERACTIONS = True
-COPY_MIRROR_BODIES_WHEN_COLLIDE = False
+COPY_MIRROR_BODIES_WHEN_COLLIDE = False 
+NUM_MERGES = 0 
 
 
 #tags for mpi messages
@@ -420,7 +421,8 @@ def mergeScene():
                 O.subD.mergeOp()
                 sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = True
                 O.splitted=False
-                collider.doSort = True                
+                collider.doSort = True
+                global NUM_MERGES; NUM_MERGES +=1; 
             else:
                 
 		if rank>0:
