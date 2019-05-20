@@ -106,12 +106,10 @@ if rank is None: #######  Single-core  ######
 	  if a > b : a,b = b,a
 	  fl.write('%s %s\n' % (a,b))
 	fl.close()
-        O.step() 
 	print "Total force on floor at 2 =",O.forces.f(WALL_ID)[1] 
-
 	O.save('mergeSerial.yade')
 	b = O.bodies[WALL_ID]
-	print "num interactions on floor = ", len(b.intrs())
+        print "num real interactions serial : " , O.interactions.countReal()
 else: #######  MPI  ######
 	#import yade's mpi module
 	#from yade import mpy as mp TODO!HACK
@@ -127,7 +125,7 @@ else: #######  MPI  ######
         mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = False 
         mp.WALL_ID = WALL_ID
 	mp.mpirun(NSTEPS)
-	print "num. bodies:",len([b for b in O.bodies]),len(O.bodies)
+	print "num. bodies:",len([b for b in O.bodies]),len(O.bodies) 
 	if rank==0:
 		fl = open('intrs_parallel.txt', 'w')
 		for i in O.interactions:
@@ -146,16 +144,17 @@ else: #######  MPI  ######
             #
 	    O.save('mergedScene.yade')
             print "force recieved from workers  = ", O.forces.f(WALL_ID)[1] 
-            O.forces.reset()
-            collider.__call__()
-            #print "num interactions = " , len(O.interactions) 
-            O.step()
- 	    mp.mprint( "Total force on floor based on inters ="+str(O.forces.f(WALL_ID)[1]))
+            #O.forces.reset()
+            #collider.__call__()
+            ##print "num interactions = " , len(O.interactions) 
+            #O.step()
+ 	    #mp.mprint( "Total force on floor based on inters ="+str(O.forces.f(WALL_ID)[1]))
             spIds = [b.id for b in O.bodies if type(b.shape)==Sphere]; 
 	    b = O.bodies[WALL_ID]; 
 	    mp.mprint ("len of intrs of  WALL_ID ---> id = ", b.id, "  num inters =  ", len(b.intrs())); 
             mp.mprint ("num merges = ", mp.NUM_MERGES)
-            collectMergeInfo(len(spIds), len(b.intrs()),mp.NUM_MERGES,O.forces.f(WALL_ID)[1],O.interactions.countReal())
+            collectMergeInfo(len(spIds), len(b.intrs()),mp.NUM_MERGES,O.forces.f(WALL_ID)[1],O.interactions.countReal()) 
+            print "num interactions real = ", O.interactions.countReal()
 
 	mp.MPI.Finalize()
 #exit()
