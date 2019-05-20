@@ -276,7 +276,7 @@ void Subdomain::recvBodyContainersFromWorkers() {
         if (subdomainRank != master ) {   return; }
         else if (subdomainRank == master){
         recvRanks.clear(); clearRecvdCharBuff(recvdCharBuff); recvdStringSizes.clear();
-	if (! allocContainerMaster){ initMasterContainer(); std::cout << "init Done MASTER " << subdomainRank << std::endl;}
+	if (! allocContainerMaster){ initMasterContainer(); std::cout << "init Done in  MASTER " << subdomainRank << std::endl;}
 	for (int sourceRank=1; sourceRank != commSize; ++sourceRank){
          int sz =  probeIncomingBlocking(sourceRank, TAG_BODY+subdomainRank);
          recvdStringSizes.push_back(sz);
@@ -329,7 +329,7 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 	interactionContainer->dirty = true;  //notify the collider about the new interactions/new body. 
         containers.clear();
         bodiesSet = true;
-	std::cout << "InteractionContainer size CPP = " << interactionContainer->size() << std::endl; 
+	// std::cout << "InteractionContainer size CPP = " << interactionContainer->size() << std::endl; 
 }
 
 //unused. 

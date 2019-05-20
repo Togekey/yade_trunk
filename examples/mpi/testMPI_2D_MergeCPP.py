@@ -135,17 +135,20 @@ else: #######  MPI  ######
 		  if a > b : a,b = b,a
 		  fl.write('%s %s\n' % (a,b))
 		fl.close()
-		collectTiming()
+		collectTiming() 
+		mp.mprint( "Total force on floor based on FORCES RECVD FROM WORKERS  ="+str(O.forces.f(WALL_ID)[1]))
+
 		
 	else: mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
 	mp.mergeScene()
 	if rank==0: 
             # just for saving and checking the state after merge.
             #
+	    O.save('mergedScene.yade')
             print "force recieved from workers  = ", O.forces.f(WALL_ID)[1] 
             O.forces.reset()
             collider.__call__()
-            print "num interactions = " , len(O.interactions) 
+            #print "num interactions = " , len(O.interactions) 
             O.step()
  	    mp.mprint( "Total force on floor based on inters ="+str(O.forces.f(WALL_ID)[1]))
             spIds = [b.id for b in O.bodies if type(b.shape)==Sphere]; 
@@ -153,6 +156,6 @@ else: #######  MPI  ######
 	    mp.mprint ("len of intrs of  WALL_ID ---> id = ", b.id, "  num inters =  ", len(b.intrs())); 
             mp.mprint ("num merges = ", mp.NUM_MERGES)
             collectMergeInfo(len(spIds), len(b.intrs()),mp.NUM_MERGES,O.forces.f(WALL_ID)[1],O.interactions.countReal())
-            O.save('mergedScene.yade')
+
 	mp.MPI.Finalize()
 #exit()
