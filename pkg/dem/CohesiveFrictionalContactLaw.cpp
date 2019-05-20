@@ -111,19 +111,46 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 	CohFrictPhys* phys = YADE_CAST<CohFrictPhys*> (ip.get());
 	Vector3r& shearForceFirst    = phys->shearForce;
 
-	if (contact->isFresh(scene)) shearForceFirst   = Vector3r::Zero();
+	if (contact->isFresh(scene)) {
+		shearForceFirst   = Vector3r::Zero();
+		phys->initD = geom->penetrationDepth;
+	}
 	Real un     = geom->penetrationDepth;
 	Real Fn    = phys->kn*(un-phys->unp);
+	Real D = un - phys->initD;
+	phys->crackAperture = D<0? -D : 0.; // for partially saturated flow engine
+	Real avgParticleSize = (geom->radius1+geom->radius2)/2.;
+	phys->unpMax = avgParticleSize*unpMaxFactor;
 
 	if (phys->fragile && (-Fn)> phys->normalAdhesion) {
-		// BREAK due to tension
-		return false;
+		// BREAK due to tensio
+		phys->breakType = 1;
+		phys->isBroken = 1;
+		if (!neverErase) return false;
+		else {
+			phys->SetBreakingState();
+			phys->shearForce = Vector3r::Zero();
+	      		phys->normalForce = Vector3r::Zero();
+	      		//phys->isBroken=true; // flag for partially saturated flow engine
+			return true;
+		}	
+		//return false;
 	} else {
 		if ((-Fn)> phys->normalAdhesion) {//normal plasticity
 			Fn=-phys->normalAdhesion;
 			phys->unp = un+phys->normalAdhesion/phys->kn;
-			if (phys->unpMax>=0 && -phys->unp>phys->unpMax)  // Actually unpMax should be defined as a function of the average particule sizes for instance
-				return false;
+			if (phys->unpMax>=0 && -phys->unp>phys->unpMax) {  // Actually unpMax should be defined as a function of the average particule sizes for instance -> NOW FIXED, Line 128?
+				phys->breakType = 1;
+				phys->isBroken = 1;				
+				if (!neverErase) return false;
+				else {
+					phys->SetBreakingState();
+					phys->shearForce = Vector3r::Zero();
+	      				phys->normalForce = Vector3r::Zero();
+	      				//phys->isBroken=true; // flag for partially saturated flow engine
+					return true;
+				}
+			}
 		}
 		phys->normalForce = Fn*geom->normal;
 		State* de1 = Body::byId(id1,scene)->state.get();
@@ -144,13 +171,34 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 			maxFs += Fn*phys->tangensOfFrictionAngle;
 		maxFs = std::max((Real) 0, maxFs);
 		if (Fs  > maxFs) {//Plasticity condition on shear force
-			if (phys->fragile && !phys->cohesionBroken) {
+			if ((!shearPlasticity || phys->fragile) && !phys->cohesionBroken) {
 				phys->SetBreakingState();
 				maxFs = max((Real) 0, Fn*phys->tangensOfFrictionAngle);
+				//phys->isBroken=true; // flag for partially saturated flow engine
+				if (D < 0){
+					phys->breakType = 2;
+					phys->isBroken = 1;
+					if (!neverErase) return false;
+					else {
+						phys->shearForce = Vector3r::Zero();
+                    				phys->normalForce = Vector3r::Zero();
+						return true;
+					}
+				}
 			}
 			maxFs = maxFs / Fs;
 			Vector3r trialForce=shearForce;
 			shearForce *= maxFs;
+			if (D < 0){
+				phys->breakType = 2;
+				phys->isBroken = 1;
+				if (!neverErase) return false;
+				else {
+					phys->shearForce = Vector3r::Zero();                    				
+					phys->normalForce = Vector3r::Zero();
+					return true;
+				}
+			}
 			if (scene->trackEnergy || traceEnergy){
 				Real sheardissip=((1/phys->ks)*(trialForce-shearForce))/*plastic disp*/ .dot(shearForce)/*active force*/;
 				if(sheardissip>0) {

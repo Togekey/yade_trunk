@@ -40,6 +40,9 @@ class PartialSatCellInfo : public FlowCellInfo_PartialSatClayEngineT
 	double porosity;
 	//double solidLine [4][4];//the length of intersecting line between sphere and facet. [i][j] is for facet "i" and sphere (facetVertices)"[i][j]". Last component [i][3] for 1/sumLines in the facet "i" (used by chao).
 	double dsdp; // the change of saturation for given capillary pressure 
+	bool crack;
+	Real crackArea;
+	bool isExposed;
 	//DynamicTwoPhaseFlow 
 	//std::vector<double> entryPressure;
 	//std::vector<double> entrySaturation;
@@ -49,6 +52,8 @@ class PartialSatCellInfo : public FlowCellInfo_PartialSatClayEngineT
 		saturation = 1.0;
 		porosity=1.0;
 		dsdp = 0;
+		crack=false;
+		isExposed=false; // flag for determining if a pore is exposed to atmosphere, which controls the pressure force calculations
 	}
 
 	inline double& sat (void) {return saturation;}
@@ -88,14 +93,31 @@ class PartialSatClayEngine : public PartialSatClayEngineT
 	void setSaturationFromPcS(CellHandle& cell);
 	void setCellsDSDP(FlowSolver& flow);
 	void updateSaturation(FlowSolver& flow);
-	void triangulate(FlowSolver& flow);
+//	void triangulate(FlowSolver& flow);
 	double diagonalSaturationContribution(CellHandle cell);
 	double RHSSaturationContribution(CellHandle cell);	
-	void collectParticleSaturation(FlowSolver& flow);
+	void collectParticleSuction(FlowSolver& flow);
 	void swellParticles();
-	void setOriginalParticleVolumes();
+	void setOriginalParticleValues();
+	void exposureRecursion(CellHandle cell);
+	void determineFracturePaths();
 
+	// fracture network 
+	void trickPermeability(Solver* flow);
+	void interpolateCrack(Tesselation& Tes,Tesselation& NewTes);
+	void computeFracturePerm(RTriangulation::Facet_circulator& facet,Real aperture,RTriangulation::Finite_edges_iterator& edge);
+	void circulateFacets(RTriangulation::Finite_edges_iterator& edge,Real aperture);
+//	void setPositionsBuffer(bool current);
+	Real leakOffRate;
+    	Real averageAperture;
+	Real averageFracturePermeability;
+    	Real maxAperture;	
+	Real crackArea;
+	Real totalFractureArea;
+	
 
+	
+	virtual void initializeVolumes(FlowSolver& flow);
 	virtual void buildTriangulation(double pZero, Solver& flow);
 	virtual void initSolver(FlowSolver& flow);
 	virtual void action();
@@ -126,10 +148,22 @@ class PartialSatClayEngine : public PartialSatClayEngineT
 	((double,lmbda,0.2,,"Lambda parameter for Van Genuchten model"))
 	((double, pAir,0,,"Air pressure for calculation of capillary pressure (Pair - Pwater)"))
 	((double, Po,1.5,,"Po parameter for Van Genuchten model"))
+	((double, nUnsatPerm,5,,"n parameter for empirical relative saturation based permeability relationship"))
+	((double, SrM,0.01,,"residual saturation for empirical relative saturation based permeability relationship"))
+	((double, SsM,1.,,"saturated saturation for empirical relative saturation based permeability relationship"))
 	((bool, partialSatEngine,1,,"Activates the partial sat clay engine"))
+	((bool, allCellsFractured,0,,"use to simulate all pores fractured for debugging purposes only"))
+	((bool, freezeRadii,0,,"use to stop swelling debugging purposes only"))
+	((bool, crackModelActive,0,,"Activates the parallel plate approximation model for facets connected to cohesionBroken edges"))
 	((double,alpham,2.6048e-08,,"alpha parameter for particle volumetric strain model MPa^-1"))
 	((double,betam,2.10206e-08,,"beta parameter for particle volumetric strain model MPa^-1"))
 	((bool,particleSwelling,1,,"set false to neglect particle swelling"))
+	((bool,freeSwelling,1,,"if true, boundary forces are computed with pAir pressure only"))
+	((double,totalVolChange,0,,"tracks the total volumetric strain that occured in each step"))
+	((double,matricSuctionRatio,1,,"The ratio of matric:osmotic suction. Facet forces computed for matricSuction fraction only."))
+	((double,residualAperture,0.,,"residual aperture of induced cracks"))
+	((double,apertureFactor,1.,,"factor to consider tortuosity"))
+	((bool,calcCrackArea,true,,"The amount of crack per pore is updated if calcCrackArea=True")) 
 	,/*PartialSatClayEngineT()*/,
 	solver = shared_ptr<FlowSolver> (new FlowSolver);
 	,

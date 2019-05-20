@@ -86,7 +86,10 @@ class State: public Serializable, public Indexable{
 #endif
 #ifdef PARTIALSAT
 		((Real,suctionSum,0,,"sum of suctions associated with incident cells"))
-		((Real,incidentCells,0,,"number of incident cells"))
+		((Real,suction,0,,"suction computed for particle (sum(sat of inc. cells)/num inc. cells)"))
+		((Real,radiiChange,0,,"total change of particle radius due to swelling"))
+		((Real,radiiOriginal,0,,"original particle radius prior to swelling"))
+		((int,incidentCells,0,,"number of incident cells"))
 		((Real,volumeOriginal,0,,"original particle volume stored for strain increments"))
 #endif
 		,

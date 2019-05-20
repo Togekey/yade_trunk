@@ -10,6 +10,7 @@
 #ifdef PARTIALSAT
 #include "PartialSatClayEngine.hpp"
 #include <boost/range/algorithm_ext/erase.hpp>
+#include<pkg/dem/CohesiveFrictionalContactLaw.hpp>
 
 CREATE_LOGGER(PartialSatClayEngine);
 YADE_PLUGIN((PartialSatClayEngine));
@@ -33,7 +34,8 @@ void PartialSatClayEngine::action(){
 	  backgroundCompleted=true;
           if (partialSatEngine) {
 		initializeSaturations(*solver);
-		if (particleSwelling) setOriginalParticleVolumes();
+		if (particleSwelling) setOriginalParticleValues();
+		cout << "Particle swelling model active, original particle volumes set" << endl;
 	  }
 	}
 	#ifdef YADE_OPENMP
@@ -60,19 +62,20 @@ void PartialSatClayEngine::action(){
 		if (partialSatEngine) setCellsDSDP(*solver);
 		solver->gaussSeidel(scene->dt);
 		timingDeltas->checkpoint ( "Factorize + Solve" );
-		solver->computeFacetForcesWithCache();
+		if (!decoupleForces) solver->computeFacetForcesWithCache();
 		if (partialSatEngine) {
 			initializeSaturations(*solver);
 			//updateSaturation(*solver);
 		}
 	}
 	if (particleSwelling) {
-		collectParticleSaturation(*solver);
+		collectParticleSuction(*solver);
 		swellParticles();
 	}
+	if (freeSwelling && crackModelActive) determineFracturePaths();
         timingDeltas->checkpoint ( "compute_Forces" );
         ///Application of vicscous forces
-        if (!decoupleForces) scene->forces.sync();
+	scene->forces.sync();
 	timingDeltas->checkpoint ( "forces.sync()" );
 	if (!decoupleForces) computeViscousForces ( *solver );
 	timingDeltas->checkpoint ( "viscous forces" );
@@ -163,7 +166,7 @@ void PartialSatClayEngine::setCellsDSDP(FlowSolver& flow)
 	Tesselation& Tes = flow.T[flow.currentTes];
 //	#ifdef YADE_OPENMP
 	const long size = Tes.cellHandles.size();
-//	#pragma omp parallel for num_threads(ompThreads>0 ? ompThreads : 1)
+	#pragma omp parallel for
     	for (long i=0; i<size; i++){
 		CellHandle& cell = Tes.cellHandles[i];
 		const double deriv = dsdp(cell);
@@ -188,7 +191,7 @@ void PartialSatClayEngine::initializeSaturations(FlowSolver& flow)
 	Tesselation& Tes = flow.T[flow.currentTes];
 //	#ifdef YADE_OPENMP
 	const long size = Tes.cellHandles.size();
-//	#pragma omp parallel for num_threads(ompThreads>0 ? ompThreads : 1)
+	#pragma omp parallel for
     	for (long i=0; i<size; i++){
 		CellHandle& cell = Tes.cellHandles[i];
         	setSaturationFromPcS(cell);
@@ -223,20 +226,21 @@ void PartialSatClayEngine::updateSaturation(FlowSolver& flow)
 	}
 }
 
-void PartialSatClayEngine::collectParticleSaturation(FlowSolver& flow){
+void PartialSatClayEngine::collectParticleSuction(FlowSolver& flow){
 	shared_ptr<BodyContainer>& bodies = scene->bodies;
 	Tesselation& Tes = flow.T[flow.currentTes];
 	const long size = Tes.cellHandles.size();
-	#pragma omp parallel for num_threads(ompThreads>0 ? ompThreads : 1)
+	#pragma omp parallel for
     	for (long i=0; i<size; i++){
 		CellHandle& cell = Tes.cellHandles[i];
-		if (cell->info().isGhost || cell->info().Pcondition) continue; // Do we need special cases for fictious cells?
+		if (cell->info().isGhost || cell->info().Pcondition || cell->info().isFictious) continue; // Do we need special cases for fictious cells?
 		for (int v=0;v<4;v++){
 			//if (cell->vertex(v)->info().isFictious) continue;
 			const long int id = cell->vertex(v)->info().id();
 			const shared_ptr<Body>& b =(*bodies)[id];
 			if (b->shape->getClassIndex()!=Sphere::getClassIndexStatic() || !b) continue;
 			auto* state = b->state.get();
+			//if (cell->info().isExposed) state->suctionSum+= pAir; // use different pressure for exposed cracks?
 			state->suctionSum += pAir - cell->info().p();
 			state->incidentCells += 1;
 		}
@@ -244,7 +248,7 @@ void PartialSatClayEngine::collectParticleSaturation(FlowSolver& flow){
 
 }
 
-void PartialSatClayEngine::setOriginalParticleVolumes(){
+void PartialSatClayEngine::setOriginalParticleValues(){
 	const shared_ptr<BodyContainer>& bodies=scene->bodies;
 	const long size=bodies->size();
 	#pragma omp parallel for
@@ -252,9 +256,10 @@ void PartialSatClayEngine::setOriginalParticleVolumes(){
 		const shared_ptr<Body>& b=(*bodies)[i];
 		if (b->shape->getClassIndex()!=Sphere::getClassIndexStatic() || !b) continue;
 		Sphere* sphere = dynamic_cast<Sphere*>(b->shape.get());
-		const double volume = 4./3. * M_PI*pow(sphere->radius,3);
+		const double volume = 4./3. * M_PI*pow(sphere->radius,3.);
 		auto* state = b->state.get();
 		state->volumeOriginal = volume;
+		state->radiiOriginal = sphere->radius;
 	}
 }
 
@@ -263,6 +268,7 @@ void PartialSatClayEngine::swellParticles(){
 	const shared_ptr<BodyContainer>& bodies=scene->bodies;
 	const long size=bodies->size();
 	const double suction0 = pAir - pZero;
+	totalVolChange = 0;
 	#pragma omp parallel for
 	for (long i=0; i<size; i++){
 		const shared_ptr<Body>& b=(*bodies)[i];
@@ -270,12 +276,18 @@ void PartialSatClayEngine::swellParticles(){
 		Sphere* sphere = dynamic_cast<Sphere*>(b->shape.get());
 		//const double volume = 4./3. * M_PI*pow(sphere->radius,3);
 		auto* state = b->state.get();
-		const double avgSuction = state->suctionSum/state->incidentCells;
+		state->suction = state->suctionSum/state->incidentCells;
 		state->incidentCells = 0; // reset to 0 for next time step
-		const double volStrain = betam/alpham * (exp(-alpham*suction0) - exp(-alpham*avgSuction));
+		state->suctionSum = 0; //
+		const double volStrain = betam/alpham * (exp(-alpham*state->suction) - exp(-alpham*suction0));
+//		const double rOrig = pow(state->volumeOriginal * 3. / (4.*M_PI),1./3.);
+	//
 		const double vNew = state->volumeOriginal*(volStrain + 1.);
 		const double rNew = pow(3.*vNew/(4.*M_PI),1./3.);
+		totalVolChange += (pow(rNew,3.) - pow(sphere->radius,3.)) * 4./3.*M_PI;
+		state->radiiChange = rNew - state->radiiOriginal;
 		sphere->radius = rNew;
+//		cout << "volStrain "<<volStrain<<" avgSuction "<<avgSuction<<" suction0 " <<suction0<<" rDel "<<rDel<<" rNew "<< rNew << " rOrig "<< rOrig << endl;
 	}
 
 }
@@ -308,10 +320,25 @@ void PartialSatClayEngine::saveUnsatVtk(const char* folder, bool withBoundaries)
 	vtkfile.begin_data("id",CELL_DATA,SCALARS,INT);
 	for (unsigned kk=0; kk<allIds.size(); kk++) vtkfile.write_data(allIds[kk]);
 	vtkfile.end_data();
+
+	vtkfile.begin_data("fracturedCells",CELL_DATA,SCALARS,INT);
+	for (unsigned kk=0; kk<allIds.size(); kk++) vtkfile.write_data(solver->tesselation().cellHandles[allIds[kk]]->info().crack);
+	vtkfile.end_data();
+
+
+	vtkfile.begin_data("Permeability",CELL_DATA,SCALARS,FLOAT);
+	for (unsigned kk=0; kk<allIds.size(); kk++) {
+		std::vector<double> perm = solver->tesselation().cellHandles[allIds[kk]]->info().kNorm();
+		double permSum = 0;
+		for (unsigned int i=0;i<perm.size();i++) permSum+=perm[i];
+		vtkfile.write_data(permSum);
+	}
+	vtkfile.end_data();
 	
 	#define SAVE_CELL_INFO(INFO) vtkfile.begin_data(#INFO,CELL_DATA,SCALARS,FLOAT); for (unsigned kk=0; kk<allIds.size(); kk++) vtkfile.write_data(solver->tesselation().cellHandles[allIds[kk]]->info().INFO); vtkfile.end_data();
 	SAVE_CELL_INFO(saturation)
 	SAVE_CELL_INFO(Pcondition)
+	SAVE_CELL_INFO(isExposed)
 	//SAVE_CELL_INFO(porosity)
 }
 
@@ -348,6 +375,12 @@ void PartialSatClayEngine::initSolver ( FlowSolver& flow )
 	flow.sphericalVertexAreaCalculated=false;
         flow.xMin = 1000.0, flow.xMax = -10000.0, flow.yMin = 1000.0, flow.yMax = -10000.0, flow.zMin = 1000.0, flow.zMax = -10000.0;
 	flow.partialSatEngine = partialSatEngine;
+	flow.pAir = pAir;
+	flow.freeSwelling = freeSwelling;
+	flow.matricSuctionRatio = matricSuctionRatio;
+	flow.nUnsatPerm = nUnsatPerm;
+	flow.SrM = SrM;
+	flow.SsM = SsM;
 }
 
 void PartialSatClayEngine::buildTriangulation ( double pZero, Solver& flow )
@@ -375,7 +408,7 @@ void PartialSatClayEngine::buildTriangulation ( double pZero, Solver& flow )
         flow.computePermeability();
 
 	if (multithread && fluidBulkModulus>0) initializeVolumes(flow);  // needed for multithreaded compressible flow (old site, fixed bug https://bugs.launchpad.net/yade/+bug/1687355)
-	trickPermeability(&flow); //This virtual function does nothing yet, derived class may overload it to make permeability different (see DFN engine)
+//	if (crackModelActive) trickPermeability(&flow); //This virtual function does nothing yet, derived class may overload it to make permeability different (see DFN engine)
         porosity = flow.vPoralPorosity/flow.vTotalPorosity;
 
         boundaryConditions ( flow );
@@ -389,9 +422,218 @@ void PartialSatClayEngine::buildTriangulation ( double pZero, Solver& flow )
 
 	
         if ( !first && !multithread && (useSolver==0 || fluidBulkModulus>0 || doInterpolate || thermalEngine || partialSatEngine)) flow.interpolate ( flow.T[!flow.currentTes], flow.tesselation() );
+	if (crackModelActive) trickPermeability(&flow);
         if ( waveAction ) flow.applySinusoidalPressure ( flow.tesselation().Triangulation(), sineMagnitude, sineAverage, 30 );
 	else if (boundaryPressure.size()!=0) flow.applyUserDefinedPressure ( flow.tesselation().Triangulation(), boundaryXPos , boundaryPressure);
         if (normalLubrication || shearLubrication || viscousShear) flow.computeEdgesSurfaces();
+}
+
+
+void PartialSatClayEngine::initializeVolumes (FlowSolver& flow )
+{
+	typedef typename Solver::FiniteVerticesIterator FiniteVerticesIterator;
+	
+	FiniteVerticesIterator vertices_end = flow.tesselation().Triangulation().finite_vertices_end();
+	CGT::CVector Zero(0,0,0);
+	for (FiniteVerticesIterator V_it = flow.tesselation().Triangulation().finite_vertices_begin(); V_it!= vertices_end; V_it++) V_it->info().forces=Zero;
+
+	FOREACH(CellHandle& cell, flow.tesselation().cellHandles)
+	{
+		switch ( cell->info().fictious() )
+		{
+			case ( 0 ) : cell->info().volume() = volumeCell ( cell ); break;
+			case ( 1 ) : cell->info().volume() = volumeCellSingleFictious ( cell ); break;
+			case ( 2 ) : cell->info().volume() = volumeCellDoubleFictious ( cell ); break;
+			case ( 3 ) : cell->info().volume() = volumeCellTripleFictious ( cell ); break;
+			default: break; 
+		}
+	if (flow.fluidBulkModulus>0 || thermalEngine || iniVoidVolumes) {
+		cell->info().invVoidVolume() = 1 / ( std::abs(cell->info().volume()) - volumeCorrection*flow.volumeSolidPore(cell) );
+	} else if (partialSatEngine) { 
+		cell->info().invVoidVolume() = 1 / std::abs(cell->info().volume()); 
+	}
+	}
+	if (debug) cout << "Volumes initialised." << endl;
+}
+
+
+
+/////// Discrete Fracture Network Functionality ////////
+
+
+void PartialSatClayEngine::interpolateCrack(Tesselation& Tes,Tesselation& NewTes){
+        RTriangulation& Tri = Tes.Triangulation();
+	//RTriangulation& newTri = NewTes.Triangulation();
+	//FiniteCellsIterator cellEnd = newTri.finite_cells_end();
+	#ifdef YADE_OPENMP
+    	const long size = NewTes.cellHandles.size();
+	#pragma omp parallel for num_threads(ompThreads>0 ? ompThreads : 1)
+    	for (long i=0; i<size; i++){
+		CellHandle& newCell = NewTes.cellHandles[i];
+        #else
+	FOREACH(CellHandle& newCell, NewTes.cellHandles){
+        #endif
+		if (newCell->info().isGhost) continue;
+		CVector center ( 0,0,0 );
+		if (newCell->info().fictious()==0) for ( int k=0;k<4;k++ ) center= center + 0.25* (Tes.vertex(newCell->vertex(k)->info().id())->point().point()-CGAL::ORIGIN);
+		else {
+			Real boundPos=0; int coord=0;
+			for ( int k=0;k<4;k++ ){
+				if (!newCell->vertex (k)->info().isFictious) center= center+(1./(4.-newCell->info().fictious()))*(Tes.vertex(newCell->vertex(k)->info().id())->point().point()-CGAL::ORIGIN);
+			}
+			for ( int k=0;k<4;k++ ) {
+				if (newCell->vertex (k)->info().isFictious) {
+					coord=solver->boundary (newCell->vertex(k)->info().id()).coordinate;
+					boundPos=solver->boundary (newCell->vertex(k)->info().id()).p[coord];
+					center=CVector(coord==0?boundPos:center[0],coord==1?boundPos:center[1],coord==2?boundPos:center[2]);
+				}
+			}
+		}
+		CellHandle oldCell = Tri.locate(CGT::Sphere(center[0],center[1],center[2]));
+		newCell->info().crack = oldCell->info().crack;
+//		For later commit newCell->info().fractureTip = oldCell->info().fractureTip;
+//		For later commit newCell->info().cellHalfWidth = oldCell->info().cellHalfWidth;
+
+		/// compute leakoff rate by summing the flow through facets abutting non-cracked neighbors
+//		if (oldCell->info().crack && !oldCell->info().fictious()){
+//			Real facetFlowRate=0;
+//			facetFlowRate -= oldCell->info().dv();
+//			for (int k=0; k<4;k++) {
+//				if (!oldCell->neighbor(k)->info().crack){
+//					facetFlowRate = oldCell->info().kNorm()[k]*(oldCell->info().shiftedP()-oldCell->neighbor(k)->info().shiftedP());
+//					leakOffRate += facetFlowRate;
+//				}
+//			}
+//		}
+	}
+    }
+
+void PartialSatClayEngine::computeFracturePerm(RTriangulation::Facet_circulator& facet,Real aperture,RTriangulation::Finite_edges_iterator& ed_it)
+{
+	const RTriangulation::Facet& currentFacet = *facet; /// seems verbose but facet->first was declaring a junk cell and crashing program (old site, fixed bug https://bugs.launchpad.net/yade/+bug/1666339)
+	const RTriangulation& Tri = solver->T[solver->currentTes].Triangulation();
+	const CellHandle& cell1 = currentFacet.first;
+	const CellHandle& cell2 = currentFacet.first->neighbor(facet->second);
+	if (Tri.is_infinite(cell1) || Tri.is_infinite(cell2)) cerr<<"Infinite cell found in trickPermeability, should be handled somehow, maybe"<<endl;
+	
+// 	/// ROBERT
+// 	if (cell1->info().count()[currentFacet.second] < 3){
+// 		cell1->info().count()[currentFacet.second] += 1;
+// 		//cell1->info().aperture()[currentFacet.second] += aperture // used with avgAperture below if desired
+// 	}
+// 	if (!edgeOnJoint && cell1->info().count()[currentFacet.second] < facetEdgeBreakThreshold) return; // only allow facets with 2 or 3 broken edges to be tricked
+	// Need to decide aperture criteria! Otherwise it selects the most recent broken edge aperture for facet's perm calc. Here is one possibility: 
+	//Real avgAperture = cell1->info().aperture()[currentFacet.second]/Real(cell1->info().count()[currentFacet.second]);
+	double fracturePerm = apertureFactor*pow(aperture,3.)/(12.*viscosity);
+	cell1->info().kNorm()[currentFacet.second] += fracturePerm; //
+	cell2->info().kNorm()[Tri.mirror_index(cell1,currentFacet.second)] += fracturePerm;
+	/// For vtk recorder:
+	cell1->info().crack=1;
+	cell2->info().crack=1;
+	//cout << "crack set to true in pore"<<endl;
+	cell2->info().blocked = cell1->info().blocked = cell2->info().Pcondition = cell1->info().Pcondition = false; /// those ones will be included in the flow problem
+	Point& CellCentre1 = cell1->info(); /// Trying to get fracture's surface 
+	Point& CellCentre2 = cell2->info(); /// Trying to get fracture's surface 
+	CVector networkFractureLength = CellCentre1 - CellCentre2; /// Trying to get fracture's surface 
+	double networkFractureDistance = sqrt(networkFractureLength.squared_length()); /// Trying to get fracture's surface 
+	Real networkFractureArea = pow(networkFractureDistance,2);  /// Trying to get fracture's surface 
+	totalFractureArea += networkFractureArea; /// Trying to get fracture's surface 
+// 	cout <<" ------------------ The total surface area up to here is --------------------" << totalFractureArea << endl;
+// 	printFractureTotalArea = totalFractureArea; /// Trying to get fracture's surface 
+	if (calcCrackArea) {
+			CVector edge = ed_it->first->vertex(ed_it->second)->point().point() - ed_it->first->vertex(ed_it->third)->point().point();
+			CVector unitV = edge*(1./sqrt(edge.squared_length()));
+			Point p3 = ed_it->first->vertex(ed_it->third)->point().point() + unitV*(cell1->info() - ed_it->first->vertex(ed_it->third)->point().point())*unitV;
+			Real halfCrackArea = 0.25*sqrt(std::abs(cross_product(CellCentre1-p3,CellCentre2-p3).squared_length()));//
+			cell1->info().crackArea += halfCrackArea;
+			cell2->info().crackArea += halfCrackArea;
+			crackArea += 2*halfCrackArea;
+		}
+}
+
+void PartialSatClayEngine::circulateFacets(RTriangulation::Finite_edges_iterator& edge,Real aperture)
+{
+	const RTriangulation& Tri = solver->T[solver->currentTes].Triangulation();
+	RTriangulation::Facet_circulator facet1 = Tri.incident_facets(*edge);
+	RTriangulation::Facet_circulator facet0 = facet1++;
+	computeFracturePerm(facet0,aperture,edge);
+	while (facet1!=facet0) {computeFracturePerm(facet1,aperture,edge); facet1++;}
+	/// Needs the fracture surface for this edge?
+	// 	double edgeArea = solver->T[solver->currentTes].computeVFacetArea(edge); cout<<"edge area="<<edgeArea<<endl;
+}
+
+void PartialSatClayEngine::trickPermeability(Solver* flow)
+{
+	leakOffRate=0;	
+	const RTriangulation& Tri = flow->T[solver->currentTes].Triangulation();
+//	if (!first) interpolateCrack(solver->T[solver->currentTes],flow->T[flow->currentTes]);
+	const CohFrictPhys* cohfrictphys;
+	const shared_ptr<InteractionContainer> interactions = scene->interactions;
+	int numberOfCrackedOrJointedInteractions=0; 
+	Real SumOfApertures=0.; 
+	averageAperture=0;
+	maxAperture=0;
+	crackArea=0;
+	//Real totalFractureArea=0; /// Trying to get fracture's surface
+// 	const shared_ptr<IGeom>& ig;
+// 	const ScGeom* geom; // = static_cast<ScGeom*>(ig.get());
+	FiniteEdgesIterator edge = Tri.finite_edges_begin();
+	for( ; edge != Tri.finite_edges_end(); ++edge) {
+	  
+		const VertexInfo& vi1 = (edge->first)->vertex(edge->second)->info();
+		const VertexInfo& vi2 = (edge->first)->vertex(edge->third)->info();
+		const shared_ptr<Interaction>& interaction = interactions->find( vi1.id(),vi2.id() );
+		
+		if (interaction && interaction->isReal()) {
+			if (edge->first->info().isFictious) continue; /// avoid trick permeability for fictitious
+			cohfrictphys = YADE_CAST<CohFrictPhys*>(interaction->phys.get());
+			
+			if (cohfrictphys->isBroken || allCellsFractured) {
+				numberOfCrackedOrJointedInteractions+=1;
+				//if (cohfrictphys->crackAperture<=0.) continue;
+				Real aperture = (cohfrictphys->crackAperture <= residualAperture)? residualAperture : cohfrictphys->crackAperture;
+
+				if (aperture > maxAperture) maxAperture = aperture; 
+				SumOfApertures += aperture;
+				
+				circulateFacets(edge,aperture);
+			};
+		}
+	}
+	averageAperture = SumOfApertures/numberOfCrackedOrJointedInteractions; /// DEBUG
+// 	cout << " Average aperture in joint ( -D ) = " << AverageAperture << endl; /// DEBUG
+}
+
+void PartialSatClayEngine::determineFracturePaths()
+{
+    RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
+    FiniteCellsIterator cellEnd = tri.finite_cells_end();
+    for ( FiniteCellsIterator cell = tri.finite_cells_begin(); cell != cellEnd; cell++ ) {
+      if(cell->info().Pcondition) continue;
+        cell->info().isExposed = false;
+    }
+    
+    for (int i=0;i<6;i++){
+    	for (FlowSolver::VCellIterator it = solver->boundingCells[i].begin(); it != solver->boundingCells[i].end(); it++) {
+      		if ((*it)==NULL) continue;
+        	exposureRecursion(*it);
+    	}
+    }
+}
+
+void PartialSatClayEngine::exposureRecursion(CellHandle cell)
+{
+    for (int facet = 0; facet < 4; facet ++) {
+        CellHandle nCell = cell->neighbor(facet);
+        if (solver->T[solver->currentTes].Triangulation().is_infinite(nCell)) continue;
+        if (nCell->info().Pcondition) continue;
+//         if ( (nCell->info().isFictious) && (!isInvadeBoundary) ) continue;
+        if (!nCell->info().crack) continue;
+       	if (nCell->info().isExposed) continue; // another recursion already found it
+        nCell->info().isExposed=true;
+	//nCell->info().p()=pAir;	
+        exposureRecursion(nCell);
+    }
 }
 
 //void PartialSatClayEngine::buildTriangulation ( double pZero, Solver& flow )

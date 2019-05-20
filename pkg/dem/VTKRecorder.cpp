@@ -40,6 +40,7 @@
 #include<pkg/dem/ConcretePM.hpp>
 #include<pkg/dem/WirePM.hpp>
 #include<pkg/dem/JointedCohesiveFrictionalPM.hpp>
+#include<pkg/dem/CohesiveFrictionalContactLaw.hpp>
 #include<pkg/dem/Shop.hpp>
 #ifdef YADE_LIQMIGRATION
 	#include<pkg/dem/ViscoelasticCapillarPM.hpp>
@@ -101,6 +102,7 @@ void VTKRecorder::action(){
 		else if(rec=="liquidcontrol") recActive[REC_LIQ]=true;
 		else if(rec=="bstresses") recActive[REC_BSTRESS]=true;
 		else if(rec=="coordNumber") recActive[REC_COORDNUMBER]=true;
+		else if(rec=="cohfrict") recActive[REC_COHFRICT]=true;
 		else LOG_ERROR("Unknown recorder named `"<<rec<<"' (supported are: all, spheres, velocity, facets, boxes, color, stress, cpm, wpm, intr, id, clumpId, materialId, jcfpm, cracks, moments, pericell, liquidcontrol, bstresses). Ignored.");
 	}
 	// cpm needs interactions
@@ -158,6 +160,16 @@ void VTKRecorder::action(){
 	vtkSmartPointer<vtkDoubleArray> spheresTemp = vtkSmartPointer<vtkDoubleArray>::New();
 	spheresTemp->SetNumberOfComponents(1);
 	spheresTemp->SetName("temp");
+
+#ifdef PARTIALSAT
+	vtkSmartPointer<vtkDoubleArray> spheresRadiiChange = vtkSmartPointer<vtkDoubleArray>::New();
+	spheresRadiiChange->SetNumberOfComponents(1);
+	spheresRadiiChange->SetName("radiiChange");
+
+	vtkSmartPointer<vtkDoubleArray> spheresSuction = vtkSmartPointer<vtkDoubleArray>::New();
+	spheresSuction->SetNumberOfComponents(1);
+	spheresSuction->SetName("suction");
+#endif
 
 #ifdef YADE_SPH
 	vtkSmartPointer<vtkDoubleArray> spheresRhoSPH = vtkSmartPointer<vtkDoubleArray>::New();
@@ -379,6 +391,17 @@ void VTKRecorder::action(){
 	eventNumber->SetNumberOfComponents(1);
 	eventNumber->SetName("eventNumber");
 
+	// extras for cohfrictphys
+	vtkSmartPointer<vtkDoubleArray> intrBroken = vtkSmartPointer<vtkDoubleArray>::New();
+	intrBroken->SetNumberOfComponents(1);
+	intrBroken->SetName("broken");
+	vtkSmartPointer<vtkDoubleArray> intrUNP = vtkSmartPointer<vtkDoubleArray>::New();
+	intrUNP->SetNumberOfComponents(1);
+	intrUNP->SetName("unp");
+	vtkSmartPointer<vtkDoubleArray> intrBreakType = vtkSmartPointer<vtkDoubleArray>::New();
+	intrBreakType->SetNumberOfComponents(1);
+	intrBreakType->SetName("breakType");
+
 	// extras for cracks
 	vtkSmartPointer<vtkPoints> crackPos = vtkSmartPointer<vtkPoints>::New();
 	vtkSmartPointer<vtkCellArray> crackCells = vtkSmartPointer<vtkCellArray>::New();
@@ -546,6 +569,12 @@ void VTKRecorder::action(){
 					intrIsOnJoint->InsertNextValue(jcfpmphys->isOnJoint);
 					intrForceN->InsertNextValue(fn);
 					eventNumber->InsertNextValue(jcfpmphys->eventNumber);
+				} else if (recActive[REC_COHFRICT]){
+					const CohFrictPhys* cohfrictphys = YADE_CAST<CohFrictPhys*>(I->phys.get());
+					intrBroken->InsertNextValue(cohfrictphys->isBroken);
+					intrUNP->InsertNextValue(cohfrictphys->unp);
+					intrForceN->InsertNextValue(fn);
+					intrBreakType->InsertNextValue(cohfrictphys->breakType);
 				} else {
 					intrForceN->InsertNextValue(fn);
 				}
@@ -1018,6 +1047,11 @@ void VTKRecorder::action(){
 		if (recActive[REC_WPM]){
 			intrPd->GetCellData()->AddArray(wpmNormalForce);
 			intrPd->GetCellData()->AddArray(wpmLimitFactor);
+		}
+		if (recActive[REC_COHFRICT]){
+			intrPd->GetCellData()->AddArray(intrBroken);
+			intrPd->GetCellData()->AddArray(intrUNP);
+			intrPd->GetCellData()->AddArray(intrBreakType);
 		}
 		#ifdef YADE_VTK_MULTIBLOCK
 			if(!multiblock)

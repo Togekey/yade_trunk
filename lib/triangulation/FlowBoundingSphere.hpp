@@ -53,13 +53,21 @@ class FlowBoundingSphere : public Network<_Tesselation>
 		bool averageCavityPressure;
 		double cavityDV;
 
+		// thermal engine necessities 
 		bool thermalEngine;
 		double fluidRho;
 		double fluidCp;
 		bool sphericalVertexAreaCalculated = 0;
 		double thermalPorosity;
 
+		// partialsat engine necessities 
 		bool partialSatEngine;
+		double pAir;
+		bool freeSwelling;
+		double matricSuctionRatio;
+		double nUnsatPerm;
+		double SrM, SsM;
+		
 
 		//Handling imposed pressures/fluxes on elements in the form of {point,value} pairs, IPCells contains the cell handles corresponding to point
 		vector<pair<Point,Real> > imposedP;

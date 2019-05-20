@@ -241,7 +241,7 @@ template<class _Tesselation>
 void PartialSatLinSolv<_Tesselation>::copyCellsToLin (Real dt)
 {
 	for (int ii=1; ii<=ncols; ii++) {
-		T_bv[ii-1]=T_b[ii-1]-T_cells[ii]->info().dv();
+		T_bv[ii-1]=T_b[ii-1]; //-T_cells[ii]->info().dv(); // if considering clay, we don't consider volume change in pressure calc?
 		if (fluidBulkModulus>0) T_bv[ii-1] += T_cells[ii]->info().p()/(fluidBulkModulus*dt*T_cells[ii]->info().invVoidVolume());
 		if (partialSatEngine && !isnan(T_cells[ii]->info().invVoidVolume())) T_bv[ii-1] += T_cells[ii]->info().p() * T_cells[ii]->info().dsdp / (dt * T_cells[ii]->info().invVoidVolume() );
 	}
@@ -283,6 +283,7 @@ void PartialSatLinSolv<_Tesselation>::interpolate(Tesselation& Tes, Tesselation&
 			if (!newCell->info().Pcondition) newCell->info().getInfo(oldCell->info());
 			if (!newCell->info().Tcondition && thermalEngine) newCell->info().temp() = oldCell->info().temp();
 			newCell->info().sat() = oldCell->info().sat();
+			newCell->info().crack = oldCell->info().crack;
 		}
 }
 
@@ -295,12 +296,12 @@ void PartialSatLinSolv<_Tesselation>::computeFacetForcesWithCache(bool onlyCache
 	//reset forces
 	if (!onlyCache) for (FiniteVerticesIterator v = Tri.finite_vertices_begin(); v != Tri.finite_vertices_end(); ++v) v->info().forces=nullVect;
 
-	#ifdef parallel_forces
-	if (noCache) {
-		perVertexUnitForce.clear(); perVertexPressure.clear();
-		perVertexUnitForce.resize(T[currentTes].maxId+1);
-		perVertexPressure.resize(T[currentTes].maxId+1);}
-	#endif
+/*	#ifdef parallel_forces*/
+/*	if (noCache) {*/
+/*		perVertexUnitForce.clear(); perVertexPressure.clear();*/
+/*		perVertexUnitForce.resize(T[currentTes].maxId+1);*/
+/*		perVertexPressure.resize(T[currentTes].maxId+1);}*/
+/*	#endif*/
 	CellHandle neighbourCell;
 	VertexHandle mirrorVertex;
 	CVector tempVect;
@@ -332,49 +333,59 @@ void PartialSatLinSolv<_Tesselation>::computeFacetForcesWithCache(bool onlyCache
 					}
 					/// Apply weighted forces f_k=sqRad_k/sumSqRad*f
 					CVector facetUnitForce = -fluidSurfk*cell->info().solidSurfaces[j][3];
-					CVector facetForce = cell->info().p()*facetUnitForce;
+					CVector facetForce;
+					if ((cell->info().isFictious && freeSwelling) || cell->info().isExposed) facetForce = pAir*facetUnitForce; // forces computed on boundaries of free swelling case based on air pressure only
+					else facetForce = cell->info().p()*facetUnitForce*cell->info().sat()*matricSuctionRatio;
+
 										
 					for (int y=0; y<3;y++) {
 						//1st the drag (viscous) force weighted by surface of spheres in the throat
-						cell->vertex(facetVertices[j][y])->info().forces = cell->vertex(facetVertices[j][y])->info().forces + facetForce*cell->info().solidSurfaces[j][y];
+						cell->vertex(facetVertices[j][y])->info().forces = cell->vertex(facetVertices[j][y])->info().forces + facetForce*cell->info().solidSurfaces[j][y]; // no viscous drag in partiallysaturated clay
 						//(add to cached value)
 						cell->info().unitForceVectors[facetVertices[j][y]]=cell->info().unitForceVectors[facetVertices[j][y]]+facetUnitForce*cell->info().solidSurfaces[j][y];
 						//2nd the partial integral of pore pressure, which boils down to weighting by partial cross-sectional area
 						//uncomment to get total force / comment to get only viscous forces (Bruno)
 						if (!cell->vertex(facetVertices[j][y])->info().isFictious) {
-							cell->vertex(facetVertices[j][y])->info().forces = cell->vertex(facetVertices[j][y])->info().forces -facetNormal*cell->info().p()*crossSections[j][y];
+							if ((cell->info().isFictious && freeSwelling) || cell->info().isExposed) cell->vertex(facetVertices[j][y])->info().forces = cell->vertex(facetVertices[j][y])->info().forces -facetNormal*pAir*crossSections[j][y]; // forces exerted by boundary cells computed not according to 
+							else cell->vertex(facetVertices[j][y])->info().forces = cell->vertex(facetVertices[j][y])->info().forces -facetNormal*cell->info().p()*crossSections[j][y]*cell->info().sat()*matricSuctionRatio;
 							//add to cached value
 							cell->info().unitForceVectors[facetVertices[j][y]]=cell->info().unitForceVectors[facetVertices[j][y]]-facetNormal*crossSections[j][y];
 						}
 					}
-					#ifdef parallel_forces
-					perVertexUnitForce[cell->vertex(j)->info().id()].push_back(&(cell->info().unitForceVectors[j]));
-					perVertexPressure[cell->vertex(j)->info().id()].push_back(&(cell->info().p()));
-					#endif
+/*					#ifdef parallel_forces*/
+/*					perVertexUnitForce[cell->vertex(j)->info().id()].push_back(&(cell->info().unitForceVectors[j]));*/
+/*					if  ((cell->info().isFictious && freeSwelling) || cell->info().isExposed) perVertexPressure[cell->vertex(j)->info().id()].push_back(&(pAir));*/
+/*					else perVertexPressure[cell->vertex(j)->info().id()].push_back(&(cell->info().p()));*/
+/*					#endif*/
 			}
 		}
 		noCache=false;//cache should always be defined after execution of this function
-	}
 		if (onlyCache) return;
-// 	} else {//use cached values
-		#ifndef parallel_forces
-		for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != cellEnd; cell++) {
-			for (int yy=0;yy<4;yy++) cell->vertex(yy)->info().forces = cell->vertex(yy)->info().forces + cell->info().unitForceVectors[yy]*cell->info().p();}
-			
-		#else
-		#pragma omp parallel for num_threads(ompThreads)
-		for (int vn=0; vn<= T[currentTes].maxId; vn++) {
-			if (T[currentTes].vertexHandles[vn]==NULL) continue;
-			VertexHandle& v = T[currentTes].vertexHandles[vn];
-			const int& id =  v->info().id();
-			CVector tf (0,0,0);
-			int k=0;
-			for (vector<const Real*>::iterator c = perVertexPressure[id].begin(); c != perVertexPressure[id].end(); c++)
-				tf = tf + (*(perVertexUnitForce[id][k++]))*(**c);
-			v->info().forces = tf;
+	} else {//use cached values
+
+//		#ifndef parallel_forces
+	//	#pragma omp parallel for
+		for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != Tri.finite_cells_end(); cell++) {
+			for (int yy=0;yy<4;yy++) {
+				if ((cell->info().isFictious && freeSwelling) || cell->info().isExposed) cell->vertex(yy)->info().forces = cell->vertex(yy)->info().forces + cell->info().unitForceVectors[yy]*pAir;
+				else cell->vertex(yy)->info().forces = cell->vertex(yy)->info().forces + cell->info().unitForceVectors[yy]*cell->info().p()*cell->info().sat()*matricSuctionRatio;
+			}
 		}
-		#endif
-// 	}
+			
+/*		#else*/
+/*		#pragma omp parallel for num_threads(ompThreads)*/
+/*		for (int vn=0; vn<= T[currentTes].maxId; vn++) {*/
+/*			if (T[currentTes].vertexHandles[vn]==NULL) continue;*/
+/*			VertexHandle& v = T[currentTes].vertexHandles[vn];*/
+/*			const int& id =  v->info().id();*/
+/*			CVector tf (0,0,0);*/
+/*			int k=0;*/
+/*			for (vector<const Real*>::iterator c = perVertexPressure[id].begin(); c != perVertexPressure[id].end(); c++)*/
+/*				tf = tf + (*(perVertexUnitForce[id][k++]))*(**c);*/
+/*			v->info().forces = tf;*/
+/*		}*/
+/*		#endif*/
+ 	}
 	if (debugOut) {
 		CVector totalForce = nullVect;
 		for (FiniteVerticesIterator v = Tri.finite_vertices_begin(); v != Tri.finite_vertices_end(); ++v)	{
@@ -452,7 +463,13 @@ void PartialSatLinSolv<_Tesselation>::computePermeability()
 					cell->info().facetFluidSurfacesRatio[j]=fluidArea/area;
 					// kFactor<0 means we replace Poiseuille by Darcy localy, yielding a particle size-independent bulk conductivity
 					if (kFactor>0) cell->info().kNorm()[j]= kFactor*(fluidArea * pow(radius,2)) / (8*viscosity*distance);
-					else cell->info().kNorm()[j]= -kFactor * area / distance;						
+					else if (partialSatEngine){
+						double avgSat = (cell->info().sat() + neighbourCell->info().sat())/2.;
+						double SeM = (avgSat - SrM) / (SsM-SrM);
+						cell->info().kNorm()[j] = -kFactor*pow(SeM,nUnsatPerm) * area/distance;
+					}
+					else cell->info().kNorm()[j]= -kFactor * area / distance;				
+							
 					meanDistance += distance;
 					meanRadius += radius;
 					meanK +=  (cell->info().kNorm())[j];
