@@ -56,11 +56,18 @@ void InteractionLoop::action(){
 	const bool removeUnseenIntrs=(scene->interactions->iterColliderLastRun>=0 && scene->interactions->iterColliderLastRun==scene->iter);
 	
 	const long size=scene->interactions->size();
+	
+	vector<shared_ptr<Interaction>> * interactions; //a pointer to an interaction vector.
+	if(loopOnSortedInteractions){
+		scene->interactions->updateSortedIntrs();			//sort sortedIntrs, this is VERY SLOW !
+		interactions = &(scene->interactions->sortedIntrs);	//set the pointer to the address of the sorted version of the vector
+	}
+	else interactions = &(scene->interactions->linIntrs);	//set the pointer to the address of the unsorted version of the vector (original version, normal behavior)
 	#ifdef YADE_OPENMP
 	#pragma omp parallel for schedule(guided) num_threads(ompThreads>0 ? min(ompThreads,omp_get_max_threads()) : omp_get_max_threads())
 	#endif
 	for(long i=0; i<size; i++){
-		const shared_ptr<Interaction>& I=(*scene->interactions)[i];
+		const shared_ptr<Interaction>& I=(*interactions)[i];
 // 	#else
 //	FIXME: unexplained segfaults with this one (initialy that was the non-OPENMP case) on large problems
 // 	for (const auto & I : *scene->interactions){ 
