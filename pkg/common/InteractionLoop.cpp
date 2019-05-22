@@ -52,15 +52,20 @@ void InteractionLoop::action(){
 	// force removal of interactions that were not encountered by the collider
 	// (only for some kinds of colliders; see comment for InteractionContainer::iterColliderLastRun)
 	const bool removeUnseenIntrs=(scene->interactions->iterColliderLastRun>=0 && scene->interactions->iterColliderLastRun==scene->iter);
-
-	#ifdef YADE_OPENMP
+	
+	vector<shared_ptr<Interaction>> * interactions; //a pointer to an interaction vector.
+	if(loopOnSortedInteractions){
+		scene->interactions->updateSortedIntrs();			//sort sortedIntrs, this is VERY SLOW !
+		interactions = &(scene->interactions->sortedIntrs);	//set the pointer to the address of the sorted version of the vector
+	}
+	else interactions = &(scene->interactions->linIntrs);	//set the pointer to the address of the unsorted version of the vector (original version, normal behavior)
+	
 	const long size=scene->interactions->size();
+	#ifdef YADE_OPENMP
 	#pragma omp parallel for schedule(guided) num_threads(ompThreads>0 ? min(ompThreads,omp_get_max_threads()) : omp_get_max_threads())
-	for(long i=0; i<size; i++){
-		const shared_ptr<Interaction>& I=(*scene->interactions)[i];
-	#else
-	for (const auto & I : *scene->interactions){
 	#endif
+	for(long i=0; i<size; i++){
+		const shared_ptr<Interaction>& I=(*interactions)[i];
 		if(removeUnseenIntrs && !I->isReal() && I->iterLastSeen<scene->iter) {
 			eraseAfterLoop(I->getId1(),I->getId2());
 			continue;

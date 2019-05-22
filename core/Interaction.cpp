@@ -23,6 +23,7 @@ void Interaction::init(){
 }
 
 void Interaction::reset(){
+	if(id1>id2) swap(id1,id2);
 	geom=shared_ptr<IGeom>();
 	phys=shared_ptr<IPhys>();
 	functorCache.geom = nullptr;
