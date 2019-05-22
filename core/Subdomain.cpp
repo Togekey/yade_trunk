@@ -161,7 +161,7 @@ void Subdomain::mergeOp() {
 	  processContainerStrings();
 	  // clear existing interactions:
 	  scene->interactions->clear();
-	  setBodiesToBodyContainer(scene, recvdBodyContainers,setDeletedBodies);
+	  setBodiesToBodyContainer(scene, recvdBodyContainers,setDeletedBodies, false);
 	  bodiesSet = false; // reset flag for next merge op.
 	  containersRecvd = false;
 	  
@@ -257,7 +257,7 @@ void Subdomain::receiveBodies(const int sender){
 // 	cout<<mpiBC->bContainer.size()<<" bodies"<<endl;
 	std::vector<shared_ptr<MPIBodyContainer> > mpiBCVect(1,mpiBC); //setBodiesToBodyContainer needs a vector of MPIBodyContainer, so create one of size 1.
 	Scene* scene = Omega::instance().getScene().get();
-	setBodiesToBodyContainer(scene,mpiBCVect,true);
+	setBodiesToBodyContainer(scene,mpiBCVect,true, true);
 }
 
 /********Functions exclusive to the master*************/
@@ -291,7 +291,7 @@ void Subdomain::recvBodyContainersFromWorkers() {
 
 
 // set all body properties from the worker MPIBodyContainer
-void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MPIBodyContainer> >& containers, bool setDeletedBodies) {
+void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MPIBodyContainer> >& containers, bool setDeletedBodies, bool resetInteractions) {
 	    // to be used when deserializing a recieved container.
 	    shared_ptr<BodyContainer>& bodyContainer = scene->bodies;
 	    shared_ptr<InteractionContainer>& interactionContainer = scene->interactions; 
@@ -319,10 +319,12 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 	      //set the interactions in the interaction container first. 
 	      shared_ptr<Body>& b = (*bodyContainer)[idx]; 
 	      //clear the inter of this body first.
-	      b->intrs.clear();       
-	      for (auto mapIter = intrsToSet.begin(); mapIter != intrsToSet.end(); ++mapIter){
-		interactionContainer -> insertInteractionMPI(mapIter->second); 
-	      }	
+	      b->intrs.clear();
+		  if(!resetInteractions){
+			for (auto mapIter = intrsToSet.begin(); mapIter != intrsToSet.end(); ++mapIter){
+			interactionContainer -> insertInteractionMPI(mapIter->second); 
+			}
+		  }
 	      newBody.reset();
 	    }
 	  }

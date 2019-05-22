@@ -282,6 +282,7 @@ def genLocalIntersections(subdomains):
 			for i in intrs:
 				otherId=i.id1 if i.id2==sdId else i.id2
 				b=O.bodies[otherId]
+				if not b:continue #in case the body was deleted
 				if b.subdomain==0:
 					if isinstance(b.shape,PFacet):
 						intersections[0]+= maskedPFacet(b, appended); continue
@@ -295,6 +296,7 @@ def genLocalIntersections(subdomains):
 		for i in intrs:
 			otherId=i.id1 if i.id2==sdId else i.id2
 			b=O.bodies[otherId]
+			if not b:continue #in case the body was deleted
 			if b.subdomain!=rank: continue
 			if b.isSubdomain: intersections[rank].append(subdIdx) #intersecting subdomain (will need to receive updated positions from there)
 			else:
@@ -529,17 +531,6 @@ def splitScene():
 	#update bounds wrt. updated subdomain(s) min/max and unbounded bodies
 	updateMirrorIntersections()
 			
-	if ERASE_REMOTE and rank>0: #workers suppress external bodies from scene, master will keep all bodies anyway 
-		numBodies = len(O.bodies)
-		for id in range(numBodies):
-			if not O.bodies[id].bounded and O.bodies[id].subdomain!=rank:
-				connected = False #a gridNode could be needed as part of interacting facet/connection even if not overlaping a specific subdomain. Assume connections are always bounded for now, we thus only check nodes.
-				if isinstance(O.bodies[id].shape,GridNode):
-					for f in O.bodies[id].shape.getPFacets():
-						if f.bounded: connected = True
-					for c in O.bodies[id].shape.getConnections():
-						if c.bounded: connected = True
-				if not connected: O.bodies.erase(id)
 	collider.doSort = True
 	collider.__call__()
 				
@@ -644,9 +635,22 @@ def updateMirrorIntersections():
 					subD.sendBodies(worker,requestedIds)
 			for worker in requestedSomethingFrom:
 				subD.receiveBodies(worker)
+	
+		if ERASE_REMOTE: #workers suppress external bodies from scene, master will keep all bodies anyway 
+			numBodies = len(O.bodies)
+			for id in range(numBodies):
+				if not O.bodies[id]:continue
+				if not O.bodies[id].bounded and O.bodies[id].subdomain!=rank:
+					connected = False #a gridNode could be needed as part of interacting facet/connection even if not overlaping a specific subdomain. Assume connections are always bounded for now, we thus only check nodes.
+					if isinstance(O.bodies[id].shape,GridNode):
+						for f in O.bodies[id].shape.getPFacets():
+							if f.bounded: connected = True
+						for c in O.bodies[id].shape.getConnections():
+							if c.bounded: connected = True
+					if not connected: O.bodies.erase(id)
+	
 	collider.doSort = True
 	collider.__call__()
-	comm.barrier()
 
 ##### RUN MPI #########
 def mpirun(nSteps):
