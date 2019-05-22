@@ -464,6 +464,7 @@ void InsertionSortCollider::handleBoundInversionPeri(Body::id_t id1, Body::id_t 
 	if (overlap && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get())){
 		shared_ptr<Interaction> newI=shared_ptr<Interaction>(new Interaction(id1,id2));
 		newI->cellDist=periods;
+		if(scene->doReproducibleComputations and id1>id2)newI->cellDist*=-1;
 		interactions->insert(newI);
 	}
 }
