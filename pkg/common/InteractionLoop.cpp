@@ -58,7 +58,7 @@ void InteractionLoop::action(){
 	const long size=scene->interactions->size();
 	
 	vector<shared_ptr<Interaction>> * interactions; //a pointer to an interaction vector.
-	if(loopOnSortedInteractions){
+	if(scene->loopOnSortedInteractions){
 		scene->interactions->updateSortedIntrs();			//sort sortedIntrs, this is VERY SLOW !
 		interactions = &(scene->interactions->sortedIntrs);	//set the pointer to the address of the sorted version of the vector
 	}

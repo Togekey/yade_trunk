@@ -10,14 +10,6 @@
 CREATE_LOGGER(InteractionContainer);
 // begin internal functions
 
-void InteractionContainer::updateSortedIntrs(){
-	this->sortedIntrs.resize(this->linIntrs.size());
-	this->sortedIntrs = this->linIntrs;
-	sort(this->sortedIntrs.begin(), this->sortedIntrs.end(), this->compareTwoInteractions);
-};
-
-
-
 bool InteractionContainer::insert(const shared_ptr<Interaction>& i){
 	assert(bodies);
 	boost::mutex::scoped_lock lock(drawloopmutex);
@@ -177,6 +169,12 @@ struct compPtrInteraction{
 	bool operator() (const shared_ptr<Interaction>& i1, const shared_ptr<Interaction>& i2) const {
 		return (*i1)<(*i2);
 	}
+};
+
+void InteractionContainer::updateSortedIntrs(){
+	this->sortedIntrs.resize(this->linIntrs.size());
+	this->sortedIntrs = this->linIntrs;
+	sort(this->sortedIntrs.begin(), this->sortedIntrs.end(), this->compareTwoInteractions);
 };
 
 void InteractionContainer::preSave(InteractionContainer&){
