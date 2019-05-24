@@ -14,7 +14,7 @@
 
 Interaction::Interaction(Body::id_t newId1,Body::id_t newId2): id1(newId1), id2(newId2), cellDist(Vector3i(0,0,0)){
 	const shared_ptr<Scene>& scene=Omega::instance().getScene();
-	if(scene->doReproducibleComputations and id1>id2) swap(id1,id2);
+	if(scene->loopOnSortedInteractions and id1>id2) swap(id1,id2);
 	reset(); 
 }
 
