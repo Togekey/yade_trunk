@@ -45,7 +45,9 @@ void InsertionSortCollider::insertionSort(VecBounds& v, InteractionContainer* in
 			// see https://bugs.launchpad.net/yade/+bug/669095
 			// skip bounds with same isMin flags, since inversion doesn't imply anything in that case  
 			if(isMin && !v[j].flags.isMin && doCollide && viInitBB && v[j].flags.hasBB && (viInit.id!=v[j].id)) {
-				/*if (isMin)*/ handleBoundInversion(viInit.id,v[j].id,interactions,scene);
+				if(viInit.id<v[j].id) handleBoundInversion(viInit.id,v[j].id,interactions,scene);
+				else handleBoundInversion(v[j].id,viInit.id,interactions,scene);
+				/*if (isMin)*/ 
 // 				else handleBoundSplit(viInit.id,v[j].id,interactions,scene);
 			}
 			j--;
@@ -138,7 +140,8 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 	for (int n=0;n<ompThreads;n++)
 		for (size_t k=0, kend=newInteractions[n].size();k<kend;k++)
 			/*if (!interactions->found(newInteractions[n][k].first,newInteractions[n][k].second))*/ //Not needed, already checked above
-			interactions->insert(shared_ptr<Interaction>(new Interaction(newInteractions[n][k].first,newInteractions[n][k].second)));
+			if(newInteractions[n][k].first<newInteractions[n][k].second) interactions->insert(shared_ptr<Interaction>(new Interaction(newInteractions[n][k].first,newInteractions[n][k].second)));
+			else interactions->insert(shared_ptr<Interaction>(new Interaction(newInteractions[n][k].second,newInteractions[n][k].first)));
 	/// If some bounds traversed more than a half-chunk, we complete colliding with the sequential sort
 	if (parallelFailed) return insertionSort(v,interactions, scene, doCollide);
 #endif
@@ -369,8 +372,10 @@ void InsertionSortCollider::action(){
 							unsigned int threadNum = omp_get_thread_num();
 							newInts[threadNum].push_back(std::pair<Body::id_t,Body::id_t>(iid,jid));
 						#else
-							if (!interactions->found(iid,jid))
-							interactions->insert(shared_ptr<Interaction>(new Interaction(iid,jid)));
+							if (!interactions->found(iid,jid)){
+								if(iid<jid) interactions->insert(shared_ptr<Interaction>(new Interaction(iid,jid)));
+								else interactions->insert(shared_ptr<Interaction>(new Interaction(jid,iid)));
+							}
 						#endif
 						}
 					}
@@ -378,8 +383,10 @@ void InsertionSortCollider::action(){
 				//go through newly created candidates sequentially, duplicates coming from different threads may exist so we check existence with found()
 				#ifdef YADE_OPENMP
 				for (int n=0;n<ompThreads;n++) for (size_t k=0, kend=newInts[n].size();k<kend;k++)
-					if (!interactions->found(newInts[n][k].first,newInts[n][k].second))
-						interactions->insert(shared_ptr<Interaction>(new Interaction(newInts[n][k].first,newInts[n][k].second)));
+					if (!interactions->found(newInts[n][k].first,newInts[n][k].second)){
+						if(newInts[n][k].first<newInts[n][k].second) interactions->insert(shared_ptr<Interaction>(new Interaction(newInts[n][k].first,newInts[n][k].second)));
+						else interactions->insert(shared_ptr<Interaction>(new Interaction(newInts[n][k].second,newInts[n][k].first)));
+					}
 				#endif
 			} else { // periodic case: see comments above
 				for(long i=0; i<2*nBodies; i++){
@@ -389,7 +396,8 @@ void InsertionSortCollider::action(){
 					for(long j=V.norm(i+1); V[j].id!=iid; j=V.norm(j+1)){
 						const Body::id_t& jid=V[j].id;
 						if(!(V[j].flags.isMin && V[j].flags.hasBB)) continue;
-						handleBoundInversionPeri(iid,jid,interactions,scene);
+						if(iid<jid) handleBoundInversionPeri(iid,jid,interactions,scene);
+						else handleBoundInversionPeri(jid,iid,interactions,scene);
 					}
 				}
 			}
@@ -451,7 +459,10 @@ void InsertionSortCollider::insertionSortPeri(VecBounds& v, InteractionContainer
 			if(j==loIdx && vi.coord<0) { vi.period-=1; vi.coord+=v.cellDim; loIdx=v.norm(loIdx+1); }
 			else if(j1==loIdx) { vNew.period+=1; vNew.coord-=v.cellDim; loIdx=v.norm(loIdx-1); }
 			if(isMin && !v[j].flags.isMin && (doCollide && viHasBB && v[j].flags.hasBB))
-				if((vi.id!=vNew.id)) handleBoundInversionPeri(vi.id,vNew.id,interactions,scene);
+				if(vi.id!=vNew.id){
+					if(vi.id<vNew.id) handleBoundInversionPeri(vi.id,vNew.id,interactions,scene);
+					else handleBoundInversionPeri(vNew.id,vi.id,interactions,scene);
+				}
 			j=v.norm(j-1);
 		}
 		v[v.norm(j+1)]=vi;
@@ -469,7 +480,6 @@ void InsertionSortCollider::handleBoundInversionPeri(Body::id_t id1, Body::id_t 
 	if (overlap && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get(),scene->subdomain)){
 		shared_ptr<Interaction> newI=shared_ptr<Interaction>(new Interaction(id1,id2));
 		newI->cellDist=periods;
-		if(scene->loopOnSortedInteractions and id1>id2)newI->cellDist*=-1;
 		interactions->insert(newI);
 	}
 }
