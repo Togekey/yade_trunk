@@ -58,7 +58,7 @@ void InteractionLoop::action(){
 	const long size=scene->interactions->size();
 	
 	vector<shared_ptr<Interaction>> * interactions; //a pointer to an interaction vector.
-	if(scene->loopOnSortedInteractions){
+	if(loopOnSortedInteractions){
 		scene->interactions->updateSortedIntrs();			//sort sortedIntrs, this is VERY SLOW !
 		interactions = &(scene->interactions->sortedIntrs);	//set the pointer to the address of the sorted version of the vector
 	}
@@ -68,11 +68,6 @@ void InteractionLoop::action(){
 	#endif
 	for(long i=0; i<size; i++){
 		const shared_ptr<Interaction>& I=(*interactions)[i];
-// 	#else
-//	FIXME: unexplained segfaults with this one (initialy that was the non-OPENMP case) on large problems
-// 	for (const auto & I : *scene->interactions){ 
-// 	#endif
-		if (not (bool) I) cerr<<"##### found null I #####"<<endl;
 		if(removeUnseenIntrs && !I->isReal() && I->iterLastSeen<scene->iter) {
 			eraseAfterLoop(I->getId1(),I->getId2());
 			continue;

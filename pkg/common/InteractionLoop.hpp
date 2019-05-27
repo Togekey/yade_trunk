@@ -32,6 +32,7 @@ class InteractionLoop: public GlobalEngine {
 			((shared_ptr<LawDispatcher>,lawDispatcher,new LawDispatcher,Attr::readonly,":yref:`LawDispatcher` object used for dispatch."))
 			((vector<shared_ptr<IntrCallback> >,callbacks,,,":yref:`Callbacks<IntrCallback>` which will be called for every :yref:`Interaction`, if activated."))
 			((bool, eraseIntsInLoop, false,,"Defines if the interaction loop should erase pending interactions, else the collider takes care of that alone (depends on what collider is used)."))
+			((bool, loopOnSortedInteractions, false,,"If true, the main interaction loop will occur on a sorted list of interactions. This is SLOW but useful to workaround floating point force addition non reproducibility when debugging parallel implementations of yade."))
 			,
 			/*ctor*/ alreadyWarnedNoCollider=false;
 				#ifdef YADE_OPENMP
