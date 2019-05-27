@@ -86,7 +86,6 @@ class Scene: public Serializable{
 		((bool,trackEnergy,false,Attr::readonly,"Whether energies are being traced."))
 		((bool,doSort,false,Attr::readonly,"Used, when new body is added to the scene."))
 		((bool,runInternalConsistencyChecks,true,Attr::hidden,"Run internal consistency check, right before the very first simulation step."))
-		((bool,doReproducibleComputations,false,,"If true, the main interaction loop will occur on a sorted list of interactions and interactions will be always created such as id1<id2. This will result in reproducible simulations, regardless of the value of the collider verletDist and the serial/MPI flavors. This is SLOW but useful to workaround floating point force addition non reproducibility when debugging yade."))
 		((Body::id_t,selectedBody,-1,,"Id of body that is selected by the user"))
 
 		((list<string>,tags,,,"Arbitrary key=value associations (tags like mp3 tags: author, date, version, description etc.)"))
