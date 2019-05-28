@@ -29,8 +29,7 @@ stages:
   script:
     - git clone https://gitlab.com/yade-dev/yadedaily.git -b testdebpackages debian
     - apt update && apt install devscripts atool -y && ls -l && apt-get -y build-dep .
-    - dpkg-buildpackage -j8
-#    - gbp buildpackage --git-ignore-branch --git-ignore-new
+    - gbp buildpackage --git-ignore-branch --git-ignore-new
 #    - gbp dch --ignore-branch --since=2019.01a
 
 debpackages_18_04:
