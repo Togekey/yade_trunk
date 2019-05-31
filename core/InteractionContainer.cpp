@@ -49,39 +49,6 @@ bool InteractionContainer::insertInteractionMPI(shared_ptr<Interaction>& i){
 	else if (i->isReal()) {	i->linIx=iOld->linIx; // else replace existing one (with special care to linIx, only valid locally)
 		(*this)[i->linIx] = i;}
 	return res;
-	
-// 	assert(bodies);
-// 	Body::id_t id1 = i->getId1();
-// 	Body::id_t id2 = i->getId2();
-// 	if (id1 > id2 ) {swap(id1, id2); } //FIXME: is this really safe? I think it breaks Shop::createExplicitInteraction (Bruno)
-// 	
-// 	if (!(*bodies)[id1] || !(*bodies)[id2]) {
-// 	  LOG_ERROR("Bodies not found in body container --> " << id1 << "  " << id2);
-// 	  return false;
-// 	}
-// 	
-// 	const shared_ptr<Body>& b1=(*bodies)[id1];
-// 	const shared_ptr<Body>& b2=(*bodies)[id2]; 
-// 	
-// // 	if (b1 -> getIsSubdomain() || b2 -> getIsSubdomain() ) {return false; }
-// 
-// 	if(!b1->intrs.insert(Body::MapId2IntrT::value_type(id2,i)).second) return false; // already exists
-// 	if(!b2->intrs.insert(Body::MapId2IntrT::value_type(id1,i)).second) return false;
-// 	
-// 	//check if this interaction already exists : 
-// 	linIntrs.resize(++currSize); // currSize updated
-// 	linIntrs[currSize-1]=i; // assign last element
-// 	i->linIx=currSize-1; // store the index back-reference in the interaction (so that it knows how to erase/move itself
-// 	const shared_ptr<Scene>& scene=Omega::instance().getScene();
-// 	i->iterMadeReal=scene->iter; 
-// 	
-// 	
-// 
-// // 	std::cout << "Interaction contaier size now = " << linIntrs.size() << std::endl; 
-// 	return true; 
-	
-	
-	
 }
 
 

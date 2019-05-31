@@ -308,45 +308,17 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 		if (!b) newBody->intrs.clear(); //we can clear here, interactions are stored in intrsToSet
 		else newBody->intrs=b->intrs;
 		b=newBody;
-		
-// 		if ((!(*bodyContainer)[idx]) &&  setDeletedBodies) {
-// // 			cout<<"Worker"<<subdomainRank<<": I set body n°"<<newBody->id<<endl;
-// 			bodyContainer->insertAtId(newBody, newBody->id);  // insert the body
-// 		}
-// 		else{ shared_ptr<Body>& b = (*bodyContainer)[idx];
-// // 		       shared_ptr<Material> tmp_mat = b->material;
-// // 		       b = newBody;
-// 		       b->state = newBody->state;
-// 		       b->shape = newBody->shape;
-// 		       if (newBody->isBounded()) {
-// 			       b->bound = newBody->bound;
-// 			       b->setBounded(true);}
-// // 		       if (!b->bound){b->bound = shared_ptr<Bound> (new Bound); }
-// // 		       b->bound = newBody->bound; //FIXME: if b = newBody what is the meaning of this line?
-// // 		       b->setBounded(true);
-// // 		       b->material = tmp_mat;
-// 	      }
-	      //set the interactions in the interaction container first. 
-// 	      shared_ptr<Body>& b = (*bodyContainer)[idx];
-	      
-	      
-	      //clear the inter of this body first.
-// 	      b->intrs.clear();
-// 		  if(!resetInteractions){
+
+// 		if(!resetInteractions)
 			for (auto mapIter = intrsToSet.begin(); mapIter != intrsToSet.end(); ++mapIter){
 				const Body::id_t& id1 = mapIter->second->id1; const Body::id_t& id2 = mapIter->second->id2;
 				if ((*bodyContainer)[id1] and (*bodyContainer)[id2] ) {
 					// FIXME: we should make really sure that we are not overwriting a live interaction with a deprecated one (possible solution: make all interactions between remote bodies virtual)
 					scene->interactions->insertInteractionMPI(mapIter->second);
 				}
-// 				bool exists = scene->interactions->find(Body::id_t(id1),Body::id_t(id2))!=0;
-// 				
-// 				interactionContainer -> insertInteractionMPI(mapIter->second); 
 			}
-// 		  }
-// 	      newBody.reset();
-	    }
-	  }
+		}
+	}
 	interactionContainer->dirty = true;  //notify the collider about the new interactions/new body. 
         containers.clear();
         bodiesSet = true;
