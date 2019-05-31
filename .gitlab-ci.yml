@@ -27,11 +27,10 @@ stages:
   <<: *platforms_definition
   stage: debpackages
   script:
-#    - apt-get update
-#    - apt-get -y build-dep .
-    - ls -la
-    - ls -la debian
-    - gbp buildpackage --git-ignore-branch --git-force-create --git-export-dir=../deb --git-debian-branch="feature/dailypackages" --git-upstream-tree="master" --git-verbose --no-sign
+    - apt-get update
+    - apt-get -y build-dep .
+    - dpkg-buildpackage
+    - #gbp buildpackage --git-ignore-branch --git-force-create --git-export-dir=../deb --git-debian-branch="feature/dailypackages" --git-upstream-tree="master" --git-verbose --no-sign
 
 debpackages_18_04:
   <<: *debpackages_definition
