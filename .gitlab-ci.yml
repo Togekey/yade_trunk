@@ -29,7 +29,7 @@ stages:
   script:
     - apt-get update
     - apt-get -y build-dep .
-    - gbp buildpackage --git-ignore-branch --git-ignore-new
+    - gbp buildpackage --git-debian-branch="feature/dailypackages" --git-ignore-new --git-upstream-branch="master" --no-sign
 
 debpackages_18_04:
   <<: *debpackages_definition
