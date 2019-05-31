@@ -28,7 +28,6 @@ stages:
   stage: debpackages
   script:
     - git clone https://gitlab.com/yade-dev/yadedaily.git -b testdebpackages debian
-    - apt update && apt install devscripts git-buildpackage -y
     - rm -rf debian/.git
     - gbp buildpackage --git-ignore-branch --git-ignore-new --git-upstream-tree=master  --no-sign
 
