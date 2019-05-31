@@ -27,9 +27,8 @@ stages:
   <<: *platforms_definition
   stage: debpackages
   script:
-    - git clone https://gitlab.com/yade-dev/yadedaily.git -b testdebpackages debian
     - rm -rf debian/.git
-    - gbp buildpackage --git-ignore-branch --git-ignore-new --git-upstream-tree=master  --no-sign
+    - gbp buildpackage --git-ignore-branch --git-ignore-new --no-sign --git-upstream-tree=master --git-debian-branch=feature/dailypackages
 
 debpackages_18_04:
   <<: *debpackages_definition
