@@ -332,19 +332,18 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 	      
 	      //clear the inter of this body first.
 // 	      b->intrs.clear();
-		  if(!resetInteractions){
+// 		  if(!resetInteractions){
 			for (auto mapIter = intrsToSet.begin(); mapIter != intrsToSet.end(); ++mapIter){
 				const Body::id_t& id1 = mapIter->second->id1; const Body::id_t& id2 = mapIter->second->id2;
-				if (!(*bodyContainer)[id1] or !(*bodyContainer)[id2]) continue; //one of the bodies is not present in the subdomain
-				shared_ptr<Interaction> i =  scene->interactions->find(Body::id_t(id1),Body::id_t(id2));
-				if (not i) scene->interactions->insert(mapIter->second);// if it doesn't exist, insert it
-				else i = mapIter->second;
-				
+				if ((*bodyContainer)[id1] and (*bodyContainer)[id2] ) {
+					// FIXME: we should make really sure that we are not overwriting a live interaction with a deprecated one (possible solution: make all interactions between remote bodies virtual)
+					scene->interactions->insertInteractionMPI(mapIter->second);
+				}
 // 				bool exists = scene->interactions->find(Body::id_t(id1),Body::id_t(id2))!=0;
 // 				
 // 				interactionContainer -> insertInteractionMPI(mapIter->second); 
 			}
-		  }
+// 		  }
 // 	      newBody.reset();
 	    }
 	  }
