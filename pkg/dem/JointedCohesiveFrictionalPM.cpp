@@ -604,8 +604,8 @@ void Ip2_JCFpmMat_JCFpmMat_JCFpmPhys::distributeCrossSectionsWeibull(shared_ptr<
 	Real correction = weibullDistribution(e2);
 	if (correction < weibullCutOffMin) correction = weibullCutOffMin;
 	else if (correction > weibullCutOffMax) correction = weibullCutOffMax;
-	Real interactingRadius = correction*min(R1, R2);  // correcting radius to account for grain interactions
-	contactPhysics->crossSection = Mathr::PI*pow(interactingRadius,2);
+	Real interactingRadius = min(R1, R2);  
+	contactPhysics->crossSection = correction*Mathr::PI*pow(interactingRadius,2);
 }
 
 JCFpmPhys::~JCFpmPhys(){}

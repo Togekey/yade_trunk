@@ -11,11 +11,33 @@ Installation
 Packages
 ----------
 
-Pre-built packages are provided for all currently supported Debian and Ubuntu
+**Stable packages**
+
+
+Since 2011, all Ubuntu (starting from 11.10, Oneiric) and Debian (starting from Wheezy) versions
+have Yade in their main repositories. There are only stable releases in place.
+To install Yade, run the following::
+
+	sudo apt-get install yade
+
+After that you can normally start Yade using the command ``yade`` or ``yade-batch``.
+
+To check which version of Yade is included in your specific distribution, visit
+`Ubuntu <https://launchpad.net/ubuntu/+source/yade>`_ or
+`Debian <http://packages.qa.debian.org/y/yade.html>`_.
+The `Debian-Backports <http://backports.debian.org/Instructions>`_
+repository is updated regularly to bring the newest Yade version to the users of stable
+Debians.
+
+**Daily packages**
+
+Pre-built packages updated more frequently than the stable versions are provided for all currently supported Debian and Ubuntu
 versions and available on `yade-dem.org/packages <http://yade-dem.org/packages/>`_ .
 
 These are "daily" versions of the packages which are being updated regularly and, hence, include
 all the newly added features.
+
+.. warning:: yade-daily packages are currently out of date, this `issue <https://gitlab.com/yade-dev/trunk/issues/58>`_ is being worked on. Yade can be installed from :ref:`source code <install-from-source-code>`.
 
 To install the daily-version you need to add the repository to your
 /etc/apt/sources.list, add the PGP-key AA915EEB as trusted and install ``yadedaily``::
@@ -47,23 +69,10 @@ To remove our key from keyring, execute the following command::
 
 	sudo apt-key remove AA915EEB
 
-Since 2011, all Ubuntu (starting from 11.10, Oneiric) and Debian (starting from Wheezy) versions
-have Yade in their main repositories. There are only stable releases in place.
-To install Yade, run the following::
-
-	sudo apt-get install yade
-
-After that you can normally start Yade using the command ``yade`` or ``yade-batch``.
-
-To check, what version of Yade is included in your specific distribution, visit
-`Ubuntu <https://launchpad.net/ubuntu/+source/yade>`_ or
-`Debian <http://packages.qa.debian.org/y/yade.html>`_.
-The `Debian-Backports <http://backports.debian.org/Instructions>`_
-repository is updated regularly to bring the newest Yade version to the users of stable
-Debians.
-
 Daily and stable Yade versions can coexist without any conflicts, i.e., you can use ``yade`` and ``yadedaily``
 at the same time.
+
+.. _install-from-source-code:
 
 Source code
 ------------
@@ -310,6 +319,38 @@ upon detecting the C and C++ compiler to use::
 Clang does not support OpenMP-parallelizing for the moment, that is why the
 feature will be disabled.
 
+Supported linux releases
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+`Currently supported <https://gitlab.com/yade-dev/trunk/pipelines?scope=branches>`_ [#buildLog]_ linux releases and their respective `docker <https://docs.docker.com/>`_ `files <https://docs.docker.com/engine/reference/builder/>`_ are:
+
+* `Ubuntu 16.04 xenial <https://gitlab.com/yade-dev/docker-yade/blob/ubuntu16-py3/Dockerfile>`_
+* `Ubuntu 18.04 bionic <https://gitlab.com/yade-dev/docker-yade/blob/ubuntu18.04/Dockerfile>`_
+* `Debian 9 stretch <https://gitlab.com/yade-dev/docker-yade/blob/debian-stretch/Dockerfile>`_
+* `Debian 10 buster <https://gitlab.com/yade-dev/docker-yade/blob/debian-buster/Dockerfile>`_
+* `openSUSE 15 <https://gitlab.com/yade-dev/docker-yade/blob/suse15/Dockerfile>`_
+
+These are the bash commands used to prepare the linux distribution and environment for installing and testing yade.
+These instructions are automatically performed using the `gitlab continuous integration <https://docs.gitlab.com/ee/ci/quick_start/>`_ service after
+each merge to master. This makes sure that yade always works correctly on these linux distributions.
+In fact yade can be installed manually by following step by step these instructions in following order:
+
+1. Bash commands in the respective Dockerfile to install necessary packages,
+
+2. do ``git clone https://gitlab.com/yade-dev/trunk.git``,
+
+3. then the ``cmake_*`` commands in the `.gitlab-ci.yml file <https://gitlab.com/yade-dev/trunk/blob/master/.gitlab-ci.yml>`_ for respective distribution,
+
+4. then the ``make_*`` commands to compile yade,
+
+5. and finally the ``--check`` and ``--test`` commands.
+
+6. Optionally documentation can be built with ``make doc`` command, however currently it is not guaranteed to work on all linux distributions due to frequent interface changes in `sphinx <http://www.sphinx-doc.org/en/master/>`_.
+
+These instructions use ``ccache`` and ``ld.gold`` to :ref:`speed-up compilation <speed-up>` as described below.
+
+.. [#buildLog] To see details of the latest build log click on the *master* branch.
+
 Python 2 backward compatibility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -339,6 +380,9 @@ Also see notes about :ref:`converting python 2 scripts into python 3<convert-pyt
 .. _speed-up:
 
 Speed-up compilation
+---------------------
+
+Compile time
 ^^^^^^^^^^^^^^^^^^^^^
 
 When spliting the compilation on many cores (``make -jN``), ``N`` is limited by the available cores and memory. It is possible to use more cores if remote computers are available, distributing the compilation with `distcc <https://wiki.archlinux.org/index.php/Distcc>`_  (see distcc documentation for configuring slaves and master)::
@@ -357,6 +401,18 @@ In addition, and independently of distcc, caching previous compilations with `cc
 The two tools can be combined very simply, adding to the above exports::
 
 	export CCACHE_PREFIX="distcc"
+
+Link time
+^^^^^^^^^^^^^^^^^^^^^
+
+The link time can be reduced roughly 2 minutes by changing the default linker from ``ld`` to ``ld.gold``. They are both in the same package ``binutils`` (on opensuse15 it is package ``binutils-gold``). To perform the switch execute these commands as root::
+
+	ld --version
+	update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.gold" 20
+	update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.bfd" 10
+	ld --version
+
+To switch back run the commands above with reversed priorities ``10`` ↔ ``20``. Alternatively a manual selection can be performed by command: ``update-alternatives --config ld``.
 
 Cloud Computing
 ----------------

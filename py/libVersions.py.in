@@ -130,6 +130,7 @@ def getAllVersionsCmake():
 	addVer("mpi"   ,'${MPI_CXX_VERSION_MAJOR}','${MPI_CXX_VERSION_MINOR}','0', '${MPI_CXX_VERSION}')
 	# 18. numpy
 	addVer("numpy" ,'${NUMPY_VERSION_MAJOR}','${NUMPY_VERSION_MINOR}','${NUMPY_VERSION_PATCH}', '${NUMPY_VERSION}')
+	# Note: these below are getting the version currently installed, not the one with which yade was compiled. Maybe this will need to be changed.
 	# 19. ipython
 	try:
 		import IPython

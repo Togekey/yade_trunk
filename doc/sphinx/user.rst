@@ -1738,7 +1738,7 @@ Reporting bugs
 
 Bugs are general name for defects (functionality shortcomings, misdocumentation, crashes) or feature requests. They are tracked at https://gitlab.com/yade-dev/trunk/issues.
 
-When reporting a new bug, be as specific as possible; state version of yade you use, system version and so on, as explained in the above section on crashes.
+When reporting a new bug, be as specific as possible; state version of yade you use, system version and the output of :yref:`printAllVersions()<yade.libVersions.printAllVersions>`, as explained in the above section on crashes.
 
 .. _getting-help:
 

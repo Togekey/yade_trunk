@@ -164,35 +164,38 @@ dd=0.0
 celleok=[0] * (nvoids)  
 deltabubble=0
 col0=[0] * (nvoids)
-col=[0] * (nvoids)
-neighK=[0.0] * (nvoids)
+neighK=[0.0] * (nvoids)  #FIXME: after remeshing the size will be invalid since nvoids can change, initializations will have to go in the function itself
 def pressureImbibition():
    global Qin,total2,dd,deltabubble,bubble
    
    c0.updateCapVolList(O.dt)
        
-   Qin+=flow.getBoundaryVolume(flow.wallIds[flow.ymin],O.dt)
+   Qin+=-1.*(flow.getBoundaryFlux(flow.wallIds[flow.ymin]))*O.dt
    #Qout+=(flow.getBoundaryFlux(flow.wallIds[flow.ymax]))*O.dt   
        
    col1=[0] * (nvoids)
    delta=[0.0] * (nvoids)   
    for ii in range(nvoids):
         if flow.getCellLabel(ii)==0:
-            totalflux[ii]+=flow.getCellInVolumeFromId(ii,O.dt)   
+            totalflux[ii]+=-1.*flow.getCellFluxFromId(ii)*O.dt   
             if (totalflux[ii])>=initialvol[ii]:
-               col1[ii]=1
+                col1[ii]=1
             if (totalflux[ii])>initialvol[ii]:
-              delta[ii]=totalflux[ii]-initialvol[ii]
-              totalflux[ii]+=-1*delta[ii]
-              #dd+=delta[ii]
-                      
+                delta[ii]=totalflux[ii]-initialvol[ii]
+                totalflux[ii]+=-1*delta[ii]
+                #dd+=delta[ii]
+                
+   # advices:
+   # never write 'getInterfaces()' inside a loop, it's expensive, get the list once outside loop
+   # get interfaces again only if you know the list could have change (cluster got/lost pores).
+   # I'm fixing only the first loop below (old version left commented)
+   # 
    for ii in range(len(c0.getInterfaces())):
       ll=c0.getInterfaces()[ii][1]
       if col1[ll]==1:
         if celleok[ll]==0:
-           celleok[ll]=1
-           col0[ll]=c0.getInterfaces()[ii][0]
-           col[ll]=ii
+            celleok[ll]=1
+            col0[ll]=c0.getInterfaces()[ii][0]
            
    for jj in range(nvoids):
       if col1[jj]==1:
@@ -202,7 +205,7 @@ def pressureImbibition():
    for ii in range(len(c0.getInterfaces())):
       ll=c0.getInterfaces()[ii][0]
       if delta[ll]!=0:
-         neighK[ll]+=c0.getConductivity(ii)      
+         neighK[ll]+=c0.getConductivity(ii)
    for ii in range(len(c0.getInterfaces())):
       ll=c0.getInterfaces()[ii][0]
       if delta[ll]!=0:
@@ -230,8 +233,7 @@ def pressureImbibition():
         if col1[ll]==1:
           if celleok[ll]==0:
              celleok[ll]=1
-             col0[ll]=c0.getInterfaces()[ii][0]
-             col[ll]=ii             
+             col0[ll]=c0.getInterfaces()[ii][0]      
      for jj in range(nvoids):
         if col1[jj]==1:
             flow.clusterOutvadePore(col0[jj],jj)
@@ -267,8 +269,7 @@ def pressureImbibition():
          if col1[ll]==1:
            if celleok[ll]==0:
               celleok[ll]=1
-              col0[ll]=c0.getInterfaces()[ii][0]
-              col[ll]=ii           
+              col0[ll]=c0.getInterfaces()[ii][0]         
        for jj in range(nvoids):
           if col1[jj]==1:
               flow.clusterOutvadePore(col0[jj],jj)

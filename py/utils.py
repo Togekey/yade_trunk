@@ -273,7 +273,7 @@ def facet(vertices,dynamic=None,fixed=True,wire=True,color=None,highlight=False,
 	return b
 
 
-def tetraPoly(vertices,dynamic=True,fixed=False,wire=True,color=None,highlight=False,noBound=False,material=-1,mask=1,chain=-1):
+def tetraPoly(vertices,fixed=False,wire=True,color=None,highlight=False,noBound=False,material=-1,mask=1,chain=-1):
 	"""Create tetrahedron (actually simple Polyhedra) with given parameters.
 
 	:param [Vector3,Vector3,Vector3,Vector3] vertices: coordinates of vertices in the global coordinate system.
@@ -291,7 +291,7 @@ def tetraPoly(vertices,dynamic=True,fixed=False,wire=True,color=None,highlight=F
 	b.chain=chain
 	return b
 
-def tetra(vertices,strictCheck=True,dynamic=True,fixed=False,wire=True,color=None,highlight=False,noBound=False,material=-1,mask=1,chain=-1):
+def tetra(vertices,strictCheck=True,fixed=False,wire=True,color=None,highlight=False,noBound=False,material=-1,mask=1,chain=-1):
 	"""Create tetrahedron with given parameters.
 
 	:param [Vector3,Vector3,Vector3,Vector3] vertices: coordinates of vertices in the global coordinate system.
@@ -319,7 +319,7 @@ def tetra(vertices,strictCheck=True,dynamic=True,fixed=False,wire=True,color=Non
 	b.chain = chain
 	return b
 
-def polyhedron(vertices,dynamic=True,fixed=False,wire=True,color=None,highlight=False,noBound=False,material=-1,mask=1,chain=-1):
+def polyhedron(vertices,fixed=False,wire=True,color=None,highlight=False,noBound=False,material=-1,mask=1,chain=-1):
 	"""Create polyhedron with given parameters.
 
 	:param [[Vector3]] vertices: coordinates of vertices in the global coordinate system.
