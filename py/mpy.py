@@ -599,7 +599,8 @@ def updateMirrorIntersections():
 			subD.mirrorIntersections = subD.mirrorIntersections[0:req[0]]+[intrs]+subD.mirrorIntersections[req[0]+1:]
 			reboundRemoteBodies(intrs)
 
-		
+		if(ERASE_REMOTE): eraseRemote()
+
 		"""
 		" NOTE: FK, what to do here:
 		" 1- all threads loop on reqs, i.e the intersecting subdomains of the current subdomain.
@@ -633,8 +634,7 @@ def updateMirrorIntersections():
 					subD.sendBodies(worker,requestedIds)
 			for worker in requestedSomethingFrom:
 				subD.receiveBodies(worker)
-				
-    if(ERASE_REMOTE): eraseRemote()
+
 	collider.doSort = True
 	collider.__call__()
 
