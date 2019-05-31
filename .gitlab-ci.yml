@@ -31,7 +31,7 @@ stages:
     - apt-get -y build-dep .
     - ls -l
     - ls -l debian
-    - gbp buildpackage --git-debian-branch="feature/dailypackages" --git-upstream-branch="master" --no-sign
+    - gbp buildpackage --git-ignore-branch --git-debian-branch="feature/dailypackages" --git-upstream-branch="master" --no-sign
 
 debpackages_18_04:
   <<: *debpackages_definition
