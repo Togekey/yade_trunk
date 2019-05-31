@@ -27,7 +27,9 @@ stages:
   <<: *platforms_definition
   stage: debpackages
   script:
-    - dpkg-buildpackage
+    - apt-get update
+    - apt-get build-dep .
+    - gbp buildpackage --git-ignore-branch --git-ignore-new
 
 debpackages_18_04:
   <<: *debpackages_definition
