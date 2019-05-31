@@ -46,7 +46,7 @@ bool InteractionContainer::insertInteractionMPI(shared_ptr<Interaction>& i){
 	bool res=true;
 	const shared_ptr<Interaction>& iOld =  find(Body::id_t(i->id1),Body::id_t(i->id2));
 	if (not iOld) res = insert(i);// if it doesn't exist, insert it
-	else {	i->linIx=iOld->linIx; // else replace existing one (with special care to linIx, only valid locally)
+	else if (i->isReal()) {	i->linIx=iOld->linIx; // else replace existing one (with special care to linIx, only valid locally)
 		(*this)[i->linIx] = i;}
 	return res;
 	
