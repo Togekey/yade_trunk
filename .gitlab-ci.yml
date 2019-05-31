@@ -28,7 +28,7 @@ stages:
   stage: debpackages
   script:
     - apt-get update
-    - apt-get build-dep .
+    - apt-get -y build-dep .
     - gbp buildpackage --git-ignore-branch --git-ignore-new
 
 debpackages_18_04:
