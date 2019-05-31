@@ -27,7 +27,7 @@ stages:
   <<: *platforms_definition
   stage: debpackages
   script:
-    - gbp buildpackage --git-ignore-branch --git-ignore-new --no-sign --git-upstream-tree="master" --git-debian-branch=feature/dailypackages
+    - gbp buildpackage --git-ignore-branch --git-ignore-new --git-upstream-tree=master  --no-sign
 
 debpackages_18_04:
   <<: *debpackages_definition
