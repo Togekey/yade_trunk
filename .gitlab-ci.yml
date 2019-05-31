@@ -29,8 +29,8 @@ stages:
   script:
 #    - apt-get update
 #    - apt-get -y build-dep .
-    - ls -l
-    - ls -l debian
+    - ls -la
+    - ls -la debian
     - gbp buildpackage --git-ignore-branch --git-export-dir=../deb --git-debian-branch="feature/dailypackages" --git-upstream-tree="master" --git-verbose --no-sign
 
 debpackages_18_04:
