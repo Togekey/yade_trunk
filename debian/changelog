@@ -1,0 +1,11 @@
+yadedaily (2019.01a-1ubuntu1) bionic; urgency=medium
+
+  * Update
+
+ -- Anton Gladky <gladk@debian.org>  Sat, 18 May 2019 23:23:57 +0200
+
+yadedaily (2019.01a-1) bionic; urgency=low
+
+  * Default debian changelog entry for yadedaily
+
+ -- Yade Developers (Key for signing packages) <yade-dev@lists.launchpad.net>  DATE

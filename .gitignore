@@ -6,8 +6,6 @@ tags
 .project
 VERSION
 yade.1
-debian/changelog
-debian/control
 doc/epydoc
 
 doc/sphinx/WallStresses
