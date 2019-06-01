@@ -29,7 +29,7 @@ stages:
   script:
     - apt-get update
     - apt-get -y build-dep .
-    - git merge master
+    - git merge origin/master
     - gbp buildpackage --git-ignore-branch --git-ignore-new --git-upstream-tree=master --git-verbose --no-sign
 
 debpackages_18_04:
