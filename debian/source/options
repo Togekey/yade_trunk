@@ -1,1 +1,1 @@
-tar-ignore = "trunk/.gitlab-ci.yml"
+tar-ignore = "*gitlab*"
