@@ -28,6 +28,7 @@ stages:
   stage: debpackages
   script:
     - git merge origin/master
+    - rm ../yadedail*
     - ls -l
     - ls -l ..
     - apt-get update
