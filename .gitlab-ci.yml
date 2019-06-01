@@ -27,7 +27,6 @@ stages:
   <<: *platforms_definition
   stage: debpackages
   script:
-    - git merge origin/master
     - rm -f ../yadedail*
     - ls -l
     - ls -l ..
