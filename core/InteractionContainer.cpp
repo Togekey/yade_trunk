@@ -130,6 +130,12 @@ struct compPtrInteraction{
 	}
 };
 
+void InteractionContainer::updateSortedIntrs(){
+	this->sortedIntrs.resize(this->linIntrs.size());
+	this->sortedIntrs = this->linIntrs;
+	sort(this->sortedIntrs.begin(), this->sortedIntrs.end(), this->compareTwoInteractions);
+}
+
 void InteractionContainer::preSave(InteractionContainer&){
 	for(const shared_ptr<Interaction>& I : *this) {
 		if(I->geom || I->phys) interaction.push_back(I);
