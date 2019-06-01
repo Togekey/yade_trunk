@@ -29,8 +29,8 @@ stages:
   script:
     - apt-get update
     - apt-get -y build-dep .
-    - git merge origin/master
-    - gbp buildpackage --git-ignore-branch --git-ignore-new --git-debian-branch=feature/dailypackages --git-upstream-tree=origin/master --git-verbose --no-sign
+    - git merge master
+    - gbp buildpackage --git-ignore-branch --git-ignore-new --git-upstream-tree=master --git-verbose --no-sign
 
 debpackages_18_04:
   <<: *debpackages_definition
