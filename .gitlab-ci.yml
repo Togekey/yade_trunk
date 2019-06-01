@@ -29,8 +29,7 @@ stages:
   script:
     - apt-get update
     - apt-get -y build-dep .
-    - dpkg-buildpackage
-#    - gbp buildpackage --git-ignore-branch --git-force-create --git-export-dir=../deb --git-debian-branch="feature/dailypackages" --git-upstream-tree="master" --git-verbose --no-sign
+    - gbp buildpackage --git-ignore-branch --git-debian-branch=feature/dailypackages --git-upstream-tree=2019.01a --git-verbose --no-sign
 
 debpackages_18_04:
   <<: *debpackages_definition
