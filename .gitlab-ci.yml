@@ -32,7 +32,7 @@ stages:
     - ls -l ..
     - apt-get update
     - apt-get -y build-dep .
-    - tar cfJ ../yadedaily_2019.01a-1ubuntu1.orig.tar.xz  --exclude "debian" --exclude ".git" .
+    - tar cfJ ../yadedaily_2019.01a.orig.tar.xz  --exclude "debian" --exclude ".git" .
     - dpkg-buildpackage -j8
 #    - gbp buildpackage --git-ignore-branch --git-ignore-new --git-debian-branch=feature/dailypackages --git-upstream-tree=origin/master --git-verbose --no-sign
 
