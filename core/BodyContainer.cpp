@@ -67,7 +67,7 @@ bool BodyContainer::erase(Body::id_t id, bool eraseClumpMembers){//default is fa
 	}
 	const shared_ptr<Scene>& scene=Omega::instance().getScene();
 	for(auto it=b->intrs.begin(), end=b->intrs.end(); it!=end; ++it) {  //Iterate over all body's interactions
-		scene->interactions->requestErase((*it).second);
+		scene->interactions->erase((*it).second->getId1(),(*it).second->getId2(),(*it).second->linIx);
 	}
 	b->id=-1;//else it sits in the python scope without a chance to be inserted again
 	body[id].reset();

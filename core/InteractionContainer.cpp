@@ -38,20 +38,21 @@ bool InteractionContainer::insert(const shared_ptr<Interaction>& i){
 	return true;
 }
 
-
-
-
 bool InteractionContainer::insertInteractionMPI(shared_ptr<Interaction>& i){
-// 	if (! i->isReal()){return false; }
 	bool res=true;
 	const shared_ptr<Interaction>& iOld =  find(Body::id_t(i->id1),Body::id_t(i->id2));
-	if (not iOld) res = insert(i);// if it doesn't exist, insert it
-	else if (i->isReal()) {	i->linIx=iOld->linIx; // else replace existing one (with special care to linIx, only valid locally)
-		(*this)[i->linIx] = i;}
+	if (not iOld) {
+		int iterBorn = i->iterBorn;
+		res = insert(i);// if it doesn't exist, insert it
+		i->iterBorn = iterBorn;
+	} else /*if (i->isReal())*/ {
+		i->linIx=iOld->linIx; // else replace existing one (with special care to linIx, only valid locally)
+		(*this)[i->linIx] = i;
+		(*bodies)[i->id1]->intrs[i->id2]=i;
+		(*bodies)[i->id2]->intrs[i->id1]=i;
+	}	
 	return res;
 }
-
-
 
 void InteractionContainer::clear(){
 	assert(bodies);
@@ -73,28 +74,20 @@ bool InteractionContainer::erase(Body::id_t id1,Body::id_t id2, int linPos){
 	const shared_ptr<Body>& b1((*bodies)[id1]);
 	const shared_ptr<Body>& b2((*bodies)[id2]);
 	int linIx=-1;
-	if(!b1 and !b2) {linIx=linPos; LOG_WARN("!b1 and !b2 for id1="+boost::lexical_cast<string>(id1)+" id2="+boost::lexical_cast<string>(id2));}	
+	if(!b1) linIx=linPos;
 	else {
-		if (b1) {
-			Body::MapId2IntrT::iterator I(b1->intrs.find(id2));
- 			if(I==b1->intrs.end()) {LOG_ERROR("I not found for "+boost::lexical_cast<string>(id1)+" "+boost::lexical_cast<string>(id2));
-			} else {
-				linIx=I->second->linIx;
-				assert(linIx==linPos);
-				if(linIx!=linPos) { LOG_ERROR("linIx!=linPos"+boost::lexical_cast<string>(id1)+" "+boost::lexical_cast<string>(id2)+" "+boost::lexical_cast<string>(linIx)+" "+boost::lexical_cast<string>(linPos));}
-				//erase from body, we also erase from linIntrs below
-				b1->intrs.erase(I);
-			}
-		}
-		if (b2) {
-			Body::MapId2IntrT::iterator I(b2->intrs.find(id1));
-			if(I==b1->intrs.end()) {LOG_ERROR("I not found(2) for "+boost::lexical_cast<string>(id1)+" "+boost::lexical_cast<string>(id2));
-			} else {
-				linIx=I->second->linIx;
-				assert(linIx==linPos);
-				if(linIx!=linPos) { LOG_ERROR("linIx!=linPos(2)"+boost::lexical_cast<string>(id1)+" "+boost::lexical_cast<string>(id2)+" "+boost::lexical_cast<string>(linIx)+" "+boost::lexical_cast<string>(linPos));}
-				//erase from body, we also erase from linIntrs below
-				b2->intrs.erase(I);
+		Body::MapId2IntrT::iterator I(b1->intrs.find(id2));
+		if(I==b1->intrs.end()) linIx=linPos;
+		else {
+			linIx=I->second->linIx;
+			assert(linIx==linPos);
+			//erase from body, we also erase from linIntrs below
+			b1->intrs.erase(I);
+			if (b2) { 
+				Body::MapId2IntrT::iterator I2(b2->intrs.find(id1));
+				if (not(I2==b2->intrs.end())) { 
+					b2->intrs.erase(I2); 
+				}
 			}
 		}
 	}
