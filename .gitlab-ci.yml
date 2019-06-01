@@ -27,12 +27,15 @@ stages:
   <<: *platforms_definition
   stage: debpackages
   script:
+    - git merge origin/master
     - rm -f ../yadedail*
     - ls -l
     - ls -l ..
     - apt-get update
     - apt-get -y build-dep .
-    - gbp buildpackage --git-ignore-branch --git-ignore-new --git-debian-branch=feature/dailypackages --git-upstream-tree=feature/dailypackages --git-verbose --no-sign
+    - tar cfJ ../yadedaily_2019.01a-1ubuntu1.orig.tar.xz  --exclude "debian" --exclude ".git" .
+    - dpkg-buildpackage -j8
+#    - gbp buildpackage --git-ignore-branch --git-ignore-new --git-debian-branch=feature/dailypackages --git-upstream-tree=origin/master --git-verbose --no-sign
 
 debpackages_18_04:
   <<: *debpackages_definition
