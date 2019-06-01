@@ -132,11 +132,11 @@ void Subdomain::clearSubdomainIds(){
 	ids.clear();
 }
 
-void Subdomain::setIDstoSubdomain(boost::python::list& idList ){
+void Subdomain::setIDstoSubdomain(boost::python::list& idList ){//Remark: probably no need for a function to assign a python list to vector<int>, boost::python does this very well.
 	unsigned int listSize = boost::python::len(idList);
 	for (unsigned int i=0; i != listSize; ++i) {
 	   int  b_id = boost::python::extract<int> (idList[i]);
-	   ids.push_back(b_id);
+	   ids.push_back(b_id);// So it's not reset before filling?
 	}
 }
 
@@ -312,7 +312,7 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 // 		if(!resetInteractions)
 			for (auto mapIter = intrsToSet.begin(); mapIter != intrsToSet.end(); ++mapIter){
 				const Body::id_t& id1 = mapIter->second->id1; const Body::id_t& id2 = mapIter->second->id2;
-				if ((*bodyContainer)[id1] and (*bodyContainer)[id2] ) {
+				if ((*bodyContainer)[id1] and (*bodyContainer)[id2] ) {// we will insert interactions only when both bodies are inserted
 					// FIXME: we should make really sure that we are not overwriting a live interaction with a deprecated one (possible solution: make all interactions between remote bodies virtual)
 					scene->interactions->insertInteractionMPI(mapIter->second);
 				}
@@ -336,7 +336,8 @@ void Subdomain::setBodyIntrsMerge(Scene* scene) {
 	    const shared_ptr<Body> b = *(bIter);
 // 	    std::cout << "size of intrs = " << b->intrs.size() << std::endl;
             for (auto mapIter = b->intrs.begin(); mapIter != b->intrs.end(); ++mapIter){
-	      interactionContainer -> insertInteractionMPI(mapIter->second);
+		    if ((*bodies)[mapIter->second->id1] and (*bodies)[mapIter->second->id2] ) // we will insert interactions only when both bodies are inserted
+			interactionContainer -> insertInteractionMPI(mapIter->second);
 	    }
     }
 	interactionContainer -> dirty = true;
