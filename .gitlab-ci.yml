@@ -28,12 +28,12 @@ stages:
   stage: debpackages
   script:
     - git merge origin/master
-    - rm ../yadedail*
+    - rm -f ../yadedail*
     - ls -l
     - ls -l ..
     - apt-get update
     - apt-get -y build-dep .
-    - gbp buildpackage --git-ignore-branch --git-ignore-new --git-verbose --no-sign
+    - gbp buildpackage --git-ignore-branch --git-ignore-new --git-debian-branch=feature/dailypackages --git-upstream-tree=origin/master --git-verbose --no-sign
 
 debpackages_18_04:
   <<: *debpackages_definition
