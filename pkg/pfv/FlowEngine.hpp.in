@@ -328,7 +328,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		((double,desiredPorosity,0,,"Correct the cell volumes to reflect this desired porosity (not active by default (0))."))
 		((Real,volumeCorrection,1,,"Volume correction factor (not user controlled. auto computed if :yref:`FlowEngine::desiredPorosity` != 0)"))
 		((double,stiffness, 10000,,"equivalent contact stiffness used in the lubrication model"))
-		((int, useSolver, 0,, "Solver to use. 0:Gauss-Seidel, >0: Cholesky factorization (sparse CHOLMOD), 4: GPU accelerated CHOLMOD (must be combined with :yref:`FlowEngine::multithread`=True)"))
+		((int, useSolver, 3,, "Solver to use. 0:Gauss-Seidel, >0: Cholesky factorization (sparse CHOLMOD), 4: multicore CPU or GPU accelerated CHOLMOD"))
 		((int, xmin,0,(Attr::readonly),"Index of the boundary $x_{min}$. This index is not equal the the id of the corresponding body in general, it may be used to access the corresponding attributes (e.g. flow.bndCondValue[flow.xmin], flow.wallId[flow.xmin],...)."))
 		((int, xmax,1,(Attr::readonly),"See :yref:`FlowEngine::xmin`."))
 		((int, ymin,2,(Attr::readonly),"See :yref:`FlowEngine::xmin`."))
