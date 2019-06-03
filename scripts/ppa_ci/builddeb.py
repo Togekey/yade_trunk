@@ -40,7 +40,7 @@ with fileinput.FileInput(dirpathyade + '/debian/changelog', inplace=True) as fil
         print(line.replace("DATE", email.utils.formatdate(localtime=True)), end='')
 
 os.system('cd %s && dpkg-source -b -I yadedaily && cd -'%(dirpath))
-os.system('cd %s/yadedaily && apt-get -y build-dep . && dpkg-buildpackage -j8 && cd -'%(dirpath))
+os.system('cd %s/yadedaily && apt-get update && apt-get -y build-dep . && dpkg-buildpackage -j8 && cd -'%(dirpath))
 
 print (versiondebian)
 print (dirpath)
