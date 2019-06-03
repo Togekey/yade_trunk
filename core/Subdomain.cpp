@@ -157,11 +157,12 @@ void Subdomain::mergeOp() {
 	recvBodyContainersFromWorkers();
 	if (subdomainRank==master){
 	  Scene* scene = Omega::instance().getScene().get();
-	  bool setDeletedBodies = false;
+	  bool ifMerge = true;
 	  processContainerStrings();
 	  // clear existing interactions:
 	  scene->interactions->clear();
-	  setBodiesToBodyContainer(scene, recvdBodyContainers,setDeletedBodies, false);
+	  setBodiesToBodyContainer(scene, recvdBodyContainers, ifMerge,false ); 
+	  //setBodiesToBodyContainerMerge(scene, recvdBodyContainers);
 	  bodiesSet = false; // reset flag for next merge op.
 	  containersRecvd = false;
 	  
@@ -258,7 +259,7 @@ void Subdomain::receiveBodies(const int sender){
 // 	cout<<mpiBC->bContainer.size()<<" bodies"<<endl;
 	std::vector<shared_ptr<MPIBodyContainer> > mpiBCVect(1,mpiBC); //setBodiesToBodyContainer needs a vector of MPIBodyContainer, so create one of size 1.
 	Scene* scene = Omega::instance().getScene().get();
-	setBodiesToBodyContainer(scene,mpiBCVect,true, true);
+	setBodiesToBodyContainer(scene,mpiBCVect,false, true);
 }
 
 
@@ -304,7 +305,7 @@ void Subdomain::recvBodyContainersFromWorkers() {
 
 
 // set all body properties from the worker MPIBodyContainer
-void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MPIBodyContainer> >& containers, bool setDeletedBodies, bool resetInteractions) {
+void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MPIBodyContainer> >& containers, bool ifMerge, bool resetInteractions) {
 	    // to be used when deserializing a recieved container.
 	    shared_ptr<BodyContainer>& bodyContainer = scene->bodies;
 	    shared_ptr<InteractionContainer>& interactionContainer = scene->interactions; 
@@ -316,11 +317,19 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 		// check if the body already exists in the existing bodycontainer
 		const Body::id_t& idx = newBody->id;
 		std::map<Body::id_t, shared_ptr<Interaction> > intrsToSet = newBody->intrs;
-		
 		shared_ptr<Body>& b = (*bodyContainer)[idx];
-		if (!b) newBody->intrs.clear(); //we can clear here, interactions are stored in intrsToSet
-		else newBody->intrs=b->intrs;
-		b=newBody;
+		
+		if (ifMerge){
+		// FIXME: this switcheroo of material for existing bodies is done to avoid 'RuntimeError: Scene::postLoad: Internal inconsistency, shared materials not preserved when loaded; please report bug.' during global merges.
+			shared_ptr<Material> tmpMat = b->material; 
+			b = newBody; 
+			b->material = tmpMat; 
+			b->intrs.clear(); 
+		  
+		}else{
+			if (!b) newBody->intrs.clear(); //we can clear here, interactions are stored in intrsToSet
+			else newBody->intrs=b->intrs;
+			b=newBody;}
 
 // 		if(!resetInteractions)
 			for (auto mapIter = intrsToSet.begin(); mapIter != intrsToSet.end(); ++mapIter){

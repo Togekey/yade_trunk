@@ -170,11 +170,9 @@ class Subdomain: public Shape {
         //functions (master) 
         
 	void recvBodyContainersFromWorkers(); 
-	void setBodiesToBodyContainer(Scene* , std::vector<shared_ptr<MPIBodyContainer> >&, bool, bool); //scene, vector of mpibodycontainers, set deleted bodies ?
 	void initMasterContainer(); 
         bool allocContainerMaster = false;   // flag 
-
-        
+       
         //functions common 
         
         void mergeOp(); 
@@ -190,6 +188,7 @@ class Subdomain: public Shape {
 	void receiveBodies(const int sender);
         void setCommunicationContainers(); 
 	void completeSendBodies(); 
+	void setBodiesToBodyContainer(Scene* , std::vector<shared_ptr<MPIBodyContainer> >&, bool, bool); //scene, vector of mpibodycontainers, set deleted bodies ?
         
         //communications util functions 
         
@@ -213,7 +212,8 @@ class Subdomain: public Shape {
 	 void clearSubdomainIds();  // clears the member ids (std::vector <Body::id_t>
 	 void getRankSize();  
 	 void clearRecvdCharBuff(std::vector<char*>& ); // frees std::vector<char*>
-	 void clearStringBuff(std::vector<string>& ); 
+	 void clearStringBuff(std::vector<string>& );
+	 
          
          
         //declarations dpk 
