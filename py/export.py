@@ -100,29 +100,6 @@ def textExt(filename, format='x_y_z_r', comment='',mask=-1,attrs=[]):
 	out.close()
 	return count
 
-	bodies = [b for b in O.bodies if isinstance(b.shape,Sphere) and (True if mask==-1 else b.msak==mask)]
-	data = []
-	for b in bodies:
-		pos = b.state.pos
-		d = [pos[i] for i in (0,1,2)]
-		for name,command in what:
-			val = eval(command)
-			if isinstance(val,Matrix3):
-				d.extend((val[0,0],val[0,1],val[0,2],val[1,0],val[1,1],val[1,2],val[2,0],val[2,1],val[2,2]))
-			elif isinstance(val,Vector3):
-				d.extend((v[0],v[1],v[2]))
-			elif isinstance(val,(int,float)):
-				d.append(val)
-			else:
-				print("WARNING: export.text: wrong 'what' parameter, output might be corrupted")
-				return 0
-		data.append(d)
-	dataw = [' '.join('%e'%v for v in d) for d in data]
-	outFile = open(filename,'w')
-	outFile.writelines(dataw)
-	outFile.close()
-	return len(bodies)
-  
 #textClumps===============================================================
 def textClumps(filename, format='x_y_z_r_clumpId', comment='',mask=-1):
 	"""Save clumps-members into a text file. Non-clumps members are bodies are silently skipped.
