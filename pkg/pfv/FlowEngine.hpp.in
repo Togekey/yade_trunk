@@ -16,7 +16,7 @@ FlowEngine is thus defined via the template class TemplateFlowEngine(Cellinfo,Ve
 PeriodicFlowEngine is a variant for periodic boundary conditions.
 
 Which solver will be actually used internally to obtain pore pressure will depend partly on compile time flags (libcholmod available and #define LINSOLV),
-and on runtime settings (useSolver=0: Gauss-Seidel (iterative), useSolver=1: CHOLMOD if available (direct sparse cholesky)).
+and on runtime settings (useSolver=0: Gauss-Seidel (iterative), 0:Gauss-Seidel, 3: Cholesky factorization (via Eigen3 interface), 4:multicore CPU or GPU accelerated CHOLMOD (without Eigen3), 1-2: undefined).
 
 The files defining lower level classes are in yade/lib. The code uses CGAL::Triangulation3 for managing the mesh and storing data. Eigen3::Sparse, suitesparse::cholmod, and metis are used for solving the linear systems with a direct method (Cholesky). An iterative method (Gauss-Seidel) is implemented directly in Yade and can be used as a fallback (see FlowEngine::useSolver).
 
@@ -328,7 +328,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		((double,desiredPorosity,0,,"Correct the cell volumes to reflect this desired porosity (not active by default (0))."))
 		((Real,volumeCorrection,1,,"Volume correction factor (not user controlled. auto computed if :yref:`FlowEngine::desiredPorosity` != 0)"))
 		((double,stiffness, 10000,,"equivalent contact stiffness used in the lubrication model"))
-		((int, useSolver, 3,, "Solver to use. 0:Gauss-Seidel, >0: Cholesky factorization (sparse CHOLMOD), 4: multicore CPU or GPU accelerated CHOLMOD"))
+		((int, useSolver, 3,, "Solver to use. 0:Gauss-Seidel, 3: Cholesky factorization (via Eigen3 interface), 4:multicore CPU or GPU accelerated CHOLMOD (without Eigen3), 1-2: undefined."))
 		((int, xmin,0,(Attr::readonly),"Index of the boundary $x_{min}$. This index is not equal the the id of the corresponding body in general, it may be used to access the corresponding attributes (e.g. flow.bndCondValue[flow.xmin], flow.wallId[flow.xmin],...)."))
 		((int, xmax,1,(Attr::readonly),"See :yref:`FlowEngine::xmin`."))
 		((int, ymin,2,(Attr::readonly),"See :yref:`FlowEngine::xmin`."))
