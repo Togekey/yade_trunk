@@ -331,17 +331,26 @@ def text(filename,mask=-1):
 #VTKExporter===============================================================
 
 class VTKExporter(object):
-	"""Class for exporting data to VTK Simple Legacy File (for example if, for some reason, you are not able to use VTKRecorder). Export of spheres, facets, interactions and polyhedra is supported.
+	"""Class for exporting data to `VTK Simple Legacy File <https://www.vtk.org/VTK/img/file-formats.pdf>`_ (for example if, for some reason, you are not able to use :yref:`VTKRecorder`).
+	Supported export of:
 	
-	USAGE:
-	create object vtkExporter = VTKExporter('baseFileName'),
-	add to engines PyRunner with command='vtkExporter.exportSomething(params)'
-	alternatively just use vtkExporter.exportSomething(...) at the end of the script for instance
+	* spheres
+	* facets
+	* polyhedra
+	* interactions
+	* contact points
+	* periodic cell
+	
+	Usage:
+
+	* create object ``vtkExporter = VTKExporter('baseFileName')``,
+	* add to ``O.engines`` a ``PyRunner`` with ``command='vtkExporter.exportSomething(...)'``
+	* alternatively, just use ``vtkExporter.exportSomething(...)`` at the end of the script for instance
 	
 	Example: :ysrc:`examples/test/vtk-exporter/vtkExporter.py`, :ysrc:`examples/test/unv-read/unvReadVTKExport.py`.
 	
-	:param string baseName: name of the exported files. The files would be named baseName-spheres-snapNb.vtk or baseName-facets-snapNb.vtk
-	:param int startSnap: the numbering of files will start form startSnap
+	:param string baseName: name of the exported files. The files would be named, e.g., ``baseName-spheres-snapNb.vtk`` or ``baseName-facets-snapNb.vtk``
+	:param int startSnap: the numbering of files will start form ``startSnap``
 	"""
 	# TODO comments
 	def __init__(self,baseName,startSnap=0):
@@ -578,6 +587,7 @@ class VTKExporter(object):
 		:param dictionary verticesWhat: what to export on connected bodies. Bodies are labeled as ``b`` (or ``b1`` and ``b2`` if you need to treat both bodies differently)
 		:param string comment: comment to add to vtk file
 		:param int numLabel: number of file (e.g. time step), if unspecified, the last used value + 1 will be used
+		:param bool useRef: if False (default), use current position of the bodies for export, use reference position otherwise
 		"""
 		# get list of interactions to export
 		intrs = self._getInteractions(ids)
@@ -694,9 +704,9 @@ class VTKExporter(object):
 	def exportContactPoints(self,ids='all',what={},useRef={},comment="comment",numLabel=None):
 		"""exports contact points (CPs) and defined properties.
 		
-		:param [(int,int)] ids: see exportInteractions
+		:param [(int,int)] ids: see :meth:`exportInteractions`
 		:param dictionary what: see :meth:`exportInteractions`
-		:param {Interaction:Vector3} useRef: if not specified, current position used. Otherwise use position from dict using interactions as keys. Interactions not in dict are not exported
+		:param bool useRef: see :meth:`exportInteractions`
 		:param string comment: comment to add to vtk file
 		:param int numLabel: number of file (e.g. time step), if unspecified, the last used value + 1 will be used
 		"""
@@ -764,7 +774,7 @@ class VTKExporter(object):
 		self.contactPointsSnapCount += 1
 
 	def exportPeriodicCell(self,comment="comment",numLabel=None):
-		"""exports the Cell geometry for periodic simulations.
+		"""exports the :yref:`Cell` geometry for periodic simulations.
 		
 		:param string comment: comment to add to vtk file
 		:param int numLabel: number of file (e.g. time step), if unspecified, the last used value + 1 will be used
