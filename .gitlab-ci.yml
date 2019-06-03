@@ -27,7 +27,8 @@ stages:
   <<: *platforms_definition
   stage: debpackages
   script:
-    - ./scripts/ppa_ci/builddeb.py  -d "bionic"
+    - ls -l ./scripts/ppa_ci/
+    - ./scripts/ppa_ci/builddeb.py -d "bionic"
 debpackages_18_04:
   <<: *debpackages_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
