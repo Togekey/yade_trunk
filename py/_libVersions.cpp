@@ -242,9 +242,9 @@ namespace py = boost::python;
 		#elif defined(MPICH_VERSION) && defined(MPICH_NUMVERSION)
 		ret.append( py::make_tuple                           (MPICH_NUMVERSION , 0, 0 ));
 		ret.append( "mpich:"+boost::lexical_cast<std::string>(MPICH_VERSION) );
-		#elif defined(MPI_VERSION) && defined(MPI_SUBVERSION) && defined(MPICH_NAME)
-		ret.append(        py::make_tuple(                  MPI_VERSION,                                      MPI_SUBVERSION,                                      MPICH_NAME));
-		ret.append( "mpi:"+boost::lexical_cast<std::string>(MPI_VERSION)+"."+boost::lexical_cast<std::string>(MPI_SUBVERSION)+"."+boost::lexical_cast<std::string>(MPICH_NAME));
+		#elif defined(MPI_VERSION) && defined(MPI_SUBVERSION)
+		ret.append(        py::make_tuple(                  MPI_VERSION,                                      MPI_SUBVERSION,                                      0 ));
+		ret.append( "mpi:"+boost::lexical_cast<std::string>(MPI_VERSION)+"."+boost::lexical_cast<std::string>(MPI_SUBVERSION)+"."+boost::lexical_cast<std::string>(0 ));
 		#else
 		ret.append( py::make_tuple( 0, 0, 0 ));
 		ret.append( "unknown_version" );
