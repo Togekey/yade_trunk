@@ -2,7 +2,7 @@
 
 import argparse, git, shutil
 import tempfile, tarfile, fileinput
-import email.utils, datetime, os
+import email.utils, datetime, os, sys
 
 
 parser = argparse.ArgumentParser(description='Build yadedaily packages.')
@@ -14,7 +14,7 @@ dirpath = tempfile.mkdtemp()
 dirpathyade = dirpath + '/yadedaily/'
 
 repoups = git.Repo('.')
-versiondebian = repoups.git.describe('--always')[0:-8] + repoups.head.commit.hexsha[0:7] + "~" + args.dist + "1"
+versiondebian = "2019.01a~" + repoups.git.describe('--always')[0:-8] + repoups.head.commit.hexsha[0:7] + "~" + args.dist + "1"
 tarballname = 'yadedaily_%s.orig.tar.xz'%(versiondebian)
 
 # Copy buildtree into the tmpdir
@@ -39,8 +39,12 @@ with fileinput.FileInput(dirpathyade + '/debian/changelog', inplace=True) as fil
     for line in file:
         print(line.replace("DATE", email.utils.formatdate(localtime=True)), end='')
 
-os.system('cd %s && dpkg-source -b -I yadedaily && cd -'%(dirpath))
-os.system('cd %s/yadedaily && apt-get update && apt-get -y build-dep . && dpkg-buildpackage -j8 && cd -'%(dirpath))
+retval = os.system('cd %s && dpkg-source -b -I yadedaily && cd -'%(dirpath))
+if (retval != 0):
+    sys.exit('Abort!')
+retval = os.system('cd %s/yadedaily && apt-get update && apt-get -y build-dep . && dpkg-buildpackage -j8 && cd -'%(dirpath))
+if (retval != 0):
+    sys.exit('Abort!')
 
 print (versiondebian)
 print (dirpath)
