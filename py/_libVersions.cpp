@@ -203,8 +203,20 @@ namespace py = boost::python;
 	#include <metis.h>
 	py::list metisVer() {
 		py::list ret;
+		// https://gcc.gnu.org/onlinedocs/cpp/Elif.html
+		#if defined(METIS_VER_MAJOR) && defined(METIS_VER_MINOR) && defined(METIS_VER_SUBMINOR)
 		ret.append( py::make_tuple(                  METIS_VER_MAJOR   ,                                   METIS_VER_MINOR   ,                                   METIS_VER_SUBMINOR));
 		ret.append( boost::lexical_cast<std::string>(METIS_VER_MAJOR)+"."+boost::lexical_cast<std::string>(METIS_VER_MINOR)+"."+boost::lexical_cast<std::string>(METIS_VER_SUBMINOR));
+		#elif defined(MTMETIS_VER_MAJOR) && defined(MTMETIS_VER_MINOR) && defined(MTMETIS_VER_SUBMINOR)
+		ret.append(       py::make_tuple(                  MTMETIS_VER_MAJOR   ,                                   MTMETIS_VER_MINOR   ,                                   MTMETIS_VER_SUBMINOR));
+		ret.append( "mt:"+boost::lexical_cast<std::string>(MTMETIS_VER_MAJOR)+"."+boost::lexical_cast<std::string>(MTMETIS_VER_MINOR)+"."+boost::lexical_cast<std::string>(MTMETIS_VER_SUBMINOR));
+		#elif defined(PARMETIS_MAJOR_VERSION) && defined(PARMETIS_MINOR_VERSION) && defined(PARMETIS_SUBMINOR_VERSION)
+		ret.append(        py::make_tuple(                  PARMETIS_MAJOR_VERSION,                                      PARMETIS_MINOR_VERSION   ,                                   PARMETIS_SUBMINOR_VERSION));
+		ret.append( "par:"+boost::lexical_cast<std::string>(PARMETIS_MAJOR_VERSION)+"."+boost::lexical_cast<std::string>(PARMETIS_MINOR_VERSION)+"."+boost::lexical_cast<std::string>(PARMETIS_SUBMINOR_VERSION));
+		#else
+		ret.append( py::make_tuple( 0, 0, 0 ));
+		ret.append( "unknown_version" );
+		#endif
 		return ret;
 	}
 #else
@@ -219,10 +231,24 @@ namespace py = boost::python;
 // https://www.open-mpi.org/software/ompi/versions/
 	py::list mpiVer() {
 		py::list ret;
+		#if defined(OMPI_MAJOR_VERSION) && defined(OMPI_MINOR_VERSION) && defined(OMPI_RELEASE_VERSION)
 		ret.append( py::make_tuple                  (OMPI_MAJOR_VERSION   ,                                   OMPI_MINOR_VERSION  ,                                    OMPI_RELEASE_VERSION ));
 // I didn't find a way to obtain a version string for mpi, so I construct my own. But if there is some MPI version string, better put it here.
 //		ret.append( boost::lexical_cast<std::string>(OMPI_VERSION) );
-		ret.append( boost::lexical_cast<std::string>(OMPI_MAJOR_VERSION)+"."+boost::lexical_cast<std::string>(OMPI_MINOR_VERSION)+"."+boost::lexical_cast<std::string>(OMPI_RELEASE_VERSION) );
+		ret.append( "ompi:"+boost::lexical_cast<std::string>(OMPI_MAJOR_VERSION)+"."+boost::lexical_cast<std::string>(OMPI_MINOR_VERSION)+"."+boost::lexical_cast<std::string>(OMPI_RELEASE_VERSION) );
+		#elif defined(I_MPI_NUMVERSION) && defined(I_MPI_VERSION)
+		ret.append( py::make_tuple                           (I_MPI_NUMVERSION, 0, 0 ));
+		ret.append( "intel:"+boost::lexical_cast<std::string>(I_MPI_VERSION) );
+		#elif defined(MPICH_VERSION) && defined(MPICH_NUMVERSION)
+		ret.append( py::make_tuple                           (MPICH_NUMVERSION , 0, 0 ));
+		ret.append( "mpich:"+boost::lexical_cast<std::string>(MPICH_VERSION) );
+		#elif defined(MPI_VERSION) && defined(MPI_SUBVERSION) && defined(MPICH_NAME)
+		ret.append(        py::make_tuple(                  MPI_VERSION,                                      MPI_SUBVERSION,                                      MPICH_NAME));
+		ret.append( "mpi:"+boost::lexical_cast<std::string>(MPI_VERSION)+"."+boost::lexical_cast<std::string>(MPI_SUBVERSION)+"."+boost::lexical_cast<std::string>(MPICH_NAME));
+		#else
+		ret.append( py::make_tuple( 0, 0, 0 ));
+		ret.append( "unknown_version" );
+		#endif
 		return ret;
 	}
 #else
