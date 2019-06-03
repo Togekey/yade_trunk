@@ -27,8 +27,7 @@ stages:
   <<: *platforms_definition
   stage: debpackages
   script:
-    - ls -l
-    - ls -l ./scripts/ppa_ci/
+    - git fetch --tags
     - ./scripts/ppa_ci/builddeb.py -d "bionic"
 debpackages_18_04:
   <<: *debpackages_definition
