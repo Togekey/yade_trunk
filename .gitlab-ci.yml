@@ -27,15 +27,7 @@ stages:
   <<: *platforms_definition
   stage: debpackages
   script:
-    - rm -f ../yadedail*
-    - ls -l
-    - ls -l ..
-    - apt-get update
-    - apt-get -y build-dep .
-    - tar cfJ ../yadedaily_2019.01a.orig.tar.xz  --exclude "debian" --exclude ".git" .
-    - dpkg-buildpackage -j8
-#    - gbp buildpackage --git-ignore-branch --git-ignore-new --git-debian-branch=feature/dailypackages --git-upstream-tree=origin/master --git-verbose --no-sign
-
+    - ./scripts/ppa_ci/builddeb.py  -d "bionic"
 debpackages_18_04:
   <<: *debpackages_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04

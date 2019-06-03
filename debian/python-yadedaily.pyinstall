@@ -1,3 +1,0 @@
-debian/tmp/usr/lib/*/yadedaily/py/yade/*.* yadedaily
-debian/tmp/usr/lib/*/yadedaily/py/yade/qt/*.* yadedaily.qt
-debian/tmp/usr/lib/*/yadedaily/py/yade/tests/*.* yadedaily.tests
