@@ -598,8 +598,11 @@ def updateMirrorIntersections():
 			intrs=req[1].wait()
 			subD.mirrorIntersections = subD.mirrorIntersections[0:req[0]]+[intrs]+subD.mirrorIntersections[req[0]+1:]
 			reboundRemoteBodies(intrs)
-
+			
+			
+		#FIXME: Seg fault 11 when global merging with interactions
 		if(ERASE_REMOTE): eraseRemote()
+
 
 		"""
 		" NOTE: FK, what to do here:
