@@ -14,7 +14,7 @@ dirpath = tempfile.mkdtemp()
 dirpathyade = dirpath + '/yadedaily/'
 
 repoups = git.Repo('.')
-versiondebian = repoups.git.describe()[0:-8] + repoups.head.commit.hexsha[0:7] + "~" + args.dist + "1"
+versiondebian = repoups.git.describe('--always')[0:-8] + repoups.head.commit.hexsha[0:7] + "~" + args.dist + "1"
 tarballname = 'yadedaily_%s.orig.tar.xz'%(versiondebian)
 
 # Copy buildtree into the tmpdir
