@@ -26,7 +26,8 @@ class Subdomain: public Shape {
 	boost::python::list mIntrs_get();
 	void mIntrs_set(const boost::python::list& intrs);
 //     	boost::python::dict members_get();
-	vector<MPI_Request> mpiReqs;
+	vector<MPI_Request> mpiReqs; 
+	vector<MPI_Request> sendBodyReqs; // I could use mpiReqs, but then I will have to manage it between states send and bodies send. 
 	
 	
 	
@@ -171,7 +172,6 @@ class Subdomain: public Shape {
 	void recvBodyContainersFromWorkers(); 
 	void setBodiesToBodyContainer(Scene* , std::vector<shared_ptr<MPIBodyContainer> >&, bool, bool); //scene, vector of mpibodycontainers, set deleted bodies ?
 	void initMasterContainer(); 
-	void setBodyIntrsMerge(Scene*); 
         bool allocContainerMaster = false;   // flag 
 
         
@@ -189,6 +189,7 @@ class Subdomain: public Shape {
 	void sendBodies(const int receiver, const vector<Body::id_t >& idsToSend);
 	void receiveBodies(const int sender);
         void setCommunicationContainers(); 
+	void completeSendBodies(); 
         
         //communications util functions 
         
@@ -196,11 +197,11 @@ class Subdomain: public Shape {
         void sendString(std::string& , int , int,  MPI_Request& );                        //non blocking send
         void recvBuff(char*  ,int , int ,  MPI_Request& );                               // non blcoking recv 
         int  probeIncoming(int, int );                                                  //non blocking probe, for getting char/string size
-        void processReqs(std::vector<MPI_Request>&, int  );                            // process Requests (MPI_Waitall(request, status))
+        void processReqs(std::vector<MPI_Request>&  );                                 // process Requests (MPI_Waitall(request, status))
         void resetReqs(std::vector<MPI_Request>& );                                   // clear the vector of mpiReqs. 
         int probeIncomingBlocking(int, int);                                         // blocking probe -> gets size of char/string : source rank, message tag. 
         void recvBuffBlocking(char* , int , int , int );                            // blockng recv : char buff, buff size, message tag, source rank  
-        void processReqsAll(std::vector<MPI_Request>& , std::vector<MPI_Status>& ); // clears vecs of MPI_Status & MPI_Request
+        void processReqsAll(std::vector<MPI_Request>& , std::vector<MPI_Status>& ); // clears vecs of MPI_Status & MPI_Request (non blocking sends & non blocking ecvs. )
         
         //Util functions -> serialization, deserializtion, setting body ids to a subdomain (aka to the member std::vector<Body::d_t> ids) and another function for  clearing it
         
@@ -212,6 +213,7 @@ class Subdomain: public Shape {
 	 void clearSubdomainIds();  // clears the member ids (std::vector <Body::id_t>
 	 void getRankSize();  
 	 void clearRecvdCharBuff(std::vector<char*>& ); // frees std::vector<char*>
+	 void clearStringBuff(std::vector<string>& ); 
          
          
         //declarations dpk 
@@ -265,6 +267,7 @@ class Subdomain: public Shape {
 		.def("receiveBodies",&Subdomain::receiveBodies,(boost::python::arg("sender")), "Receive the bodies from MPI sender rank to MPI receiver rank")
 		.add_property("intersections",&Subdomain::intrs_get,&Subdomain::intrs_set,"lists of bodies from this subdomain intersecting other subdomains. WARNING: only assignement and concatenation allowed")
                 .def("getRankSize", &Subdomain::getRankSize, "set subdomain ranks, used for communications -> merging, sending bodies etc.")
+		.def("completeSendBodies", &Subdomain::completeSendBodies, "calls MPI_wait to complete the non blocking sends/recieves.")
 		.add_property("mirrorIntersections",&Subdomain::mIntrs_get,&Subdomain::mIntrs_set,"lists of bodies from other subdomains intersecting this one. WARNING: only assignement and concatenation allowed")
 	);
 	DECLARE_LOGGER;

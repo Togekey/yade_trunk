@@ -632,8 +632,10 @@ def updateMirrorIntersections():
 				if(len(requestedIds)>0):
 					wprint("I will now send ",requestedIds," to ",worker)
 					subD.sendBodies(worker,requestedIds)
+			
 			for worker in requestedSomethingFrom:
 				subD.receiveBodies(worker)
+			subD.completeSendBodies(); 
 
 	collider.doSort = True
 	collider.__call__()

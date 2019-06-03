@@ -245,6 +245,7 @@ void Subdomain::sendBodies(const int receiver, const vector<Body::id_t >& idsToS
 	stringBuff.push_back(s);
 	MPI_Request req;
 	MPI_Isend(stringBuff.back().data(), s.size(), MPI_CHAR, receiver, TAG_BODY, MPI_COMM_WORLD, &req);
+	sendBodyReqs.push_back(req); 
 }
 
 void Subdomain::receiveBodies(const int sender){
@@ -258,6 +259,18 @@ void Subdomain::receiveBodies(const int sender){
 	std::vector<shared_ptr<MPIBodyContainer> > mpiBCVect(1,mpiBC); //setBodiesToBodyContainer needs a vector of MPIBodyContainer, so create one of size 1.
 	Scene* scene = Omega::instance().getScene().get();
 	setBodiesToBodyContainer(scene,mpiBCVect,true, true);
+}
+
+
+void Subdomain::clearStringBuff(std::vector<string>& sbuff){
+	if (! sbuff.size()){return ; }
+	 sbuff.clear(); 
+}
+
+
+void Subdomain::completeSendBodies(){
+	processReqs(sendBodyReqs);		// calls MPI_Wait on the reqs, cleans the vect of mpi Reqs
+	clearStringBuff(stringBuff);		// cleares the vector<string> stringBuff; 
 }
 
 /********Functions exclusive to the master*************/
@@ -308,6 +321,7 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 		if (!b) newBody->intrs.clear(); //we can clear here, interactions are stored in intrsToSet
 		else newBody->intrs=b->intrs;
 		b=newBody;
+		b->material = newBody->material; 
 
 // 		if(!resetInteractions)
 			for (auto mapIter = intrsToSet.begin(); mapIter != intrsToSet.end(); ++mapIter){
@@ -325,23 +339,6 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 	// std::cout << "InteractionContainer size CPP = " << interactionContainer->size() << std::endl; 
 }
 
-//unused. 
-void Subdomain::setBodyIntrsMerge(Scene* scene) {
-	// Set all interactions from the recieved bodies : bodies have to be set in the body container firs!
-    if (!bodiesSet) {LOG_ERROR("MASTER PROC : Bodies are not set in Body container."); return;  }
-	shared_ptr<BodyContainer>& bodies = scene->bodies;
-	shared_ptr<InteractionContainer>& interactionContainer = scene -> interactions;
-	std::vector<shared_ptr<Body> >&  container = bodies->body; // the real bodycontainer aka std::vector<shared_ptr<Body> >
-	for (auto bIter = container.begin(); bIter != container.end(); ++bIter) {
-	    const shared_ptr<Body> b = *(bIter);
-// 	    std::cout << "size of intrs = " << b->intrs.size() << std::endl;
-            for (auto mapIter = b->intrs.begin(); mapIter != b->intrs.end(); ++mapIter){
-		    if ((*bodies)[mapIter->second->id1] and (*bodies)[mapIter->second->id2] ) // we will insert interactions only when both bodies are inserted
-			interactionContainer -> insertInteractionMPI(mapIter->second);
-	    }
-    }
-	interactionContainer -> dirty = true;
-}
 
 /*********************communication functions**************/
 //blocking  send and recv
@@ -391,9 +388,9 @@ void Subdomain::recvBuff(char* cbuf, int cbufsZ, int sourceRank, MPI_Request& re
 	MPI_Irecv(cbuf, cbufsZ, MPI_CHAR, sourceRank, TAG_STRING + subdomainRank, MPI_COMM_WORLD, &request);
 }
 
-void Subdomain::processReqs(std::vector<MPI_Request>& mpiReqs, int index) {
-
-	for (unsigned int i = static_cast<unsigned int>(index); i != mpiReqs.size(); ++i){
+void Subdomain::processReqs(std::vector<MPI_Request>& mpiReqs) {
+	if (!mpiReqs.size()){return ; }
+	for (unsigned int i = 0; i != mpiReqs.size(); ++i){
 	  MPI_Status status;
 	  MPI_Wait(&mpiReqs[i], &status);
     }
