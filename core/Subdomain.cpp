@@ -321,7 +321,7 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 		if (!b) newBody->intrs.clear(); //we can clear here, interactions are stored in intrsToSet
 		else newBody->intrs=b->intrs;
 		b=newBody;
-		b->material = newBody->material; 
+
 
 // 		if(!resetInteractions)
 			for (auto mapIter = intrsToSet.begin(); mapIter != intrsToSet.end(); ++mapIter){
