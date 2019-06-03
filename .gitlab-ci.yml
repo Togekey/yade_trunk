@@ -28,7 +28,7 @@ stages:
   stage: debpackages
   script:
     - git fetch --tags
-    - git describe
+    - git describe --always
     - ./scripts/ppa_ci/builddeb.py -d "bionic"
 debpackages_18_04:
   <<: *debpackages_definition
