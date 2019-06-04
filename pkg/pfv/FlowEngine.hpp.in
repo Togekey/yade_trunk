@@ -357,7 +357,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		((bool, multithread, false,,"Build triangulation and factorize in the background (multi-thread mode)"))
 		((bool, decoupleForces, false,,"If true, viscous and pressure forces are not imposed on particles. Useful for speeding up simulations in ultra-stiff cohesive materials."))
 		((bool, getCHOLMODPerfTimings, false,,"Print CHOLMOD build, analyze, and factorize timings"))
-		#ifdef CHOLMOD_LIBS
+		#ifdef LINSOLV
 		((int, numSolveThreads, 1,,"number of openblas threads in the solve phase."))
 		((int, numFactorizeThreads, 1,,"number of openblas threads in the factorization phase"))
 		#endif
