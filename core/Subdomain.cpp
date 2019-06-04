@@ -243,9 +243,9 @@ void Subdomain::sendBodies(const int receiver, const vector<Body::id_t >& idsToS
 // 	cout<<"]"<<endl;
 	shared_ptr<MPIBodyContainer> container(shared_ptr<MPIBodyContainer> (new MPIBodyContainer()));
 	std::string s = idsToSerializedMPIBodyContainer(idsToSend);
-	stringBuff.push_back(s);
+	stringBuff[receiver]=s;
 	MPI_Request req;
-	MPI_Isend(stringBuff.back().data(), s.size(), MPI_CHAR, receiver, TAG_BODY, MPI_COMM_WORLD, &req);
+	MPI_Isend(stringBuff[receiver].data(), s.size(), MPI_CHAR, receiver, TAG_BODY, MPI_COMM_WORLD, &req);
 	sendBodyReqs.push_back(req); 
 }
 
@@ -263,15 +263,10 @@ void Subdomain::receiveBodies(const int sender){
 }
 
 
-void Subdomain::clearStringBuff(std::vector<string>& sbuff){
-	if (! sbuff.size()){return ; }
-	 sbuff.clear(); 
-}
 
 
 void Subdomain::completeSendBodies(){
 	processReqs(sendBodyReqs);		// calls MPI_Wait on the reqs, cleans the vect of mpi Reqs
-	clearStringBuff(stringBuff);		// cleares the vector<string> stringBuff; 
 }
 
 /********Functions exclusive to the master*************/

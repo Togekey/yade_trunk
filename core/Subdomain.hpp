@@ -17,6 +17,10 @@
 
 class Subdomain: public Shape {
 	public:
+	void init(){
+		getRankSize();
+		stringBuff.resize(commSize);
+	}
 // 	typedef std::map<Body::id_t,std::vector<Body::id_t> > IntersectionMap; // the lists of bodies from other subdomaines intersecting this one
 	//Map fails...
 	typedef std::vector< std::vector<Body::id_t> > IntersectionMap; // the lists of bodies from other subdomaines intersecting this one
@@ -212,7 +216,6 @@ class Subdomain: public Shape {
 	 void clearSubdomainIds();  // clears the member ids (std::vector <Body::id_t>
 	 void getRankSize();  
 	 void clearRecvdCharBuff(std::vector<char*>& ); // frees std::vector<char*>
-	 void clearStringBuff(std::vector<string>& );
 	 
          
          
@@ -250,6 +253,7 @@ class Subdomain: public Shape {
 		((vector<vector<Real> >,stateBuffer,vector<vector<Real> >(),(Attr::noSave | Attr::hidden),"container storing data from other subdomains")) 
 		,/*ctor*/ createIndex();
 		,/*py*/ /*.add_property("members",&Clump::members_get,"Return clump members as {'id1':(relPos,relOri),...}")*/
+		.def("init",&Subdomain::init,"Initialize subdomain variables as rank and buffer sizes, call this from each thread after scene distribution by master.")
 		.def("setMinMax",&Subdomain::setMinMax,"returns bounding min-max based on members bounds. precondition: the members bounds have been dispatched already, else we re-use old values. Carefull if subdomain is not at the end of O.bodies.")
 		.def("getStateValues",&Subdomain::getStateValues,(boost::python::arg("otherDomain")),"returns pos,vel,angVel,ori of bodies interacting with a given otherDomain, based on :yref:`Subdomain.intersections`.")
 		.def("getStateValuesFromIds",&Subdomain::getStateValuesFromIds,(boost::python::arg("b_ids")),"returns pos,vel,angVel,ori of listed bodies.")

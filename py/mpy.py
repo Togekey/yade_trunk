@@ -527,7 +527,8 @@ def splitScene():
 		if domainBody==None: print "SUBDOMAIN NOT FOUND FOR RANK=",rank
 		O.subD = domainBody.shape
 		O.subD.subdomains = subdomains
-	O.subD.getRankSize() # this one sets the ranks and comm size for the merge communication in CPP (MPI_Comm_rank, MPI_Comm_size)
+	if not O.splittedOnce:
+		O.subD.init()
 	#update bounds wrt. updated subdomain(s) min/max and unbounded bodies
 	updateMirrorIntersections()
 	
