@@ -33,7 +33,7 @@ override_dh_auto_configure:
 	-cat /proc/cpuinfo
 
 override_dh_auto_build:
-	dh_auto_build -- -j8
+	dh_auto_build -- -j12
 
 override_dh_auto_install-arch:
 	dh_auto_install -a

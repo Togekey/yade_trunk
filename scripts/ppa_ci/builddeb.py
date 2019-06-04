@@ -8,13 +8,14 @@ import email.utils, datetime, os, sys
 parser = argparse.ArgumentParser(description='Build yadedaily packages.')
 parser.add_argument("-d", help="target distribution", action="store", dest="dist", default='buster', type=str)
 args = parser.parse_args()
+dt = datetime.datetime.now()
 
 # Define variables
 dirpath = tempfile.mkdtemp()
 dirpathyade = dirpath + '/yadedaily/'
 
 repoups = git.Repo('.')
-versiondebian = "2019.01a~" + repoups.git.describe('--always')[0:-8] + repoups.head.commit.hexsha[0:7] + "~" + args.dist + "1"
+versiondebian = dt.strftime("%Y%m%d") + "~" + repoups.git.describe('--always')[0:-8] + repoups.head.commit.hexsha[0:7] + "~" + args.dist + "1"
 tarballname = 'yadedaily_%s.orig.tar.xz'%(versiondebian)
 
 # Copy buildtree into the tmpdir
@@ -35,14 +36,13 @@ with fileinput.FileInput(dirpathyade + '/debian/changelog', inplace=True) as fil
     for line in file:
         print(line.replace("DISTRIBUTION", args.dist), end='')
 with fileinput.FileInput(dirpathyade + '/debian/changelog', inplace=True) as file:
-    dt = datetime.datetime.now()
     for line in file:
         print(line.replace("DATE", email.utils.formatdate(localtime=True)), end='')
 
 retval = os.system('cd %s && dpkg-source -b -I yadedaily && cd -'%(dirpath))
 if (retval != 0):
     sys.exit('Abort!')
-retval = os.system('cd %s/yadedaily && apt-get update && apt-get -y build-dep . && dpkg-buildpackage -j8 && cd -'%(dirpath))
+retval = os.system('cd %s/yadedaily && apt-get update && apt-get -y build-dep . && dpkg-buildpackage -j12 && cd -'%(dirpath))
 if (retval != 0):
     sys.exit('Abort!')
 
