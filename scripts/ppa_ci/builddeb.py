@@ -45,6 +45,9 @@ if (retval != 0):
 retval = os.system('cd %s/yadedaily && apt-get update && apt-get -y build-dep . && dpkg-buildpackage -j12 && cd -'%(dirpath))
 if (retval != 0):
     sys.exit('Abort!')
+retval = os.system('mkdir deb && mv %s/* ./deb/'%(dirpath))
+if (retval != 0):
+    sys.exit('Abort!')
 
 print (versiondebian)
 print (dirpath)

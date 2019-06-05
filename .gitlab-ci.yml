@@ -27,7 +27,8 @@ stages:
   stage: debpackages
   script:
     - ./scripts/ppa_ci/builddeb.py -d "buster"
+    - ls -l deb
 debpackages_18_04:
   <<: *debpackages_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian_buster
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
   #image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
