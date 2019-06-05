@@ -20,15 +20,14 @@ stages:
   only:
     - branches
 
-
 # image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
 # 6.1. build debian packages
 .debpackages_template: &debpackages_definition
   <<: *platforms_definition
   stage: debpackages
   script:
-    - git fetch --tags
-    - ./scripts/ppa_ci/builddeb.py -d "bionic"
+    - ./scripts/ppa_ci/builddeb.py -d "buster"
 debpackages_18_04:
   <<: *debpackages_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
+  image: registry.gitlab.com/yade-dev/docker-yade:debian_buster
+  #image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
