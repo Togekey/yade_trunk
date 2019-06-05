@@ -12,12 +12,12 @@
 
 
 stages:
-  - debpackages
+  - deb
 
 # image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
 # 6.1. build debian packages
-.debpackages_template: &debpackages_definition
-  stage: debpackages
+.deb_template: &deb_definition
+  stage: deb
   only:
     - branches
   before_script:
@@ -46,14 +46,14 @@ stages:
       - deb
     expire_in: 2 weeks
 
-debpackages_buster:
-  <<: *debpackages_definition
+deb_buster:
+  <<: *deb_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
   script:
     - ./scripts/ppa_ci/builddeb.py -d "buster"
 
-debpackages_18_04:
-  <<: *debpackages_definition
+deb_18_04:
+  <<: *deb_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
   script:
     - ./scripts/ppa_ci/builddeb.py -d "bionic"
