@@ -14,27 +14,29 @@
 stages:
   - debpackages
 
-# If you want to compile everything also on merge_request, change this template.
-# If you want to compile on one platform see [1] note below.
-.plaftorms_template: &platforms_definition
-  only:
-    - branches
-
 # image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
 # 6.1. build debian packages
 .debpackages_template: &debpackages_definition
-  <<: *platforms_definition
   stage: debpackages
-  script:
+  only:
+    - branches
+  before_script:
     - mkdir deb
-    - ./scripts/ppa_ci/builddeb.py -d "buster"
+  after_script:
     - cd deb/yadedaily
     - apt-get update && apt-get -y build-dep .
     - dpkg-buildpackage -j16
     - cd ..
     - rm -rf yadedaily
     - ls -l
+  artifacts:
+    paths:
+      - deb
+    expire_in: 2 weeks
+
 debpackages_18_04:
   <<: *debpackages_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+  script:
+    - ./scripts/ppa_ci/builddeb.py -d "buster"
   #image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
