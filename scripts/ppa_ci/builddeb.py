@@ -2,8 +2,7 @@
 
 import argparse, git, shutil
 import tempfile, tarfile, fileinput
-import email.utils, datetime, os, sys
-
+import email.utils, datetime
 
 parser = argparse.ArgumentParser(description='Build yadedaily packages.')
 parser.add_argument("-d", help="target distribution", action="store", dest="dist", default='buster', type=str)
@@ -16,7 +15,7 @@ dirpath = "./deb/"
 dirpathyade = dirpath + '/yadedaily/'
 
 repoups = git.Repo('.')
-versiondebian = dt.strftime("%Y%m%d") + "~" + repoups.git.describe('--always')[0:-8] + repoups.head.commit.hexsha[0:7] + "~" + args.dist + "1"
+versiondebian = (repoups.head.reference.commit.committed_datetime).strftime("%Y%m%d") + "~" + repoups.head.commit.hexsha[0:7] + "~" + args.dist + "1"
 tarballname = 'yadedaily_%s.orig.tar.xz'%(versiondebian)
 
 # Copy buildtree into the tmpdir
