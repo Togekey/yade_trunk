@@ -44,9 +44,23 @@ stages:
       - deb
     expire_in: 2 hours
 
+deb_buster:
+  <<: *deb_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+  before_script:
+    - mkdir deb
+    - ./scripts/ppa_ci/builddeb.py -d "buster"
+
 deb_stretch:
   <<: *deb_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
   before_script:
     - mkdir deb
     - ./scripts/ppa_ci/builddeb.py -d "stretch"
+
+deb_18_04:
+  <<: *deb_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
+  before_script:
+    - mkdir deb
+    - ./scripts/ppa_ci/builddeb.py -d "bionic"
