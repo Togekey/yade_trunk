@@ -40,16 +40,6 @@ with fileinput.FileInput(dirpathyade + '/debian/changelog', inplace=True) as fil
     for line in file:
         print(line.replace("DATE", email.utils.formatdate(localtime=True)), end='')
 
-retval = os.system('cd %s && dpkg-source -b -I yadedaily && cd -'%(dirpath))
-if (retval != 0):
-    sys.exit('Abort!')
-retval = os.system('cd %s/yadedaily && apt-get update && apt-get -y build-dep . && dpkg-buildpackage -j12 && cd -'%(dirpath))
-if (retval != 0):
-    sys.exit('Abort!')
-retval = os.system('mkdir deb && mv %s/* ./deb/'%(dirpath))
-if (retval != 0):
-    sys.exit('Abort!')
-
 print (versiondebian)
 print (dirpath)
 #shutil.rmtree(dirpath)
