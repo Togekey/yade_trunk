@@ -11,7 +11,8 @@ args = parser.parse_args()
 dt = datetime.datetime.now()
 
 # Define variables
-dirpath = tempfile.mkdtemp()
+dirpath = "./deb/"
+#dirpath = tempfile.mkdtemp()
 dirpathyade = dirpath + '/yadedaily/'
 
 repoups = git.Repo('.')

@@ -26,8 +26,13 @@ stages:
   <<: *platforms_definition
   stage: debpackages
   script:
+    - mkdir deb
     - ./scripts/ppa_ci/builddeb.py -d "buster"
-    - ls -l deb
+    - cd deb/yadedaily
+    - dpkg-buildpackage -j16
+    - cd ..
+    - rm -rf yadedaily
+    - ls -l
 debpackages_18_04:
   <<: *debpackages_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
