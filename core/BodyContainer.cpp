@@ -28,7 +28,8 @@ Body::id_t BodyContainer::insert(shared_ptr<Body> b){
 }
 
 Body::id_t BodyContainer::insertAtId(shared_ptr<Body> b, Body::id_t candidate){
-	if(body[candidate] or candidate>=size()) {LOG_ERROR("invalid candidate id"); return -1;}
+	assert(candidate>=0);
+	if(body[candidate] or unsigned(candidate)>=size()) {LOG_ERROR("invalid candidate id"); return -1;}
 	const shared_ptr<Scene>& scene=Omega::instance().getScene(); 
 	b->iterBorn=scene->iter;
 	b->timeBorn=scene->time;
@@ -66,8 +67,9 @@ bool BodyContainer::erase(Body::id_t id, bool eraseClumpMembers){//default is fa
 		return true;
 	}
 	const shared_ptr<Scene>& scene=Omega::instance().getScene();
-	for(auto it=b->intrs.begin(), end=b->intrs.end(); it!=end; ++it) {  //Iterate over all body's interactions
-		scene->interactions->erase((*it).second->getId1(),(*it).second->getId2(),(*it).second->linIx);
+	for(auto it=b->intrs.begin(), end=b->intrs.end(); it!=end;) {  //Iterate over all body's interactions
+		Body::MapId2IntrT::iterator willBeInvalid = it; ++it;
+		scene->interactions->erase(willBeInvalid->second->getId1(),willBeInvalid->second->getId2(),willBeInvalid->second->linIx);
 	}
 	b->id=-1;//else it sits in the python scope without a chance to be inserted again
 	body[id].reset();
