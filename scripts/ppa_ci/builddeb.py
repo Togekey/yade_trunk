@@ -2,7 +2,7 @@
 
 import argparse, git, shutil
 import tempfile, tarfile, fileinput
-import email.utils, datetime
+import email.utils, datetime, os
 
 parser = argparse.ArgumentParser(description='Build yadedaily packages.')
 parser.add_argument("-d", help="target distribution", action="store", dest="dist", default='buster', type=str)
