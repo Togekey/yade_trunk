@@ -45,7 +45,7 @@ deb_buster:
   before_script:
     - rm -rf ../deb_buster
     - ./scripts/ppa_ci/builddeb.py -d "buster"
-    - cd deb_buster/yadedaily
+    - cd ../deb_buster/yadedaily
   artifacts:
     paths:
       - ../deb_buster
