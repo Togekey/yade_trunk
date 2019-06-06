@@ -20,6 +20,7 @@ class Subdomain: public Shape {
 	void init(){
 		getRankSize();
 		stringBuff.resize(commSize);
+		initMasterContainer(); 
 	}
 // 	typedef std::map<Body::id_t,std::vector<Body::id_t> > IntersectionMap; // the lists of bodies from other subdomaines intersecting this one
 	//Map fails...
