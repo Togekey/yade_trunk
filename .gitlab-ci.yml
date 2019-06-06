@@ -43,6 +43,7 @@ deb_buster:
   <<: *deb_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
   before_script:
+    - rm -rf ../deb_buster
     - ./scripts/ppa_ci/builddeb.py -d "buster"
     - cd deb_buster/yadedaily
   artifacts:
