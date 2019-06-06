@@ -21,7 +21,6 @@ stages:
   only:
     - branches
   script:
-    - cd deb/yadedaily
     - apt-get update && apt-get -y build-dep .
     - export JOBSNUM=$(case $CI_RUNNER_DESCRIPTION in
         "y_4pak_64cpu_256RAM_4TB_docker") echo "42" ;;
@@ -39,10 +38,6 @@ stages:
     - cd ..
     - rm -rf yadedaily
     - ls -l
-  artifacts:
-    paths:
-      - deb
-    expire_in: 2 hours
 
 deb_buster:
   <<: *deb_definition
