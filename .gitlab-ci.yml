@@ -44,3 +44,8 @@ deb_buster:
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
   before_script:
     - ./scripts/ppa_ci/builddeb.py -d "buster"
+    - cd deb_buster/yadedaily
+    artifacts:
+    paths:
+      - ../deb_buster
+    expire_in: 2 hours
