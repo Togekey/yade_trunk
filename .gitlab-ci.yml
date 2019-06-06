@@ -45,7 +45,7 @@ deb_buster:
   before_script:
     - ./scripts/ppa_ci/builddeb.py -d "buster"
     - cd deb_buster/yadedaily
-    artifacts:
+  artifacts:
     paths:
       - ../deb_buster
     expire_in: 2 hours
