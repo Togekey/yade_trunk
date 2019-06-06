@@ -154,7 +154,7 @@ def receiveForces(subdomains):
 	'''
 	Accumulate forces from subdomains (only executed by master process), should happen after ForceResetter but before Newton and before any other force-dependent engine (e.g. StressController), could be inserted via yade's pyRunner.
 	'''
-	if 0: #non-blocking:
+	if 1: #non-blocking:
 		reqForces=[]
 		for sd in subdomains:#would be better as a loop on subdomains directly, but we don't have those
 			
@@ -178,14 +178,18 @@ def receiveForces(subdomains):
 				
 def checkColliderActivated():
 	'''
-	return true if collision detection needs activation in at least one of them, else false  
+	return true if collision detection needs activation in at least one SD, else false. If COPY_MIRROR_BODIES_WHEN_COLLIDE run collider when needed, and in that case return False.
 	'''
 	needsCollide = int(utils.typedEngine("InsertionSortCollider").isActivated())
 	if(needsCollide!=0):
 		mprint("triggers collider at iter "+str(O.iter))
 	needsCollide = timing_comm.allreduce("checkcollider",needsCollide,op=MPI.SUM)
-	return needsCollide != 0
-
+	if needsCollide:
+		if(COPY_MIRROR_BODIES_WHEN_COLLIDE):
+			updateMirrorIntersections()
+			return False
+		else: return True
+	return False
 
 def unboundRemoteBodies():
 	'''
@@ -399,7 +403,7 @@ def isendRecvForces():
 			forces0=[[id,O.forces.f(id),O.forces.t(id)] for id in  O.subD.mirrorIntersections[0]]
 			#wprint ("worker "+str(rank)+": sending "+str(len(forces0))+" "+str("forces to 0 "))
 			#O.freqs.append(comm.isend(forces0, dest=0, tag=_FORCES_))
-			timing_comm.send("isendRecvForces",forces0, dest=0, tag=_FORCES_)
+			comm.isend(forces0, dest=0, tag=_FORCES_)
 		else: #master
 			receiveForces(O.subD.intersections[0])
 
@@ -421,7 +425,7 @@ def mergeScene():
 	if O.splitted:
             if MERGE_W_INTERACTIONS: 
                 O.subD.mergeOp()
-                sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = True
+                sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkColliderActivated.dead = True
                 O.splitted=False
                 collider.doSort = True
                 global NUM_MERGES; NUM_MERGES +=1; 
@@ -470,7 +474,7 @@ def mergeScene():
 				O.subD.setStateBoundsValuesFromIds(ids,dat[shift: shift_plus_one]);
 				reboundRemoteBodies(ids)
 		# turn mpi engines off
-		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = True
+		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkColliderActivated.dead = True
 		O.splitted=False
 		collider.doSort = True
 
@@ -541,10 +545,10 @@ def splitScene():
 		O.engines=O.engines[:idx]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].isendRecvForces()",label="isendRecvForcesRunner")]+O.engines[idx:]
 		
 		# append engine waiting until forces are effectively sent to master
-		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].waitForces()",label="waitForcesRunner")]
+		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="pass",label="waitForcesRunner")]
 		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkColliderActivated(): O.pause()",label="collisionChecker")]
 	else:
-		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = False
+		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkColliderActivated.dead = False
 		
 	O.splitted=True
 	O.splittedOnce=True
@@ -576,7 +580,7 @@ def updateMirrorIntersections():
 				temp+=[0]
 				subD.intersections=subD.intersections[:rank]+[temp]+subD.intersections[rank+1:]
 			else:
-				mprint("0 already in intersections (should not happen)")
+				if not O.splittedOnce: mprint("0 already in intersections (should not happen)")
 		reqs=[]
 		
 		#from workers
@@ -639,10 +643,12 @@ def updateMirrorIntersections():
 			
 			for worker in requestedSomethingFrom:
 				subD.receiveBodies(worker)
-			subD.completeSendBodies(); 
-
+			subD.completeSendBodies();
+	
 	collider.doSort = True
 	collider.__call__()
+	#maxVelocitySq is normally reset in NewtonIntegrator in the same iteration as bound dispatching, since Newton will not run before next iter in our case we force that value to avoid another collision detection at next step
+	utils.typedEngine("NewtonIntegrator").maxVelocitySq=0.5
 
 
 def eraseRemote(): 
@@ -668,15 +674,12 @@ def mpirun(nSteps):
 	if not (MERGE_SPLIT or COPY_MIRROR_BODIES_WHEN_COLLIDE): #run until collider is activated then stop		
 		O.run(nSteps,True)
 	else: #merge/split or body_copy for each collider update
-		collisionChecker.dead=True
+		if(MERGE_SPLIT): collisionChecker.dead=True
 		while (O.iter-initStep)<nSteps:
 			O.step()
-			if checkColliderActivated() and (O.iter-initStep)<nSteps:
-				if(MERGE_SPLIT):
-					mergeScene()
-					splitScene()
-				elif(COPY_MIRROR_BODIES_WHEN_COLLIDE):
-					updateMirrorIntersections()
+			if checkColliderActivated():
+				mergeScene()
+				splitScene()
 	timing_comm.print_all()
 	if YADE_TIMING:
 		from yade import timing
