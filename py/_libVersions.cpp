@@ -255,6 +255,20 @@ namespace py = boost::python;
 	py::list mpiVer() { return {}; }
 #endif
 
+// 18. clp
+#ifdef YADE_POTENTIAL_BLOCKS
+//	#include <config_clp.h>
+	#include <ClpConfig.h>
+	py::list clpVer() {
+		py::list ret;
+		ret.append( py::make_tuple( CLP_VERSION_MAJOR , CLP_VERSION_MINOR , CLP_VERSION_RELEASE ) );
+		ret.append( boost::lexical_cast<std::string>(CLP_VERSION));
+		return ret;
+	}
+#else
+	py::list clpVer() { return {}; }
+#endif
+
 py::dict getAllVersionsCpp(){
 	py::dict ret;
 	// I found relevant names with commad:
@@ -275,6 +289,7 @@ py::dict getAllVersionsCpp(){
 	ret["openblas"     ] = openblasVer();
 	ret["metis"        ] = metisVer();
 	ret["mpi"          ] = mpiVer();
+	ret["clp"          ] = clpVer();
 	return ret;
 }
 
