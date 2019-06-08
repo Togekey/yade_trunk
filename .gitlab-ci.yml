@@ -21,7 +21,6 @@ stages:
   only:
     - branches
   script:
-    - cd ./deb/yadedaily
     - apt-get update && apt-get -y build-dep .
     - export JOBSNUM=$(case $CI_RUNNER_DESCRIPTION in
         "y_4pak_64cpu_256RAM_4TB_docker") echo "42" ;;
@@ -39,27 +38,39 @@ stages:
     - cd ..
     - rm -rf yadedaily
     - ls -l
-  artifacts:
-    paths:
-      - ./deb
-    expire_in: 1 week
 
 deb_buster:
   <<: *deb_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
   before_script:
+    - rm -rf ../deb_buster
     - ./scripts/ppa_ci/builddeb.py -d "buster"
-
+    - cd ../deb_buster/yadedaily
+  artifacts:
+    paths:
+      - ../deb_buster
+    expire_in: 2 hours
 
 deb_stretch:
   <<: *deb_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
   before_script:
+    - rm -rf ../deb_stretch
     - ./scripts/ppa_ci/builddeb.py -d "stretch"
-
+    - cd ../deb_stretch/yadedaily
+  artifacts:
+    paths:
+      - ../deb_stretch
+    expire_in: 2 hours
 
 deb_bionic:
   <<: *deb_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
   before_script:
+    - rm -rf ../deb_bionic
     - ./scripts/ppa_ci/builddeb.py -d "bionic"
+    - cd ../deb_bionic/yadedaily
+  artifacts:
+    paths:
+      - ../deb_bionic
+    expire_in: 2 hours
