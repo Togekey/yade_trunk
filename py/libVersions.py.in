@@ -147,6 +147,8 @@ def getAllVersionsCmake():
 	except:
 		pass
 	return ret
+	# 21. clp
+	addVer("clp",'${CLP_VERSION_MAJOR}','${CLP_VERSION_MINOR}','${CLP_VERSION_RELEASE}','${CLP_VERSION}')
 
 def printAllVersions(rstFormat=False):
 	"""
