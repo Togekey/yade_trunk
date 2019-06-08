@@ -21,7 +21,7 @@ tarballname = 'yadedaily_%s.orig.tar.xz'%(versiondebian)
 # Create tempdir
 os.mkdir(dirpath)
 # Copy buildtree into the tmpdir
-shutil.copytree('.', dirpathyade, ignore=shutil.ignore_patterns('.git', 'deb'))
+shutil.copytree('.', dirpathyade, ignore=shutil.ignore_patterns('.git', dirpath))
 
 # Create tarball
 with tarfile.open('%s/%s'%(dirpath,tarballname), mode='w:xz') as out:
