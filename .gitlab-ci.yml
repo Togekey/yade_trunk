@@ -43,34 +43,34 @@ deb_buster:
   <<: *deb_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
   before_script:
-    - rm -rf ./deb_buster
+    - rm -rf ./deb
     - ./scripts/ppa_ci/builddeb.py -d "buster"
-    - cd ./deb_buster/yadedaily
+    - cd ./deb/yadedaily
   artifacts:
     paths:
-      - ./deb_buster
+      - ./deb
     expire_in: 2 hours
 
 deb_stretch:
   <<: *deb_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
   before_script:
-    - rm -rf ./deb_stretch
+    - rm -rf ./deb
     - ./scripts/ppa_ci/builddeb.py -d "stretch"
-    - cd ./deb_stretch/yadedaily
+    - cd ./deb/yadedaily
   artifacts:
     paths:
-      - ./deb_stretch
+      - ./deb
     expire_in: 2 hours
 
 deb_bionic:
   <<: *deb_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
   before_script:
-    - rm -rf ./deb_bionic
+    - rm -rf ./deb
     - ./scripts/ppa_ci/builddeb.py -d "bionic"
-    - cd ./deb_bionic/yadedaily
+    - cd ./deb/yadedaily
   artifacts:
     paths:
-      - ./deb_bionic
+      - ./deb
     expire_in: 2 hours

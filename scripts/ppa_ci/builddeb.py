@@ -10,7 +10,7 @@ args = parser.parse_args()
 dt = datetime.datetime.now()
 
 # Define variables
-dirpath = "./deb_%s/"%args.dist
+dirpath = "./deb"
 #dirpath = tempfile.mkdtemp()
 dirpathyade = dirpath + '/yadedaily/'
 
@@ -21,7 +21,7 @@ tarballname = 'yadedaily_%s.orig.tar.xz'%(versiondebian)
 # Create tempdir
 os.mkdir(dirpath)
 # Copy buildtree into the tmpdir
-shutil.copytree('.', dirpathyade, ignore=shutil.ignore_patterns('.git', dirpath))
+shutil.copytree('.', dirpathyade, ignore=shutil.ignore_patterns('.git', 'deb'))
 
 # Create tarball
 with tarfile.open('%s/%s'%(dirpath,tarballname), mode='w:xz') as out:
