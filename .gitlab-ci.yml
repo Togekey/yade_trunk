@@ -1,15 +1,5 @@
-# The previously used image:
-# image: registry.gitlab.com/yade-dev/docker-yade
-#
-# Five new images:
-# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
-# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
-# image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
-# image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
-# image: registry.gitlab.com/yade-dev/docker-yade:suse15
-#
-# Useful link to validator: https://gitlab.com/yade-dev/trunk/-/ci/lint
-
+variables:
+  CCACHE_WORK_DIR: $CI_PROJECT_DIR/.ccache
 
 stages:
   - deb
@@ -21,7 +11,7 @@ stages:
   only:
     - branches
   script:
-    - cd ./deb/yadedaily
+    - cd $CI_PROJECT_DIR/deb/yadedaily
     - apt-get update && apt-get -y build-dep .
     - export JOBSNUM=$(case $CI_RUNNER_DESCRIPTION in
         "y_4pak_64cpu_256RAM_4TB_docker") echo "43" ;;
@@ -35,15 +25,19 @@ stages:
         *) echo "8";;
         esac)
     - echo $JOBSNUM
-    - echo "max_size = 100.0G" > ~/.ccache/ccache.conf
+    - export CCACHE_DIR=${CCACHE_WORK_DIR}
     - dpkg-buildpackage -j$JOBSNUM
-    - cd ..
-    - rm -rf yadedaily
-    - ls -l
+    - ccache -s
+    - rm -rf $CI_PROJECT_DIR/deb/yadedaily
+    - ls -l $CI_PROJECT_DIR/deb
   artifacts:
     paths:
       - ./deb
-    expire_in: 5 hours
+    expire_in: 1 day
+  cache:
+    paths:
+      - ${CCACHE_WORK_DIR}
+
 
 deb_buster:
   <<: *deb_definition
