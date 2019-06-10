@@ -10,7 +10,8 @@ args = parser.parse_args()
 dt = datetime.datetime.now()
 
 # Define variables
-dirpath = "./deb_%s/"%args.dist
+dirpath = "./deb"
+#dirpath = "./deb_%s/"%args.dist
 #dirpath = tempfile.mkdtemp()
 dirpathyade = dirpath + '/yadedaily/'
 
