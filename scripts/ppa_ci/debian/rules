@@ -23,6 +23,7 @@ extra_flags += \
 -DYADE_VERSION=VERSIONYADEREPLACE \
 -DENABLE_SPH=0 \
 -DPYTHON_VERSION=3 \
+-DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
 override_dh_auto_configure:
 	dh_auto_configure -- $(extra_flags)

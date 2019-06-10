@@ -23,8 +23,6 @@ stages:
   script:
     - cd ./deb/yadedaily
     - apt-get update && apt-get -y build-dep .
-    - export CC="ccache gcc"
-    - export CXX="ccache g++"
     - export JOBSNUM=$(case $CI_RUNNER_DESCRIPTION in
         "y_4pak_64cpu_256RAM_4TB_docker") echo "43" ;;
         "c_4pak_64cpu_256RAM_4TB_docker") echo "43" ;;
