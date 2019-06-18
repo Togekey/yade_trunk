@@ -12,6 +12,7 @@
 #include <pkg/common/Dispatching.hpp>
 #include <mpi.h>
 #include <core/MPIBodyContainer.hpp>
+#include <mpi4py/mpi4py.h> // for passing MPI_Comm from python to c++
 
 
 
@@ -34,7 +35,15 @@ class Subdomain: public Shape {
 	vector<MPI_Request> mpiReqs; 
 	vector<MPI_Request> sendBodyReqs; // I could use mpiReqs, but then I will have to manage it between states send and bodies send. 
 	
-	
+	// pass python-generated communicator to the c++ side
+	// inspired by https://bitbucket.org/mpi4py/mpi4py/src/master/demo/wrap-boost/helloworld.cxx
+	void setMyComm(boost::python::object py_comm) {
+		if (import_mpi4py() < 0) return;// must be somewhere to initialize mpi4py in c++, else segfault
+		PyObject* py_obj = py_comm.ptr();
+		myComm_p = PyMPIComm_Get(py_obj);
+		if (myComm_p == NULL) LOG_ERROR("invalid COMM received from Python");
+	}
+	PyObject* getMyComm() {	return PyMPIComm_New(*myComm_p);}
 	
 	// returns pos,vel,angVel,ori of bodies interacting with a given otherDomain
 	std::vector<double> getStateValuesFromIds(const vector<Body::id_t>& search) { 
@@ -162,11 +171,10 @@ class Subdomain: public Shape {
 		MPI_Irecv(&vals.front(), nb, MPI_DOUBLE, otherSubdomain, 177, MPI_COMM_WORLD, &mpiReqs[otherSubdomain]);
 	}
 	
-	void mpiWaitReceived(unsigned otherSubdomain){ MPI_Wait(&mpiReqs[otherSubdomain],MPI_STATUS_IGNORE);}
-	
-	
 
 	
+	void mpiWaitReceived(unsigned otherSubdomain){ MPI_Wait(&mpiReqs[otherSubdomain],MPI_STATUS_IGNORE);}
+
 	//WARNING: precondition: the members bounds have been dispatched already, else we re-use old values. Carefull if subdomain is not at the end of O.bodies
 	void setMinMax();
         
@@ -270,10 +278,11 @@ class Subdomain: public Shape {
                 .def("mergeOp",&Subdomain::mergeOp,"merge with setting interactions")		
 		.def("sendBodies",&Subdomain::sendBodies,(boost::python::arg("sender"),boost::python::arg("receiver"),boost::python::arg("idsToSend")), "Copy the bodies from MPI sender rank to MPI receiver rank")
 		.def("receiveBodies",&Subdomain::receiveBodies,(boost::python::arg("sender")), "Receive the bodies from MPI sender rank to MPI receiver rank")
-		.add_property("intersections",&Subdomain::intrs_get,&Subdomain::intrs_set,"lists of bodies from this subdomain intersecting other subdomains. WARNING: only assignement and concatenation allowed")
+                .add_property("intersections",&Subdomain::intrs_get,&Subdomain::intrs_set,"lists of bodies from this subdomain intersecting other subdomains. WARNING: only assignement and concatenation allowed")
                 .def("getRankSize", &Subdomain::getRankSize, "set subdomain ranks, used for communications -> merging, sending bodies etc.")
 		.def("completeSendBodies", &Subdomain::completeSendBodies, "calls MPI_wait to complete the non blocking sends/recieves.")
 		.add_property("mirrorIntersections",&Subdomain::mIntrs_get,&Subdomain::mIntrs_set,"lists of bodies from other subdomains intersecting this one. WARNING: only assignement and concatenation allowed")
+		.add_property("myComm",&Subdomain::getMyComm,&Subdomain::setMyComm,"Communicator to be used for MPI (converts mpi4py comm <-> c++ comm)")
 	);
 	DECLARE_LOGGER;
 	REGISTER_CLASS_INDEX(Subdomain,Shape);
@@ -287,5 +296,4 @@ class Bo1_Subdomain_Aabb : public BoundFunctor{
 	YADE_CLASS_BASE_DOC(Bo1_Subdomain_Aabb,BoundFunctor,"Creates/updates an :yref:`Aabb` of a :yref:`Facet`.");
 };
 REGISTER_SERIALIZABLE(Bo1_Subdomain_Aabb);
-
 
