@@ -36,6 +36,7 @@ class Subdomain: public Shape {
 	vector<MPI_Request> sendBodyReqs; // I could use mpiReqs, but then I will have to manage it between states send and bodies send.
 	MPI_Comm *myComm_p;
 	
+	MPI_Comm selfComm() {if (myComm_p) return *myComm_p; else return MPI_COMM_WORLD;}
 	
 	// pass python-generated communicator to the c++ side
 	// inspired by https://bitbucket.org/mpi4py/mpi4py/src/master/demo/wrap-boost/helloworld.cxx
@@ -262,7 +263,7 @@ class Subdomain: public Shape {
 		((IntersectionMap,mirrorIntersections,IntersectionMap(),Attr::hidden,"[will be overridden below]"))
 		((vector<Body::id_t>,ids,vector<Body::id_t>(),Attr::hidden,"Ids of owned particles.")) //FIXME
 		((vector<vector<Real> >,stateBuffer,vector<vector<Real> >(),(Attr::noSave | Attr::hidden),"container storing data from other subdomains")) 
-		,/*ctor*/ createIndex();
+		,/*ctor*/ createIndex(); myComm_p=NULL;
 		,/*py*/ /*.add_property("members",&Clump::members_get,"Return clump members as {'id1':(relPos,relOri),...}")*/
 		.def("init",&Subdomain::init,"Initialize subdomain variables as rank and buffer sizes, call this from each thread after scene distribution by master.")
 		.def("setMinMax",&Subdomain::setMinMax,"returns bounding min-max based on members bounds. precondition: the members bounds have been dispatched already, else we re-use old values. Carefull if subdomain is not at the end of O.bodies.")
