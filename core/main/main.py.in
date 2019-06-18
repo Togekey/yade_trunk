@@ -52,6 +52,7 @@ par=argparse.ArgumentParser(usage='%s [options] [ simulation.xml[.bz2] | script.
 par.add_argument('-v','--version',help='Print version and exit.',dest='version',action='store_true')
 par.add_argument('-j','--threads',help='Number of OpenMP threads to run; defaults to 1. Equivalent to setting OMP_NUM_THREADS environment variable.',dest='threads',type=int)
 par.add_argument('--cores',help='Set number of OpenMP threads (as \-\-threads) and in addition set affinity of threads to the cores given. Please provide a string with comma-separated core-ids.',dest='cores',type=str)
+par.add_argument('-mit','--mpi-interactive-threads',help='Number of MPI threads (interactive mode, master+spawns). Values <2 disables mit, -mit x sets 1 master and x-1 workers.',dest='mit',default=0,type=int)
 par.add_argument('--update',help='Update deprecated class names in given script(s) using text search & replace. Changed files will be backed up with ~ suffix. Exit when done without running any simulation.',dest='updateScripts',nargs='+')
 par.add_argument('--nice',help='Increase nice level (i.e. decrease priority) by given number.',dest='nice',type=int)
 par.add_argument('-x',help='Exit when the script finishes',dest='exitAfter',action='store_true')
@@ -82,7 +83,10 @@ if opts.version:
 if opts.script:
 	args.insert(0,opts.script) # for compatibility with userSession(), could be modified in the future
 
+	
 ## Check if this script is exec'd or imported as part of a mpi process
+# If yade is run with mpiexec prefix (on clusters for example), all processes will be in mpi_mode.
+# If yade is run with -mit x(>1), master will disable mpi_mode (for interactivity) and will spawn processes that will be in mpi_mode.
 opts.mpi_mode = os.getenv('OMPI_COMM_WORLD_RANK')!=None
 
 
@@ -154,6 +158,7 @@ if opts.updateScripts:
 	sys.exit(0)
 
 # modify sys.argv in-place so that it can be handled by userSession
+sys.yade_argv=sys.argv
 sys.argv=yade.runtime.argv=args
 yade.runtime.opts=opts
 
@@ -300,6 +305,9 @@ def userSession(gui='none',qapp=None):
 				sys.stderr.write("Running script "+arg0+'\n')
 				try:
 					execfile(script,globals())
+					if(opts.mit>1 and opts.mpi_mode): # workers only in mit mode
+						from yade import mpy as mp
+						mp.spawnedProcessWaitCommand() #after the script execution, don't exit and wait a command from master.
 				except SystemExit: raise
 				except: # all other exceptions
 					import traceback
