@@ -28,7 +28,7 @@ Yet to be implemented is the global update of domain bounds and new collision de
 
 '''
 
-import sys
+import sys,os,inspect
 import time
 from mpi4py import MPI
 import numpy as np
@@ -61,6 +61,7 @@ _FORCES_=15
 _MIRROR_INTERSECTIONS_ = 16
 _POS_VEL_ = 17
 _BOUNDS_ = 18
+_MASTER_COMMAND_ = 19
 
 
 #for coloring processes outputs differently
@@ -92,6 +93,38 @@ def wprint(*args):
 #from yadeimport import yade,sphere,box,Sphere,Body,Subdomain,Bo1_Subdomain_Aabb,typedEngine,PFacet,GridConnection,GridNode,PyRunner,kineticEnergy
 from yade import *
 from yade.wrapper import *
+import yade.runtime
+
+mit_mode = yade.runtime.opts.mit>1
+
+def initialize(prefix,prog):
+	global comm,rank,numThreads
+	if(mit_mode):
+		numThreads=yade.runtime.opts.mit
+		process_count = comm.Get_size()
+		if process_count < 2: #MASTER ONLY
+			mprint("I will spawn ",numThreads-1," workers")
+			comm = MPI.COMM_WORLD.Spawn(prefix+"/bin/"+prog, args=sys.yade_argv[1:],maxprocs=numThreads-1).Merge()
+			rank=0
+		else:	#WORKERS
+			comm = MPI.Comm.Get_parent().Merge()
+			rank=comm.Get_rank()
+	else:
+		rank = os.getenv('OMPI_COMM_WORLD_RANK')
+		numThreads=None
+		if rank is not None: #mpiexec was used
+			rank=int(rank)
+			numThreads=int(os.getenv('OMPI_COMM_WORLD_SIZE'))
+		#else monolithic simulation (no mpiexec, no mit)
+	return rank,numThreads
+
+def spawnedProcessWaitCommand():
+	mprint("I'm now waiting")
+	while not comm.Iprobe(source=0, tag=_MASTER_COMMAND_):
+		time.sleep(0.01)
+	command = comm.recv(source=0)
+	mprint("I will now execute ",command)
+	exec(command)
 
 class Timing_comm():
 	def __init__(self):
@@ -355,6 +388,7 @@ def sendRecvStates():
 				pstates.append( comm.irecv(buf[-1],otherDomain, tag=_ID_STATE_SHAPE_))  #warning leaving buffer size undefined crash for large subdomains (MPI_ERR_TRUNCATE: message truncated)
 			else:
 				O.subD.mpiIrecvStates(otherDomain) #use yade's messages (coded in cpp)
+				wprint("Receivers set for ",otherDomain)
 		#mprint("prepared receive: "+str(time.time()-start)); start=time.time()
 	
 	#____2. broadcast new positions (should be non-blocking if n>2, else lock) - this includes subdomain bodies intersecting the current one	
@@ -367,9 +401,11 @@ def sendRecvStates():
 			comm.send(genUpdatedStates(O.subD.intersections[k]), dest=k, tag=_ID_STATE_SHAPE_) #should be non-blocking if n>2, else lock?
 		else:
 			if not USE_CPP_MPI:
-				reqs.append(comm.isend(subD.getStateValues(k), dest=k, tag=_ID_STATE_SHAPE_)) #should be non-blocking if n>2, else lock?
+				reqs.append(comm.isend(O.subD.getStateValues(k), dest=k, tag=_ID_STATE_SHAPE_)) #should be non-blocking if n>2, else lock?
 			else:
+				wprint("Send state to ",k)
 				O.subD.mpiSendStates(k)
+				wprint("Sent state to ",k)
 		for r in reqs: r.wait() #empty if USE_CPP_MPI
 		
 	#____3. receive positions and update bodies
@@ -570,6 +606,7 @@ def updateMirrorIntersections():
 	else:
 		# from master
 		b_ids=comm.recv(source=0, tag=_MIRROR_INTERSECTIONS_)
+		wprint("Received mirrors from master: ",b_ids)
 		if len(b_ids)>0:
 			reboundRemoteBodies(b_ids)
 			subD.mirrorIntersections= [b_ids]+subD.mirrorIntersections[1:]
@@ -593,6 +630,7 @@ def updateMirrorIntersections():
 		for worker in subD.intersections[rank]:
 			if worker==0: continue #we do not send positions to master, only forces
 			#wprint("sending "+str(len(subD.intersections[worker]))+" states to "+str(worker))
+			wprint("Send mirrors to: ", worker)
 			timing_comm.send("splitScene_intersections",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
 
 		nn=0
@@ -601,6 +639,7 @@ def updateMirrorIntersections():
 			sd=subD.intersections[rank][nn]
 			nn+=1
 			intrs=req[1].wait()
+			wprint("Received mirrors from: ", sd, " : ",intrs)
 			subD.mirrorIntersections = subD.mirrorIntersections[0:req[0]]+[intrs]+subD.mirrorIntersections[req[0]+1:]
 			reboundRemoteBodies(intrs)
 			
@@ -667,12 +706,18 @@ def eraseRemote():
 
 ##### RUN MPI #########
 def mpirun(nSteps):
+	caller_name = inspect.stack()[2][3]
+	if(mit_mode and rank==0 and not caller_name=='runScript'):	#if the caller is the userScript, everyone already calls mpirun and the workers are not waiting for a command.
+		for w in range(1,numThreads):
+			comm.send("mpirun("+str(nSteps)+")",dest=w,tag=_MASTER_COMMAND_)
+			wprint("Command sent to ",w)
 	initStep = O.iter
 	if not O.splitted: splitScene()
 	if YADE_TIMING:
 		O.timingEnabled=True
 	if not (MERGE_SPLIT or COPY_MIRROR_BODIES_WHEN_COLLIDE): #run until collider is activated then stop		
 		O.run(nSteps,True)
+		mergeScene()
 	else: #merge/split or body_copy for each collider update
 		if(MERGE_SPLIT): collisionChecker.dead=True
 		while (O.iter-initStep)<nSteps:
@@ -680,10 +725,13 @@ def mpirun(nSteps):
 			if checkColliderActivated():
 				mergeScene()
 				splitScene()
+		mergeScene()
 	timing_comm.print_all()
 	if YADE_TIMING:
 		from yade import timing
 		time.sleep((numThreads-rank)*0.1) #avoid mixing the final output, timing.stats() is independent of the sleep
 		mprint( "#####  Worker "+str(rank)+"  ######")
 		timing.stats() #specific numbers for -n4 and gabion.py
+	if(mit_mode and rank!=0 and not caller_name=='runScript'):
+		spawnedProcessWaitCommand()
 
