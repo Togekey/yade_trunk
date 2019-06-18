@@ -33,7 +33,9 @@ class Subdomain: public Shape {
 	void mIntrs_set(const boost::python::list& intrs);
 //     	boost::python::dict members_get();
 	vector<MPI_Request> mpiReqs; 
-	vector<MPI_Request> sendBodyReqs; // I could use mpiReqs, but then I will have to manage it between states send and bodies send. 
+	vector<MPI_Request> sendBodyReqs; // I could use mpiReqs, but then I will have to manage it between states send and bodies send.
+	MPI_Comm *myComm_p;
+	
 	
 	// pass python-generated communicator to the c++ side
 	// inspired by https://bitbucket.org/mpi4py/mpi4py/src/master/demo/wrap-boost/helloworld.cxx
@@ -282,7 +284,7 @@ class Subdomain: public Shape {
                 .def("getRankSize", &Subdomain::getRankSize, "set subdomain ranks, used for communications -> merging, sending bodies etc.")
 		.def("completeSendBodies", &Subdomain::completeSendBodies, "calls MPI_wait to complete the non blocking sends/recieves.")
 		.add_property("mirrorIntersections",&Subdomain::mIntrs_get,&Subdomain::mIntrs_set,"lists of bodies from other subdomains intersecting this one. WARNING: only assignement and concatenation allowed")
-		.add_property("myComm",&Subdomain::getMyComm,&Subdomain::setMyComm,"Communicator to be used for MPI (converts mpi4py comm <-> c++ comm)")
+		.add_property("comm",&Subdomain::getMyComm,&Subdomain::setMyComm,"Communicator to be used for MPI (converts mpi4py comm <-> c++ comm)")
 	);
 	DECLARE_LOGGER;
 	REGISTER_CLASS_INDEX(Subdomain,Shape);
