@@ -20,7 +20,7 @@
 #include "FlowEngine_TwoPhaseFlowEngineT.hpp"
 #include<Eigen/SparseLU>
 
-#ifdef CHOLMOD_LIBS
+#ifdef LINSOLV
       #include <cholmod.h>
 #endif
 
@@ -160,7 +160,7 @@ class PhaseCluster : public Serializable
 		vector<CellHandle> pores;
 		vector<Interface> interfaces;
 // 		TwoPhaseFlowEngineT::RTriangulation* tri;
-		#ifdef CHOLMOD_LIBS
+		#ifdef LINSOLV
 		cholmod_common comC;
 		cholmod_factor* LC;
 		cholmod_dense* ex;//the pressure field
@@ -222,7 +222,7 @@ class PhaseCluster : public Serializable
 		((int,entryPore,-1,,"the pore of the cluster incident to the throat with smallest entry Pc."))
 		((double,interfacialArea,0,,"interfacial area of the cluster"))
 		,((LC,NULL))((ex,NULL))((pComC,&comC)),
-		#ifdef CHOLMOD_LIBS
+		#ifdef LINSOLV
 		cholmod_l_start(pComC);//initialize cholmod solver
 		factorized=false;
 		#endif

@@ -6,7 +6,7 @@
 #include<lib/compatibility/VTKCompatibility.hpp> // fix InsertNextTupleValue → InsertNextTuple name change (and others in the future)
 
 #include "RockBolt.hpp"
-#include<pkg/dem/KnKsLaw.hpp>
+//#include<pkg/dem/KnKsLaw.hpp>
 #include<pkg/dem/ScGeom.hpp>
 #include<core/Omega.hpp>
 #include <ctime>

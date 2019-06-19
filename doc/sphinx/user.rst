@@ -1577,7 +1577,7 @@ Another opportunity to display spheres is by using *PointSprite* plugin. This te
 Rendering interactions as force chain
 """""""""""""""""""""""""""""""""""""""""""
 
-Data saved by ``VTKRecorder`` (the steps below generates cones rather than tubes) or ``export.VTKExporter(...).exportInteractions(what=[('forceN','i.phys.normalForce().norm()')])`` (the steps below generates per interaction tubes with constant radius):
+Data saved by ``VTKRecorder`` (the steps below generates cones rather than tubes) or ``export.VTKExporter(...).exportInteractions(what=dict(forceN='i.phys.normalForce().norm()'))`` (the steps below generates per interaction tubes with constant radius):
 
 * Load interactions VTP or VTK files
 * Filters -> Cell Data To Point Data

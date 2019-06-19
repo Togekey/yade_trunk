@@ -249,6 +249,7 @@ As of Yade version git-2315bd8 (or 2018.02b release), the following options are 
 	* ENABLE_LIQMIGRATION: enable LIQMIGRATION-option, see [Mani2013]_ for details (OFF by default)
 	* ENABLE_MASK_ARBITRARY: enable MASK_ARBITRARY option (OFF by default)
 	* ENABLE_PROFILING: enable profiling, e.g., shows some more metrics, which can define bottlenecks of the code (OFF by default)
+	* ENABLE_POTENTIAL_BLOCKS: enable potential blocks option (OFF by default)
 	* ENABLE_POTENTIAL_PARTICLES: enable potential particles option (OFF by default)
 	* ENABLE_DEFORM: enable constant volume deformation engine (OFF by default)
 	* ENABLE_OAR: generate a script for oar-based task scheduler (OFF by default)

@@ -16,7 +16,7 @@ YADE_PLUGIN((TwoPhaseFlowEngine));
 YADE_PLUGIN((PhaseCluster));
 
 PhaseCluster::~PhaseCluster(){
-	#ifdef CHOLMOD_LIBS
+	#ifdef LINSOLV
 	resetSolver();
 	#endif
 }
@@ -35,7 +35,7 @@ void PhaseCluster::solvePressure()
 		vector<double> RHSvol;
 		
 		vector<CellHandle> pCells;//the pores in which pressure will be solved
-#ifdef CHOLMOD_LIBS
+#ifdef LINSOLV
 		for (vector<CellHandle>::iterator cellIt =  pores.begin(); cellIt!=pores.end(); cellIt++) {
 			CellHandle cell = *cellIt;
 			if ((!cell->info().Pcondition) && !cell->info().blocked) {cell->info().index= ncols++; pCells.push_back(cell);}
@@ -2761,7 +2761,7 @@ vector<int> TwoPhaseFlowEngine::clusterInvadePoreFast(PhaseCluster* cluster, Cel
 	if (label!=cluster->label) LOG_WARN("wrong label");
 	if (cell->info().Pcondition) {if (solver->debugOut) LOG_WARN("invading a Pcondition pore (ignored)"); return vector<int>(1,label);}
 	const RTriangulation& Tri = solver->T[solver->currentTes].Triangulation();
-#ifdef CHOLMOD_LIBS
+#ifdef LINSOLV
 	cluster->resetSolver();
 #endif
 	unsigned id = cell->info().id;
