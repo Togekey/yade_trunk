@@ -1,6 +1,5 @@
-# In order for mpy module to work, don't forget to make a symlink to yade executable named "yadeimport.py":
-# ln -s path/to/yade/yade-version path/to/yade/yadeimport.py
-#
+
+
 # Possible executions of this script
 # ./yadempi script.py #interactive will spawn 3 additional workers
 # mpiexec -n 4 ./yadempi script.py #non interactive
