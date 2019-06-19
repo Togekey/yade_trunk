@@ -247,9 +247,13 @@ def userSession(gui='none',qapp=None):
 				sys.stderr.write("Running script "+arg0+'\n')
 				try:
 					execfile(script,globals())
-					if(opts.mit>1 and opts.mpi_mode): # workers only in mit mode
+					if (opts.mpi_mode):
 						from yade import mpy as mp
-						mp.spawnedProcessWaitCommand() #after the script execution, don't exit and wait a command from master.
+						if(opts.mit>1): # workers only in mit mode
+							
+							mp.spawnedProcessWaitCommand() #after the script execution, don't exit and wait a command from master.
+						else:
+							mp.MPI.Finalize()
 				except SystemExit: raise
 				except: # all other exceptions
 					import traceback
