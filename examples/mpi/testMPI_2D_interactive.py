@@ -103,7 +103,7 @@ else: #######  MPI  ######
 	mp.VERBOSE_OUTPUT=False
 	mp.ERASE_REMOTE=False #erase bodies not interacting wit a given subdomain?
 	mp.OPTIMIZE_COM=True #L1-optimization: pass a list of double instead of a list of states
-	mp.USE_CPP_MPI=False and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
+	mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
 	mp.MERGE_W_INTERACTIONS=False
 	mp.MERGE_SPLIT=mergeSplit
 	mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = bodyCopy and not mergeSplit
