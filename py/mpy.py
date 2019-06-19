@@ -534,6 +534,7 @@ def splitScene():
 			subD= O.subD #alias
 			#insert "meta"-bodies
 			subD.subdomains=[] #list subdomains by body ids
+			if mit_mode: subD.comm=comm #make sure the c++ uses the merged intracommunicator
 			
 			for k in range(1,numThreads):
 				domainBody=Body(shape=Subdomain(ids=[b.id for b in O.bodies if b.subdomain==k]),subdomain=k) #note: not clear yet how shape.subDomainIndex and body.subdomain should interact, currently equal values
@@ -581,6 +582,8 @@ def splitScene():
 		if domainBody==None: print "SUBDOMAIN NOT FOUND FOR RANK=",rank
 		O.subD = domainBody.shape
 		O.subD.subdomains = subdomains
+		if mit_mode: O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
+		
 	if not O.splittedOnce:
 		O.subD.init()
 	#update bounds wrt. updated subdomain(s) min/max and unbounded bodies
