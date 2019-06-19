@@ -38,6 +38,7 @@ this = sys.modules[__name__]
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 numThreads = comm.Get_size()
+waitingCommands=False
 
 ACCUMULATE_FORCES=True #control force summation on master's body. FIXME: if false master goes out of sync since nothing is blocking rank=0 thread
 VERBOSE_OUTPUT=False
@@ -102,13 +103,15 @@ def initialize(prefix,prog):
 	if(mit_mode):
 		numThreads=yade.runtime.opts.mit
 		process_count = comm.Get_size()
-		if process_count < 2: #MASTER ONLY
-			mprint("I will spawn ",numThreads-1," workers")
-			comm = MPI.COMM_WORLD.Spawn(prefix+"/bin/"+prog, args=sys.yade_argv[1:],maxprocs=numThreads-1).Merge()
+		if not yade.runtime.opts.mpi_mode and process_count<numThreads: #MASTER ONLY
+			mprint("I will spawn ",numThreads-process_count," workers")
+			comm = MPI.COMM_WORLD.Spawn(prefix+"/bin/"+prog, args=sys.yade_argv[1:],maxprocs=numThreads-process_count).Merge()
+			#TODO: if process_count>numThreads, free some workers
 			rank=0
 		else:	#WORKERS
 			comm = MPI.Comm.Get_parent().Merge()
 			rank=comm.Get_rank()
+			mprint("Hello, I'm worker "+str(rank))
 	else:
 		rank = os.getenv('OMPI_COMM_WORLD_RANK')
 		numThreads=None
@@ -119,12 +122,16 @@ def initialize(prefix,prog):
 	return rank,numThreads
 
 def spawnedProcessWaitCommand():
+	global waitingCommands
+	if waitingCommands: return
+	waitingCommands = True
 	mprint("I'm now waiting")
-	while not comm.Iprobe(source=0, tag=_MASTER_COMMAND_):
-		time.sleep(0.01)
-	command = comm.recv(source=0)
-	mprint("I will now execute ",command)
-	exec(command)
+	while 1:
+		while not comm.Iprobe(source=0, tag=_MASTER_COMMAND_):
+			time.sleep(0.01)
+		command = comm.recv(source=0,tag=_MASTER_COMMAND_)
+		mprint("I will now execute ",command)
+		exec(command)
 
 class Timing_comm():
 	def __init__(self):
@@ -209,7 +216,7 @@ def receiveForces(subdomains):
 				O.forces.addF(ft[0],ft[1])
 				O.forces.addT(ft[0],ft[2])
 				
-def checkColliderActivated():
+def checkNeedCollide():
 	'''
 	return true if collision detection needs activation in at least one SD, else false. If COPY_MIRROR_BODIES_WHEN_COLLIDE run collider when needed, and in that case return False.
 	'''
@@ -461,7 +468,7 @@ def mergeScene():
 	if O.splitted:
             if MERGE_W_INTERACTIONS: 
                 O.subD.mergeOp()
-                sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkColliderActivated.dead = True
+                sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkNeedCollide.dead = True
                 O.splitted=False
                 collider.doSort = True
                 global NUM_MERGES; NUM_MERGES +=1; 
@@ -510,7 +517,7 @@ def mergeScene():
 				O.subD.setStateBoundsValuesFromIds(ids,dat[shift: shift_plus_one]);
 				reboundRemoteBodies(ids)
 		# turn mpi engines off
-		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkColliderActivated.dead = True
+		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkNeedCollide.dead = True
 		O.splitted=False
 		collider.doSort = True
 
@@ -547,15 +554,22 @@ def splitScene():
 		#distribute work
 		
 		sceneAsString=O.sceneToString()
-		for worker in range(1,numThreads):
-			timing_comm.send("splitScene_distribute_work",sceneAsString, dest=worker, tag=_SCENE_) #sent with scene.subdomain=1, better make subdomain index a passed value so we could pass the sae string to every worker (less serialization+deserialization)
+		wprint("will send scene")
+		#NOTE: that loop with blocking send will hang on ubuntu 16.04 with -mit 4, for unknown reason, fortunately bcast works (and it should be faster)
+		#for worker in range(1,numThreads):
+			#wprint("sending bodies to ",worker)
+			#timing_comm.send("splitScene_distribute_work",sceneAsString, dest=worker, tag=_SCENE_) #sent with scene.subdomain=1, better make subdomain index a passed value so we could pass the sae string to every worker (less serialization+deserialization)
 		O.interactions.clear() # clear the interactions in the master proc.  
 	else:
-		O.stringToScene(comm.recv(source=0, tag=_SCENE_)) #receive a scene pre-processed by master (i.e. with appropriate body.subdomain's)  
-		wprint("worker 1 received",len(O.bodies),"bodies (verletDist=",collider.verletDist,")")
+		sceneAsString=None
+		wprint("receiving scene")
+		
+	sceneAsString=timing_comm.bcast("splitScene_distribute_work",sceneAsString,root=0)
+	
+	if rank>0:
+		O.stringToScene(sceneAsString) #receive a scene pre-processed by master (i.e. with appropriate body.subdomain's)  
+		wprint("received ",len(O.bodies)," bodies (verletDist=",collider.verletDist,")")
 		O._sceneObj.subdomain = rank
-		
-		
 		
 		domainBody=None
 		subdomains=[] #list of subdomains by body id
@@ -582,9 +596,9 @@ def splitScene():
 		
 		# append engine waiting until forces are effectively sent to master
 		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="pass",label="waitForcesRunner")]
-		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkColliderActivated(): O.pause()",label="collisionChecker")]
+		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkNeedCollide(): O.pause()",label="collisionChecker")]
 	else:
-		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkColliderActivated.dead = False
+		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkNeedCollide.dead = False
 		
 	O.splitted=True
 	O.splittedOnce=True
@@ -707,22 +721,24 @@ def eraseRemote():
 ##### RUN MPI #########
 def mpirun(nSteps):
 	caller_name = inspect.stack()[2][3]
-	if(mit_mode and rank==0 and not caller_name=='runScript'):	#if the caller is the userScript, everyone already calls mpirun and the workers are not waiting for a command.
+	if(mit_mode and rank==0 and not caller_name=='runScript'): #if the caller is the userScript, everyone already calls mpirun and the workers are not waiting for a command.
 		for w in range(1,numThreads):
-			comm.send("mpirun("+str(nSteps)+")",dest=w,tag=_MASTER_COMMAND_)
+			comm.send("yade.mpy.mpirun("+str(nSteps)+")",dest=w,tag=_MASTER_COMMAND_)
 			wprint("Command sent to ",w)
 	initStep = O.iter
+	mprint("splitting")
 	if not O.splitted: splitScene()
+	mprint("splitted")
 	if YADE_TIMING:
 		O.timingEnabled=True
 	if not (MERGE_SPLIT or COPY_MIRROR_BODIES_WHEN_COLLIDE): #run until collider is activated then stop		
-		O.run(nSteps,True)
+		O.run(nSteps,True) #a pyrunner will pause
 		mergeScene()
 	else: #merge/split or body_copy for each collider update
 		if(MERGE_SPLIT): collisionChecker.dead=True
 		while (O.iter-initStep)<nSteps:
 			O.step()
-			if checkColliderActivated():
+			if checkNeedCollide():
 				mergeScene()
 				splitScene()
 		mergeScene()
@@ -732,6 +748,5 @@ def mpirun(nSteps):
 		time.sleep((numThreads-rank)*0.1) #avoid mixing the final output, timing.stats() is independent of the sleep
 		mprint( "#####  Worker "+str(rank)+"  ######")
 		timing.stats() #specific numbers for -n4 and gabion.py
-	if(mit_mode and rank!=0 and not caller_name=='runScript'):
-		spawnedProcessWaitCommand()
+
 

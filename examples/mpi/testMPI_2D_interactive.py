@@ -100,7 +100,7 @@ if rank is None: #######  Single-core  ######
 else: #######  MPI  ######
 	# customize
 	mp.ACCUMULATE_FORCES=True #trigger force summation on master's body (here WALL_ID)
-	mp.VERBOSE_OUTPUT=True
+	mp.VERBOSE_OUTPUT=False
 	mp.ERASE_REMOTE=False #erase bodies not interacting wit a given subdomain?
 	mp.OPTIMIZE_COM=True #L1-optimization: pass a list of double instead of a list of states
 	mp.USE_CPP_MPI=False and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
