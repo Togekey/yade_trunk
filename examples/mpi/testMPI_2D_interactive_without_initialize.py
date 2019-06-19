@@ -70,3 +70,6 @@ mp.mpirun(NSTEPS,4)
 mp.mprint( "num. bodies:",len([b for b in O.bodies]),len(O.bodies))
 mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
 
+#demonstrate getting stuff from workers
+if mp.rank==0 and mp.mit_mode:
+	O.subD.comm.send("Ek=utils.kineticEnergy();O.subD.comm.send(Ek,dest=0)",dest=1,tag=mp._MASTER_COMMAND_); k=O.subD.comm.recv(source=1); print("Ek="+str(k))
