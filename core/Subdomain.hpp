@@ -144,7 +144,7 @@ class Subdomain: public Shape {
 	
 	void mpiSendStates(/*vector<double> message,*/ unsigned otherSubdomain){
 		std::vector<double> vals = getStateValues(otherSubdomain);
-		MPI_Send(&vals.front(), vals.size(), MPI_DOUBLE, otherSubdomain, 177, MPI_COMM_WORLD);
+		MPI_Send(&vals.front(), vals.size(), MPI_DOUBLE, otherSubdomain, 177, selfComm());
 	}
 	
 	void mpiRecvStates(unsigned otherSubdomain){
@@ -156,7 +156,7 @@ class Subdomain: public Shape {
 		vals.resize(nb);
 		int recv_count;
 		MPI_Status recv_status;
-		MPI_Recv(&vals.front(), nb, MPI_DOUBLE, otherSubdomain, 177, MPI_COMM_WORLD, &recv_status);
+		MPI_Recv(&vals.front(), nb, MPI_DOUBLE, otherSubdomain, 177, selfComm(), &recv_status);
 		MPI_Get_count(&recv_status,MPI_DOUBLE,&recv_count);
 		if (recv_count != int(nb)) LOG_ERROR("length mismatch");
 	}
@@ -171,7 +171,7 @@ class Subdomain: public Shape {
 		vector<Real>& vals = stateBuffer[otherSubdomain];
 		vals.resize(nb);
 		
-		MPI_Irecv(&vals.front(), nb, MPI_DOUBLE, otherSubdomain, 177, MPI_COMM_WORLD, &mpiReqs[otherSubdomain]);
+		MPI_Irecv(&vals.front(), nb, MPI_DOUBLE, otherSubdomain, 177, selfComm(), &mpiReqs[otherSubdomain]);
 	}
 	
 

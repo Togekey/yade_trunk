@@ -142,8 +142,8 @@ void Subdomain::setIDstoSubdomain(boost::python::list& idList ){//Remark: probab
 
 void Subdomain::getRankSize() {
 	  if (!ranksSet){
-	    MPI_Comm_rank(MPI_COMM_WORLD, &subdomainRank);
-	    MPI_Comm_size(MPI_COMM_WORLD, &commSize); 
+	    MPI_Comm_rank(selfComm(), &subdomainRank);
+	    MPI_Comm_size(selfComm(), &commSize); 
 	    ranksSet = true; 
 	  } else {return; }
 }
@@ -237,7 +237,7 @@ void Subdomain::sendBodies(const int receiver, const vector<Body::id_t >& idsToS
 	std::string s = idsToSerializedMPIBodyContainer(idsToSend);
 	stringBuff[receiver]=s;
 	MPI_Request req;
-	MPI_Isend(stringBuff[receiver].data(), s.size(), MPI_CHAR, receiver, TAG_BODY, MPI_COMM_WORLD, &req);
+	MPI_Isend(stringBuff[receiver].data(), s.size(), MPI_CHAR, receiver, TAG_BODY, selfComm(), &req);
 	sendBodyReqs.push_back(req); 
 }
 
@@ -333,12 +333,12 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 
 void Subdomain::sendStringBlocking(std::string& s, int destRank, int tag) {
 
-	MPI_Send(s.data(), s.size(), MPI_CHAR, destRank, tag, MPI_COMM_WORLD);
+	MPI_Send(s.data(), s.size(), MPI_CHAR, destRank, tag, selfComm());
 }
 
 int Subdomain::probeIncomingBlocking(int sourceRank, int tag) {
 	MPI_Status status;
-	MPI_Probe(sourceRank, tag, MPI_COMM_WORLD, &status);
+	MPI_Probe(sourceRank, tag, selfComm(), &status);
 	int sz;
 	MPI_Get_count(&status, MPI_CHAR, &sz);
 	return sz;
@@ -346,7 +346,7 @@ int Subdomain::probeIncomingBlocking(int sourceRank, int tag) {
 
 void Subdomain::recvBuffBlocking(char* cbuf, int cbufSz, int tag, int sourceRank){
 	MPI_Status status;
-	MPI_Recv(cbuf, cbufSz, MPI_CHAR, sourceRank, tag, MPI_COMM_WORLD, &status);
+	MPI_Recv(cbuf, cbufSz, MPI_CHAR, sourceRank, tag, selfComm(), &status);
 }
 
 
@@ -356,14 +356,14 @@ void Subdomain::recvBuffBlocking(char* cbuf, int cbufSz, int tag, int sourceRank
 void Subdomain::sendString(std::string& s, int destRank, int tag,  MPI_Request& request){
 
 	int len = s.size();
-	MPI_Isend(s.data(), len, MPI_CHAR,  destRank, tag , MPI_COMM_WORLD, &request);  //
+	MPI_Isend(s.data(), len, MPI_CHAR,  destRank, tag , selfComm(), &request);  //
 
 }
 
 int Subdomain::probeIncoming(int sourceRank, int tag) {
 	int flag=0; MPI_Status status;
 	while (! flag) {
-	  MPI_Iprobe(sourceRank, tag, MPI_COMM_WORLD, &flag, &status);
+	  MPI_Iprobe(sourceRank, tag, selfComm(), &flag, &status);
 	}
 	int sz;
 	MPI_Get_count(&status, MPI_CHAR, &sz);
@@ -373,7 +373,7 @@ int Subdomain::probeIncoming(int sourceRank, int tag) {
 
 void Subdomain::recvBuff(char* cbuf, int cbufsZ, int sourceRank, MPI_Request& request) {
 
-	MPI_Irecv(cbuf, cbufsZ, MPI_CHAR, sourceRank, TAG_STRING + subdomainRank, MPI_COMM_WORLD, &request);
+	MPI_Irecv(cbuf, cbufsZ, MPI_CHAR, sourceRank, TAG_STRING + subdomainRank, selfComm(), &request);
 }
 
 void Subdomain::processReqs(std::vector<MPI_Request>& mpiReqs) {
