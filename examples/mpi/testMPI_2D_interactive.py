@@ -42,7 +42,7 @@ else: bodyCopy=False
 import os
 #import yade's mpi module
 from yade import mpy as mp
-rank,numThreads = mp.initialize(prefix,prog) #fixme: prefix and prog should be accessed directly from mpy.py, but how ?
+rank,numThreads = mp.initialize() #fixme: prefix and prog should be accessed directly from mpy.py, but how ?
 
 if(rank==None):#non-mpi execution, numThreads will still be used as multiplier for the problem size (2 => multiplier is 1)
 	numThreads=2 if len(sys.argv)<4 else (int(sys.argv[3]))

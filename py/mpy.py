@@ -98,14 +98,14 @@ import yade.runtime
 
 mit_mode = yade.runtime.opts.mit>1
 
-def initialize(prefix,prog):
+def initialize():
 	global comm,rank,numThreads
 	if(mit_mode):
 		numThreads=yade.runtime.opts.mit
 		process_count = comm.Get_size()
 		if not yade.runtime.opts.mpi_mode and process_count<numThreads: #MASTER ONLY
 			mprint("I will spawn ",numThreads-process_count," workers")
-			comm = MPI.COMM_WORLD.Spawn(prefix+"/bin/"+prog, args=sys.yade_argv[1:],maxprocs=numThreads-process_count).Merge()
+			comm = MPI.COMM_WORLD.Spawn(sys.yade_argv[0], args=sys.yade_argv[1:],maxprocs=numThreads-process_count).Merge()
 			#TODO: if process_count>numThreads, free some workers
 			rank=0
 		else:	#WORKERS
@@ -120,6 +120,12 @@ def initialize(prefix,prog):
 			numThreads=int(os.getenv('OMPI_COMM_WORLD_SIZE'))
 		#else monolithic simulation (no mpiexec, no mit)
 	return rank,numThreads
+
+def autoInitialize(np):
+	global mit_mode
+	yade.runtime.opts.mit=np
+	mit_mode=True
+	return initialize()
 
 def spawnedProcessWaitCommand():
 	global waitingCommands
@@ -722,8 +728,11 @@ def eraseRemote():
 				if not connected: O.bodies.erase(id)  
 
 ##### RUN MPI #########
-def mpirun(nSteps):
+def mpirun(nSteps,np=numThreads):
 	caller_name = inspect.stack()[2][3]
+	if (np>numThreads):  
+		if not mit_mode: autoInitialize(np)
+		else: mprint("number of cores can't be increased after first call to mpirun")
 	if(mit_mode and rank==0 and not caller_name=='runScript'): #if the caller is the userScript, everyone already calls mpirun and the workers are not waiting for a command.
 		for w in range(1,numThreads):
 			comm.send("yade.mpy.mpirun("+str(nSteps)+")",dest=w,tag=_MASTER_COMMAND_)
