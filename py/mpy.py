@@ -136,7 +136,7 @@ def spawnedProcessWaitCommand():
 	mprint("I'm now waiting")
 	while 1:
 		while not comm.Iprobe(source=0, tag=_MASTER_COMMAND_):
-			time.sleep(0.01)
+			time.sleep(0.0001)
 		command = comm.recv(source=0,tag=_MASTER_COMMAND_)
 		mprint("I will now execute ",command)
 		exec(command)
@@ -145,6 +145,7 @@ def sendCommand(executors,command,wait=False):
 	'''
 	Send a command to a worker (or list of) from master or from another worker
 	'''
+	start=time.time()
 	if not mit_mode: mprint("sendCommand in interactive mode only"); return
 	if 0 in executors: mprint("master does not accept mpi commands"); return
 	if len(executors)>=numThreads: mprint("executors > numThreads"); return
@@ -157,6 +158,7 @@ def sendCommand(executors,command,wait=False):
 		O.subD.comm.isend(command,dest=w,tag=_MASTER_COMMAND_)
 	if wait:
 		res= [O.subD.comm.recv(source=w,tag=_RETURN_VALUE_) for w in executors]
+		mprint("sendCommand returned in "+str(time.time()-start)+" s")
 		return (res if argIsList else res[0])
 	else:
 		return None
