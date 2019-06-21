@@ -192,6 +192,7 @@ class Subdomain: public Shape {
         //functions common 
         
         void mergeOp(); 
+	void splitBodiesToWorkers(const bool& ); 
         
         // functions (workers) 
         
@@ -222,7 +223,7 @@ class Subdomain: public Shape {
         
          std::string serializeMPIBodyContainer(const shared_ptr<MPIBodyContainer>&);  //serialize and return string
 	 shared_ptr<MPIBodyContainer> deSerializeMPIBodyContainer(const char* , int ); //deserialize return MPIBodyContainer
-	 std::string fillContainerGetString(shared_ptr<MPIBodyContainer>&, std::vector<Body::id_t>& ); 
+	 std::string fillContainerGetString(shared_ptr<MPIBodyContainer>&, const std::vector<Body::id_t>& ); 
 	 std::string idsToSerializedMPIBodyContainer(const std::vector<Body::id_t>& ids);
 	 void setIDstoSubdomain(boost::python::list& );  // exposed to yadempi.py, function to change/reset the ids in a subdomain
 	 void clearSubdomainIds();  // clears the member ids (std::vector <Body::id_t>
@@ -286,6 +287,7 @@ class Subdomain: public Shape {
 		.def("completeSendBodies", &Subdomain::completeSendBodies, "calls MPI_wait to complete the non blocking sends/recieves.")
 		.add_property("mirrorIntersections",&Subdomain::mIntrs_get,&Subdomain::mIntrs_set,"lists of bodies from other subdomains intersecting this one. WARNING: only assignement and concatenation allowed")
 		.add_property("comm",&Subdomain::getMyComm,&Subdomain::setMyComm,"Communicator to be used for MPI (converts mpi4py comm <-> c++ comm)")
+		.def("splitBodiesToWorkers", &Subdomain::splitBodiesToWorkers,(boost::python::arg("eraseWorkerBodies")), "of true bodies in workers are erased and reassigned.")
 	);
 	DECLARE_LOGGER;
 	REGISTER_CLASS_INDEX(Subdomain,Shape);

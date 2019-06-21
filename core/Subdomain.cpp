@@ -116,7 +116,7 @@ shared_ptr<MPIBodyContainer> Subdomain::deSerializeMPIBodyContainer(const char* 
 }
 
 
-string Subdomain::fillContainerGetString(shared_ptr<MPIBodyContainer>& container, std::vector<Body::id_t>& ids) {
+string Subdomain::fillContainerGetString(shared_ptr<MPIBodyContainer>& container, const  std::vector<Body::id_t>& ids) {
 	container->insertBodyList(ids);
 	std::string containerString = serializeMPIBodyContainer(container);
 	return containerString;
@@ -286,6 +286,7 @@ void Subdomain::recvBodyContainersFromWorkers() {
     }
 }
 
+
 // set all body properties from the recvd MPIBodyContainer
 void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MPIBodyContainer> >& containers, bool ifMerge, bool resetInteractions) {
 	// to be used when deserializing a recieved container.
@@ -325,6 +326,67 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 	interactionContainer->dirty = true;  //notify the collider about the new interactions/new body. 
 	containers.clear();
 	bodiesSet = true;
+}
+
+
+void Subdomain::splitBodiesToWorkers(const bool& eraseWorkerIds){
+
+	if (!eraseWorkerIds){return; } 
+	shared_ptr<Scene> scene = Omega::instance().getScene(); 
+	shared_ptr<BodyContainer> bodyContainer = scene-> bodies; 
+	std::vector<std::vector<Body::id_t> > idsToSend; 
+	
+	if (subdomainRank==0){
+		idsToSend.resize(commSize-1); 
+		for (const auto& b : bodyContainer->body){
+			if (!b->getIsSubdomain()){
+				if (!b->subdomain==master){idsToSend[b->subdomain-1].push_back(b->id);}
+				for (const auto& bIntrs : b->intrs){
+					const Body::id_t& otherId = bIntrs.first; 
+					
+					//shared_ptr<Interaction> I = bIntrs.second; 
+					//if (b->id == I->getId1()){otherId = I->getId2(); }else{otherId = I->getId1();}
+					const shared_ptr<Body>& otherBody = (*bodyContainer)[otherId]; 
+					if (otherBody->getIsSubdomain()){
+						idsToSend[otherBody->subdomain-1].push_back(b->id); 
+					}
+				}
+			}
+		}
+	}
+	
+	if ((subdomainRank != master) && (eraseWorkerIds)){
+		for(const auto& b : bodyContainer->body){
+			if (!b){continue; }
+			if (!b->getIsSubdomain()){bodyContainer->erase(b->id, true); }
+		}
+		clearSubdomainIds(); 
+	}
+	
+	if (subdomainRank == master) {
+		for (unsigned rnk = 0; rnk != idsToSend.size(); ++rnk){
+			const std::vector<Body::id_t>& workerIds = idsToSend[rnk]; 
+			shared_ptr<MPIBodyContainer> container(shared_ptr<MPIBodyContainer> (new MPIBodyContainer()));
+			std::string s = fillContainerGetString(container,workerIds); 
+			sendStringBlocking(s, rnk+1, TAG_BODY); 
+			
+		}
+		
+	}
+	
+	
+	if (subdomainRank != master){
+		receiveBodies(master); 
+		for (const auto& b : bodyContainer->body){
+			if (!b){continue; }
+			if (!b->getIsSubdomain()){
+				if (b->subdomain==subdomainRank){
+				ids.push_back(b->id); }
+			}
+		}
+		
+	}
+
 }
 
 
