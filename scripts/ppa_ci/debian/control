@@ -29,8 +29,7 @@ Build-Depends:
  libxmu-dev,
  pyqt5-dev-tools,
  python3-all-dev (>= 2.6.6-3~),
- python3-argparse,
- python3-gts,
+ python-gts,
  python3-matplotlib,
  python3-minieigen [!precise],
  python3-numpy,
@@ -44,7 +43,7 @@ Build-Depends-Indep:
  graphviz,
  libjs-jquery,
  lmodern,
- python3-bibtex,
+ python-bibtex,
  python3-sphinx (>= 1.0.7+dfsg),
  texlive-fonts-recommended,
  texlive-generic-extra,
@@ -109,8 +108,7 @@ Pre-Depends:
 Multi-Arch: foreign
 Depends:
  libyadedaily (= ${binary:Version}),
- python3-argparse,
- python3-gts,
+ python-gts,
  python3-matplotlib,
  python3-minieigen [!precise],
  python3-pil,
