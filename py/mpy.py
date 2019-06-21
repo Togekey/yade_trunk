@@ -718,6 +718,7 @@ def updateMirrorIntersections():
 		"""
 		if((COPY_MIRROR_BODIES_WHEN_COLLIDE and O.splittedOnce) or (MERGE_W_INTERACTIONS and O.splittedOnce)):
 			requestedSomethingFrom=[]
+			reqs=[[req[0]] for req in reqs]
 			for req in reqs:
 				bodiesToImport=[]
 				worker=req[0]
