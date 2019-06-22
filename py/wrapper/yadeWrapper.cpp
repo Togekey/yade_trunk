@@ -691,12 +691,22 @@ class pyOmega{
 	shared_ptr<Scene> scene_get(){ return OMEGA.getScene(); }
 	void scene_set(const shared_ptr<Scene>& source){ Py_BEGIN_ALLOW_THREADS; reset(); Py_END_ALLOW_THREADS; assertScene(); OMEGA.setScene(source); }
 	
+	#if PY_MAJOR_VERSION < 3
 	string sceneToString(){
+	#else
+	PyObject* sceneToString(){
+	#endif
 		ostringstream oss;
 		yade::ObjectIO::save<decltype(OMEGA.getScene()),boost::archive::binary_oarchive>(oss,"scene",OMEGA.getScene());
 		oss.flush();
+		#if PY_MAJOR_VERSION < 3
 		return oss.str();
+		#else
+		const string s=oss.str();
+		return PyBytes_FromStringAndSize(s.c_str(), s.length());
+		#endif
 	}
+	
 	void stringToScene(const string &sstring, string mark=""){
 		Py_BEGIN_ALLOW_THREADS; OMEGA.stop(); Py_END_ALLOW_THREADS;
 		assertScene();
@@ -704,6 +714,7 @@ class pyOmega{
 		OMEGA.sceneFile=":memory:"+mark;
 		load(OMEGA.sceneFile,true);
 	}
+	
 	int thisScene(){return OMEGA.currentSceneNb;}
 
 	void save(std::string fileName,bool quiet=false){
@@ -915,7 +926,7 @@ BOOST_PYTHON_MODULE(wrapper)
 		.def("clear", &pyBodyContainer::clear,"Remove all bodies (interactions not checked)")
 		.def("erase", &pyBodyContainer::erase,(py::arg("eraseClumpMembers")=0),"Erase body with the given id; all interaction will be deleted by InteractionLoop in the next step. If a clump is erased use *O.bodies.erase(clumpId,True)* to erase the clump AND its members.")
 		.def("replace",&pyBodyContainer::replace) 
-    .def("insertAtId",&pyBodyContainer::insertAtId,(py::arg("insertatid")),"Insert a body at theid, (no body should exist in this id)")
+		.def("insertAtId",&pyBodyContainer::insertAtId,(py::arg("insertatid")),"Insert a body at theid, (no body should exist in this id)")
 		.add_property("rawBodies",&pyBodyContainer::raw_bodies_get,&pyBodyContainer::raw_bodies_set,"Bodies in the current simulation in the form of pickle-friendly raw container. In typical situations it is better to access bodies as 'O.bodies', which offers better python support. This one may be used for debugging or advanced manipulations.");
 	py::class_<pyBodyIterator>("BodyIterator",py::init<pyBodyIterator&>())
 		.def("__iter__",&pyBodyIterator::pyIter)
