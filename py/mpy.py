@@ -65,26 +65,34 @@ _BOUNDS_ = 18
 _MASTER_COMMAND_ = 19
 _RETURN_VALUE_ = 20
 
-
 #for coloring processes outputs differently
-red = [255]*256 + range(255,-1,-1) + [0]*256*2 + range(0,256) + [255]*256
-green = red[256*2:] + red[0:256*2]
-blue = green[256*2:] + green[0:256*2]
-rank_color_id = int(len(red)/numThreads*rank)
-rank_color = [str(red[rank_color_id]),str(green[rank_color_id]),str(blue[rank_color_id])]
+bcolors=['\033[95m','\033[94m','\033[93m','\033[92m','\033[91m','\033[90m','\033[95m','\033[93m','\033[91m','\033[1m','\033[4m','\033[0m']
+
+#def mprint(m): #this one will print regardless of VERBOSE_OUTPUT
+	#if 1:
+		#if rank>0:
+			#print (bcolors.WARNING if rank==1 else bcolors.OKBLUE) +"worker"+str(rank)+": "+m+bcolors.ENDC
+		#else: print bcolors.HEADER+"master:" +m+bcolors.ENDC
+
+##for coloring processes outputs differently
+#red = [255]*256 + range(255,-1,-1) + [0]*256*2 + range(0,256) + [255]*256
+#green = red[256*2:] + red[0:256*2]
+#blue = green[256*2:] + green[0:256*2]
+#rank_color_id = int(len(red)/numThreads*rank)
+#rank_color = [str(red[rank_color_id]),str(green[rank_color_id]),str(blue[rank_color_id])]
 
 def mprint(*args): #this one will print regardless of VERBOSE_OUTPUT
-	m='\033['
+	m=bcolors[min(rank,len(bcolors)-2)]
 	if rank==0:
 		m+='1;' #bold for master
-	m+='38;2;'+rank_color[0]+';'+rank_color[1]+';'+rank_color[2]+'m'
+	#m+='38;2;'+rank_color[0]+';'+rank_color[1]+';'+rank_color[2]+'m'
 	if rank==0:
 		m+='Master: '
 	else:
 		m+='Worker'+str(rank)+": "
 	for a in args:
 		m+=str(a)
-	m+='\033[0m'
+	m+=bcolors[-1]
 	print (m)
 
 def wprint(*args):
@@ -380,7 +388,7 @@ def genLocalIntersections(subdomains):
 						intersections[subdIdx]+=maskedConnection(b, appended); continue
 				#else (standalone body, normal case)
 				intersections[subdIdx].append(otherId)
-
+				
 		#for master domain set list of interacting subdomains (could be handled above but for the sake of clarity complex if-else-if are avoided for now)
 		if rank==0 and len(intersections[subdIdx])>0:
 			intersections[0].append(subdIdx)
@@ -496,60 +504,58 @@ O.splittedOnce=False #after the first split we have additional bodies (Subdomain
 
 def mergeScene():
 	if O.splitted:
-            if MERGE_W_INTERACTIONS: 
-                O.subD.mergeOp()
-                sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkNeedCollide.dead = True
-                O.splitted=False
-                collider.doSort = True
-                global NUM_MERGES; NUM_MERGES +=1; 
-            else:
-                
-		if rank>0:
-			# Workers
-			send_buff=np.asarray(O.subD.getStateBoundsValuesFromIds([b.id for b in O.bodies if b.subdomain==rank]))
-			size=np.array(len(send_buff),dtype=int)
+		if MERGE_W_INTERACTIONS: 
+			O.subD.mergeOp()
+			sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkNeedCollide.dead = True
+			O.splitted=False
+			collider.doSort = True
+			global NUM_MERGES; NUM_MERGES +=1; 
 		else:
-			#Master
-			send_buff=np.array([0])
-			size=np.array(0,dtype=int)
+			if rank>0:
+				# Workers
+				send_buff=np.asarray(O.subD.getStateBoundsValuesFromIds([b.id for b in O.bodies if b.subdomain==rank]))
+				size=np.array(len(send_buff),dtype=int)
+			else:
+				#Master
+				send_buff=np.array([0])
+				size=np.array(0,dtype=int)
+			sizes=np.empty(numThreads,dtype=int)
+			# Master get sizes from all workers
+			timing_comm.Gather("mergeScene_sizes",size,sizes,root=0)
+			
+			
+			if(rank==0):
+				# MASTER
+				# Alloc sizes for workers 
+				dat=np.ones(sizes.sum(),dtype=np.float64)
+				# Displacement indexes where data should be stored/received in targeted array
+				# dspl should be visible by everyone
+				dspl=np.empty(numThreads, dtype=int)
+				dspl[0] = 0
+				for i in range(1, len(sizes)):
+					dspl[i] = dspl[i-1] + sizes[i-1];
+			else:
+				dspl=None
+				dat=None
 
-		sizes=np.empty(numThreads,dtype=int)
-		# Master get sizes from all workers
-		timing_comm.Gather("mergeScene_sizes",size,sizes,root=0)
-		
-		
-		if(rank==0):
-			# MASTER
-			# Alloc sizes for workers 
-			dat=np.ones(sizes.sum(),dtype=np.float64)
-			# Displacement indexes where data should be stored/received in targeted array
-			# dspl should be visible by everyone
-			dspl=np.empty(numThreads, dtype=int)
-			dspl[0] = 0
-			for i in range(1, len(sizes)):
-				dspl[i] = dspl[i-1] + sizes[i-1];
-		else:
-			dspl=None
-			dat=None
-
-		# data sent = [data, size of data] (for each worker)
-		# data recv = [allocated target_array, array of different sizes, displacement, data type]
-		timing_comm.Gatherv("mergeScene_data",[send_buff, size], [dat, sizes, dspl, MPI.DOUBLE], root=0)
-		if(rank==0): #master
-			for worker_id in range(1, numThreads):
-				# generate corresponding ids (order is the same for both master and worker)
-				ids = [b.id for b in O.bodies if b.subdomain==worker_id]
-				shift = dspl[worker_id];
-				if (worker_id != numThreads-1):
-					shift_plus_one = dspl[worker_id+1];
-				else:		
-					shift_plus_one = len(dat);
-				O.subD.setStateBoundsValuesFromIds(ids,dat[shift: shift_plus_one]);
-				reboundRemoteBodies(ids)
-		# turn mpi engines off
-		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkNeedCollide.dead = True
-		O.splitted=False
-		collider.doSort = True
+			# data sent = [data, size of data] (for each worker)
+			# data recv = [allocated target_array, array of different sizes, displacement, data type]
+			timing_comm.Gatherv("mergeScene_data",[send_buff, size], [dat, sizes, dspl, MPI.DOUBLE], root=0)
+			if(rank==0): #master
+				for worker_id in range(1, numThreads):
+					# generate corresponding ids (order is the same for both master and worker)
+					ids = [b.id for b in O.bodies if b.subdomain==worker_id]
+					shift = dspl[worker_id];
+					if (worker_id != numThreads-1):
+						shift_plus_one = dspl[worker_id+1];
+					else:		
+						shift_plus_one = len(dat);
+					O.subD.setStateBoundsValuesFromIds(ids,dat[shift: shift_plus_one]);
+					reboundRemoteBodies(ids)
+			# turn mpi engines off
+			sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkNeedCollide.dead = True
+			O.splitted=False
+			collider.doSort = True
 
 def splitScene():
 	'''
@@ -609,7 +615,7 @@ def splitScene():
 				subdomains.append(b.id)
 				if b.subdomain==rank: domainBody=b
 			
-		if domainBody==None: print "SUBDOMAIN NOT FOUND FOR RANK=",rank
+		if domainBody==None: print("SUBDOMAIN NOT FOUND FOR RANK=",rank)
 		O.subD = domainBody.shape
 		O.subD.subdomains = subdomains
 		if mit_mode: O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
@@ -679,7 +685,6 @@ def updateMirrorIntersections():
 			#wprint("sending "+str(len(subD.intersections[worker]))+" states to "+str(worker))
 			wprint("Send mirrors to: ", worker)
 			timing_comm.send("splitScene_intersections",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
-
 		nn=0
 		for req in reqs:
 			if subD.intersections[rank][nn]==0: nn+=1
@@ -693,8 +698,6 @@ def updateMirrorIntersections():
 			
 		#FIXME: Seg fault 11 when global merging with interactions
 		if(ERASE_REMOTE): eraseRemote()
-
-
 		"""
 		" NOTE: FK, what to do here:
 		" 1- all threads loop on reqs, i.e the intersecting subdomains of the current subdomain.
@@ -754,10 +757,11 @@ def eraseRemote():
 ##### RUN MPI #########
 def mpirun(nSteps,np=numThreads):
 	caller_name = inspect.stack()[2][3]
+	print("caller_name",caller_name)
 	if (np>numThreads):  
 		if not mit_mode: autoInitialize(np)
 		else: mprint("number of cores can't be increased after first call to mpirun")
-	if(mit_mode and rank==0 and not caller_name=='runScript'): #if the caller is the userScript, everyone already calls mpirun and the workers are not waiting for a command.
+	if(mit_mode and rank==0 and not caller_name=='execfile'): #if the caller is the userScript, everyone already calls mpirun and the workers are not waiting for a command.
 		for w in range(1,numThreads):
 			comm.send("yade.mpy.mpirun("+str(nSteps)+")",dest=w,tag=_MASTER_COMMAND_)
 			wprint("Command sent to ",w)
