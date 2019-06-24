@@ -18,7 +18,18 @@ from yade import pack
 # [None,None,None] below, but I decided that it is too much testing.
 results={True:[None,None],False:[None,None]}
 
-#checksPath="." # this line was used for working on this script locally.
+checksPath="." # this line was used for working on this script locally.
+
+def dumpRealInteractions():
+	dat=[]
+	for b in O.bodies:
+		intrs=[]
+		for i in b.intrs():
+			intrs.append(i.id1 if i.id2==b.id else i.id2)
+		intrs.sort()
+		dat.append(intrs)
+	#NOTE: there should be a list.sort() here for minimal comparison, but ordering appears to e deterministic still... 
+	return dat
 
 for usePeriod in [True,False]:
 	O.periodic=usePeriod
@@ -61,8 +72,8 @@ for usePeriod in [True,False]:
 	
 	testedCollider=typedEngine("InsertionSortCollider")
 	
-	O.run( 500, True); results[usePeriod][0]=testedCollider.dumpBounds()
-	O.run(1000, True); results[usePeriod][1]=testedCollider.dumpBounds()
+	O.run( 500, True); results[usePeriod][0]=dumpRealInteractions()
+	O.run(1000, True); results[usePeriod][1]=dumpRealInteractions()
 	#O.run( 500, True); results[usePeriod][2]=testedCollider.dumpBounds()
 	O.reset()
 
@@ -73,28 +84,28 @@ for usePeriod in [True,False]:
 
 resultFile=None
 # careful, I used this loop to save the reference results in git revision 2bc5ac90b. When doing tests it must be readonly, and loading=True
-loading=True
+loading=False
 if(loading):
-	resultFile=open( checksPath+'/data/checkColider.txt', "r" )
+	resultFile=open( checksPath+'/data/checkColliderCorrect.txt', "r" )
 else:
-	resultFile=open( checksPath+'/data/checkColider.txt', "w" )
+	resultFile=open( checksPath+'/data/checkColliderCorrect.txt', "w" )
 lineCount=0
 for per in sorted(results):
 	for result in results[per]:
 		for record in result:
-			for tupl in record:
+			for number in record:
 				# contents of this tuple is explained in file InsertionSortCollider.cpp line 518, function boost::python::tuple InsertionSortCollider::dumpBounds();
-				for number in tupl:
-					lineCount+=1
-					if(loading):
-						line = resultFile.readline()
-						tmp = float(line)
-						if(abs(tmp - number) > 1e-8):
-							raise YadeCheckError("InsertionSortCollider check failed in file scripts/checks-and-tests/checks/data/checkColider.txt line: %d"%lineCount)
+				#for number in tupl:
+				lineCount+=1
+				if(loading):
+					line = resultFile.readline()
+					tmp = float(line)
+					if(abs(tmp - number) > 1e-8):
+						raise YadeCheckError("InsertionSortCollider check failed in file scripts/checks-and-tests/checks/data/checkColliderCorrect.txt line: %d"%lineCount)
+				else:
+					if(type(number) is int):
+						resultFile.write(str(number)+'\n')
 					else:
-						if(type(number) is int):
-							resultFile.write(str(number)+'\n')
-						else:
-							resultFile.write("%.8f"%number+'\n')
+						resultFile.write("%.8f"%number+'\n')
 
 
