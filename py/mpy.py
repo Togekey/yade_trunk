@@ -38,7 +38,9 @@ this = sys.modules[__name__]
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 numThreads = comm.Get_size()
-waitingCommands=False
+
+waitingCommands=False #are workers currently interactive?
+userScriptInCheckList=""	# the simulation script from which mpy.py is used
 
 ACCUMULATE_FORCES=True #control force summation on master's body. FIXME: if false master goes out of sync since nothing is blocking rank=0 thread
 VERBOSE_OUTPUT=False
@@ -115,7 +117,10 @@ def initialize():
 		process_count = comm.Get_size()
 		if not yade.runtime.opts.mpi_mode and process_count<numThreads: #MASTER ONLY
 			mprint("I will spawn ",numThreads-process_count," workers")
-			comm = MPI.COMM_WORLD.Spawn(sys.yade_argv[0], args=sys.yade_argv[1:],maxprocs=numThreads-process_count).Merge()
+			if (userScriptInCheckList==""): #normal case
+				comm = MPI.COMM_WORLD.Spawn(sys.yade_argv[0], args=sys.yade_argv[1:],maxprocs=numThreads-process_count).Merge()
+			else: #HACK, otherwise, handle execution from checkList.py otherwise will we run checkList.py in parallel
+				comm = MPI.COMM_WORLD.Spawn(sys.yade_argv[0], args=[userScriptInCheckList],maxprocs=numThreads-process_count).Merge()
 			#TODO: if process_count>numThreads, free some workers
 			rank=0
 		else:	#WORKERS
@@ -756,12 +761,15 @@ def eraseRemote():
 
 ##### RUN MPI #########
 def mpirun(nSteps,np=numThreads):
-	caller_name = inspect.stack()[2][3]
-	print("caller_name",caller_name)
+	stack=inspect.stack()
+	global userScriptInCheckList
+	if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
+		userScriptInCheckList=stack[1][1]
+	caller_name = stack[2][3]
 	if (np>numThreads):  
 		if not mit_mode: autoInitialize(np)
 		else: mprint("number of cores can't be increased after first call to mpirun")
-	if(mit_mode and rank==0 and not caller_name=='execfile'): #if the caller is the userScript, everyone already calls mpirun and the workers are not waiting for a command.
+	if(mit_mode and rank==0 and not caller_name=='execfile'): #if the caller is the user's script, everyone already calls mpirun and the workers are not waiting for a command.
 		for w in range(1,numThreads):
 			comm.send("yade.mpy.mpirun("+str(nSteps)+")",dest=w,tag=_MASTER_COMMAND_)
 			wprint("Command sent to ",w)
