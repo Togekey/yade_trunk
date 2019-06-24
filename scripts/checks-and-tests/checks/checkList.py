@@ -11,7 +11,7 @@ class YadeCheckError(Exception):
 scriptsToRun=os.listdir(checksPath)
 failedScripts=list()
 
-skipScripts = ['checkList.py','checkMPI.py']
+skipScripts = ['checkList.py','checkMPI.py','checkColliderConstantness.py']
 onlyOneScript = [] # use this if you want to test only one script, it takes precedence over skipScripts.
 
 def mustCheck(sc):
