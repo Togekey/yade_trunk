@@ -18,7 +18,7 @@ from yade import pack
 # [None,None,None] below, but I decided that it is too much testing.
 results={True:[None,None],False:[None,None]}
 
-checksPath="." # this line was used for working on this script locally.
+#checksPath="." # this line was used for working on this script locally.
 
 def dumpRealInteractions():
 	dat=[]
@@ -99,8 +99,8 @@ for per in sorted(results):
 				lineCount+=1
 				if(loading):
 					line = resultFile.readline()
-					tmp = float(line)
-					if(abs(tmp - number) > 1e-8):
+					tmp = int(line)
+					if(tmp!=number):
 						raise YadeCheckError("InsertionSortCollider check failed in file scripts/checks-and-tests/checks/data/checkColliderCorrect.txt line: %d"%lineCount)
 				else:
 					if(type(number) is int):
