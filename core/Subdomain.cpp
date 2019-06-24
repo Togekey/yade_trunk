@@ -340,7 +340,7 @@ void Subdomain::splitBodiesToWorkers(const bool& eraseWorkerIds){
 		idsToSend.resize(commSize-1); 
 		for (const auto& b : bodyContainer->body){
 			if (!b->getIsSubdomain()){
-				if (!b->subdomain==master){idsToSend[b->subdomain-1].push_back(b->id);}
+				if (!(b->subdomain==master)){idsToSend[b->subdomain-1].push_back(b->id);}
 				for (const auto& bIntrs : b->intrs){
 					const Body::id_t& otherId = bIntrs.first; 
 					
