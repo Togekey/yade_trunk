@@ -27,6 +27,19 @@ numThreads = 4
 import colorsys
 colorScale = (Vector3(colorsys.hsv_to_rgb(value*1.0/numThreads, 1, 1)) for value in range(0, numThreads))
 
+O.engines=[ #this reproduces the yade default, not present during checkList.py execution
+		ForceResetter(),
+		InsertionSortCollider([Bo1_Sphere_Aabb(),Bo1_Facet_Aabb(),Bo1_Box_Aabb()],label="collider"),
+		InteractionLoop(
+			[Ig2_Sphere_Sphere_ScGeom(),Ig2_Facet_Sphere_ScGeom(),Ig2_Box_Sphere_ScGeom()],
+			[Ip2_FrictMat_FrictMat_FrictPhys()],	#for linear model only
+			[Law2_ScGeom_FrictPhys_CundallStrack(label="law")],	#for linear model only
+			label="interactionLoop"
+		),
+		GlobalStiffnessTimeStepper(timeStepUpdateInterval=10,label="timeStepper"),
+		NewtonIntegrator(label="newton")
+	]
+
 #add spheres
 for sd in range(0,numThreads-1):
 	col = next(colorScale)
