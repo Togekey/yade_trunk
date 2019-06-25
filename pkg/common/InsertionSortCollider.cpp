@@ -13,7 +13,6 @@
   #include<omp.h>
 #endif
 
-#define YADE_MPI
 
 YADE_PLUGIN((InsertionSortCollider))
 CREATE_LOGGER(InsertionSortCollider);
@@ -369,7 +368,11 @@ void InsertionSortCollider::action(){
 						const Body::id_t& jid=V[j].id;
 						// take 2 of the same condition (only handle collision [min_i..max_i]+min_j, not [min_i..max_i]+min_i (symmetric)
 						if(!(V[j].flags.isMin && V[j].flags.hasBB)) continue;
-						if (spatialOverlap(iid,jid) && Collider::mayCollide(Body::byId(iid,scene).get(),Body::byId(jid,scene).get(),scene->subdomain) ){
+						if (spatialOverlap(iid,jid) && Collider::mayCollide(Body::byId(iid,scene).get(),Body::byId(jid,scene).get()
+						#ifdef YADE_MPI
+							,scene->subdomain
+						#endif
+						)){
 						#ifdef YADE_OPENMP
 							unsigned int threadNum = omp_get_thread_num();
 							newInts[threadNum].push_back(std::pair<Body::id_t,Body::id_t>(iid,jid));
@@ -479,7 +482,11 @@ void InsertionSortCollider::handleBoundInversionPeri(Body::id_t id1, Body::id_t 
 	if (interactions->found(id1,id2)) return;// we want to _create_ new ones, we don't care about existing ones
 	Vector3i periods(Vector3i::Zero());
 	bool overlap=spatialOverlapPeri(id1,id2,scene,periods);
-	if (overlap && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get(),scene->subdomain)){
+	if (overlap && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get()
+		#ifdef YADE_MPI
+		,scene->subdomain
+		#endif
+		)){
 		shared_ptr<Interaction> newI=shared_ptr<Interaction>(new Interaction(id1,id2));
 		newI->cellDist=periods;
 		interactions->insert(newI);

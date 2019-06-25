@@ -30,7 +30,9 @@ void InteractionLoop::action(){
 	physDispatcher->updateScenePtr();
 	lawDispatcher->updateScenePtr();
 	
+	#ifdef YADE_MPI
 	const Body::id_t& subDIdx = scene->subdomain;
+	#endif
 
 	/*
 		initialize callbacks; they return pointer (used only in this timestep) to the function to be called
@@ -80,10 +82,13 @@ void InteractionLoop::action(){
 			scene->interactions->requestErase(I);
 			continue;
 		}
+		
+		#ifdef YADE_MPI
 		//FIXME: can be removed if scene splitting takes care of it
 		if (subDIdx!=b1_->subdomain and subDIdx!=b2_->subdomain) {
-			scene->interactions->requestErase(I); continue;
+			scene->interactions->erase(I->getId1(),I->getId2()); continue;
 		}
+		#endif
     
 		// Skip interaction with clumps
 		if (b1_->isClump() || b2_->isClump()) { continue; }

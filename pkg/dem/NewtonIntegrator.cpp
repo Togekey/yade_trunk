@@ -126,7 +126,6 @@ void NewtonIntegrator::action()
 	YADE_PARALLEL_FOREACH_BODY_BEGIN(const shared_ptr<Body>& b, scene->bodies){
 			// clump members are handled inside clumps
 			if(b->isClumpMember()) continue;
-#define YADE_MPI
 #ifdef YADE_MPI
 			if(scene->subdomain!=b->subdomain or b->getIsSubdomain()) continue;//this thread will not move bodies from other subdomains
 #endif

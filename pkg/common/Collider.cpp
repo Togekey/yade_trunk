@@ -9,7 +9,6 @@
 
 YADE_PLUGIN((Collider));
 
-#define YADE_MPI
 
 int Collider::avoidSelfInteractionMask = 0 ;
 

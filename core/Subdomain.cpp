@@ -1,6 +1,5 @@
 // (c) 2018 Bruno Chareyre <bruno.chareyre@grenoble-inp.fr>
 
-#define YADE_MPI
 #ifdef YADE_MPI
 
 #include "Subdomain.hpp"

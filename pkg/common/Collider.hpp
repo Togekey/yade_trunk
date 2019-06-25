@@ -14,7 +14,6 @@
 
 #include<pkg/common/Dispatching.hpp>
 
-#define YADE_MPI
 
 class Collider: public GlobalEngine {
 	public:

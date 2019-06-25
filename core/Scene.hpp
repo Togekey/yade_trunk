@@ -87,7 +87,6 @@ class Scene: public Serializable{
 		((bool,doSort,false,Attr::readonly,"Used, when new body is added to the scene."))
 		((bool,runInternalConsistencyChecks,true,Attr::hidden,"Run internal consistency check, right before the very first simulation step."))
 		((Body::id_t,selectedBody,-1,,"Id of body that is selected by the user"))
-#define YADE_MPI
 #ifdef YADE_MPI
 		((int,subdomain,0,,"the subdomain this scene is assigned in MPI/domain decomposition."))
 #endif
