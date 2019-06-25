@@ -22,7 +22,7 @@ stages:
 .plaftorms_template: &platforms_definition
   only:
     - master
-    - merge_request
+#    - merge_request
 
 # stage: cmake uses ccache for faster compilation. ccache works only with -DCHUNKSIZE=1
 # Important: to get ccache to work an external volume must be mounted by gitlab-runner (in config file: /etc/gitlab-runner/config.toml)
@@ -49,6 +49,9 @@ stages:
 cmake_16_04:
   <<: *cmake_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
+  only:
+    - master
+    - merge_request
 
 cmake_18_04:
   <<: *cmake_definition
@@ -61,10 +64,16 @@ cmake_18_04:
 cmake_stretch:
   <<: *cmake_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
+  only:
+    - master
+    - merge_request
 
 cmake_buster:
   <<: *cmake_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+  only:
+    - master
+    - merge_request
 
 cmake_suse15:
   <<: *cmake_definition
