@@ -127,6 +127,9 @@ cmake_suse15:
 make_16_04:
   <<: *make_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
+  only:
+    - master
+    - merge_request
   dependencies:
     - cmake_16_04
 
@@ -142,12 +145,18 @@ make_18_04:
 make_stretch:
   <<: *make_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
+  only:
+    - master
+    - merge_request
   dependencies:
     - cmake_stretch
 
 make_buster:
   <<: *make_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+  only:
+    - master
+    - merge_request
   dependencies:
     - cmake_buster
 
@@ -170,6 +179,9 @@ make_suse15:
 test_16_04:
   <<: *test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
+  only:
+    - master
+    - merge_request
   dependencies:
     - make_16_04
 
@@ -185,12 +197,18 @@ test_18_04:
 test_stretch:
   <<: *test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
+  only:
+    - master
+    - merge_request
   dependencies:
     - make_stretch
 
 test_buster:
   <<: *test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+  only:
+    - master
+    - merge_request
   dependencies:
     - make_buster
 
@@ -216,6 +234,9 @@ test_suse15:
 check_16_04:
   <<: *check_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
+  only:
+    - master
+    - merge_request
   dependencies:
     - make_16_04
 
@@ -231,12 +252,18 @@ check_18_04:
 check_stretch:
   <<: *check_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
+  only:
+    - master
+    - merge_request
   dependencies:
     - make_stretch
 
 check_buster:
   <<: *check_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+  only:
+    - master
+    - merge_request
   dependencies:
     - make_buster
 
