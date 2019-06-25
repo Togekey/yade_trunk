@@ -83,8 +83,6 @@ cmake_suse15:
   <<: *platforms_definition
   stage: build
   script:
-    - apt update
-    - apt install python3-mpi4py 
     - export LINK_GOLD=$(case    $CI_PIPELINE_SOURCE in "merge_request_event") echo "20" ;; *) echo "10";; esac)
     - export LINK_REGULAR=$(case $CI_PIPELINE_SOURCE in "merge_request_event") echo "10" ;; *) echo "20";; esac)
     - ld --version
