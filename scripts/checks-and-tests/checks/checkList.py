@@ -12,6 +12,7 @@ scriptsToRun=os.listdir(checksPath)
 failedScripts=list()
 
 skipScripts = ['checkList.py','checkColliderConstantness.py']
+if not yade.libVersions.getLinuxVersion()=='Ubuntu 16.04.3 LTS': skipScripts.append('checkMPI.py')
 onlyOneScript = [] # use this if you want to test only one script, it takes precedence over skipScripts.
 
 def mustCheck(sc):
