@@ -86,6 +86,7 @@ mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
 Ek=0
 if mp.rank==0:
 	Ek=sum(mp.sendCommand([1,2,3],"kineticEnergy()",True))
+	mp.mprint("got Ek=",Ek)
+	if (abs(Ek-1203790.66007)/Ek)>1e-10:
+		raise YadeCheckError("kinetic energy changed by"+str((abs(Ek-1203790.66007)/Ek)))
 
-if (abs(Ek-1203790.66007)/Ek)>1e-10:
-	raise YadeCheckError("kinetic energy changed by"+str((abs(Ek-1203790.66007)/Ek)))
