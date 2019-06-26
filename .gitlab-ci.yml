@@ -229,8 +229,7 @@ test_suse15:
   <<: *platforms_definition
   stage: test
   script:
-    - export OMPI_MCA_btl_vader_single_copy_mechanism=none #https://github.com/open-mpi/ompi/issues/4948 (INDEED SOME ERROR CHANGED ON 18.04)
-    - export OMPI_MCA_rmaps_base_oversubscribe=yes #https://bitbucket.org/mpi4py/mpi4py/issues/87/multiple-test-errors-with-openmpi-30
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none #https://github.com/open-mpi/ompi/issues/4948
     - install/bin/yade-ci --checks
 
 check_16_04:
