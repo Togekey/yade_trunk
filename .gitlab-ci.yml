@@ -229,7 +229,6 @@ test_suse15:
   <<: *platforms_definition
   stage: test
   script:
-    - export OMPI_MCA_btl_vader_single_copy_mechanism=none #https://github.com/open-mpi/ompi/issues/4948
     - install/bin/yade-ci --checks
 
 check_16_04:
