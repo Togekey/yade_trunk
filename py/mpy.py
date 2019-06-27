@@ -176,6 +176,21 @@ def sendCommand(executors,command,wait=False):
 		return (res if argIsList else res[0])
 	else:
 		return None
+	      
+
+
+def probeRecvMessage(source, tag):
+	msgStat = MPI.Status() 
+	O.subD.comm.Probe(source=source, tag=tag, status=msgStat)
+	if msgStat.tag == tag : print("message size recvd")
+	data = bytearray(msgStat.Get_count(MPI.BYTE))  
+	O.subD.comm.Recv([data, MPI.BYTE], source=source, tag=tag)
+	return data
+      
+	
+      
+      
+	
 
 class Timing_comm():
 	def __init__(self):
