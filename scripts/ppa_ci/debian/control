@@ -62,17 +62,7 @@ Depends:
  gnuplot,
  gtk2-engines-pixbuf,
  libyadedaily (= ${binary:Version}),
- python-yadedaily (= ${binary:Version}),
- python3-matplotlib,
- python3-minieigen,
- python3-pil,
- python3-pyqt5,
- python3-pyqt5.qtsvg,
- python3-pyqt5.qtwebkit,
- python3-tk,
- python3-xlib,
- python3-ipython,
- python3-future,
+ python3-yadedaily (= ${binary:Version}),
  ${python:Depends},
  ${misc:Depends}
 Description: Platform for discrete element modeling
@@ -108,7 +98,7 @@ Description: Platform for discrete element modeling. Libraries
  .
  This package contains yade`s libraries.
 
-Package: python-yadedaily
+Package: python3-yadedaily
 Architecture: any
 Section: python
 Pre-Depends:
