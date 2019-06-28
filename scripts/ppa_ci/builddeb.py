@@ -41,6 +41,9 @@ with fileinput.FileInput(dirpathyade + '/debian/changelog', inplace=True) as fil
 with fileinput.FileInput(dirpathyade + '/debian/changelog', inplace=True) as file:
     for line in file:
         print(line.replace("DATE", email.utils.formatdate(localtime=True)), end='')
+with fileinput.FileInput(dirpathyade + '/debian/rules', inplace=True) as file:
+    for line in file:
+        print(line.replace("VERSIONYADEREPLACE", versiondebian), end='')
 
 print (versiondebian)
 print (dirpath)
