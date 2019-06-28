@@ -147,13 +147,17 @@ def spawnedProcessWaitCommand():
 	global waitingCommands
 	if waitingCommands: return
 	waitingCommands = True
+	sys.stderr.write=sys.stdout.write
 	mprint("I'm now waiting")
 	while 1:
 		while not comm.Iprobe(source=0, tag=_MASTER_COMMAND_):
 			time.sleep(0.0001)
 		command = comm.recv(source=0,tag=_MASTER_COMMAND_)
 		mprint("I will now execute ",command)
-		exec(command)
+		try:
+			exec(command)
+		except:
+			mprint(sys.exc_info())
 		
 def sendCommand(executors,command,wait=False):
 	'''
@@ -161,19 +165,19 @@ def sendCommand(executors,command,wait=False):
 	'''
 	start=time.time()
 	if not mit_mode: mprint("sendCommand in interactive mode only"); return
+	argIsList=isinstance(executors,list)
+	if not argIsList: executors = [executors]
 	if 0 in executors: mprint("master does not accept mpi commands"); return
 	if len(executors)>=numThreads: mprint("executors > numThreads"); return
 	
-	argIsList=isinstance(executors,list)
-	if not argIsList: executors = [executors]	
 	if wait:
-		command="res="+command+";O.subD.comm.send(res,dest="+str(rank)+",tag=_RETURN_VALUE_)"
+		command="resCommand="+command+";O.subD.comm.send(resCommand,dest="+str(rank)+",tag=_RETURN_VALUE_)"
 	for w in executors:
 		O.subD.comm.isend(command,dest=w,tag=_MASTER_COMMAND_)
 	if wait:
-		res= [O.subD.comm.recv(source=w,tag=_RETURN_VALUE_) for w in executors]
+		resCommand= [O.subD.comm.recv(source=w,tag=_RETURN_VALUE_) for w in executors]
 		mprint("sendCommand returned in "+str(time.time()-start)+" s")
-		return (res if argIsList else res[0])
+		return (resCommand if argIsList else res[0])
 	else:
 		return None
 	      
