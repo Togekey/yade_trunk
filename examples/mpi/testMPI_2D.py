@@ -21,6 +21,10 @@ The number of subdomains depends on argument 'n' of mpiexec. Since rank=0 is not
 
 '''
 
+
+
+
+
 NSTEPS=1000 #turn it >0 to see time iterations, else only initilization TODO!HACK
 #NSTEPS=50 #turn it >0 to see time iterations, else only initilization
 N=50; M=50; #(columns, rows) per thread
@@ -45,7 +49,7 @@ if rank is not None: #mpiexec was used
 	numThreads=int(os.getenv('OMPI_COMM_WORLD_SIZE'))
 else: #non-mpi execution, numThreads will still be used as multiplier for the problem size (2 => multiplier is 1)
 	numThreads=2 if len(sys.argv)<4 else (int(sys.argv[3]))
-	print "numThreads",numThreads
+	print("numThreads",numThreads)
 	
 if len(sys.argv)>1: #we then assume N,M are provided as 1st and 2nd cmd line arguments
 	N=int(sys.argv[1]); M=int(sys.argv[2])
@@ -94,8 +98,8 @@ if rank is None: #######  Single-core  ######
 	from yade import timing
 	timing.stats()
 	collectTiming()
-	print "num. bodies:",len([b for b in O.bodies]),len(O.bodies)
-	print "Total force on floor=",O.forces.f(WALL_ID)[1]
+	print ("num. bodies:",len([b for b in O.bodies]),len(O.bodies))
+	print ("Total force on floor=",O.forces.f(WALL_ID)[1])
 else: #######  MPI  ######
 	#import yade's mpi module
 	from yade import mpy as mp
@@ -105,12 +109,11 @@ else: #######  MPI  ######
 	mp.ERASE_REMOTE=True #erase bodies not interacting wit a given subdomain?
 	mp.OPTIMIZE_COM=True #L1-optimization: pass a list of double instead of a list of states
 	mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
-	mp.MERGE_W_INTERACTIONS=False
 	mp.MERGE_SPLIT=mergeSplit
 	mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = bodyCopy and not mergeSplit
 
 	mp.mpirun(NSTEPS)
-	print "num. bodies:",len([b for b in O.bodies]),len(O.bodies)
+	print("num. bodies:",len([b for b in O.bodies]),len(O.bodies))
 	if rank==0:
 		mp.mprint( "Total force on floor="+str(O.forces.f(WALL_ID)[1]))
 		collectTiming()

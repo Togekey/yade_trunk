@@ -33,7 +33,7 @@ if rank is not None: #mpiexec was used
 	numThreads=int(os.getenv('OMPI_COMM_WORLD_SIZE'))
 else: #non-mpi execution, numThreads will still be used as multiplier for the problem size (2 => multiplier is 1)
 	numThreads=2 if len(sys.argv)<4 else (int(sys.argv[3]))
-	print "numThreads",numThreads
+	print ("numThreads",numThreads)
 	
 if len(sys.argv)>1: #we then assume N,M are provided as 1st and 2nd cmd line arguments
 	N=int(sys.argv[1]); M=int(sys.argv[2])
@@ -65,7 +65,7 @@ tsIdx=O.engines.index(timeStepper) #remove the automatic timestepper. Very impor
 O.engines=O.engines[0:tsIdx]+O.engines[tsIdx+1:]
 #O.dt=0.00002 #this very small timestep will make it possible to run 2000 iter without merging
 O.dt=0.0005#very important, we don't want subdomains to use many different timesteps... 
-print "num bodies = ", len(O.bodies)
+print("num bodies = ", len(O.bodies))
 
 
 #########  RUN  ##########
@@ -97,19 +97,19 @@ if rank is None: #######  Single-core  ######
 	from yade import timing
 	timing.stats()
 	collectTiming()
-	print "num. bodies:",len([b for b in O.bodies]),len(O.bodies)
-	print "Total force on floor=",O.forces.f(WALL_ID)[1] 
-        print "num interactions = ", len(O.interactions)
+	print ("num. bodies:",len([b for b in O.bodies]),len(O.bodies))
+	print ("Total force on floor=",O.forces.f(WALL_ID)[1] )
+        print ("num interactions = ", len(O.interactions)) 
         fl = open('intrs_serial.txt', 'w')
         for i in O.interactions:
 	  a = i.id1; b = i.id2
 	  if a > b : a,b = b,a
 	  fl.write('%s %s\n' % (a,b))
 	fl.close()
-	print "Total force on floor at 2 =",O.forces.f(WALL_ID)[1] 
+	print( "Total force on floor at 2 =",O.forces.f(WALL_ID)[1] )
 	O.save('mergeSerial.yade')
 	b = O.bodies[WALL_ID]
-        print "num real interactions serial : " , O.interactions.countReal()
+        print("num real interactions serial : " , O.interactions.countReal())
 else: #######  MPI  ######
 	#import yade's mpi module
 	#from yade import mpy as mp TODO!HACK
@@ -125,7 +125,7 @@ else: #######  MPI  ######
         mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = False 
         mp.WALL_ID = WALL_ID
 	mp.mpirun(NSTEPS)
-	print "num. bodies:",len([b for b in O.bodies]),len(O.bodies) 
+	print("num. bodies:",len([b for b in O.bodies]),len(O.bodies))
 	if rank==0:
 		fl = open('intrs_parallel.txt', 'w')
 		for i in O.interactions:
@@ -143,7 +143,7 @@ else: #######  MPI  ######
             # just for saving and checking the state after merge.
             #
 	    O.save('mergedScene.yade')
-            print "force recieved from workers  = ", O.forces.f(WALL_ID)[1] 
+            print ("force recieved from workers  = ", O.forces.f(WALL_ID)[1])
             #O.forces.reset()
             #collider.__call__()
             ##print "num interactions = " , len(O.interactions) 
@@ -154,7 +154,7 @@ else: #######  MPI  ######
 	    mp.mprint ("len of intrs of  WALL_ID ---> id = ", b.id, "  num inters =  ", len(b.intrs())); 
             mp.mprint ("num merges = ", mp.NUM_MERGES)
             collectMergeInfo(len(spIds), len(b.intrs()),mp.NUM_MERGES,O.forces.f(WALL_ID)[1],O.interactions.countReal()) 
-            print "num interactions real = ", O.interactions.countReal()
+            print("num interactions real = ", O.interactions.countReal())
 
 	mp.MPI.Finalize()
 #exit()
