@@ -36,9 +36,11 @@ stages:
   <<: *platforms_definition
   stage: cmake
   script:
+    - update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.gold" 10
+    - update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.bfd" 20
     - mkdir build && cd build
-    - export CC="ccache gcc"
-    - export CXX="ccache g++"
+    - export CC="ccache mpicc"
+    - export CXX="ccache mpicxx"
     - cmake -DSUFFIX=-ci -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_PREFIX=../install -DPYTHON_VERSION=3 -DDISABLE_SAVE_TEMPS=1 ..
     - ccache -s
   artifacts:
