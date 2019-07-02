@@ -26,7 +26,7 @@ stages:
         esac)
     - echo $JOBSNUM
     - export CCACHE_DIR=${CCACHE_WORK_DIR}
-    - DEB_BUILD_OPTIONS=noddebs dpkg-buildpackage -j$JOBSNUM
+    - dpkg-buildpackage -j$JOBSNUM
     - ccache -s
     - rm -rf $CI_PROJECT_DIR/deb/yadedaily
     - ls -l $CI_PROJECT_DIR/deb
