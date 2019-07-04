@@ -232,7 +232,7 @@ test_suse15:
     - apt update
     - apt install pip3
     - apt remove python3-mpi4py
-    - pip3 install mpi4py
+    - yes | pip3 install mpi4py
     - install/bin/yade-ci --checks
 
 check_16_04:
