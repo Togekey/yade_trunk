@@ -230,7 +230,7 @@ test_suse15:
   stage: test
   script:
     - apt update
-    - apt install pip3
+    - apt install python3-pip
     - apt remove python3-mpi4py
     - yes | pip3 install mpi4py
     - install/bin/yade-ci --checks
