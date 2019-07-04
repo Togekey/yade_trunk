@@ -186,6 +186,9 @@ test_16_04:
     - make_16_04
 
 test_18_04:
+  apt install pip3
+  apt remove python3-mpi4py
+  pip3 install mpi4py
   <<: *test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
   only:
