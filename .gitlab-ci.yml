@@ -229,6 +229,7 @@ test_suse15:
   <<: *platforms_definition
   stage: test
   script:
+    - apt update
     - apt install pip3
     - apt remove python3-mpi4py
     - pip3 install mpi4py
