@@ -121,6 +121,7 @@ def initialize():
 			if (userScriptInCheckList==""): #normal case
 				comm = MPI.COMM_WORLD.Spawn(sys.yade_argv[0], args=sys.yade_argv[1:],maxprocs=numThreads-process_count).Merge()
 			else: #HACK, otherwise, handle execution from checkList.py otherwise will we run checkList.py in parallel
+			    os.environ['OMPI_MCA_rmaps_base_oversubscribe'] = "yes"
 				comm = MPI.COMM_WORLD.Spawn(sys.yade_argv[0], args=[userScriptInCheckList],maxprocs=numThreads-process_count).Merge()
 			#TODO: if process_count>numThreads, free some workers
 			rank=0
