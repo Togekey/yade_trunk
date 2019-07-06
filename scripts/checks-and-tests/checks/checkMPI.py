@@ -1,5 +1,4 @@
 
-
 # Possible executions of this script
 # ./yadempi script.py #interactive will spawn 3 additional workers
 # mpiexec -n 4 ./yadempi script.py #non interactive
@@ -80,7 +79,7 @@ mp.MERGE_SPLIT=mergeSplit
 mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = bodyCopy and not mergeSplit
 mp.VERBOSE_OUTPUT=True
 
-mp.mpirun(NSTEPS,4)
+mp.mpirun(NSTEPS,numThreads)
 mp.mprint( "num. bodies:",len([b for b in O.bodies]),len(O.bodies))
 mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
 
