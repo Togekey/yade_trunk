@@ -138,6 +138,7 @@ Some of them are only optional. The last ones are only relevant for using the fl
 * `OpenBLAS <http://www.openblas.net/>`_ optimized and parallelized alternative to the standard blas+lapack (fluid coupling, optional)
 * `Metis <http://glaros.dtc.umn.edu/gkhome/metis/metis/overview/>`_ matrix preconditioning (fluid coupling, optional)
 * `OpenMPI <https://www.open-mpi.org/software/>`_ library for parallel distributed computing (For MPI and OpenFOAM coupling, optional)
+* `python3-mpi4py <https://bitbucket.org/mpi4py/>`_ MPI for Python (For MPI, optional)
 
 Most of the list above is very likely already packaged for your distribution. In case you are confronted
 with some errors concerning not available packages (e.g., package libmetis-dev is not available) it may be necessary
