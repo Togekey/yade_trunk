@@ -78,6 +78,7 @@ mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by p
 mp.MERGE_W_INTERACTIONS=False
 mp.MERGE_SPLIT=mergeSplit
 mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = bodyCopy and not mergeSplit
+mp.VERBOSE_OUTPUT=True
 
 mp.mpirun(NSTEPS,4)
 mp.mprint( "num. bodies:",len([b for b in O.bodies]),len(O.bodies))
