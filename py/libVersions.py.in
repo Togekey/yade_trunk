@@ -146,9 +146,18 @@ def getAllVersionsCmake():
 		addVer("sphinx", spver[0] , spver[1] , spver[2] , '%i.%i.%i-%s-%i'%spver )
 	except:
 		pass
-	return ret
 	# 21. clp
 	addVer("clp",'${CLP_VERSION_MAJOR}','${CLP_VERSION_MINOR}','${CLP_VERSION_RELEASE}','${CLP_VERSION}')
+	# 22. PyMPI
+	try:
+		import mpi4py
+		mpi4ver=mpi4py.__version__
+		mpi4vertab=mpi4py.__version__.split('.')
+		addVer("mpi4py", mpi4vertab[0] , mpi4vertab[1] , mpi4vertab[2] , mpi4ver )
+	except:
+		pass
+
+	return ret
 
 def printAllVersions(rstFormat=False):
 	"""

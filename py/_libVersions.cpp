@@ -6,6 +6,28 @@
 
 namespace py = boost::python;
 
+py::tuple extractNumbers(std::string verStr, std::string what) {
+	std::stringstream ss(verStr);
+	std::vector<int> verNum{};
+	string temp;
+	int found;
+	while (!ss.eof()) {
+		ss >> temp;
+		if (std::stringstream(temp) >> found) { verNum.push_back(found); }
+		temp = "";
+	}
+	if(verNum.size()>3) {
+		LOG_WARN(what << ": more than 3 numbers extracted from " << verStr);
+	}
+	switch(verNum.size()) {
+		case 0 : return py::make_tuple(0,0,0);
+		case 1 : return py::make_tuple(verNum[0],0,0);
+		case 2 : return py::make_tuple(verNum[0],verNum[1],0);
+		default: return py::make_tuple(verNum[0],verNum[1],verNum[2]);
+	}
+}
+
+
 // I used the list in https://yade-dem.org/doc/installation.html#prerequisites
 // If we need a version of some library not listed in doc/sphinx/installation.rst, then it must also be added to that list!
 
@@ -230,6 +252,8 @@ namespace py = boost::python;
 	#include <mpi.h>
 // https://www.open-mpi.org/software/ompi/versions/
 	py::list mpiVer() {
+// FIXME (?): in file https://bitbucket.org/mpi4py/mpi4py/src/master/src/lib-mpi/config.h they are detecting various mpi vendors. Might be useful to use their method instead of this method below.
+//            maybe using their method will fix this yade --test warning while detecting mpi version?
 		py::list ret;
 		#if defined(OMPI_MAJOR_VERSION) && defined(OMPI_MINOR_VERSION) && defined(OMPI_RELEASE_VERSION)
 		ret.append( py::make_tuple                  (OMPI_MAJOR_VERSION   ,                                   OMPI_MINOR_VERSION  ,                                    OMPI_RELEASE_VERSION ));
@@ -269,6 +293,40 @@ namespace py = boost::python;
 	py::list clpVer() { return {}; }
 #endif
 
+
+// 19. mpi4py
+/*
+ * It turns out that getting PyMPI version in C++ is not possible. Because it's a python library ;)
+ * The PyMPI_Get_version and PyMPI_Get_library_version are only #defines (in file https://bitbucket.org/mpi4py/mpi4py/src/master/src/lib-mpi/fallback.h )
+ * that point to original MPI_Get_version, so using them makes no sense at all.
+ *
+#ifdef YADE_MPI
+	#include <mpi.h>
+	#include <mpi4py/mpi4py.h> // for passing MPI_Comm from python to c++
+	py::list mpi4PyVer() {
+		py::list ret;
+		// the PyMPI uses char array[], which is rather annoying. And this version string can be very long sometimes.
+		char charStr[10000] = "unknown_version";
+		int  rlen=0;
+		// and I don't know if this is the correct way to do this. But I didn't find anything else.
+		PyMPI_Get_library_version(charStr,&rlen);
+		std::string verStr(charStr);
+		// now I will try to parse this string to extract the numbers. I suppose I will end up with MPI_VERSION, MPI_SUBVERSION, but in fact
+		// I don't know which implementation of PyMPI_Get_library_version I am calling here, so I cannot be sure what will be the result.
+
+		// I want to extract numbers using stringstream, to make it simpler I replace '.' with ' '.
+		std::replace( verStr.begin(), verStr.end(), '.' , ' ');
+
+		ret.append( extractNumbers(verStr , "mpi4PyVer()") );
+		ret.append( verStr );
+		return ret;
+	}
+#else
+	py::list mpi4PyVer() { return {}; }
+#endif
+*
+*/
+
 py::dict getAllVersionsCpp(){
 	py::dict ret;
 	// I found relevant names with commad:
@@ -289,6 +347,7 @@ py::dict getAllVersionsCpp(){
 	ret["openblas"     ] = openblasVer();
 	ret["metis"        ] = metisVer();
 	ret["mpi"          ] = mpiVer();
+//	ret["mpi4py"       ] = mpi4PyVer();
 	ret["clp"          ] = clpVer();
 	return ret;
 }
