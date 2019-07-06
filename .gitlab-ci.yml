@@ -243,11 +243,6 @@ check_16_04:
 check_18_04:
   <<: *check_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
-  before_script:
-    - apt update
-    - apt install -y python3-pip
-    - apt remove -y python3-mpi4py
-    - yes | pip3 install --disable-pip-version-check mpi4py
   only:
     - master
     - merge_request
