@@ -1,4 +1,3 @@
-
 # Possible executions of this script
 # ./yadempi script.py #interactive will spawn 3 additional workers
 # mpiexec -n 4 ./yadempi script.py #non interactive
@@ -87,6 +86,7 @@ Ek=0
 if mp.rank==0:
 	Ek=sum(mp.sendCommand([1,2,3],"kineticEnergy()",True))
 	mp.mprint("got Ek=",Ek)
-	if (abs(Ek-1203790.66007)/Ek)>1e-10:
+	refEk=1203790.66007
+	if (abs(Ek-refEk)/refEk)>1e-10:
 		raise YadeCheckError("kinetic energy changed by"+str((abs(Ek-1203790.66007)/Ek)))
 
