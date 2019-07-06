@@ -243,6 +243,8 @@ check_16_04:
 check_18_04:
   <<: *check_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
+  before_script:
+    - export OMPI_MCA_rmaps_base_oversubscribe=1
   only:
     - master
     - merge_request
@@ -261,6 +263,8 @@ check_stretch:
 check_buster:
   <<: *check_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+  before_script:
+    - export OMPI_MCA_rmaps_base_oversubscribe=1
   only:
     - master
     - merge_request
