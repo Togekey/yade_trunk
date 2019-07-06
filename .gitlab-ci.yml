@@ -99,12 +99,12 @@ cmake_suse15:
     - update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.bfd" $LINK_REGULAR
     - ld --version
     - export JOBSNUM=$(case $CI_RUNNER_DESCRIPTION in
-        "y_4pak_64cpu_256RAM_4TB_docker") echo "43" ;;
-        "c_4pak_64cpu_256RAM_4TB_docker") echo "43" ;;
-        "y_6pak_48cpu_128RAM_4TB_docker") echo "46" ;;
-        "c_6pak_48cpu_128RAM_4TB_docker") echo "46" ;;
-        "y_7pak_48cpu_128RAM_1TB_docker") echo "46" ;;
-        "c_7pak_48cpu_128RAM_1TB_docker") echo "46" ;;
+        "y4pak") echo "43" ;;
+        "c4pak") echo "43" ;;
+        "y6pak") echo "46" ;;
+        "c6pak") echo "46" ;;
+        "y7pak") echo "46" ;;
+        "c7pak") echo "46" ;;
         "yade-runner") echo "12" ;;
         "yade-runner-01") echo "1" ;;
         *) echo "8";;
