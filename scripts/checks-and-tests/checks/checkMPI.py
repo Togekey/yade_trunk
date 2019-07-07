@@ -88,5 +88,5 @@ if mp.rank==0:
 	mp.mprint("got Ek=",Ek)
 	refEk=1203790.66007
 	if (abs(Ek-refEk)/refEk)>1e-10:
-		raise YadeCheckError("kinetic energy changed by"+str((abs(Ek-1203790.66007)/Ek)))
+		raise YadeCheckError("kinetic energy changed by"+str((Ek-refEk)/refEk))
 
