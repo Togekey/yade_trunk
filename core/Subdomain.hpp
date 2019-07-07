@@ -105,8 +105,10 @@ class Subdomain: public Shape {
 		unsigned int N= b_ids.size();
 		if ((N*13) != input.size()) LOG_ERROR("size mismatch"<<N*13<<" vs "<<input.size()<< " in "<<scene->subdomain);
 		for (unsigned k=0; k<N; k++) {
-			const shared_ptr<State>& s = (*(scene->bodies))[b_ids[k]]->state;
 			unsigned int idx=k*13;
+			const shared_ptr<Body>& b =  (*(scene->bodies))[b_ids[k]]; 
+			if (!b) {LOG_ERROR(" Body id not found " << b_ids[k] << "  rank = " << subdomainRank); return; }
+			const shared_ptr<State>& s = (*(scene->bodies))[b_ids[k]]->state;
 			s->pos=Vector3r(input[idx],input[idx+1],input[idx+2]);
 			s->vel=Vector3r(input[idx+3],input[idx+4],input[idx+5]);
 			s->angVel=Vector3r(input[idx+6],input[idx+7],input[idx+8]);

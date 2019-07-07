@@ -251,6 +251,7 @@ void Subdomain::receiveBodies(const int sender){
 	std::vector<shared_ptr<MPIBodyContainer> > mpiBCVect(1,mpiBC); //setBodiesToBodyContainer needs a vector of MPIBodyContainer, so create one of size 1.
 	Scene* scene = Omega::instance().getScene().get();
 	setBodiesToBodyContainer(scene,mpiBCVect,false, true);
+	delete[] cbuf; 
 }
 
 void Subdomain::completeSendBodies(){
@@ -310,7 +311,8 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 			}else{
 				if (!b) newBody->intrs.clear(); //we can clear here, interactions are stored in intrsToSet
 				else newBody->intrs=b->intrs;
-				b=newBody;  
+				b = newBody; 
+				//bodyContainer->insertAtId(newBody, newBody->id);  
 			}
 	//if(!resetInteractions)
 			for (auto mapIter = intrsToSet.begin(); mapIter != intrsToSet.end(); ++mapIter){
@@ -339,12 +341,11 @@ void Subdomain::splitBodiesToWorkers(const bool& eraseWorkerIds){
 		idsToSend.resize(commSize-1); 
 		for (const auto& b : bodyContainer->body){
 			if (!b->getIsSubdomain()){
-				if (!(b->subdomain==master)){idsToSend[b->subdomain-1].push_back(b->id);}
+				if (b->subdomain != master){idsToSend[b->subdomain-1].push_back(b->id);}
 				for (const auto& bIntrs : b->intrs){
-					const Body::id_t& otherId = bIntrs.first; 
-					
-					//shared_ptr<Interaction> I = bIntrs.second; 
-					//if (b->id == I->getId1()){otherId = I->getId2(); }else{otherId = I->getId1();}
+					 Body::id_t otherId; 
+					shared_ptr<Interaction> I = bIntrs.second; 
+					if (b->id == I->getId1()){otherId = I->getId2(); }else{otherId = I->getId1();}
 					const shared_ptr<Body>& otherBody = (*bodyContainer)[otherId]; 
 					if (otherBody->getIsSubdomain()){
 						idsToSend[otherBody->subdomain-1].push_back(b->id); 
@@ -357,6 +358,7 @@ void Subdomain::splitBodiesToWorkers(const bool& eraseWorkerIds){
 	if ((subdomainRank != master) && (eraseWorkerIds)){
 		for(const auto& b : bodyContainer->body){
 			if (!b){continue; }
+			if (b->subdomain ==0){continue; }
 			if (!b->getIsSubdomain()){bodyContainer->erase(b->id, true); }
 		}
 		clearSubdomainIds(); 
@@ -465,7 +467,7 @@ void Subdomain::processReqsAll(std::vector<MPI_Request>& mpiReqs, std::vector<MP
 void Subdomain::clearRecvdCharBuff(std::vector<char*>& rcharBuff) {
 
 	for (std::vector<char*>::iterator cIter = rcharBuff.begin(); cIter != rcharBuff.end(); ++cIter){
-	    delete (*cIter);
+	    delete[] (*cIter);
 	  }
 	if (subdomainRank != master){ rcharBuff.clear(); } // assuming master alwasy recieves from workers, hence the size of this vector for master is fixed.
 }
