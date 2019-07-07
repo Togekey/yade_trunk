@@ -33,7 +33,7 @@ stages:
   artifacts:
     paths:
       - ./deb
-    expire_in: 1 day
+    expire_in: 5 day
   cache:
     paths:
       - ${CCACHE_WORK_DIR}
