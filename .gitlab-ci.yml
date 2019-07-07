@@ -22,7 +22,7 @@ stages:
 .plaftorms_template: &platforms_definition
   only:
     - master
-#    - merge_request
+    - merge_request
 
 # stage: cmake uses ccache for faster compilation. ccache works only with -DCHUNKSIZE=1
 # Important: to get ccache to work an external volume must be mounted by gitlab-runner (in config file: /etc/gitlab-runner/config.toml)
@@ -49,9 +49,6 @@ stages:
 cmake_16_04:
   <<: *cmake_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
-  only:
-    - master
-    - merge_request
 
 cmake_18_04:
   <<: *cmake_definition
@@ -64,16 +61,10 @@ cmake_18_04:
 cmake_stretch:
   <<: *cmake_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
-  only:
-    - master
-    - merge_request
 
 cmake_buster:
   <<: *cmake_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
-  only:
-    - master
-    - merge_request
 
 cmake_suse15:
   <<: *cmake_definition
@@ -127,9 +118,6 @@ cmake_suse15:
 make_16_04:
   <<: *make_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
-  only:
-    - master
-    - merge_request
   dependencies:
     - cmake_16_04
 
@@ -145,18 +133,12 @@ make_18_04:
 make_stretch:
   <<: *make_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
-  only:
-    - master
-    - merge_request
   dependencies:
     - cmake_stretch
 
 make_buster:
   <<: *make_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
-  only:
-    - master
-    - merge_request
   dependencies:
     - cmake_buster
 
@@ -179,9 +161,6 @@ make_suse15:
 test_16_04:
   <<: *test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
-  only:
-    - master
-    - merge_request
   dependencies:
     - make_16_04
 
@@ -197,18 +176,12 @@ test_18_04:
 test_stretch:
   <<: *test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
-  only:
-    - master
-    - merge_request
   dependencies:
     - make_stretch
 
 test_buster:
   <<: *test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
-  only:
-    - master
-    - merge_request
   dependencies:
     - make_buster
 
@@ -228,25 +201,22 @@ test_suse15:
 .check_template: &check_definition
   <<: *platforms_definition
   stage: test
+#  before_script:
+#    - export OMPI_MCA_rmaps_base_oversubscribe=1
+#    - export OMPI_MCA_btl_vader_single_copy_mechanism=none
+#    - export OMPI_MCA_mpi_yield_when_idle=1 #degraded mode when oversubscribing (https://www.open-mpi.org/faq/?category=running#oversubscribing)
   script:
     - install/bin/yade-ci --checks
 
 check_16_04:
   <<: *check_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
-  only:
-    - master
-    - merge_request
   dependencies:
     - make_16_04
 
 check_18_04:
   <<: *check_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
-  before_script:
-    - export OMPI_MCA_rmaps_base_oversubscribe=1
-    - export OMPI_MCA_btl_vader_single_copy_mechanism=none
-    - export OMPI_MCA_mpi_yield_when_idle=1
   only:
     - master
     - merge_request
@@ -256,25 +226,12 @@ check_18_04:
 check_stretch:
   <<: *check_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
-  before_script:
-    - export OMPI_MCA_rmaps_base_oversubscribe=1
-    - export OMPI_MCA_btl_vader_single_copy_mechanism=none
-    - export OMPI_MCA_mpi_yield_when_idle=1 #degraded mode when oversubscribing (https://www.open-mpi.org/faq/?category=running#oversubscribing)
-  only:
-    - master
-    - merge_request
   dependencies:
     - make_stretch
 
 check_buster:
   <<: *check_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
-  before_script:
-    - export OMPI_MCA_rmaps_base_oversubscribe=1
-    - export OMPI_MCA_btl_vader_single_copy_mechanism=none
-  only:
-    - master
-    - merge_request
   dependencies:
     - make_buster
 
