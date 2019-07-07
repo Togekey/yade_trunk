@@ -32,6 +32,7 @@ import sys,os,inspect
 import time
 from mpi4py import MPI
 import numpy as np
+import yade.bisectionDecomposition as dd
 
 this = sys.modules[__name__]
 
@@ -53,6 +54,7 @@ MERGE_SPLIT = False
 MERGE_W_INTERACTIONS = True
 COPY_MIRROR_BODIES_WHEN_COLLIDE = True 
 RESET_SUBDOMAINS_WHEN_COLLIDE = False
+DOMAIN_DECOMPOSITION = False
 NUM_MERGES = 0 
 
 
@@ -589,7 +591,15 @@ def splitScene():
 	Split a monolithic scene into distributed scenes on threads
 	precondition: the bodies have subdomain no. set in user script
 	'''
-	if not O.splittedOnce: 
+	
+	
+	
+	
+	if not O.splittedOnce:
+		if DOMAIN_DECOMPOSITION: 
+			if rank == 0:
+				decomposition = dd.decompBodiesSerial(comm) 
+				decomposition.partitionDomain() 
 
 		if rank == 0: 
 			O._sceneObj.subdomain=0
@@ -665,7 +675,11 @@ def splitScene():
 		O.splittedOnce = True 
 		
 	else: 
-		O.subD.splitBodiesToWorkers(RESET_SUBDOMAINS_WHEN_COLLIDE)
+		if (DOMAIN_DECOMPOSITION and RESET_SUBDOMAINS_WHEN_COLLIDE):
+			if rank == 0:
+				decomposition = dd.decompBodiesSerial(comm) 
+				decomposition.partitionDomain() 
+			O.subD.splitBodiesToWorkers(RESET_SUBDOMAINS_WHEN_COLLIDE)
 		if rank == 0 : O.interactions.clear()
 		updateMirrorIntersections()
 		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkNeedCollide.dead = False
