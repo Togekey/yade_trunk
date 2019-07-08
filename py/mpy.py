@@ -34,6 +34,8 @@ from mpi4py import MPI
 import numpy as np
 import yade.bisectionDecomposition as dd
 
+sys.stderr.write=sys.stdout.write #so we see error messages from workers
+
 this = sys.modules[__name__]
 
 comm = MPI.COMM_WORLD
@@ -332,8 +334,8 @@ def updateDomainBounds(subdomains): #subdomains is the list of subdomains by bod
 	for r in range(1,numThreads):
 		O.bodies[subdomains[r-1]].shape.boundsMin = recv_buff[6*r:6*r+3]
 		O.bodies[subdomains[r-1]].shape.boundsMax = recv_buff[3+6*r:6+6*r]
-		if(VERBOSE_OUTPUT):#condition here to avoid concatenation overhead
-			mprint("Updated ", O.bodies[subdomains[r-1]].subdomain, " with min=", O.bodies[subdomains[r-1]].shape.boundsMin," and max=", O.bodies[subdomains[r-1]].shape.boundsMax)
+		#if(VERBOSE_OUTPUT):#condition here to avoid concatenation overhead
+			#mprint("Updated ", O.bodies[subdomains[r-1]].subdomain, " with min=", O.bodies[subdomains[r-1]].shape.boundsMin," and max=", O.bodies[subdomains[r-1]].shape.boundsMax)
 
 def maskedPFacet(pf, boolArray):
 	'''
@@ -392,6 +394,7 @@ def genLocalIntersections(subdomains):
 			for i in intrs:
 				otherId=i.id1 if i.id2==sdId else i.id2
 				b=O.bodies[otherId]
+				if otherId==10604: mprint("====GOT 10604======(1)")
 				if not b:continue #in case the body was deleted
 				if b.subdomain==0:
 					if isinstance(b.shape,PFacet):
@@ -406,6 +409,7 @@ def genLocalIntersections(subdomains):
 		for i in intrs:
 			otherId=i.id1 if i.id2==sdId else i.id2
 			b=O.bodies[otherId]
+			if otherId==10604: mprint("====GOT 10604======")
 			if not b:continue #in case the body was deleted
 			if b.subdomain!=rank: continue
 			if b.isSubdomain: intersections[rank].append(subdIdx) #intersecting subdomain (will need to receive updated positions from there)
@@ -461,7 +465,7 @@ def sendRecvStates():
 				pstates.append( comm.irecv(buf[-1],otherDomain, tag=_ID_STATE_SHAPE_))  #warning leaving buffer size undefined crash for large subdomains (MPI_ERR_TRUNCATE: message truncated)
 			else:
 				O.subD.mpiIrecvStates(otherDomain) #use yade's messages (coded in cpp)
-				wprint("Receivers set for ",otherDomain)
+				#wprint("Receivers set for ",otherDomain)
 		#mprint("prepared receive: "+str(time.time()-start)); start=time.time()
 	
 	#____2. broadcast new positions (should be non-blocking if n>2, else lock) - this includes subdomain bodies intersecting the current one	
@@ -476,9 +480,9 @@ def sendRecvStates():
 			if not USE_CPP_MPI:
 				reqs.append(comm.isend(O.subD.getStateValues(k), dest=k, tag=_ID_STATE_SHAPE_)) #should be non-blocking if n>2, else lock?
 			else:
-				wprint("Send state to ",k)
+				#wprint("Send state to ",k)
 				O.subD.mpiSendStates(k)
-				wprint("Sent state to ",k)
+				#wprint("Sent state to ",k)
 		for r in reqs: r.wait() #empty if USE_CPP_MPI
 		
 	#____3. receive positions and update bodies
@@ -702,7 +706,7 @@ def updateMirrorIntersections():
 	subD.mirrorIntersections=[[] for n in range(numThreads)]
 	if rank==0:#master domain
 		for worker in range(1,numThreads):#FIXME: we actually don't need so much data since at this stage the states are unchanged and the list is used to re-bound intersecting bodies, this is only done in the initialization phase, though
-			wprint("sending mirror intersections to "+str(worker)+" ("+str(len(subD.intersections[worker]))+" bodies)")
+			mprint("sending mirror intersections to "+str(worker)+" ("+str(len(subD.intersections[worker]))+" bodies), "+str(subD.intersections[worker]))
 			timing_comm.send("splitScene_master_domain",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
 	else:
 		# from master
@@ -724,7 +728,7 @@ def updateMirrorIntersections():
 		#from workers
 		for worker in subD.intersections[rank]:
 			if worker==0: continue #already received above
-			#wprint("subD.intersections["+str(rank)+"]: "+str(subD.intersections[rank]))
+			wprint("subD.intersections["+str(rank)+"]: "+str(subD.intersections[rank]))
 			buf = bytearray(1<<22) #CRITICAL
 			reqs.append([worker,comm.irecv(buf, worker, tag=_MIRROR_INTERSECTIONS_)])
 
@@ -736,54 +740,58 @@ def updateMirrorIntersections():
 		nn=0
 		for req in reqs:
 			if subD.intersections[rank][nn]==0: nn+=1
-			sd=subD.intersections[rank][nn]
 			nn+=1
 			intrs=req[1].wait()
-			wprint("Received mirrors from: ", sd, " : ",intrs)
+			wprint("Received mirrors from: ", req[0], " : ",intrs)
 			subD.mirrorIntersections = subD.mirrorIntersections[0:req[0]]+[intrs]+subD.mirrorIntersections[req[0]+1:]
 			reboundRemoteBodies(intrs)
 			
 			
 		
 		if(ERASE_REMOTE): eraseRemote()
-		"""
-		" NOTE: FK, what to do here:
-		" 1- all threads loop on reqs, i.e the intersecting subdomains of the current subdomain.
-		" 2- during this loop, check whether the current subdomain needs bodies from the intersecting ones
-		" 3- in all cases, isend the ids needed, (if no ids needed send empty array)
-		" 3.1- build a ranks list "requestedSomethingFrom" to loop later on to receive data
-		" 4- loop again on reqs to get the ids needed by other subdomains (with blocking recv as we used isend)
-		" 5- if the data recved is empty (nothing requested), do nothing. Else isend the bodies (c++)
-		" 6- loop on "requestedSomethingFrom" ranks and recv the bodies (blocking, c++, using MPI_Probe to know the message size)
-		" 7- comm.barrier(), just in case
-		"""
-		if((COPY_MIRROR_BODIES_WHEN_COLLIDE and O.splittedOnce) or (MERGE_W_INTERACTIONS and O.splittedOnce)):
-			requestedSomethingFrom=[]
-			reqs=[[req[0]] for req in reqs]
-			for req in reqs:
+	"""
+	" NOTE: FK, what to do here:
+	" 1- all threads loop on reqs, i.e the intersecting subdomains of the current subdomain.
+	" 2- during this loop, check whether the current subdomain needs bodies from the intersecting ones
+	" 3- in all cases, isend the ids needed, (if no ids needed send empty array)
+	" 3.1- build a ranks list "requestedSomethingFrom" to loop later on to receive data
+	" 4- loop again on reqs to get the ids needed by other subdomains (with blocking recv as we used isend)
+	" 5- if the data recved is empty (nothing requested), do nothing. Else isend the bodies (c++)
+	" 6- loop on "requestedSomethingFrom" ranks and recv the bodies (blocking, c++, using MPI_Probe to know the message size)
+	" 7- comm.barrier(), just in case
+	"""
+	if((COPY_MIRROR_BODIES_WHEN_COLLIDE and O.splittedOnce) or (MERGE_W_INTERACTIONS and O.splittedOnce)):
+		requestedSomethingFrom=[]
+		if rank>0: #master doesn't need bodies
+			#reqs=subD.intersections[rank]
+			for worker in subD.intersections[rank]:
 				bodiesToImport=[]
-				worker=req[0]
-				if(worker==0):continue
+				#worker=req[0]
+				#if(worker==0):continue
 				for mirrorBodyId in subD.mirrorIntersections[worker]:
-					if not isinstance(O.bodies[mirrorBodyId],Body):
+					if O.bodies[mirrorBodyId]==None:
 						bodiesToImport+=[mirrorBodyId]
 				if(len(bodiesToImport)>0):
-					wprint("I request ids ",bodiesToImport, " from ",worker)
 					requestedSomethingFrom.append(worker)
-				req.append(comm.isend(bodiesToImport, worker, tag=_MIRROR_INTERSECTIONS_))
-			for req in reqs:
-				worker=req[0]
-				requestedIds=comm.recv(None, worker, tag=_MIRROR_INTERSECTIONS_)
+				wprint("I request ids ",bodiesToImport, " from ",worker)
+				comm.isend(bodiesToImport, worker, tag=_MIRROR_INTERSECTIONS_)
+		wprint("will wait requests from ",subD.intersections[rank])
+		for worker in subD.intersections[rank]:
+			if worker!=0:
+				wprint("waiting requests from ",worker)
+				requestedIds=comm.recv(source=worker, tag=_MIRROR_INTERSECTIONS_)
 				if(len(requestedIds)>0):
 					wprint("I will now send ",requestedIds," to ",worker)
 					subD.sendBodies(worker,requestedIds)
-			
-			for worker in requestedSomethingFrom:
-				subD.receiveBodies(worker)
-			subD.completeSendBodies();
+		
+		for worker in requestedSomethingFrom:
+			subD.receiveBodies(worker)
+		subD.completeSendBodies();
 	
 	collider.doSort = True
+	start=time.time()
 	collider.__call__()
+	mprint("collider time ",time.time()-start)
 	#maxVelocitySq is normally reset in NewtonIntegrator in the same iteration as bound dispatching, since Newton will not run before next iter in our case we force that value to avoid another collision detection at next step
 	utils.typedEngine("NewtonIntegrator").maxVelocitySq=0.5
 
