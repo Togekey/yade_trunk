@@ -394,7 +394,6 @@ def genLocalIntersections(subdomains):
 			for i in intrs:
 				otherId=i.id1 if i.id2==sdId else i.id2
 				b=O.bodies[otherId]
-				if otherId==10604: mprint("====GOT 10604======(1)")
 				if not b:continue #in case the body was deleted
 				if b.subdomain==0:
 					if isinstance(b.shape,PFacet):
@@ -409,7 +408,6 @@ def genLocalIntersections(subdomains):
 		for i in intrs:
 			otherId=i.id1 if i.id2==sdId else i.id2
 			b=O.bodies[otherId]
-			if otherId==10604: mprint("====GOT 10604======")
 			if not b:continue #in case the body was deleted
 			if b.subdomain!=rank: continue
 			if b.isSubdomain: intersections[rank].append(subdIdx) #intersecting subdomain (will need to receive updated positions from there)
@@ -699,14 +697,16 @@ def updateMirrorIntersections():
 	unboundRemoteBodies()
 	collider.boundDispatcher.__call__()
 	updateDomainBounds(subD.subdomains) #triggers communications
+	start=time.time()
 	collider.__call__() #see [1]
+	wprint("collider time(1)=", time.time()-start)
 	subD.intersections=genLocalIntersections(subD.subdomains)
 	
 	#update mirror intersections so we know message sizes in advance
 	subD.mirrorIntersections=[[] for n in range(numThreads)]
 	if rank==0:#master domain
 		for worker in range(1,numThreads):#FIXME: we actually don't need so much data since at this stage the states are unchanged and the list is used to re-bound intersecting bodies, this is only done in the initialization phase, though
-			mprint("sending mirror intersections to "+str(worker)+" ("+str(len(subD.intersections[worker]))+" bodies), "+str(subD.intersections[worker]))
+			wprint("sending mirror intersections to "+str(worker)+" ("+str(len(subD.intersections[worker]))+" bodies), "+str(subD.intersections[worker]))
 			timing_comm.send("splitScene_master_domain",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
 	else:
 		# from master
@@ -791,7 +791,7 @@ def updateMirrorIntersections():
 	collider.doSort = True
 	start=time.time()
 	collider.__call__()
-	mprint("collider time ",time.time()-start)
+	wprint("collider time (2)",time.time()-start)
 	#maxVelocitySq is normally reset in NewtonIntegrator in the same iteration as bound dispatching, since Newton will not run before next iter in our case we force that value to avoid another collision detection at next step
 	utils.typedEngine("NewtonIntegrator").maxVelocitySq=0.5
 
