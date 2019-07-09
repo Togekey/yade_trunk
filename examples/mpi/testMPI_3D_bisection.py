@@ -8,17 +8,6 @@ NSTEPS=1000 #turn it >0 to see time iterations, else only initilization TODO!HAC
 #NSTEPS=50 #turn it >0 to see time iterations, else only initilization
 N=50; M=50; #(columns, rows) per thread
 
-if("-ms" in sys.argv):
-	sys.argv.remove("-ms")
-	mergeSplit=True
-else: mergeSplit=False
-
-if("-bc" in sys.argv):
-	sys.argv.remove("-bc")
-	bodyCopy=True
-else: bodyCopy=False
-
-
 import os
 from yade import mpy as mp
 numThreads = 4
@@ -38,12 +27,13 @@ O.bodies.append(pack.regularHexa(pred,radius=2.80,gap=0, material='sphereMat'))
 wallIds=aabbWalls([Vector3(-360,-1,-360),Vector3(360,360,360)],thickness=10.0, material='wallMat')
 O.bodies.append(wallIds)
 
-collider.verletDist = 0.5
+collider.verletDist = 1.5
 newton.gravity=(0,-10,0) #else nothing would move
 tsIdx=O.engines.index(timeStepper) #remove the automatic timestepper. Very important: we don't want subdomains to use many different timesteps...
 O.engines=O.engines[0:tsIdx]+O.engines[tsIdx+1:]
 O.dt=0.01 #this very small timestep will make it possible to run 2000 iter without merging
 #O.dt=0.1*PWaveTimeStep() #very important, we don't want subdomains to use many different timesteps...
+newton.gravity=0.05*newton.gravity
 
 
 #########  RUN  ##########
@@ -58,13 +48,7 @@ def collectTiming():
 
 # customize mpy
 
-mp.ACCUMULATE_FORCES=True #trigger force summation on master's body (here WALL_ID)
 mp.VERBOSE_OUTPUT=False
-mp.ERASE_REMOTE=False #erase bodies not interacting wit a given subdomain?
-mp.OPTIMIZE_COM=True #L1-optimization: pass a list of double instead of a list of states
-mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
-mp.MERGE_SPLIT=mergeSplit
-mp.COPY_MIRROR_BODIES_WHEN_COLLIDE =  bodyCopy and not mergeSplit
 mp.DOMAIN_DECOMPOSITION= True
 mp.mpirun(NSTEPS,4)
 mp.mergeScene() 
