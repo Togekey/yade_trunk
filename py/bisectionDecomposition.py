@@ -24,7 +24,7 @@ _TOL_ = 1e-08
 
 
 # for coloring bodies. 
-import colorsys
+import yade.coloring as col
 
 class decompBodiesSerial: 
 
@@ -35,9 +35,7 @@ class decompBodiesSerial:
 		self.comm = mpiComm
 		self.numWorkers = self.comm.Get_size() - 1
 		# for coloring bodies 
-		self.colorscale = []
-		for i in range(self.numWorkers): 
-			self.colorscale.append(Vector3(colorsys.hsv_to_rgb(i*1./self.numWorkers,1,1)))
+		self.colorscale = col.getCol(self.numWorkers)
 		
 
 	def isEqual(self, a,b): 
