@@ -47,87 +47,12 @@ deb_buster:
     - rm -rf ./deb
     - ./scripts/ppa_ci/builddeb.py -d "buster"
 
-<<<<<<< HEAD
 deb_stretch:
   <<: *deb_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
   before_script:
     - rm -rf ./deb
     - ./scripts/ppa_ci/builddeb.py -d "stretch"
-=======
-# Four new images:
-# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
-# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
-# image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
-# image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
-# 3.2. check stage
-.check_template: &check_definition
-  <<: *platforms_definition
-  stage: test
-#  before_script:
-#    - export OMPI_MCA_rmaps_base_oversubscribe=1
-#    - export OMPI_MCA_btl_vader_single_copy_mechanism=none
-#    - export OMPI_MCA_mpi_yield_when_idle=1 #degraded mode when oversubscribing (https://www.open-mpi.org/faq/?category=running#oversubscribing)
-  script:
-    - install/bin/yade-ci --checks
-
-check_16_04:
-  <<: *check_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
-  dependencies:
-    - make_16_04
-
-check_18_04:
-  <<: *check_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
-  only:
-    - master
-    - merge_request
-  dependencies:
-    - make_18_04
-
-check_stretch:
-  <<: *check_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
-  dependencies:
-    - make_stretch
-
-check_buster:
-  <<: *check_definition
-  before_script:
-    - export OMPI_MCA_rmaps_base_oversubscribe=1
-    - export OMPI_MCA_btl_vader_single_copy_mechanism=none
-    - export OMPI_MCA_mpi_yield_when_idle=1 #degraded mode when oversubscribing (https://www.open-mpi.org
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
-  dependencies:
-    - make_buster
-
-check_suse15:
-  <<: *check_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:suse15
-  dependencies:
-    - make_suse15
-
-
-# currently doc is build only on ubuntu 18.04. Without .doc_template. We may fix this later.
-# 4. doc stage
-doc_18_04:
-  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
-  stage: test
-  only:
-    - master
-    - merge_request
-  script:
-    - cd build
-    - xvfb-run -s "-screen 0 1600x1200x24" make doc
-  dependencies:
-    - cmake_18_04
-    - make_18_04
-  artifacts:
-    paths:
-      - install
-
->>>>>>> origin/master
 
 deb_bionic:
   <<: *deb_definition
