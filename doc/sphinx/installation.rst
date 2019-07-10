@@ -126,7 +126,7 @@ Some of them are only optional. The last ones are only relevant for using the fl
 * `Qt <http://www.qt.io/>`_ library
 * `freeglut3 <http://freeglut.sourceforge.net>`_
 * `libQGLViewer <http://www.libqglviewer.com>`_
-* `python <http://www.python.org>`_, `numpy <https://www.numpy.org/>`_, `ipython <https://ipython.org/>`_, `sphinx <https://www.sphinx-doc.org/en/master/>`_
+* `python <http://www.python.org>`_, `numpy <https://www.numpy.org/>`_, `ipython <https://ipython.org/>`_, `sphinx <https://www.sphinx-doc.org/en/master/>`_, `mpi4py <https://mpi4py.readthedocs.io/en/stable/>`_
 * `matplotlib <http://matplotlib.sf.net>`_
 * `eigen <http://eigen.tuxfamily.org>`_ algebra library (minimal required version 3.2.1)
 * `gdb <http://www.gnu.org/software/gdb>`_ debugger
@@ -138,6 +138,7 @@ Some of them are only optional. The last ones are only relevant for using the fl
 * `OpenBLAS <http://www.openblas.net/>`_ optimized and parallelized alternative to the standard blas+lapack (fluid coupling, optional)
 * `Metis <http://glaros.dtc.umn.edu/gkhome/metis/metis/overview/>`_ matrix preconditioning (fluid coupling, optional)
 * `OpenMPI <https://www.open-mpi.org/software/>`_ library for parallel distributed computing (For MPI and OpenFOAM coupling, optional)
+* `python3-mpi4py <https://bitbucket.org/mpi4py/>`_ MPI for Python (For MPI, optional)
 
 Most of the list above is very likely already packaged for your distribution. In case you are confronted
 with some errors concerning not available packages (e.g., package libmetis-dev is not available) it may be necessary
@@ -155,7 +156,7 @@ need root privileges.
 		sudo apt install cmake git freeglut3-dev libloki-dev libboost-all-dev fakeroot \
 		dpkg-dev build-essential g++ python3-dev python3-ipython python3-matplotlib \
 		libsqlite3-dev python3-numpy python3-tk gnuplot libgts-dev python3-pygraphviz \
-		libvtk6-dev libeigen3-dev python3-xlib python3-pyqt5 pyqt5-dev-tools \
+		libvtk6-dev libeigen3-dev python3-xlib python3-pyqt5 pyqt5-dev-tools python3-mpi4py\
 		python3-pyqt5.qtwebkit gtk2-engines-pixbuf python3-pyqt5.qtsvg libqglviewer-dev-qt5 \
 		python3-pil libjs-jquery python3-sphinx python3-git libxmu-dev libxi-dev libcgal-dev \
 		help2man libbz2-dev zlib1g-dev python3-minieigen libopenblas-dev libsuitesparse-dev \
@@ -238,7 +239,7 @@ As of Yade version git-2315bd8 (or 2018.02b release), the following options are 
 	* ENABLE_CGAL: enable CGAL option (ON by default)
 	* ENABLE_VTK: enable VTK-export option (ON by default)
 	* ENABLE_OPENMP: enable OpenMP-parallelizing option (ON by default)
-	* ENABLE_MPI: Enable MPI enviroment and communication, required for Yade-OpenFOAM coupling (OFF by default)
+	* ENABLE_MPI: Enable MPI enviroment and communication, required distributed memory and for Yade-OpenFOAM coupling (ON by default)
 	* ENABLE_GTS: enable GTS-option (ON by default)
 	* ENABLE_GL2PS: enable GL2PS-option (ON by default)
 	* ENABLE_LINSOLV: enable LINSOLV-option (ON by default)
@@ -414,6 +415,8 @@ The link time can be reduced roughly 2 minutes by changing the default linker fr
 	ld --version
 
 To switch back run the commands above with reversed priorities ``10`` ↔ ``20``. Alternatively a manual selection can be performed by command: ``update-alternatives --config ld``.
+
+Note: ``ld.gold`` is incompatible with the compiler wrapper ``mpicxx`` in some distributions, which is manifested as an error in the ``cmake`` stage. We do not use ``mpicxx`` for our builds currently, if you want to use it then disable ``ld.gold``.
 
 Cloud Computing
 ----------------

@@ -73,8 +73,8 @@ class InteractionContainer: public Serializable{
 		bool insert(Body::id_t id1,Body::id_t id2);
 		bool insert(const shared_ptr<Interaction>& i);
 		//3rd parameter is used to remove I from linIntrs (in conditionalyEraseNonReal()) when body b1 has been removed
-		bool erase(Body::id_t id1,Body::id_t id2,int linPos);
-		
+		bool erase(Body::id_t id1,Body::id_t id2,int linPos=-1);
+		bool insertInteractionMPI(shared_ptr<Interaction>& ); 
 		const shared_ptr<Interaction>& find(Body::id_t id1,Body::id_t id2);
 		inline bool found(const Body::id_t& id1,const Body::id_t& id2){
 			assert(bodies);

@@ -704,14 +704,14 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::augmentConductivityMatrix
 template<class _Tesselation, class FlowType>
 void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setNewCellTemps()
 {
-    RTriangulation& Tri = T[currentTes].Triangulation();
-    FiniteCellsIterator cellEnd = Tri.finite_cells_end();
-    for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != cellEnd; cell++){
+	RTriangulation& Tri = T[currentTes].Triangulation();
+	FiniteCellsIterator cellEnd = Tri.finite_cells_end();
+	for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != cellEnd; cell++) {
 		if (!cell->info().Tcondition && !cell->info().isGhost) {
-            Real oldTemp = cell->info().temp();
-            cell->info().temp()=cell->info().internalEnergy/((1./cell->info().invVoidVolume())*fluidCp*fluidRho); //FIXME: invVoidVolume depends on volumeSolidPore() which uses CGAL points only updated each remesh. We need our own volumeSolidPore(). 
-            cell->info().dtemp() = cell->info().temp() - oldTemp;
-        }
+			Real oldTemp = cell->info().temp();
+			cell->info().temp()=cell->info().internalEnergy/((1./cell->info().invVoidVolume())*fluidCp*fluidRho); //FIXME: invVoidVolume depends on volumeSolidPore() which uses CGAL points only updated each remesh. We need our own volumeSolidPore(). 
+			cell->info().dtemp() = cell->info().temp() - oldTemp;
+		}
 	}
 }
 

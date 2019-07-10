@@ -279,7 +279,7 @@ Real approxSectionArea(Real coord, int axis){
 }
 /* Find all interactions deriving from NormShearPhys that cross plane given by a point and normal
 	(the normal may not be normalized in this case, though) and sum forces (both normal and shear) on them.
-	
+
 	Returns a 3-tuple with the components along global x,y,z axes, which can be viewed as "action from lower part, towards
 	upper part" (lower and upper parts with respect to the plane's normal).
 
