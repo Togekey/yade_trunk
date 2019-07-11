@@ -51,21 +51,12 @@ for sd in range(0,numThreads-1):
 WALL_ID=O.bodies.append(box(center=(numThreads*N*0.5,-0.5,0),extents=(2*numThreads*N,0,2),fixed=True))
 
 collider.verletDist = 0.5
+newton=typedEngine("NewtonIntegrator")
 newton.gravity=(0,-10,0) #else nothing would move
 tsIdx=O.engines.index(timeStepper) #remove the automatic timestepper. Very important: we don't want subdomains to use many different timesteps...
 O.engines=O.engines[0:tsIdx]+O.engines[tsIdx+1:]
 O.dt=0.001 #this very small timestep will make it possible to run 2000 iter without merging
 #O.dt=0.1*PWaveTimeStep() #very important, we don't want subdomains to use many different timesteps...
-
-
-#########  RUN  ##########
-def collectTiming():
-	created = os.path.isfile("collect.dat")
-	f=open('collect.dat','a')
-	if not created: f.write("numThreads mpi omp Nspheres N M runtime \n")
-	from yade import timing
-	f.write(str(numThreads)+" "+str(os.getenv('OMPI_COMM_WORLD_SIZE'))+" "+os.getenv('OMP_NUM_THREADS')+" "+str(N*M*(numThreads-1))+" "+str(N)+" "+str(M)+" "+str(timing.runtime())+"\n")
-	f.close()
 
 # customize mpy
 mp.ACCUMULATE_FORCES=True #trigger force summation on master's body (here WALL_ID)
@@ -77,9 +68,11 @@ mp.MERGE_W_INTERACTIONS=False
 mp.MERGE_SPLIT=mergeSplit
 mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = bodyCopy and not mergeSplit
 mp.VERBOSE_OUTPUT=False
+mp.YADE_TIMING=False
+mp.NO_OUTPUT=True
 
 mp.mpirun(NSTEPS,numThreads)
-mp.mprint( "num. bodies:",len([b for b in O.bodies]),len(O.bodies))
+mp.mprint( "num. bodies:",len([b for b in O.bodies]))
 mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
 
 Ek=0

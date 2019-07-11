@@ -156,7 +156,7 @@ need root privileges.
 		sudo apt install cmake git freeglut3-dev libloki-dev libboost-all-dev fakeroot \
 		dpkg-dev build-essential g++ python3-dev python3-ipython python3-matplotlib \
 		libsqlite3-dev python3-numpy python3-tk gnuplot libgts-dev python3-pygraphviz \
-		libvtk6-dev libeigen3-dev python3-xlib python3-pyqt5 pyqt5-dev-tools python3-mpi4py\
+		libvtk6-dev libeigen3-dev python3-xlib python3-pyqt5 pyqt5-dev-tools python3-mpi4py \
 		python3-pyqt5.qtwebkit gtk2-engines-pixbuf python3-pyqt5.qtsvg libqglviewer-dev-qt5 \
 		python3-pil libjs-jquery python3-sphinx python3-git libxmu-dev libxi-dev libcgal-dev \
 		help2man libbz2-dev zlib1g-dev python3-minieigen libopenblas-dev libsuitesparse-dev \
