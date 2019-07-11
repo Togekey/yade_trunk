@@ -23,7 +23,9 @@ COPY .aptly.conf /root/
 
 COPY create_repos.sh /root/
 
-COPY update_repos.sh /root/
+COPY update_repos_initial.sh /root/
+
+COPY update_repos_next.sh /root/
 
 RUN mkdir -p /root/deb
 
