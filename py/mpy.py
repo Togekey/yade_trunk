@@ -34,13 +34,19 @@ from mpi4py import MPI
 import numpy as np
 import yade.bisectionDecomposition as dd
 
+
+
 sys.stderr.write=sys.stdout.write #so we see error messages from workers
 
 this = sys.modules[__name__]
 
-comm = MPI.COMM_WORLD
+worldComm = MPI.COMM_WORLD
+color = 1 ; key = 0 ; 
+comm = worldComm.Split(color, key)
 rank = comm.Get_rank()
 numThreads = comm.Get_size()
+commSplit = False 
+
 
 waitingCommands=False #are workers currently interactive?
 userScriptInCheckList=""	# the simulation script from which mpy.py is used
@@ -59,6 +65,7 @@ COPY_MIRROR_BODIES_WHEN_COLLIDE = True
 RESET_SUBDOMAINS_WHEN_COLLIDE = False
 DOMAIN_DECOMPOSITION = False
 NUM_MERGES = 0 
+
 
 
 #tags for mpi messages
@@ -132,16 +139,23 @@ def initialize():
 			#TODO: if process_count>numThreads, free some workers
 			rank=0
 		else:	#WORKERS
-			comm = MPI.Comm.Get_parent().Merge()
-			rank=comm.Get_rank()
+			if not commSplit:
+				comm = MPI.Comm.Get_parent().Merge()
+				rank=comm.Get_rank()
+			else: 
+				rank = comm.Get_rank()
 			mprint("Hello, I'm worker "+str(rank))
 	else:
-		rank = os.getenv('OMPI_COMM_WORLD_RANK')
-		numThreads=None
-		if rank is not None: #mpiexec was used
-			rank=int(rank)
-			numThreads=int(os.getenv('OMPI_COMM_WORLD_SIZE'))
-		#else monolithic simulation (no mpiexec, no mit)
+		if not commSplit:
+			rank = os.getenv('OMPI_COMM_WORLD_RANK')
+			numThreads=None
+			if rank is not None: #mpiexec was used
+				rank=int(rank)
+				numThreads=int(os.getenv('OMPI_COMM_WORLD_SIZE'))
+			#else monolithic simulation (no mpiexec, no mit)
+		else: 
+			rank = comm.Get_rank() 
+			numThreads = comm.Get_size()
 	return rank,numThreads
 
 def autoInitialize(np):
