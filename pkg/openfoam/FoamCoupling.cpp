@@ -1,6 +1,7 @@
 // *  Deepak kn : deepak.kunhappan@3sr-grenoble.fr; deepak.kn1990@gmail.com
 
 #ifdef YADE_MPI
+
 #include <mpi.h>
 #include "FoamCoupling.hpp"
 #include <iostream>
@@ -9,6 +10,15 @@ namespace yade { // Cannot have #include directive inside.
 
 CREATE_LOGGER(FoamCoupling);
 YADE_PLUGIN((FoamCoupling));
+YADE_PLUGIN((FluidDomainBbox));
+CREATE_LOGGER(FluidDomainBbox);
+YADE_PLUGIN((Bo1_FluidDomainBbox_Aabb));
+
+
+void Bo1_FluidDomainBbox_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* b){
+	return; 
+}
+
 
 void FoamCoupling::getRank() {
 
@@ -219,6 +229,6 @@ void FoamCoupling::killMPI() {
 
 }
 
-} // namespace yade
 
 #endif
+}
