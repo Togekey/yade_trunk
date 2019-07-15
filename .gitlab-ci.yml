@@ -37,10 +37,10 @@ stages:
   stage: cmake
   script:
     - mkdir build && cd build
-    - export CC="ccache gcc"
-    - export CXX="ccache g++"
+#    - export CC="ccache gcc"
+#    - export CXX="ccache g++"
     - cmake -DSUFFIX=-ci -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_PREFIX=../install -DPYTHON_VERSION=3 -DDISABLE_SAVE_TEMPS=1 ..
-    - ccache -s
+#    - ccache -s
   artifacts:
     paths:
       - build
@@ -102,7 +102,7 @@ cmake_suse15:
     - make -j $JOBSNUM
     - make install
     - make clean
-    - ccache -s
+#    - ccache -s
   artifacts:
     paths:
       - install
@@ -306,8 +306,8 @@ variables:
     - echo $JOBSNUM
     - export CCACHE_DIR=${CCACHE_WORK_DIR}
     - DEB_BUILD_OPTIONS=noddebs dpkg-buildpackage -j$JOBSNUM
-#    - dpkg-buildpackage -j$JOBSNUM
-    - ccache -s
+    - dpkg-buildpackage -j$JOBSNUM
+#    - ccache -s
     - rm -rf $CI_PROJECT_DIR/deb/yadedaily
     - ls -l $CI_PROJECT_DIR/deb
   artifacts:
