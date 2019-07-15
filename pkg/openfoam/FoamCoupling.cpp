@@ -1,12 +1,22 @@
 // *  Deepak kn : deepak.kunhappan@3sr-grenoble.fr; deepak.kn1990@gmail.com
 
 #ifdef YADE_MPI
+
 #include <mpi.h>
 #include "FoamCoupling.hpp"
 #include <iostream>
 
 CREATE_LOGGER(FoamCoupling);
 YADE_PLUGIN((FoamCoupling));
+YADE_PLUGIN((FluidDomainBbox));
+CREATE_LOGGER(FluidDomainBbox);
+YADE_PLUGIN((Bo1_FluidDomainBbox_Aabb));
+
+
+void Bo1_FluidDomainBbox_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* b){
+	return; 
+}
+
 
 void FoamCoupling::getRank() {
 
@@ -46,7 +56,6 @@ void FoamCoupling::castParticle() {
 			particleData[i*10+1] = pos[1];
 			particleData[i*10+2] = pos[2];
 		} else {
-
 			particleData[i*10] = b->state->pos[0];
 			particleData[i*10+1] = b->state->pos[1];
 			particleData[i*10+2] = b->state->pos[2];
@@ -60,7 +69,6 @@ void FoamCoupling::castParticle() {
 		shared_ptr<Sphere> s = YADE_PTR_DYN_CAST<Sphere>(b->shape);
 		particleData[i*10+9] = s->radius;
 	}
-
 	MPI_Bcast(&particleData.front(), particleData.capacity(), MPI_DOUBLE, rank, MPI_COMM_WORLD);
 
 }
@@ -181,5 +189,6 @@ void FoamCoupling::killMPI() {
   MPI_Finalize();
 
 }
+
 
 #endif
