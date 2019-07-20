@@ -36,14 +36,15 @@ from mpi4py import MPI
 import numpy as np
 import yade.bisectionDecomposition as dd
 
-<<<<<<< 8ec7f49fd9a8dd65f141cbc9b5eff0e72d6b49ba
+
 ##  Initialization
 
 this = sys.modules[__name__]
 
 sys.stderr.write=sys.stdout.write #so we see error messages from workers
+commSplit = False
 worldComm = MPI.COMM_WORLD
-color = 1 ; key = 0 ; 
+color = 1; key =1; 
 comm = worldComm.Split(color, key)
 parent = comm.Get_parent()
 if parent!=MPI.COMM_NULL:
@@ -52,6 +53,9 @@ rank = comm.Get_rank()
 numThreads = comm.Get_size()
 commSplit = False 
 
+#comm = MPI.COMM_WORLD
+#rank = comm.Get_rank()
+#numThreads = comm.Get_size()
 
 waitingCommands=False #are workers currently interactive?
 userScriptInCheckList=""	# detect if mpy is executed by checkList.py
@@ -82,7 +86,6 @@ REALLOCATE_FILTER = None # pointer to filtering function, will be set to 'median
 AUTO_COLOR = True
 MINIMAL_INTERSECTIONS = False # Reduces the size of position/velocity comms (at the end of the colliding phase, we can exclude those bodies with no interactions besides body<->subdomain from intersections). 
 REALLOCATE_MINIMAL = False # if true, intersections are minimized before reallocations, hence minimizing the number of reallocated bodies
-
 
 #tags for mpi messages
 _SCENE_=11
@@ -1059,6 +1062,7 @@ def mpirun(nSteps,np=None,withMerge=False):
 		mprint( "#####  Worker "+str(rank)+"  ######")
 		timing.stats() #specific numbers for -n4 and gabion.py
 
+<<<<<<< 911c5e41e67de79960a6478a04bf2f7d82359db7
 #######################################
 #######  Bodies re-allocation  ########
 #######################################
@@ -1265,4 +1269,3 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 	#mprint("sending to ",otherDomain,": ",len(candidates))
 	migrateBodies(candidates,rank,otherDomain) #send
 	migrateBodies(None,otherDomain,rank)       #recv
-
