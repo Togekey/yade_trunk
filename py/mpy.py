@@ -34,19 +34,22 @@ from mpi4py import MPI
 import numpy as np
 import yade.bisectionDecomposition as dd
 
-
-
 sys.stderr.write=sys.stdout.write #so we see error messages from workers
 
 this = sys.modules[__name__]
-
+#commSplit = True
+commSplit = False
 worldComm = MPI.COMM_WORLD
-color = 1 ; key = 0 ; 
+color = 1; key =1; 
 comm = worldComm.Split(color, key)
-rank = comm.Get_rank()
-numThreads = comm.Get_size()
-commSplit = False 
+rank = comm.Get_rank() 
+numThreads = comm.Get_size() 
 
+
+
+#comm = MPI.COMM_WORLD
+#rank = comm.Get_rank()
+#numThreads = comm.Get_size()
 
 waitingCommands=False #are workers currently interactive?
 userScriptInCheckList=""	# the simulation script from which mpy.py is used
@@ -73,7 +76,6 @@ DISTRIBUTED_INSERT = False  #if True each worker is supposed to "O.bodies.insert
 REALLOCATE_FREQUENCY = 0  # if >0 checkAndCollide() will automatically reallocate bodies to subdomains, if =1 realloc. happens each time collider is triggered, if >1 it happens every N trigger
 REALLOCATE_FILTER = None # pointer to filtering function, will be set to 'medianFilter' hereafter, could point to other ones if implemented
 AUTO_COLOR = True
-
 
 #tags for mpi messages
 _SCENE_=11
@@ -130,10 +132,11 @@ import yade.runtime
 mit_mode = yade.runtime.opts.mit>1
 
 def initialize():
-	global comm,rank,numThreads
+	global comm,rank,numThreads, worldComm
 	if(mit_mode):
 		numThreads=yade.runtime.opts.mit
 		process_count = comm.Get_size()
+		print("comm size here =", process_count)
 		if not yade.runtime.opts.mpi_mode and process_count<numThreads: #MASTER ONLY
 			mprint("I will spawn ",numThreads-process_count," workers")
 			if (userScriptInCheckList==""): #normal case
@@ -144,23 +147,20 @@ def initialize():
 			#TODO: if process_count>numThreads, free some workers
 			rank=0
 		else:	#WORKERS
-			if not commSplit:
-				comm = MPI.Comm.Get_parent().Merge()
-				rank=comm.Get_rank()
-			else: 
-				rank = comm.Get_rank()
+			print("comm size here AT ELSE  =", process_count)
+			comm = MPI.Comm.Get_parent().Merge()
+			rank=comm.Get_rank()
 			mprint("Hello, I'm worker "+str(rank))
+			
+		
 	else:
-		if not commSplit:
-			rank = os.getenv('OMPI_COMM_WORLD_RANK')
-			numThreads=None
-			if rank is not None: #mpiexec was used
-				rank=int(rank)
-				numThreads=int(os.getenv('OMPI_COMM_WORLD_SIZE'))
-			#else monolithic simulation (no mpiexec, no mit)
-		else: 
-			rank = comm.Get_rank() 
-			numThreads = comm.Get_size()
+		print("comm size here AT ELSE  =", process_count)
+		rank = os.getenv('OMPI_COMM_WORLD_RANK')
+		numThreads=None
+		if rank is not None: #mpiexec was used
+			rank=int(rank)
+			numThreads=int(os.getenv('OMPI_COMM_WORLD_SIZE'))
+		#else monolithic simulation (no mpiexec, no mit)
 	return rank,numThreads
 
 def autoInitialize(np):
@@ -682,7 +682,7 @@ def splitScene():
 				O.subD.subdomains = subdomains
 		
 		O._sceneObj.subdomain = rank
-		if mit_mode: O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
+		if mit_mode or commSplit : O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 		
 		O.subD.init()
 		
@@ -922,6 +922,7 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 		mprint( "#####  Worker "+str(rank)+"  ######")
 		timing.stats() #specific numbers for -n4 and gabion.py
 
+<<<<<<< 911c5e41e67de79960a6478a04bf2f7d82359db7
 #######################################
 #######  Bodies re-allocation  ########
 #######################################
@@ -1155,3 +1156,15 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 		#updateAllIntersections() #triggers communication
 		#if rank>0: req.wait()
 	
+
+def sendTerminateMessage(): 
+	worldRank = worldComm.Get_rank() 
+	if worldRank == 0: 
+		data = numpy.arange(3, dtype = 'i') 
+		worldComm.Send([data,MPI.INT], dest=5, tag = 199)
+
+
+def killMPI(): 
+	MPI.Finalize()
+
+
