@@ -1265,3 +1265,4 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 	#mprint("sending to ",otherDomain,": ",len(candidates))
 	migrateBodies(candidates,rank,otherDomain) #send
 	migrateBodies(None,otherDomain,rank)       #recv
+
