@@ -1154,10 +1154,10 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 	
 
 def sendTerminateMessage(): 
-	worldRank = worldComm.Get_rank() 
-	if worldRank == 0: 
-		data = numpy.arange(3, dtype = 'i') 
-		worldComm.Send([data,MPI.INT], dest=5, tag = 199)
+'''Used for coupled mpi simulations to notify non yade-mpi processes of termination, (they call mpi.finalize after this broadcast) , e.g: yade-openfoam, yade-yales2 etc'''  
+	data = numpy.arange(3, dtype = 'i') 
+	worldRank = worldComm.Get_rank()
+	worldComm.Bcast([data,MPI.INT], root=0)
 
 
 def killMPI(): 
