@@ -874,7 +874,7 @@ def mpirun(nSteps,np=numThreads):
 
 
 def sendTerminateMessage(): 
-'''Used for coupled mpi simulations to notify non yade-mpi processes of termination, (they call mpi.finalize after this broadcast) , e.g: yade-openfoam, yade-yales2 etc'''  
+	'''Used for coupled mpi simulations to notify non yade-mpi processes of termination, (they call mpi.finalize after this broadcast) , e.g: yade-openfoam, yade-yales2 etc'''  
 	data = numpy.arange(3, dtype = 'i') 
 	worldRank = worldComm.Get_rank()
 	worldComm.Bcast([data,MPI.INT], root=0)
