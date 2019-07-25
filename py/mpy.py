@@ -1058,7 +1058,6 @@ def mpirun(nSteps,np=None,withMerge=False):
 		mprint( "#####  Worker "+str(rank)+"  ######")
 		timing.stats() #specific numbers for -n4 and gabion.py
 
-<<<<<<< 911c5e41e67de79960a6478a04bf2f7d82359db7
 #######################################
 #######  Bodies re-allocation  ########
 #######################################
