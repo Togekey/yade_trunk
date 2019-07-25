@@ -131,7 +131,6 @@ def initialize():
 	if(mit_mode):
 		numThreads=yade.runtime.opts.mit
 		process_count = comm.Get_size()
-		print("comm size here =", process_count)
 		if not yade.runtime.opts.mpi_mode and process_count<numThreads: #MASTER ONLY
 			mprint("I will spawn ",numThreads-process_count," workers")
 			if (userScriptInCheckList==""): #normal case
@@ -142,14 +141,12 @@ def initialize():
 			#TODO: if process_count>numThreads, free some workers
 			rank=0
 		else:	#WORKERS
-			print("comm size here AT ELSE  =", process_count)
 			comm = MPI.Comm.Get_parent().Merge()
 			rank=comm.Get_rank()
 			mprint("Hello, I'm worker "+str(rank))
 			
 		
 	else:
-		print("comm size here AT ELSE  =", process_count)
 		rank = os.getenv('OMPI_COMM_WORLD_RANK')
 		numThreads=None
 		if rank is not None: #mpiexec was used
