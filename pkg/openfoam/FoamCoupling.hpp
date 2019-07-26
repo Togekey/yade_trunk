@@ -14,44 +14,41 @@
 
 class Scene; 
 class FoamCoupling : public GlobalEngine {
+	private:
 
+	// some variables for MPI_Send/Recv 
+		const int sendTag=500;  
+		MPI_Status status; 
+		int rank, commSize; 
 
-  private:
-    // some variables for MPI_Send/Recv 
-    const int sendTag=500;  
-    MPI_Status status; 
-    int rank, commSize; 
-
-
-  public: 
+	public: 
     
-    void getRank(); 
-    void setNumParticles(int); 
-    void setIdList(const boost::python::list& );  
-    void killMPI(); 
-    void updateProcList();
-    void castParticle();
-    void castNumParticle(int); 
-    void castTerminate();  
-    void resetProcList(); 
-    void recvHydroForce(); 
-    void setHydroForce();
-    void sumHydroForce(); 
-    void exchangeDeltaT();  
-    void runCoupling(); 
-    bool exchangeData();
-    Real getViscousTimeScale();  // not fully implemented, piece of code left in foam.
-    virtual void action(); 
-    virtual ~FoamCoupling(){}; 
-    std::vector<int> bodyList; 
-    std::vector<double> hydroForce; 
-    std::vector<double> particleData;
-    std::vector<int>  procList; 
-    Real foamDeltaT; 
-    long int  dataExchangeInterval=1; 
-    bool recvdFoamDeltaT; 
-    bool isGaussianInterp; 
-    
+		void getRank(); 
+		void setNumParticles(int); 
+		void setIdList(const boost::python::list& );  
+		void killMPI(); 
+		void updateProcList();
+		void castParticle();
+		void castNumParticle(int); 
+		void resetProcList(); 
+		void recvHydroForce(); 
+		void setHydroForce();
+		void sumHydroForce(); 
+		void exchangeDeltaT();  
+		void runCoupling(); 
+		bool exchangeData();
+		Real getViscousTimeScale();  // not fully implemented, piece of code left in foam.
+		virtual void action(); 
+		virtual ~FoamCoupling(){}; 
+		std::vector<int> bodyList; 
+		std::vector<double> hydroForce; 
+		std::vector<double> particleData;
+		std::vector<int>  procList; 
+		Real foamDeltaT; 
+		long int  dataExchangeInterval=1; 
+		bool recvdFoamDeltaT; 
+		bool isGaussianInterp; 
+      
     YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(FoamCoupling,GlobalEngine, "An engine for coupling Yade with the finite volume fluid solver OpenFOAM in parallel." " \n Requirements : Yade compiled with MPI libs, OpenFOAM-6 (openfoam is not required for compilation)." "Yade is executed under MPI environment with OpenFOAM simultaneously, and using MPI communication  routines data is exchanged between the solvers."
    " \n \n 1. Yade broadcasts the particle data -> position, velocity, ang-velocity, radius to all the foam processes as in :yref:`castParticle <FoamCoupling::castParticle>` \n"
   "2. In each foam process, particle is searched.Yade keeps a vector(cpp) of the rank of the openfoam process containing that particular particle (FoamCoupling::procList), using :yref:`updateProcList <FoamCoupling::updateProcList>`\n"
@@ -75,5 +72,38 @@ class FoamCoupling : public GlobalEngine {
     DECLARE_LOGGER; 
 }; 
 REGISTER_SERIALIZABLE(FoamCoupling); 
+
+
+/* a class for holding info on the min and max bounds of the fluid mesh. Each fluid proc has a domain minmax and */
+class FluidDomainBbox : public Shape{
+	public:
+		std::vector<double> minmaxBuff(1e-50, 6); // a buffer to receive the min max during MPI_Recv. 
+		bool recvdMinMax = false; 
+		bool setMinMax(){
+			if (!recvdMinMax){LOG_ERROR("minmax not received from fluid proces.") return; }
+			
+		}
+		virtual ~fluidDomain() {}; 
+		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(FluidDomainBbox, "The bounding box of a fluid grid from one OpenFOAM/YALES2 proc",
+		((int,domainRank,-1,,"rank of the OpenFOAM/YALES2 proc"))
+		((std::vector<Body::id_t>,bIds,std::vector<Body::id_t>(), , "ids of bodies intersecting with this subdomain, "))
+		((Vector3r,minBounds,Vector3r(NaN, NaN, NaN),,"min bounds of the fluid grid ")) // maybe not required, just for debugging 
+		((Vector3r,maxBounds,Vector3r(NaN, NaN, NaN),,"max bounds of the fluid grid"))	// maybe not required, just for debugging 
+		((bool,hasIntersection,false,,"if this Yade subdomain has intersection with this OpenFOAM/YALES2 subdomain"))
+		(())
+		); 
+		DECLARE_LOGGER;
+		REGISTER_CLASS_INDEX(FluidDomainBbox, Shape);   
+}; 
+REGISTER_SERIALIZABLE(FluidDomainBbox); 
+
+class Bo1_FluidDomainBbox_Aabb : public BoundFunctor{
+	public:
+		void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body*); 
+		FUNCTOR1D(FluidDomainBbox)l 
+		YADE_CLASS_BASE_DOC(Bo1_FluidDomainBbox_Aabb,BoundFunctor, "creates/updates an :yref:`Aabb` of a :yref:`FluidDomainBbox`."); 
+}; 
+
+REGISTER_SERIALIZABLE(Bo1_FluidDomainBbox_Aabb); 
 
 #endif  
