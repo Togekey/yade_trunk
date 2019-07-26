@@ -27,7 +27,6 @@ Yet to be implemented is the global update of domain bounds and new collision de
 #HINTS:
 - handle subD.intersections with care (same for mirrorIntersections). subD.intersections.append() will not reach the c++ object. subD.intersections can only be assigned (a list of list of int)
 
-
 '''
 
 import sys,os,inspect
@@ -40,22 +39,17 @@ import yade.bisectionDecomposition as dd
 ##  Initialization
 
 this = sys.modules[__name__]
-
 sys.stderr.write=sys.stdout.write #so we see error messages from workers
+
 commSplit = False
 worldComm = MPI.COMM_WORLD
-color = 1; key =1; 
+color = 3; key =0; 
 comm = worldComm.Split(color, key)
 parent = comm.Get_parent()
 if parent!=MPI.COMM_NULL:
 	comm=parent.Merge()
 rank = comm.Get_rank()
 numThreads = comm.Get_size()
-commSplit = False 
-
-#comm = MPI.COMM_WORLD
-#rank = comm.Get_rank()
-#numThreads = comm.Get_size()
 
 waitingCommands=False #are workers currently interactive?
 userScriptInCheckList=""	# detect if mpy is executed by checkList.py
@@ -80,6 +74,7 @@ DOMAIN_DECOMPOSITION = False
 NUM_MERGES = 0
 SEND_BYTEARRAYS = True
 ENABLE_PFACETS = False    #PFacets need special (and expensive) tricks, if PFacets are not used skip the tricks
+
 DISTRIBUTED_INSERT = False  #if True each worker is supposed to "O.bodies.insertAtId" its own bodies
 REALLOCATE_FREQUENCY = 0  # if >0 checkAndCollide() will automatically reallocate bodies to subdomains, if =1 realloc. happens each time collider is triggered, if >1 it happens every N trigger
 REALLOCATE_FILTER = None # pointer to filtering function, will be set to 'medianFilter' hereafter, could point to other ones if implemented
@@ -1023,6 +1018,7 @@ def mpirun(nSteps,np=None,withMerge=False):
 	if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
 		userScriptInCheckList=stack[1][1]
 	caller_name = stack[2][3]
+	
 	if (np>numThreads):  
 		if numThreads==1: initialize(np) #this will set numThreads
 		else: mprint("number of mpy cores can't be increased when already initialized")
