@@ -84,6 +84,7 @@ class FoamCoupling : public GlobalEngine {
 		void exchangeDeltaT();  
 		void runCoupling(); 
 		bool exchangeData();
+    void castTerminate(); 
 		Real getViscousTimeScale();  // not fully implemented, piece of code left in foam.
 		virtual void action(); 
 		virtual ~FoamCoupling(){}; 
