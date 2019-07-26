@@ -12,8 +12,8 @@ YADE_PLUGIN((FoamCoupling));
 
 void FoamCoupling::getRank() {
 
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &commSize);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &commSize);
 
 }
 
@@ -101,8 +101,7 @@ for (unsigned int i=0; i <  bodyList.size(); ++i)
 }
 
 void FoamCoupling::castNumParticle(int value) {
-  MPI_Bcast(&value, 1, MPI_INT, rank, MPI_COMM_WORLD);
-
+	MPI_Bcast(&value, 1, MPI_INT, rank, MPI_COMM_WORLD);
 }
 
 
@@ -168,16 +167,16 @@ void FoamCoupling::resetProcList() {
 
 void FoamCoupling::action() {
 
-  if ( exchangeData()) {
-    runCoupling();
-    exchangeDeltaT();
-  }
-  setHydroForce();
+	if ( exchangeData()) {
+		runCoupling();
+		exchangeDeltaT();
+	}
+	setHydroForce();
 }
 
 bool FoamCoupling::exchangeData(){
 
-  return scene->iter%dataExchangeInterval==0;
+	return scene->iter%dataExchangeInterval==0;
 
 }
 
@@ -201,23 +200,23 @@ Real FoamCoupling::getViscousTimeScale() {
 //
 //  MPI_Allreduce(&dummy, &hDeltaT, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
 //
-  return 0;
+	return 0;
 }
 
 void FoamCoupling::runCoupling() {
-
-    castParticle();
-    updateProcList();
-    if (isGaussianInterp){
-        sumHydroForce();
-    } else {
-    recvHydroForce();
-  }
+	castParticle();
+	updateProcList();
+	if (isGaussianInterp){
+		sumHydroForce();
+	} else {
+		recvHydroForce();
+	}
 }
 
 void FoamCoupling::killMPI() { 
   castTerminate(); 
   MPI_Finalize();
+
 }
 
 } // namespace yade
