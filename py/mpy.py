@@ -25,7 +25,6 @@ Yet to be implemented is the global update of domain bounds and new collision de
 #HINTS:
 - handle subD.intersections with care (same for mirrorIntersections). subD.intersections.append() will not reach the c++ object. subD.intersections can only be assigned (a list of list of int)
 
-
 '''
 
 import sys,os,inspect
@@ -37,7 +36,7 @@ import yade.bisectionDecomposition as dd
 sys.stderr.write=sys.stdout.write #so we see error messages from workers
 
 this = sys.modules[__name__]
-#commSplit = True
+
 commSplit = False
 worldComm = MPI.COMM_WORLD
 color = 1; key =1; 
@@ -45,11 +44,6 @@ comm = worldComm.Split(color, key)
 rank = comm.Get_rank() 
 numThreads = comm.Get_size() 
 
-
-
-#comm = MPI.COMM_WORLD
-#rank = comm.Get_rank()
-#numThreads = comm.Get_size()
 
 waitingCommands=False #are workers currently interactive?
 userScriptInCheckList=""	# the simulation script from which mpy.py is used
@@ -68,7 +62,7 @@ COPY_MIRROR_BODIES_WHEN_COLLIDE = True
 RESET_SUBDOMAINS_WHEN_COLLIDE = False
 DOMAIN_DECOMPOSITION = False
 NUM_MERGES = 0 
-
+LOAD_SIM = False # to enable restart of mpi simulations after O.load('sim')
 
 #tags for mpi messages
 _SCENE_=11
@@ -611,15 +605,22 @@ def splitScene():
 	'''
 	
 	
-	
-	
 	if not O.splittedOnce:
+	  
+	  
 		if DOMAIN_DECOMPOSITION: 
+			
 			if rank == 0:
 				decomposition = dd.decompBodiesSerial(comm) 
 				decomposition.partitionDomain() 
 
-		if rank == 0: 
+		if rank == 0:
+			
+			if LOAD_SIM: # maybe an easier way to get to subdomain ids?
+				for b in O.bodies: 
+					if b.isSubdomain:
+						O.bodies.erase(b.id)
+			
 			O._sceneObj.subdomain=0
 			O.subD=Subdomain() #for storage only, this one will not be used beyond that 
 			subD= O.subD #alias
@@ -833,6 +834,11 @@ def mpirun(nSteps,np=numThreads):
 	if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
 		userScriptInCheckList=stack[1][1]
 	caller_name = stack[2][3]
+	
+	if LOAD_SIM: 
+		O.splitted = False
+		O.splittedOnce = False
+	
 	if (np>numThreads):  
 		if not mit_mode: autoInitialize(np)
 		else: mprint("number of cores can't be increased after first call to mpirun")
@@ -876,5 +882,3 @@ def sendTerminateMessage():
 
 def killMPI(): 
 	MPI.Finalize()
-
-
