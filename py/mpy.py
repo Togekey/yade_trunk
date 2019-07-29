@@ -600,7 +600,7 @@ def splitScene():
 	Split a monolithic scene into distributed scenes on threads
 	precondition: the bodies have subdomain no. set in user script
 	'''
-	
+	global LOAD_SIM
 	
 	if not O.splittedOnce:
 	  
@@ -631,15 +631,17 @@ def splitScene():
 				subD.subdomains.append(O.bodies.append(domainBody))
 
 			#tell the collider how to handle this new thing
-			collider.boundDispatcher.functors=collider.boundDispatcher.functors+[Bo1_Subdomain_Aabb()]
-			collider.targetInterv=0
 			
-			#BEGIN Garbage (should go to some init(), usually done in collider.__call__() but in the mpi case we want to collider.boundDispatcher.__call__() before collider.__call__()
-			collider.boundDispatcher.sweepDist=collider.verletDist;
-			collider.boundDispatcher.minSweepDistFactor=collider.minSweepDistFactor;
-			collider.boundDispatcher.targetInterv=collider.targetInterv;
-			collider.boundDispatcher.updatingDispFactor=collider.updatingDispFactor;
-			#END Garbage
+			if not LOAD_SIM:
+				collider.boundDispatcher.functors=collider.boundDispatcher.functors+[Bo1_Subdomain_Aabb()]
+				collider.targetInterv=0
+				
+				#BEGIN Garbage (should go to some init(), usually done in collider.__call__() but in the mpi case we want to collider.boundDispatcher.__call__() before collider.__call__()
+				collider.boundDispatcher.sweepDist=collider.verletDist;
+				collider.boundDispatcher.minSweepDistFactor=collider.minSweepDistFactor;
+				collider.boundDispatcher.targetInterv=collider.targetInterv;
+				collider.boundDispatcher.updatingDispFactor=collider.updatingDispFactor;
+				#END Garbage
 		
 			#distribute work
 		
@@ -650,6 +652,7 @@ def splitScene():
 			#wprint("sending bodies to ",worker)
 			#timing_comm.send("splitScene_distribute_work",sceneAsString, dest=worker, tag=_SCENE_) #sent with scene.subdomain=1, better make subdomain index a passed value so we could pass the sae string to every worker (less serialization+deserialization)
 			O.interactions.clear() # clear the interactions in the master proc.
+
 		if rank > 0:# worker procs.
 		  
 			sceneAsString = None
@@ -677,19 +680,23 @@ def splitScene():
 		
 		updateMirrorIntersections()
 		
-		idx = O.engines.index(utils.typedEngine("NewtonIntegrator"))
-		O.engines=O.engines[:idx+1]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].sendRecvStates()",label="sendRecvStatesRunner")]+O.engines[idx+1:]
-		
-		# append force communicator before Newton
-		O.engines=O.engines[:idx]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].isendRecvForces()",label="isendRecvForcesRunner")]+O.engines[idx:]
-		
-		# append engine waiting until forces are effectively sent to master
-		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="pass",label="waitForcesRunner")]
-		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkNeedCollide(): O.pause()",label="collisionChecker")]
+		if not LOAD_SIM:
+			idx = O.engines.index(utils.typedEngine("NewtonIntegrator"))
+			O.engines=O.engines[:idx+1]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].sendRecvStates()",label="sendRecvStatesRunner")]+O.engines[idx+1:]
+			
+			# append force communicator before Newton
+			O.engines=O.engines[:idx]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].isendRecvForces()",label="isendRecvForcesRunner")]+O.engines[idx:]
+			
+			# append engine waiting until forces are effectively sent to master
+			O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="pass",label="waitForcesRunner")]
+			O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkNeedCollide(): O.pause()",label="collisionChecker")]
 		
 		O.splitted=True
 		O.splittedOnce = True 
+		LOAD_SIM = False
 		
+
+	
 	else: 
 		if (DOMAIN_DECOMPOSITION and RESET_SUBDOMAINS_WHEN_COLLIDE):
 			if rank == 0:
@@ -827,7 +834,7 @@ def eraseRemote():
 ##### RUN MPI #########
 def mpirun(nSteps,np=numThreads):
 	stack=inspect.stack()
-	global userScriptInCheckList
+	global userScriptInCheckList, LOAD_SIM
 	if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
 		userScriptInCheckList=stack[1][1]
 	caller_name = stack[2][3]
@@ -844,7 +851,6 @@ def mpirun(nSteps,np=numThreads):
 			comm.send("yade.mpy.mpirun("+str(nSteps)+")",dest=w,tag=_MASTER_COMMAND_)
 			wprint("Command sent to ",w)
 	initStep = O.iter
-	print("numthreads = ", comm.Get_size())
 	mprint("splitting")
 	if not O.splitted: splitScene()
 	mprint("splitted")
@@ -861,7 +867,6 @@ def mpirun(nSteps,np=numThreads):
 				mergeScene()
 				splitScene()
 		mergeScene()
-		print("all done ! , rank = ", rank)
 	timing_comm.print_all()
 	if YADE_TIMING:
 		from yade import timing
