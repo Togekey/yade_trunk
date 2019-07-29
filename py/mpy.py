@@ -692,6 +692,8 @@ def splitScene():
 		O.splitted=True
 		O.splittedOnce = True
 		
+
+	
 	else: 
 		if (DOMAIN_DECOMPOSITION and RESET_SUBDOMAINS_WHEN_COLLIDE):
 			if rank == 0:
@@ -872,7 +874,7 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 	
 	# Detect evironment (interactive or not, initialized or not...)
 	stack=inspect.stack()
-	global userScriptInCheckList
+	global userScriptInCheckList, LOAD_SIM
 	if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
 		userScriptInCheckList=stack[1][1]
 	caller_name = stack[2][3]
@@ -887,6 +889,7 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 			
 	# split if needed
 	initStep = O.iter
+	
 	if not O.splitted:
 		wprint("splitting")
 		splitScene()
@@ -909,13 +912,11 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 	
 	# report performance
 	if YADE_TIMING and rank<=MAX_RANK_OUTPUT:
-		timing_comm.print_all()
 		from yade import timing
 		time.sleep((numThreads-rank)*0.002) #avoid mixing the final output, timing.stats() is independent of the sleep
 		mprint( "#####  Worker "+str(rank)+"  ######")
 		timing.stats() #specific numbers for -n4 and gabion.py
 
-<<<<<<< 911c5e41e67de79960a6478a04bf2f7d82359db7
 #######################################
 #######  Bodies re-allocation  ########
 #######################################
