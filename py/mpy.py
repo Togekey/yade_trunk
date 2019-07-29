@@ -862,16 +862,10 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 			comm.send("yade.mpy.mpirun(nSteps="+str(nSteps)+",withMerge="+str(withMerge)+")",dest=w,tag=_MASTER_COMMAND_)
 			wprint("Command sent to ",w)
 	initStep = O.iter
-<<<<<<< 8171ba21b650f0dd6ec414b466a99d2f6d25dfb4
 	if not O.splitted:
 		wprint("splitting")
 		splitScene()
 		wprint("splitted")
-=======
-	mprint("splitting")
-	if not O.splitted: splitScene()
-	mprint("splitted")
->>>>>>> suppress readding of mpi engines after loading simulation
 	if YADE_TIMING:
 		O.timingEnabled=True
 	if not (MERGE_SPLIT):
@@ -885,14 +879,8 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 				mergeScene()
 				splitScene()
 		mergeScene()
-<<<<<<< 8171ba21b650f0dd6ec414b466a99d2f6d25dfb4
-	
 	if YADE_TIMING and rank<=MAX_RANK_OUTPUT:
 		timing_comm.print_all()
-=======
-	timing_comm.print_all()
-	if YADE_TIMING:
->>>>>>> suppress readding of mpi engines after loading simulation
 		from yade import timing
 		time.sleep((numThreads-rank)*0.002) #avoid mixing the final output, timing.stats() is independent of the sleep
 		mprint( "#####  Worker "+str(rank)+"  ######")
