@@ -789,7 +789,7 @@ def splitScene():
 		
 		# insert force communicator before Newton
 		O.engines=O.engines[:idx]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].isendRecvForces()",label="isendRecvForcesRunner")]+O.engines[idx:]
-		
+
 		# append engine waiting until forces are effectively sent to master
 		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="pass",label="waitForcesRunner")]
 		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkAndCollide(): O.pause();",label="collisionChecker")]
