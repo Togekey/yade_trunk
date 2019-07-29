@@ -889,7 +889,6 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 			
 	# split if needed
 	initStep = O.iter
-	
 	if not O.splitted:
 		wprint("splitting")
 		splitScene()
@@ -911,7 +910,9 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 		mergeScene()
 	
 	# report performance
+
 	if YADE_TIMING and rank<=MAX_RANK_OUTPUT:
+		timing_comm.print_all()
 		from yade import timing
 		time.sleep((numThreads-rank)*0.002) #avoid mixing the final output, timing.stats() is independent of the sleep
 		mprint( "#####  Worker "+str(rank)+"  ######")
