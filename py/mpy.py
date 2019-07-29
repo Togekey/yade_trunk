@@ -1014,7 +1014,7 @@ def mpirun(nSteps,np=None,withMerge=False):
 		O.run(nSteps,True)
 		return
 	stack=inspect.stack()
-	global userScriptInCheckList
+	global userScriptInCheckList, LOAD_SIM
 	if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
 		userScriptInCheckList=stack[1][1]
 	caller_name = stack[2][3]
@@ -1030,6 +1030,7 @@ def mpirun(nSteps,np=None,withMerge=False):
 			
 	# split if needed
 	initStep = O.iter
+	
 	if not O.splitted:
 		wprint("splitting")
 		splitScene()
@@ -1052,7 +1053,6 @@ def mpirun(nSteps,np=None,withMerge=False):
 	
 	# report performance
 	if YADE_TIMING and rank<=MAX_RANK_OUTPUT:
-		timing_comm.print_all()
 		from yade import timing
 		time.sleep((numThreads-rank)*0.002) #avoid mixing the final output, timing.stats() is independent of the sleep
 		mprint( "#####  Worker "+str(rank)+"  ######")
