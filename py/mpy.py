@@ -657,19 +657,22 @@ def splitScene():
 		
 		updateMirrorIntersections()
 		
-		idx = O.engines.index(utils.typedEngine("NewtonIntegrator"))
-		O.engines=O.engines[:idx+1]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].sendRecvStates()",label="sendRecvStatesRunner")]+O.engines[idx+1:]
-		
-		# append force communicator before Newton
-		O.engines=O.engines[:idx]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].isendRecvForces()",label="isendRecvForcesRunner")]+O.engines[idx:]
-		
-		# append engine waiting until forces are effectively sent to master
-		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="pass",label="waitForcesRunner")]
-		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkNeedCollide(): O.pause()",label="collisionChecker")]
+		if not LOAD_SIM:
+			idx = O.engines.index(utils.typedEngine("NewtonIntegrator"))
+			O.engines=O.engines[:idx+1]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].sendRecvStates()",label="sendRecvStatesRunner")]+O.engines[idx+1:]
+			
+			# append force communicator before Newton
+			O.engines=O.engines[:idx]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].isendRecvForces()",label="isendRecvForcesRunner")]+O.engines[idx:]
+			
+			# append engine waiting until forces are effectively sent to master
+			O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="pass",label="waitForcesRunner")]
+			O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkNeedCollide(): O.pause()",label="collisionChecker")]
 		
 		O.splitted=True
 		O.splittedOnce = True
 		
+
+	
 	else: 
 		if (DOMAIN_DECOMPOSITION and RESET_SUBDOMAINS_WHEN_COLLIDE):
 			if rank == 0:
@@ -846,7 +849,7 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
             wether subdomains should be merged into master at the end of the run (default False). If True the scene in the master process is exactly in the same state as after O.run(nSteps,True). The merge can be time consumming, it is recommended to activate only if post-processing or other similar tasks require it.
 	'''
 	stack=inspect.stack()
-	global userScriptInCheckList
+	global userScriptInCheckList, LOAD_SIM
 	if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
 		userScriptInCheckList=stack[1][1]
 	caller_name = stack[2][3]
@@ -859,10 +862,16 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 			comm.send("yade.mpy.mpirun(nSteps="+str(nSteps)+",withMerge="+str(withMerge)+")",dest=w,tag=_MASTER_COMMAND_)
 			wprint("Command sent to ",w)
 	initStep = O.iter
+<<<<<<< 8171ba21b650f0dd6ec414b466a99d2f6d25dfb4
 	if not O.splitted:
 		wprint("splitting")
 		splitScene()
 		wprint("splitted")
+=======
+	mprint("splitting")
+	if not O.splitted: splitScene()
+	mprint("splitted")
+>>>>>>> suppress readding of mpi engines after loading simulation
 	if YADE_TIMING:
 		O.timingEnabled=True
 	if not (MERGE_SPLIT):
@@ -876,9 +885,14 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 				mergeScene()
 				splitScene()
 		mergeScene()
+<<<<<<< 8171ba21b650f0dd6ec414b466a99d2f6d25dfb4
 	
 	if YADE_TIMING and rank<=MAX_RANK_OUTPUT:
 		timing_comm.print_all()
+=======
+	timing_comm.print_all()
+	if YADE_TIMING:
+>>>>>>> suppress readding of mpi engines after loading simulation
 		from yade import timing
 		time.sleep((numThreads-rank)*0.002) #avoid mixing the final output, timing.stats() is independent of the sleep
 		mprint( "#####  Worker "+str(rank)+"  ######")
