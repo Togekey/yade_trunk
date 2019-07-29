@@ -9,18 +9,18 @@
 #include <core/Omega.hpp>
 #include <pkg/common/Sphere.hpp> 
 #include <vector> 
-#include <core/InteractionContainer.hpp> // for pairwise hydro interaction (to be implemented) 
+#include <core/InteractionContainer.hpp> 
 #include <lib/serialization/Serializable.hpp>
+
 
 
 namespace yade { // Cannot have #include directive inside.
 
+#include <core/Subdomain.hpp>
 #include <pkg/common/Aabb.hpp>
 #include <pkg/common/Dispatching.hpp>
-
->>>>>>> fake subdomain to represent fluid grid bounds, use this to simplify locate particles in fluid grid and fluid proc
-
 class Scene; 
+
 class FoamCoupling : public GlobalEngine {
 	private:
 
@@ -28,6 +28,7 @@ class FoamCoupling : public GlobalEngine {
 		const int sendTag=500;  
 		MPI_Status status; 
 		int rank, commSize; 
+		int szdff, localCommSize, worldCommSize; 
 
   private:
     // some variables for MPI_Send/Recv 
@@ -92,10 +93,14 @@ class FoamCoupling : public GlobalEngine {
 		std::vector<double> hydroForce; 
 		std::vector<double> particleData;
 		std::vector<int>  procList; 
+		std::vector<Body::id_t> fluidDomains; 
+		std::vector<std::vector<Body::id_t> > inBoxIds; 
 		Real foamDeltaT; 
 		long int  dataExchangeInterval=1; 
 		bool recvdFoamDeltaT; 
-		bool isGaussianInterp; 
+		bool isGaussianInterp;
+		void getFluidDomainBbox(); 
+		
       
     YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(FoamCoupling,GlobalEngine, "An engine for coupling Yade with the finite volume fluid solver OpenFOAM in parallel." " \n Requirements : Yade compiled with MPI libs, OpenFOAM-6 (openfoam is not required for compilation)." "Yade is executed under MPI environment with OpenFOAM simultaneously, and using MPI communication  routines data is exchanged between the solvers."
    " \n \n 1. Yade broadcasts the particle data -> position, velocity, ang-velocity, radius to all the foam processes as in :yref:`castParticle <FoamCoupling::castParticle>` \n"
@@ -131,19 +136,27 @@ REGISTER_SERIALIZABLE(FoamCoupling);
 class FluidDomainBbox : public Shape{
 	public:
 		std::vector<double> minMaxBuff; // a buffer to receive the min max during MPI_Recv. 
-		bool recvdMinMax = false; 
-		bool setMinMax(){
-			if (!recvdMinMax){LOG_ERROR("minmax not received from fluid proces.");  return false; }
-			/* blah */
+		void setMinMax(std::vector<double>& minmaxbuff){
+			if (minMaxBuff.size() != 6){LOG_ERROR("incorrect minmaxbuff size. FAIL"); return; }
+			minBound[0] = minmaxbuff[0]; 
+			minBound[1] = minmaxbuff[1];
+			minBound[2] = minmaxbuff[2]; 
+			maxBound[0] = minmaxbuff[3]; 
+			maxBound[1] = minmaxbuff[4]; 
+			maxBound[2] = minmaxbuff[5]; 
+			minMaxisSet = true; 
+			
 		}
 		virtual ~FluidDomainBbox() {}; 
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(FluidDomainBbox,Shape,"The bounding box of a fluid grid from one OpenFOAM/YALES2 proc",
 		((int,domainRank,-1,,"rank of the OpenFOAM/YALES2 proc"))
+		((bool,minMaxisSet,false,,"flag to check if the min max bounds of this body are set."))
 		((std::vector<Body::id_t>,bIds,std::vector<Body::id_t>(), , "ids of bodies intersecting with this subdomain, "))
-		((Vector3r,minBounds,Vector3r(NaN, NaN, NaN),,"min bounds of the fluid grid ")) // maybe not required, just for debugging 
-		((Vector3r,maxBounds,Vector3r(NaN, NaN, NaN),,"max bounds of the fluid grid"))	// maybe not required, just for debugging 
+		((Vector3r,minBound,Vector3r(NaN, NaN, NaN),,"min bounds of the fluid grid ")) 
+		((Vector3r,maxBound,Vector3r(NaN, NaN, NaN),,"max bounds of the fluid grid"))	
 		((bool,hasIntersection,false,,"if this Yade subdomain has intersection with this OpenFOAM/YALES2 subdomain"))
 		,
+		createIndex(); 
 		,
 		); 
 		DECLARE_LOGGER;
@@ -158,5 +171,8 @@ class Bo1_FluidDomainBbox_Aabb : public BoundFunctor{
 		YADE_CLASS_BASE_DOC(Bo1_FluidDomainBbox_Aabb,BoundFunctor, "creates/updates an :yref:`Aabb` of a :yref:`FluidDomainBbox`."); 
 }; 
 REGISTER_SERIALIZABLE(Bo1_FluidDomainBbox_Aabb); 
-#endif
+
+
+
+#endif  
 }
