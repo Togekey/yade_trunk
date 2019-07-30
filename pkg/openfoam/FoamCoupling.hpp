@@ -7,18 +7,18 @@
 #include <core/GlobalEngine.hpp> 
 #include <core/Body.hpp>
 #include <core/Omega.hpp>
-#include <pkg/common/Sphere.hpp> 
 #include <vector> 
 #include <core/InteractionContainer.hpp> 
 #include <lib/serialization/Serializable.hpp>
+#include <core/Subdomain.hpp>
+#include <pkg/common/Aabb.hpp>
+#include <pkg/common/Dispatching.hpp>
+#include <lib/base/Logging.hpp>
 
 
 
 namespace yade { // Cannot have #include directive inside.
 
-#include <core/Subdomain.hpp>
-#include <pkg/common/Aabb.hpp>
-#include <pkg/common/Dispatching.hpp>
 class Scene; 
 
 class FoamCoupling : public GlobalEngine {
@@ -86,21 +86,26 @@ class FoamCoupling : public GlobalEngine {
 		void runCoupling(); 
 		bool exchangeData();
                 void castTerminate(); 
-		Real getViscousTimeScale();  // not fully implemented, piece of code left in foam.
+		Real getViscousTimeScale();  	// not fully implemented, piece of code left in foam.
 		virtual void action(); 
 		virtual ~FoamCoupling(){}; 
+		
 		std::vector<int> bodyList; 
 		std::vector<double> hydroForce; 
 		std::vector<double> particleData;
 		std::vector<int>  procList; 
 		std::vector<Body::id_t> fluidDomains; 
-		std::vector<std::vector<Body::id_t> > inBoxIds; 
+		std::vector<int> sendRecvRanks; 
+		
 		Real foamDeltaT; 
 		long int  dataExchangeInterval=1; 
 		bool recvdFoamDeltaT; 
 		bool isGaussianInterp;
 		void getFluidDomainBbox(); 
-		
+		void findIntersections();
+		bool ifDomainBodies(const shared_ptr<Body>& );
+		void sendIntersectionToFluidProcs(); 
+		int commSzdff; 
       
     YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(FoamCoupling,GlobalEngine, "An engine for coupling Yade with the finite volume fluid solver OpenFOAM in parallel." " \n Requirements : Yade compiled with MPI libs, OpenFOAM-6 (openfoam is not required for compilation)." "Yade is executed under MPI environment with OpenFOAM simultaneously, and using MPI communication  routines data is exchanged between the solvers."
    " \n \n 1. Yade broadcasts the particle data -> position, velocity, ang-velocity, radius to all the foam processes as in :yref:`castParticle <FoamCoupling::castParticle>` \n"
