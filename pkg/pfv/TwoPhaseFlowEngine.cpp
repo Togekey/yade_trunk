@@ -835,7 +835,7 @@ double TwoPhaseFlowEngine::poreSaturationFromPcS(CellHandle cell,double pw)
 }
 
 
-double TwoPhaseFlowEngine::porePressureFromPcS(CellHandle cell,double saturation)
+double TwoPhaseFlowEngine::porePressureFromPcS(CellHandle cell,double /*saturation*/)
 {
    
   double pw = -1.0 * cell->info().thresholdPressure / (1.0 - std::exp(-1*getKappa(cell->info().numberFacets) * cell->info().saturation));
@@ -2648,7 +2648,7 @@ void TwoPhaseFlowEngine::clusterGetPore(PhaseCluster* cluster, CellHandle cell) 
 	cluster->pores.push_back(cell);
 }
 
-vector<int> TwoPhaseFlowEngine::clusterOutvadePore(unsigned startingId, unsigned imbibedId, int index) {
+vector<int> TwoPhaseFlowEngine::clusterOutvadePore(unsigned startingId, unsigned imbibedId, int /*index*/) {
 	CellHandle& origin = solver->tesselation().cellHandles[startingId];
 	CellHandle& newPore = solver->tesselation().cellHandles[imbibedId];
 	PhaseCluster* cluster = clusters[origin->info().label].get();

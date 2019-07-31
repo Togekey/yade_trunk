@@ -652,7 +652,7 @@ void ThermalEngine::computeCellVolumeChangeFromSolidVolumeChange(CellHandle& cel
 //	}
 //}
 
-void ThermalEngine::computeCellVolumeChangeFromDeltaTemp(CellHandle& cell,double cavDens){
+void ThermalEngine::computeCellVolumeChangeFromDeltaTemp(CellHandle& cell,double /*cavDens*/){
 	double beta;
 	if (tempDependentFluidBeta) beta = 7.5e-6*cell->info().temp()+5.7e-5; // linear model for thermal expansion
 	else beta = fluidBeta;

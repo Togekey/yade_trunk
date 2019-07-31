@@ -51,7 +51,7 @@ SimpleShear::~SimpleShear ()
 
 
 
-bool SimpleShear::generate(std::string& message)
+bool SimpleShear::generate(std::string& /*message*/)
 {
 	scene = shared_ptr<Scene>(new Scene);
 	createActors(scene);

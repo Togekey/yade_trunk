@@ -7,7 +7,7 @@ YADE_PLUGIN((BubbleMat)(Ip2_BubbleMat_BubbleMat_BubblePhys)(BubblePhys)(Law2_ScG
 
 /********************** Ip2_BubbleMat_BubbleMat_BubblePhys ****************************/
 CREATE_LOGGER(Ip2_BubbleMat_BubbleMat_BubblePhys);
-void Ip2_BubbleMat_BubbleMat_BubblePhys::go(const shared_ptr<Material>& m1, const shared_ptr<Material>& m2, const shared_ptr<Interaction>& interaction){
+void Ip2_BubbleMat_BubbleMat_BubblePhys::go(const shared_ptr<Material>& /*m1*/, const shared_ptr<Material>& /*m2*/, const shared_ptr<Interaction>& interaction){
 	// phys already exists
 	if (interaction->phys) return;
 
@@ -17,7 +17,7 @@ void Ip2_BubbleMat_BubbleMat_BubblePhys::go(const shared_ptr<Material>& m1, cons
 
 /********************** BubblePhys ****************************/
 CREATE_LOGGER(BubblePhys);
-void BubblePhys::computeCoeffs(Real pctMaxForce, Real surfaceTension, Real c1)
+void BubblePhys::computeCoeffs(Real pctMaxForce, Real /*surfaceTension*/, Real c1)
 {
 	    Real Fmax = pctMaxForce*c1*rAvg;
 	    Real logPct = log(pctMaxForce/4);
@@ -28,7 +28,7 @@ void BubblePhys::computeCoeffs(Real pctMaxForce, Real surfaceTension, Real c1)
 	    fN = 0.1*Fmax;
 }
 
-Real BubblePhys::computeForce(Real separation, Real surfaceTension, Real rAvg, int newtonIter, Real newtonTol, Real c1, Real fN, BubblePhys* phys) {
+Real BubblePhys::computeForce(Real separation, Real /*surfaceTension*/, Real rAvg, int newtonIter, Real newtonTol, Real c1, Real fN, BubblePhys* phys) {
 
 	if (separation >= phys->Dmax) {
 	  Real f,df,g,retOld,residual;

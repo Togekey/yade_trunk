@@ -363,7 +363,7 @@ CREATE_LOGGER(Ip2_FrictMat_FrictMat_KnKsPBPhys);
 
 
 
-double Law2_SCG_KnKsPBPhys_KnKsPBLaw::stressUpdateVec(shared_ptr<IPhys>& ip, const Vector3r Fs_prev /*prev shear force*/ , const Vector3r du /*shear displacement increment*/, const double beta_prev /* prev plastic displacements*/, const double Ks /*shear stiffness */,const double fN /*normal force*/, const double phi_b /*peak friction angle*/, Vector3r & newFs /*new shear force*/){
+double Law2_SCG_KnKsPBPhys_KnKsPBLaw::stressUpdateVec(shared_ptr<IPhys>& /*ip*/, const Vector3r Fs_prev /*prev shear force*/ , const Vector3r du /*shear displacement increment*/, const double beta_prev /* prev plastic displacements*/, const double Ks /*shear stiffness */,const double fN /*normal force*/, const double phi_b /*peak friction angle*/, Vector3r & newFs /*new shear force*/){
 
 // FUNCTION RETURNS PLASTIC MULTIPLIER RATE (beta) AND CURRENT SHEAR FORCE
 
@@ -474,7 +474,7 @@ double Law2_SCG_KnKsPBPhys_KnKsPBLaw::stressUpdateVec(shared_ptr<IPhys>& ip, con
 
 
 
-double Law2_SCG_KnKsPBPhys_KnKsPBLaw::stressUpdateVecTalesnick(shared_ptr<IPhys>& ip, const Vector3r Fs_prev /*prev shear force*/ , const Vector3r du /*shear displacement increment*/, const double beta_prev /* prev plastic displacements*/, const double Ks /*shear stiffness */,const double fN /*normal force*/, const double phi_b /*peak friction angle*/, Vector3r & newFs /*new shear force*/, const double upeak){
+double Law2_SCG_KnKsPBPhys_KnKsPBLaw::stressUpdateVecTalesnick(shared_ptr<IPhys>& /*ip*/, const Vector3r Fs_prev /*prev shear force*/ , const Vector3r du /*shear displacement increment*/, const double beta_prev /* prev plastic displacements*/, const double Ks /*shear stiffness */,const double fN /*normal force*/, const double phi_b /*peak friction angle*/, Vector3r & newFs /*new shear force*/, const double upeak){
 
 // FUNCTION RETURNS PLASTIC MULTIPLIER RATE (beta) AND CURRENT SHEAR FORCE
 

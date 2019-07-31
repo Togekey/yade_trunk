@@ -47,7 +47,7 @@ void DeformableCohesiveElement::addPair(const shared_ptr<Body>& nodeBody1,const 
 	return;
 
 }
-void DeformableCohesiveElement::delPair(const shared_ptr<Body>& node1,const shared_ptr<Body>& node2)
+void DeformableCohesiveElement::delPair(const shared_ptr<Body>& /*node1*/,const shared_ptr<Body>& /*node2*/)
 {
 	// erase the subBody; removing body that is not part of the element throws
 //	if(this->localmap.erase(subBody)!=1) throw std::invalid_argument(("Node #"+boost::lexical_cast<string>(subBody->id)+" not a part of the deformable element, not removing...").c_str());

@@ -52,7 +52,7 @@ void ScGeom::precompute(const State& rbp1, const State& rbp2, const Scene* scene
 
 
 
-Vector3r ScGeom::getIncidentVel(const State* rbp1, const State* rbp2, Real dt, const Vector3r& shift2, const Vector3r& shiftVel, bool avoidGranularRatcheting){
+Vector3r ScGeom::getIncidentVel(const State* rbp1, const State* rbp2, Real /*dt*/, const Vector3r& shift2, const Vector3r& shiftVel, bool avoidGranularRatcheting){
 	if(avoidGranularRatcheting){
 		/* B.C. Comment :
 		Short explanation of what we want to avoid :
@@ -95,7 +95,7 @@ Vector3r ScGeom::getIncidentVel_py(shared_ptr<Interaction> i, bool avoidGranular
 		avoidGranularRatcheting);
 }
 
-Vector3r ScGeom::getRelAngVel(const State* rbp1, const State* rbp2, Real dt){
+Vector3r ScGeom::getRelAngVel(const State* rbp1, const State* rbp2, Real /*dt*/){
   	Vector3r relAngVel = (rbp2->angVel-rbp1->angVel);
 	return relAngVel;
 }

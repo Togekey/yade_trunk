@@ -119,7 +119,7 @@ void build_triangulation_with_ids(const shared_ptr<BodyContainer>& bodies, Tesse
 		if (v==RTriangulation::Vertex_handle())
 			hint=c;
 		else {
-			v->info().setId((const unsigned int) p->second);
+			v->info().setId((unsigned int) p->second);
 			//Vh->info().isFictious = false;//false is the default
 			Tes.maxId = std::max(Tes.maxId,(int) p->second);
 			Tes.vertexHandles[p->second]=v;
@@ -318,7 +318,7 @@ void TesselationWrapper::defToVtkFromStates (string inputFile1, string inputFile
 	mma.analyser->DefToFile(inputFile1.c_str(),inputFile2.c_str(),outputFile.c_str(),bz2);
 }
 
-void createSphere(shared_ptr<Body>& body, Vector3r position, Real radius, bool big, bool dynamic )
+void createSphere(shared_ptr<Body>& body, Vector3r position, Real radius, bool /*big*/, bool /*dynamic*/ )
 {
 	body = shared_ptr<Body>(new Body); body->groupMask=2;
 	shared_ptr<Sphere> iSphere(new Sphere);
@@ -328,7 +328,7 @@ void createSphere(shared_ptr<Body>& body, Vector3r position, Real radius, bool b
 	body->shape	= iSphere;
 }
 
-void TesselationWrapper::defToVtkFromPositions (string inputFile1, string inputFile2, string outputFile, bool bz2){
+void TesselationWrapper::defToVtkFromPositions (string inputFile1, string inputFile2, string outputFile, bool /*bz2*/){
 	SpherePack sp1, sp2;
 	sp1.fromFile(inputFile1);
 	sp2.fromFile(inputFile2);

@@ -15,7 +15,7 @@ OpenGLManager::OpenGLManager(QObject* parent): QObject(parent){
 	connect(this,SIGNAL(startTimerSignal()),this,SLOT(startTimerSlot()),Qt::QueuedConnection);
 }
 
-void OpenGLManager::timerEvent(QTimerEvent* event){
+void OpenGLManager::timerEvent(QTimerEvent* /*event*/){
 	//cerr<<".";
 	boost::mutex::scoped_lock lock(viewsMutex);
 	// when sharing the 0th view widget, it should be enough to update the primary view only

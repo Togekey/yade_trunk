@@ -14,7 +14,7 @@
 YADE_PLUGIN((FEInternalForceEngine));
 CREATE_LOGGER(FEInternalForceEngine);
 
-void FEInternalForceEngine::pyHandleCustomCtorArgs(boost::python::tuple& t, boost::python::dict& d){
+void FEInternalForceEngine::pyHandleCustomCtorArgs(boost::python::tuple& t, boost::python::dict& /*d*/){
 	cout<<"Entered the initialization function";
 	if(boost::python::len(t)==0) return; // nothing to do
 

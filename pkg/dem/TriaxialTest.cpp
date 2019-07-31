@@ -178,7 +178,7 @@ bool TriaxialTest::generate(string& message)
 	return true;
 }
 
-void TriaxialTest::createSphere(shared_ptr<Body>& body, Vector3r position, Real radius, bool big, bool dynamic )
+void TriaxialTest::createSphere(shared_ptr<Body>& body, Vector3r position, Real radius, bool /*big*/, bool /*dynamic*/ )
 {
 	body = shared_ptr<Body>(new Body); body->groupMask=2;
 	shared_ptr<Aabb> aabb(new Aabb);
@@ -319,6 +319,6 @@ void TriaxialTest::createActors(shared_ptr<Scene>& scene)
 	scene->engines.push_back(newton);
 }
 
-void TriaxialTest::positionRootBody(shared_ptr<Scene>& scene)
+void TriaxialTest::positionRootBody(shared_ptr<Scene>& /*scene*/)
 {
 }

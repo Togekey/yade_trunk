@@ -10,7 +10,7 @@
 #include <pkg/fem/DeformableElement.hpp>
 #include <pkg/common/Aabb.hpp>
 
-void Bo1_DeformableElement_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* b){
+void Bo1_DeformableElement_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& /*se3*/, const Body* /*b*/){
 
 	DeformableElement* deformableElement = static_cast<DeformableElement*>(cm.get());
 

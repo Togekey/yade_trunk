@@ -45,7 +45,7 @@ KinematicLocalisationAnalyser::~KinematicLocalisationAnalyser()
 	delete(TS0);
 }
 
-KinematicLocalisationAnalyser::KinematicLocalisationAnalyser(const char* state_file1, bool usebz2)
+KinematicLocalisationAnalyser::KinematicLocalisationAnalyser(const char* state_file1, bool /*usebz2*/)
 {
 	sphere_discretisation = SPHERE_DISCRETISATION;
 	linear_discretisation = LINEAR_DISCRETISATION;
@@ -346,7 +346,7 @@ long KinematicLocalisationAnalyser::Filtered_grains(TriaxialState& state)
 	return ng1;
 }
 
-Real KinematicLocalisationAnalyser::Filtered_volume(TriaxialState& state)
+Real KinematicLocalisationAnalyser::Filtered_volume(TriaxialState& /*state*/)
 {
 	return 0;
 }

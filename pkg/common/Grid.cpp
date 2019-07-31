@@ -89,7 +89,7 @@ bool Ig2_GridNode_GridNode_GridNodeGeom6D::goReverse( const shared_ptr<Shape>& c
 YADE_PLUGIN((Ig2_GridNode_GridNode_GridNodeGeom6D));
 
 //!			\\//
-bool Ig2_GridConnection_GridConnection_GridCoGridCoGeom::go( const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c)
+bool Ig2_GridConnection_GridConnection_GridCoGridCoGeom::go( const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& /*state1*/, const State& /*state2*/, const Vector3r& shift2, const bool& /*force*/, const shared_ptr<Interaction>& c)
 {
 	/*FIXME : /!\ Note that this geometry doesn't take care of any unwished duplicated contact or shear force following. /!\*/
 	GridConnection* conn1 = YADE_CAST<GridConnection*>(cm1.get());
@@ -202,7 +202,7 @@ YADE_PLUGIN((Ig2_GridConnection_GridConnection_GridCoGridCoGeom));
 //!			O/
 bool Ig2_Sphere_GridConnection_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 						const shared_ptr<Shape>& cm2,
-						const State& state1, const State& state2, const Vector3r& shift2, const bool& force,
+						const State& state1, const State& /*state2*/, const Vector3r& shift2, const bool& /*force*/,
 						const shared_ptr<Interaction>& c)
 {	// Useful variables :
 	const State*    sphereSt  = YADE_CAST<const State*>(&state1);
@@ -617,7 +617,7 @@ bool Law2_GridCoGridCoGeom_FrictPhys_CundallStrack::go(shared_ptr<IGeom>& ig, sh
 YADE_PLUGIN((Law2_GridCoGridCoGeom_FrictPhys_CundallStrack));
 //!##################	Bounds   #####################
 
-void Bo1_GridConnection_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* b){
+void Bo1_GridConnection_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& /*se3*/, const Body* /*b*/){
 	GridConnection* GC = static_cast<GridConnection*>(cm.get());
 	if(!bv){ bv=shared_ptr<Bound>(new Aabb); }
 	Aabb* aabb=static_cast<Aabb*>(bv.get());

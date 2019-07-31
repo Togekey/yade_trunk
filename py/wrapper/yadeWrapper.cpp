@@ -531,8 +531,8 @@ class pyMaterialContainer{
 		int index(const std::string& label){ return Material::byLabelIndex(label,scene.get()); }
 };
 
-void termHandlerNormal(int sig){cerr<<"Yade: normal exit."<<endl; raise(SIGTERM);}
-void termHandlerError(int sig){cerr<<"Yade: error exit."<<endl; raise(SIGTERM);}
+void termHandlerNormal(int /*sig*/){cerr<<"Yade: normal exit."<<endl; raise(SIGTERM);}
+void termHandlerError(int /*sig*/){cerr<<"Yade: error exit."<<endl; raise(SIGTERM);}
 
 class pyOmega{
 	private:
@@ -785,7 +785,7 @@ class pyOmega{
 		shared_ptr<InteractionContainer> ic=YADE_PTR_DYN_CAST<InteractionContainer>(ClassFactory::instance().createShared(clss));
 		rb->interactions=ic;
 	}
-	string interactionContainer_get(string clss){ return OMEGA.getScene()->interactions->getClassName(); }
+	string interactionContainer_get(string /*clss*/){ return OMEGA.getScene()->interactions->getClassName(); }
 
 	void bodyContainer_set(string clss){
 		Scene* rb=OMEGA.getScene().get();
@@ -793,7 +793,7 @@ class pyOmega{
 		shared_ptr<BodyContainer> bc=YADE_PTR_DYN_CAST<BodyContainer>(ClassFactory::instance().createShared(clss));
 		rb->bodies=bc;
 	}
-	string bodyContainer_get(string clss){ return OMEGA.getScene()->bodies->getClassName(); }
+	string bodyContainer_get(string /*clss*/){ return OMEGA.getScene()->bodies->getClassName(); }
 	#ifdef YADE_OPENMP
 		int numThreads_get(){ return omp_get_max_threads();}
 		void numThreads_set(int n){ int bcn=OMEGA.getScene()->forces.getNumAllocatedThreads(); if(bcn<n) LOG_WARN("ForceContainer has only "<<bcn<<" threads allocated. Changing thread number to on "<<bcn<<" instead of "<<n<<" requested."); omp_set_num_threads(min(n,bcn)); LOG_WARN("BUG: Omega().numThreads=n doesn't work as expected (number of threads is not changed globally). Set env var OMP_NUM_THREADS instead."); }

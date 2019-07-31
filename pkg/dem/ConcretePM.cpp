@@ -166,7 +166,7 @@ Real CpmPhys::funcG(const Real& kappaD, const Real& epsCrackOnset, const Real& e
 	throw runtime_error("CpmPhys::funcG: wrong damLaw\n");
 }
 
-Real CpmPhys::funcGDKappa(const Real& kappaD, const Real& epsCrackOnset, const Real& epsFracture, const bool& neverDamage, const int& damLaw) {
+Real CpmPhys::funcGDKappa(const Real& kappaD, const Real& epsCrackOnset, const Real& epsFracture, const bool& /*neverDamage*/, const int& damLaw) {
 	switch (damLaw) {
 		case 0: // linear
 			return epsCrackOnset / ((1.-epsCrackOnset/epsFracture)*kappaD*kappaD);
@@ -476,7 +476,7 @@ bool Law2_ScGeom_CpmPhys_Cpm::go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _p
 	Real Gl1_CpmPhys::colorStrainRatio=-1;
 
 
-	void Gl1_CpmPhys::go(const shared_ptr<IPhys>& ip, const shared_ptr<Interaction>& i, const shared_ptr<Body>& b1, const shared_ptr<Body>& b2, bool wireFrame){
+	void Gl1_CpmPhys::go(const shared_ptr<IPhys>& ip, const shared_ptr<Interaction>& i, const shared_ptr<Body>& /*b1*/, const shared_ptr<Body>& /*b2*/, bool /*wireFrame*/){
 		const shared_ptr<CpmPhys>& phys = boost::static_pointer_cast<CpmPhys>(ip);
 		const shared_ptr<GenericSpheresContact>& geom = YADE_PTR_CAST<GenericSpheresContact>(i->geom);
 		// FIXME: get the scene for periodicity; ugly!

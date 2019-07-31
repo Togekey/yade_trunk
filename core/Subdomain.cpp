@@ -81,7 +81,7 @@ boost::python::list Subdomain::mIntrs_get(){
 	return ret;
 }
 
-void Bo1_Subdomain_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* b){
+void Bo1_Subdomain_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& /*se3*/, const Body* /*b*/){
 // 	LOG_WARN("Bo1_Subdomain_Aabb::go()")
 	Subdomain* domain = static_cast<Subdomain*>(cm.get());
 	if(!bv){ bv=shared_ptr<Bound>(new Aabb);}
@@ -288,7 +288,7 @@ void Subdomain::recvBodyContainersFromWorkers() {
 
 
 // set all body properties from the recvd MPIBodyContainer
-void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MPIBodyContainer> >& containers, bool ifMerge, bool resetInteractions) {
+void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MPIBodyContainer> >& containers, bool ifMerge, bool /*resetInteractions*/) {
 	// to be used when deserializing a recieved container.
 	shared_ptr<BodyContainer>& bodyContainer = scene->bodies;
 	shared_ptr<InteractionContainer>& interactionContainer = scene->interactions; 

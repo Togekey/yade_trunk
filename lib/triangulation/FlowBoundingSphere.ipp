@@ -1172,7 +1172,7 @@ double FlowBoundingSphere<Tesselation>::getCavityFlux()
 }
 
 template <class Tesselation>
-void FlowBoundingSphere<Tesselation>::adjustCavityVolumeChange(double dt, int stepsSinceLastMesh, double pZero)
+void FlowBoundingSphere<Tesselation>::adjustCavityVolumeChange(double dt, int stepsSinceLastMesh, double /*pZero*/)
 {
 	double totalStep = dt*stepsSinceLastMesh;
 	//double Q1=0;
@@ -1198,7 +1198,7 @@ void FlowBoundingSphere<Tesselation>::adjustCavityVolumeChange(double dt, int st
 }
 
 template <class Tesselation>
-void FlowBoundingSphere<Tesselation>::adjustCavityPressure(double dt, int stepsSinceLastMesh, double pZero)
+void FlowBoundingSphere<Tesselation>::adjustCavityPressure(double dt, int stepsSinceLastMesh, double /*pZero*/)
 {
 	double totalStep = dt*stepsSinceLastMesh;
 	//double Q1=0;
@@ -1846,7 +1846,7 @@ Vector3r FlowBoundingSphere<Tesselation>::computeViscousShearForce(const Vector3
 }
 
 template <class Tesselation> 
-Vector3r FlowBoundingSphere<Tesselation>::computeShearLubricationForce(const Vector3r& deltaShearV, const Real& dist, const int& edge_id, const Real& eps, const Real& centerDist, const Real& meanRad )
+Vector3r FlowBoundingSphere<Tesselation>::computeShearLubricationForce(const Vector3r& deltaShearV, const Real& dist, const int& /*edge_id*/, const Real& eps, const Real& centerDist, const Real& meanRad )
 {
     Real d = max(dist,0.) + 2.*eps*meanRad;
     Vector3r viscLubF = 0.5 * Mathr::PI * viscosity * (-2*meanRad + centerDist*log(centerDist/d)) * deltaShearV;
@@ -1854,7 +1854,7 @@ Vector3r FlowBoundingSphere<Tesselation>::computeShearLubricationForce(const Vec
 }
 
 template <class Tesselation> 
-Vector3r FlowBoundingSphere<Tesselation>::computePumpTorque(const Vector3r& deltaShearAngV, const Real& dist, const int& edge_id, const Real& eps, const Real& meanRad )
+Vector3r FlowBoundingSphere<Tesselation>::computePumpTorque(const Vector3r& deltaShearAngV, const Real& dist, const int& /*edge_id*/, const Real& eps, const Real& meanRad )
 {
     Real d = max(dist,0.) + 2.*eps*meanRad;
     Vector3r viscPumpC = Mathr::PI * viscosity * pow(meanRad,3) *(3./20. * log(meanRad/d) + 63./500. * (d/meanRad) * log(meanRad/d)) * deltaShearAngV;
@@ -1862,7 +1862,7 @@ Vector3r FlowBoundingSphere<Tesselation>::computePumpTorque(const Vector3r& delt
 }
 
 template <class Tesselation> 
-Vector3r FlowBoundingSphere<Tesselation>::computeTwistTorque(const Vector3r& deltaNormAngV, const Real& dist, const int& edge_id, const Real& eps, const Real& meanRad )
+Vector3r FlowBoundingSphere<Tesselation>::computeTwistTorque(const Vector3r& deltaNormAngV, const Real& dist, const int& /*edge_id*/, const Real& eps, const Real& meanRad )
 {
     Real d = max(dist,0.) + 2.*eps*meanRad;
     Vector3r twistC = Mathr::PI * viscosity * pow(meanRad,2) * d * log(meanRad/d) * deltaNormAngV;

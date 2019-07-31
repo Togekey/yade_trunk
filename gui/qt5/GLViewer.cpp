@@ -378,7 +378,7 @@ void GLViewer::centerScene(){
 
 // new object selected.
 // set frame coordinates, and isDynamic=false;
-void GLViewer::postSelection(const QPoint& point) 
+void GLViewer::postSelection(const QPoint& /*point*/)
 {
 	LOG_DEBUG("Selection is "<<selectedName());
 	int selection = selectedName();

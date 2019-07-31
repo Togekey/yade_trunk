@@ -32,6 +32,9 @@
   #include "numpy/arrayobject.h"
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
 static PyObject*
 merge(PyObject *self, PyObject *args)
@@ -862,3 +865,6 @@ static PyMethodDef gts_methods[] = {
 
   return MOD_SUCCESS_VAL(m);
 }
+
+#pragma GCC diagnostic pop
+

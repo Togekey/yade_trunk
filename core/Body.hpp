@@ -65,9 +65,9 @@ class Body: public Serializable{
 		boost::python::list py_intrs();
 
 		Body::id_t getId() const {return id;};
-		const unsigned int coordNumber() const;  // Number of neighboring particles
+		unsigned int coordNumber() const;  // Number of neighboring particles
 
-		const mask_t getGroupMask() const {return groupMask; };
+		mask_t getGroupMask() const {return groupMask; };
 		bool maskOk(int mask) const;
 		bool maskCompatible(int mask) const;
 #ifdef YADE_MASK_ARBITRARY

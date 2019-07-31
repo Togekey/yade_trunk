@@ -20,7 +20,7 @@ typedef std::map<DeformableCohesiveElement::nodepair,Se3r> NodePairsMap;//Initia
 
 CREATE_LOGGER(If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat);
 
-void If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat::go(const shared_ptr<Shape>& element,const shared_ptr<Material>& material,const shared_ptr<Body>& bdy)
+void If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat::go(const shared_ptr<Shape>& element,const shared_ptr<Material>& material,const shared_ptr<Body>& /*bdy*/)
 {
 
 	shared_ptr<Lin4NodeTetra_Lin4NodeTetra_InteractionElement> interactionelement=YADE_PTR_CAST<Lin4NodeTetra_Lin4NodeTetra_InteractionElement>(element);

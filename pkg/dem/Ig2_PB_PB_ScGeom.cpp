@@ -42,7 +42,7 @@ YADE_PLUGIN((Ig2_PB_PB_ScGeom)
 CREATE_LOGGER(Ig2_PB_PB_ScGeom);
 
 
-bool Ig2_PB_PB_ScGeom::go(const shared_ptr<Shape>& cm1,const shared_ptr<Shape>& cm2,const State& state1, const State& state2, const Vector3r& shift2, const bool& force,const shared_ptr<Interaction>& c)
+bool Ig2_PB_PB_ScGeom::go(const shared_ptr<Shape>& cm1,const shared_ptr<Shape>& cm2,const State& state1, const State& state2, const Vector3r& /*shift2*/, const bool& force,const shared_ptr<Interaction>& c)
 {	
 	
 
@@ -980,7 +980,7 @@ double Ig2_PB_PB_ScGeom::getDet(const Eigen::MatrixXd A){
 
 
 
-bool Ig2_PB_PB_ScGeom::startingPointFeasibilityCLP(const shared_ptr<Shape>& cm1, const State& state1, const shared_ptr<Shape>& cm2, const State& state2, Vector3r &contactPoint, bool &convergeFeasibility){
+bool Ig2_PB_PB_ScGeom::startingPointFeasibilityCLP(const shared_ptr<Shape>& cm1, const State& state1, const shared_ptr<Shape>& cm2, const State& state2, Vector3r &contactPoint, bool &/*convergeFeasibility*/){
 
 //timingDeltas->start(); 
   Vector3r xGlobal (0,0,0); double rescale = 1.0; //bool converge = true;

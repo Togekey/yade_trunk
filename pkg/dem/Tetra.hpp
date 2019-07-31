@@ -116,7 +116,7 @@ class Ig2_Tetra_Tetra_TTetraGeom: public IGeomFunctor
 {
 	public:
 		virtual bool go(const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c);
-		virtual bool goReverse(	const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c){ throw std::logic_error("Ig2_Tetra_Tetra_TTetraGeom::goReverse called, but the functor is symmetric."); }
+		virtual bool goReverse(	const shared_ptr<Shape>& /*cm1*/, const shared_ptr<Shape>& /*cm2*/, const State& /*state1*/, const State& /*state2*/, const Vector3r& /*shift2*/, const bool& /*force*/, const shared_ptr<Interaction>& /*c*/){ throw std::logic_error("Ig2_Tetra_Tetra_TTetraGeom::goReverse called, but the functor is symmetric."); }
 		FUNCTOR2D(Tetra,Tetra);
 		DEFINE_FUNCTOR_ORDER_2D(Tetra,Tetra);
 		YADE_CLASS_BASE_DOC(Ig2_Tetra_Tetra_TTetraGeom,IGeomFunctor,"Create/update geometry of collision between 2 :yref:`tetrahedra<Tetra>` (:yref:`TTetraGeom` instance)");
@@ -156,7 +156,7 @@ class Ig2_Tetra_Tetra_TTetraSimpleGeom: public IGeomFunctor
 		static const int sstMap[6][6];
 	public:
 		virtual bool go(const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c);
-		virtual bool goReverse(	const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c){ throw std::logic_error("Ig2_Tetra_Tetra_TTetraSimpleGeom::goReverse called, but the functor is symmetric."); }
+		virtual bool goReverse(	const shared_ptr<Shape>& , const shared_ptr<Shape>& , const State& , const State& , const Vector3r& , const bool& , const shared_ptr<Interaction>& ){ throw std::logic_error("Ig2_Tetra_Tetra_TTetraSimpleGeom::goReverse called, but the functor is symmetric."); }
 	FUNCTOR2D(Tetra,Tetra);
 	DEFINE_FUNCTOR_ORDER_2D(Tetra,Tetra);
 	YADE_CLASS_BASE_DOC(Ig2_Tetra_Tetra_TTetraSimpleGeom,IGeomFunctor,"EXPERIMANTAL. Create/update geometry of collision between 2 :yref:`tetrahedra<Tetra>` (:yref:`TTetraSimpleGeom` instance)");

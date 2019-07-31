@@ -971,7 +971,7 @@ if(applyForcesAndTorques) CalculateAndApplyForcesAndTorquesOnBodies(true,true);
     }
 }
 
-void HydrodynamicsLawLBM::save(int iter_number, Real timestep)
+void HydrodynamicsLawLBM::save(int iter_number, Real /*timestep*/)
 {
     
     /*--------------------------------------------*/
@@ -1212,7 +1212,7 @@ void HydrodynamicsLawLBM::saveObservedPtc(int iter_number, Real timestep)
 
     return;
 }
-void HydrodynamicsLawLBM::saveObservedNode(int iter_number, Real timestep)
+void HydrodynamicsLawLBM::saveObservedNode(int /*iter_number*/, Real /*timestep*/)
 {
     return;
 }

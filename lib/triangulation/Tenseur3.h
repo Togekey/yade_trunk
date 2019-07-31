@@ -34,7 +34,7 @@ class Tens
 	public:
 		Tens ( void ) {}
 		virtual ~Tens ( void ) {}
-		virtual Real operator() ( int i, int j ) const {return 0;}
+		virtual Real operator() ( int /*i*/, int /*j*/ ) const {return 0;}
 		Real Norme2 ( void );
 		Real Norme ( void ) {return sqrt ( Norme2() );}
 		Real Trace ( void )

@@ -392,7 +392,7 @@ void Bo1_Polyhedra_Aabb::go(const shared_ptr<Shape>& ig, shared_ptr<Bound>& bv, 
 	void Gl1_PolyhedraGeom::go(const shared_ptr<IGeom>& ig, const shared_ptr<Interaction>&,
 		const shared_ptr<Body>&, const shared_ptr<Body>&, bool) {draw(ig);}
 
-	void Gl1_PolyhedraGeom::draw(const shared_ptr<IGeom>& ig){};
+	void Gl1_PolyhedraGeom::draw(const shared_ptr<IGeom>& /*ig*/){};
 
 	GLUquadric* Gl1_PolyhedraPhys::gluQuadric=NULL;
 	Real Gl1_PolyhedraPhys::maxFn;
@@ -403,7 +403,7 @@ void Bo1_Polyhedra_Aabb::go(const shared_ptr<Shape>& ig, shared_ptr<Bound>& bv, 
 	int Gl1_PolyhedraPhys::stacks;
 
 	void Gl1_PolyhedraPhys::go(const shared_ptr<IPhys>& ip, const shared_ptr<Interaction>& i,
-		const shared_ptr<Body>& b1, const shared_ptr<Body>& b2, bool wireFrame){
+		const shared_ptr<Body>& b1, const shared_ptr<Body>& b2, bool /*wireFrame*/){
 		if(!gluQuadric){
 			gluQuadric=gluNewQuadric();
 			if(!gluQuadric) throw runtime_error("Gl1_PolyhedraPhys::go unable to allocate new GLUquadric object (out of memory?).");
@@ -449,7 +449,7 @@ void Bo1_Polyhedra_Aabb::go(const shared_ptr<Shape>& ig, shared_ptr<Bound>& bv, 
 //!Precompute data needed for rotating tangent vectors attached to the interaction
 
 void PolyhedraGeom::precompute(const State& rbp1, const State& rbp2, const Scene* scene,
-	const shared_ptr<Interaction>& c, const Vector3r& currentNormal, bool isNew, const Vector3r& shift2) {
+	const shared_ptr<Interaction>& /*c*/, const Vector3r& currentNormal, bool isNew, const Vector3r& shift2) {
 	
 	if(!isNew) {
 		orthonormal_axis = normal.cross(currentNormal);
@@ -521,7 +521,7 @@ Real Law2_PolyhedraGeom_PolyhedraPhys_Volumetric::elasticEnergy()
 
 //**************************************************************************************
 // Apply forces on polyhedrons in collision based on geometric configuration
-bool Law2_PolyhedraGeom_PolyhedraPhys_Volumetric::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& ip, Interaction* I){
+bool Law2_PolyhedraGeom_PolyhedraPhys_Volumetric::go(shared_ptr<IGeom>& /*ig*/, shared_ptr<IPhys>& /*ip*/, Interaction* I){
 		if (!I->geom) {return true;} 
 		const shared_ptr<PolyhedraGeom>& contactGeom(YADE_PTR_DYN_CAST<PolyhedraGeom>(I->geom));
 		if(!contactGeom) {return true;} 

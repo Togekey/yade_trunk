@@ -401,7 +401,7 @@ Real Law2_ScGeom_ViscElCapPhys_Basic::Soulie_f(const ScGeom& geom, ViscElCapPhys
   return fC;
 }
 
-Real Law2_ScGeom_ViscElCapPhys_Basic::None_f(const ScGeom& geom, ViscElCapPhys& phys) {
+Real Law2_ScGeom_ViscElCapPhys_Basic::None_f(const ScGeom& /*geom*/, ViscElCapPhys& /*phys*/) {
   return 0;
 }
 

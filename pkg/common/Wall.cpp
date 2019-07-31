@@ -10,7 +10,7 @@ YADE_PLUGIN((Wall)(Bo1_Wall_Aabb)
 
 Wall::~Wall(){} // vtable
 
-void Bo1_Wall_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* b){
+void Bo1_Wall_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* /*b*/){
 	Wall* wall=static_cast<Wall*>(cm.get());
 	if(!bv){ bv=shared_ptr<Bound>(new Aabb); }
 	Aabb* aabb=static_cast<Aabb*>(bv.get());

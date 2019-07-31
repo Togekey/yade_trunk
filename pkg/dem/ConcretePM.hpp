@@ -262,7 +262,7 @@ class Law2_ScGeom_CpmPhys_Cpm: public LawFunctor{
 	virtual bool go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I);
 	Real elasticEnergy();
 
-	Real yieldSigmaTMagnitude(Real sigmaN, Real omega, Real undamagedCohesion, Real tanFrictionAngle) {
+	Real yieldSigmaTMagnitude(Real /*sigmaN*/, Real /*omega*/, Real /*undamagedCohesion*/, Real /*tanFrictionAngle*/) {
 #ifdef CPM_MATERIAL_MODEL
 		return CPM_YIELD_SIGMA_T_MAGNITUDE(sigmaN);
 #else

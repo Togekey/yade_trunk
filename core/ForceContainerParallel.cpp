@@ -239,9 +239,9 @@ void ForceContainer::resize(size_t newSize, int threadN) {
   syncedSizes=false;
 }
 
-const int ForceContainer::getNumAllocatedThreads() const {return nThreads;}
-const bool ForceContainer::getMoveRotUsed() const {return moveRotUsed;}
-const bool ForceContainer::getPermForceUsed() const {return permForceUsed;}
+int ForceContainer::getNumAllocatedThreads() const {return nThreads;}
+bool ForceContainer::getMoveRotUsed() const {return moveRotUsed;}
+bool ForceContainer::getPermForceUsed() const {return permForceUsed;}
 
 void ForceContainer::syncSizesOfContainers() {
   if (syncedSizes) return;

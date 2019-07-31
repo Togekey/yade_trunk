@@ -344,7 +344,7 @@ void RockBolt::action(){
 }
 
 
-Vector3r RockBolt::getNodeDistance(const PotentialBlock* cm1,const State* state1,const PotentialBlock* cm2,const State* state2, const Vector3r localPt1, const Vector3r localPt2){
+Vector3r RockBolt::getNodeDistance(const PotentialBlock* /*cm1*/,const State* state1,const PotentialBlock* /*cm2*/,const State* state2, const Vector3r localPt1, const Vector3r localPt2){
 	//Vector3r nodeDist = Vector3r(0,0,0.0);
 	Vector3r global1 = state1->ori*localPt1 + state1->pos;
 	Vector3r global2 = state2->ori*localPt2 + state2->pos;

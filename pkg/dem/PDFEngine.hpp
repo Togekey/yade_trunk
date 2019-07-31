@@ -59,7 +59,7 @@ public:
 		return out;
 	}
 	void cleanData() { m_stress = Matrix3r::Zero(); }
-	bool addData(const shared_ptr<Interaction>& I, Real const& dS, Real const& V, int const& N) {
+	bool addData(const shared_ptr<Interaction>& I, Real const& dS, Real const& V, int const& /*N*/) {
 		if(!I->isReal()) return false;
 	ScGeom* geom=dynamic_cast<ScGeom*>(I->geom.get());
 	Phys* phys=dynamic_cast<Phys*>(I->phys.get());

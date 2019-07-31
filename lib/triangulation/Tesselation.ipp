@@ -565,7 +565,7 @@ double _Tesselation<TT>::computeVFacetArea ( FiniteEdgesIterator ed_it )
 }
 
 template<class TT>
-CVector _Tesselation<TT>::alphaVoronoiFaceArea (const Edge& ed_it, const AlphaShape& as, const RTriangulation& Tro)
+CVector _Tesselation<TT>::alphaVoronoiFaceArea (const Edge& ed_it, const AlphaShape& as, const RTriangulation& /*Tro*/)
 {
 	//Overall, we calculate the area vector of the polygonal Voronoi face between two spheres, this is done by integrating x×dx
  

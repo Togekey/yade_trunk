@@ -500,7 +500,7 @@ bool Ig2_Tetra_Tetra_TTetraSimpleGeom::go(
 														const State& state1,
 														const State& state2,
 														const Vector3r& shift2,
-														const bool& force,
+														const bool& /*force*/,
 														const shared_ptr<Interaction>& interaction)
 {
 	const Se3r& se31=state1.se3; const Se3r& se32=state2.se3;

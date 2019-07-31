@@ -18,9 +18,9 @@
 #include <lib/pyutil/doc_opts.hpp>
 
 
-template<typename T>	void preLoad(T&){};
-template<typename T> void postLoad(T& obj){};
-template<typename T>	void preSave(T&){};
+template<typename T> void preLoad(T&){};
+template<typename T> void postLoad(T&){};
+template<typename T> void preSave(T&){};
 template<typename T> void postSave(T&){};
 
 
@@ -150,7 +150,7 @@ if(key==BOOST_PP_STRINGIZE(_DEPREC_OLDNAME(z))){ \
 #define _REGISTER_BOOST_ATTRIBUTES_REPEAT(x,y,z) if((_ATTR_FLG(z) & yade::Attr::noSave)==0) { ar & BOOST_SERIALIZATION_NVP(_ATTR_NAM(z)); }
 #define _REGISTER_BOOST_ATTRIBUTES(baseClass,attrs) \
 	friend class boost::serialization::access; \
-	private: template<class ArchiveT> void serialize(ArchiveT & ar, unsigned int version){ \
+	private: template<class ArchiveT> void serialize(ArchiveT & ar, unsigned int /*version*/){ \
 		ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(baseClass);  \
 		/* with ADL, either the generic (empty) version above or baseClass::preLoad etc will be called (compile-time resolution) */ \
 		if(ArchiveT::is_loading::value) preLoad(*this); else preSave(*this); \
@@ -266,7 +266,7 @@ if(key==BOOST_PP_STRINGIZE(_DEPREC_OLDNAME(z))){ \
 
 class Serializable: public Factorable {
 	public:
-		template <class ArchiveT> void serialize(ArchiveT & ar, unsigned int version){ };
+		template <class ArchiveT> void serialize(ArchiveT & /*ar*/, unsigned int /*version*/){ };
 		// lovely cast members like in eigen :-)
 		template <class DerivedT> const DerivedT& cast() const { return *static_cast<DerivedT*>(this); }
 		template <class DerivedT> DerivedT& cast(){ return *static_cast<DerivedT*>(this); }
@@ -280,7 +280,7 @@ class Serializable: public Factorable {
 		void pyUpdateAttrs(const boost::python::dict& d);
 		//static void pyUpdateAttrs(const shared_ptr<Serializable>&, const boost::python::dict& d);
 
-		virtual void pySetAttr(const std::string& key, const boost::python::object& value){ PyErr_SetString(PyExc_AttributeError,(std::string("No such attribute: ")+key+".").c_str()); boost::python::throw_error_already_set(); };
+		virtual void pySetAttr(const std::string& key, const boost::python::object& /*value*/){ PyErr_SetString(PyExc_AttributeError,(std::string("No such attribute: ")+key+".").c_str()); boost::python::throw_error_already_set(); };
 		//virtual boost::python::list pyKeys() const { return boost::python::list(); };
 		virtual boost::python::dict pyDict() const { return boost::python::dict(); }
 		virtual void callPostLoad(void){ postLoad(*this); }
@@ -291,7 +291,7 @@ class Serializable: public Factorable {
 		virtual void pyRegisterClass(boost::python::object _scope);
 		// perform any manipulation of arbitrary constructor arguments coming from python, manipulating them in-place;
 		// the remainder is passed to the Serializable_ctor_kwAttrs of the respective class (note: args must be empty)
-		virtual void pyHandleCustomCtorArgs(boost::python::tuple& args, boost::python::dict& kw){ return; }
+		virtual void pyHandleCustomCtorArgs(boost::python::tuple& /*args*/, boost::python::dict& /*kw*/){ return; }
 		
 		//! string representation of this object
 		std::string pyStr() { return "<"+getClassName()+" instance at "+boost::lexical_cast<string>(this)+">"; }

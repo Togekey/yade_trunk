@@ -98,7 +98,7 @@ bool Gl1_PotentialParticle::initialized;
 
 bool Gl1_PotentialParticle::wire;
 
-void Gl1_PotentialParticle::go( const shared_ptr<Shape>& cm, const shared_ptr<State>& state ,bool wire2, const GLViewInfo&) {
+void Gl1_PotentialParticle::go( const shared_ptr<Shape>& cm, const shared_ptr<State>& /*state*/ ,bool wire2, const GLViewInfo&) {
 
 	PotentialParticle* pp = static_cast<PotentialParticle*>(cm.get());
 	int shapeId = pp->id;

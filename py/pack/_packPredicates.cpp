@@ -319,7 +319,11 @@ public:
 	py::tuple aabb() const {
 		Real inf=std::numeric_limits<Real>::infinity();
 		std::pair<Vector3r,Vector3r> bb; bb.first=Vector3r(inf,inf,inf); bb.second=Vector3r(-inf,-inf,-inf);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wcast-function-type"
 		gts_surface_foreach_vertex(surf,(GtsFunc)vertex_aabb,&bb);
+#pragma GCC diagnostic pop
 		return vvec2tuple(bb.first,bb.second);
 	}
 	bool ptCheck(const Vector3r& pt) const{

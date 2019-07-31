@@ -28,7 +28,7 @@ bool Ig2_Polyhedra_Polyhedra_PolyhedraGeom::go(
 		const State& state1,
 		const State& state2,
 		const Vector3r& shift2,
-		const bool& force,
+		const bool& /*force*/,
 		const shared_ptr<Interaction>& interaction) {
 	//get polyhedras
 	const Se3r& se31=state1.se3; 
@@ -152,7 +152,7 @@ bool Ig2_Polyhedra_Polyhedra_PolyhedraGeom::goReverse(
 /*! Create Polyhedra (collision geometry) from colliding Polyhedron and Wall. */
 
 bool Ig2_Wall_Polyhedra_PolyhedraGeom::go(const shared_ptr<Shape>& shape1,const shared_ptr<Shape>& shape2,
-		const State& state1,const State& state2, const Vector3r& shift2, const bool& force,
+		const State& state1,const State& state2, const Vector3r& shift2, const bool& /*force*/,
 		const shared_ptr<Interaction>& interaction) {
 	const int& PA(shape1->cast<Wall>().axis); 
 	const int& sense(shape1->cast<Wall>().sense);
@@ -228,7 +228,7 @@ bool Ig2_Wall_Polyhedra_PolyhedraGeom::go(const shared_ptr<Shape>& shape1,const 
 
 bool Ig2_Facet_Polyhedra_PolyhedraGeom::go(const shared_ptr<Shape>& shape1,const shared_ptr<Shape>& shape2,
 																					 const State& state1,const State& state2,
-																					 const Vector3r& shift2, const bool& force,
+																					 const Vector3r& shift2, const bool& /*force*/,
 																					 const shared_ptr<Interaction>& interaction){
 	
 	const Se3r& se31=state1.se3; 
@@ -326,7 +326,7 @@ bool Ig2_Facet_Polyhedra_PolyhedraGeom::go(const shared_ptr<Shape>& shape1,const
 //**********************************************************************************
 /*! Create Polyhedra (collision geometry) from colliding Polyhedron and Sphere. */
 
-bool Ig2_Sphere_Polyhedra_ScGeom::go(const shared_ptr<Shape>& shape1,const shared_ptr<Shape>& shape2,const State& state1,const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& interaction){
+bool Ig2_Sphere_Polyhedra_ScGeom::go(const shared_ptr<Shape>& shape1,const shared_ptr<Shape>& shape2,const State& state1,const State& state2, const Vector3r& shift2, const bool& /*force*/, const shared_ptr<Interaction>& interaction){
 
 	const Se3r& se31=state1.se3; 
 	const Se3r& se32=state2.se3;

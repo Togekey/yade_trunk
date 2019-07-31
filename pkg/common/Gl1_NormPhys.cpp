@@ -22,7 +22,7 @@
 	int Gl1_NormPhys::weakFilter;
 	Real Gl1_NormPhys::weakScale;
 
-	void Gl1_NormPhys::go(const shared_ptr<IPhys>& ip, const shared_ptr<Interaction>& i, const shared_ptr<Body>& b1, const shared_ptr<Body>& b2, bool wireFrame){
+	void Gl1_NormPhys::go(const shared_ptr<IPhys>& ip, const shared_ptr<Interaction>& i, const shared_ptr<Body>& b1, const shared_ptr<Body>& b2, bool /*wireFrame*/){
 		if(!gluQuadric){ gluQuadric=gluNewQuadric(); if(!gluQuadric) throw runtime_error("Gl1_NormPhys::go unable to allocate new GLUquadric object (out of memory?)."); }
 		NormPhys* np=static_cast<NormPhys*>(ip.get());
 		shared_ptr<IGeom> ig(i->geom); if(!ig) return; // changed meanwhile?

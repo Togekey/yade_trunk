@@ -23,7 +23,7 @@ typedef VECTOR12_TEMPLATE(Real) Vector12r;
 
 CREATE_LOGGER(If2_Lin4NodeTetra_LinIsoRayleighDampElast);
 
-void If2_Lin4NodeTetra_LinIsoRayleighDampElast::go(const shared_ptr<Shape>& element,const shared_ptr<Material>& material,const shared_ptr<Body>& bdy)
+void If2_Lin4NodeTetra_LinIsoRayleighDampElast::go(const shared_ptr<Shape>& element,const shared_ptr<Material>& material,const shared_ptr<Body>& /*bdy*/)
 {
 
 	shared_ptr<Lin4NodeTetra> tetel=YADE_PTR_CAST<Lin4NodeTetra>(element);

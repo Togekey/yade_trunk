@@ -30,7 +30,7 @@ unsigned int ChainedState::currentChain=0;
 //!Sphere-cylinder or cylinder-cylinder not implemented yet, see Ig2_ChainedCylinder_ChainedCylinder_ScGeom6D and test/chained-cylinder-spring.py
 bool Ig2_Sphere_ChainedCylinder_CylScGeom::go(	const shared_ptr<Shape>& cm1,
 						const shared_ptr<Shape>& cm2,
-						const State& state1, const State& state2, const Vector3r& shift2, const bool& force,
+						const State& state1, const State& state2, const Vector3r& shift2, const bool& /*force*/,
 						const shared_ptr<Interaction>& c)
 {
 	const State* sphereSt=YADE_CAST<const State*>(&state1);
@@ -203,7 +203,7 @@ bool Ig2_Sphere_ChainedCylinder_CylScGeom::goReverse(	const shared_ptr<Shape>& c
 
 bool Ig2_Sphere_ChainedCylinder_CylScGeom6D::go(	const shared_ptr<Shape>& cm1,
         const shared_ptr<Shape>& cm2,
-        const State& state1, const State& state2, const Vector3r& shift2, const bool& force,
+        const State& state1, const State& state2, const Vector3r& shift2, const bool& /*force*/,
         const shared_ptr<Interaction>& c)
 {
 	const State* sphereSt=YADE_CAST<const State*>(&state1);
@@ -367,7 +367,7 @@ bool Ig2_Sphere_ChainedCylinder_CylScGeom6D::goReverse( const shared_ptr<Shape>&
 
 bool Ig2_ChainedCylinder_ChainedCylinder_ScGeom6D::go(	const shared_ptr<Shape>& cm1,
 							const shared_ptr<Shape>& cm2,
-							const State& state1, const State& state2, const Vector3r& shift2, const bool& force,
+							const State& state1, const State& state2, const Vector3r& shift2, const bool& /*force*/,
 							const shared_ptr<Interaction>& c)
 {
 	const ChainedState *pChain1, *pChain2;
@@ -626,7 +626,7 @@ void Gl1_Cylinder::drawCylinder(bool wire, Real radius, Real length, const Quate
 
 #endif
 
-void Bo1_Cylinder_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* b){
+void Bo1_Cylinder_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* /*b*/){
 	Cylinder* cylinder = static_cast<Cylinder*>(cm.get());
 	if(!bv){ bv=shared_ptr<Bound>(new Aabb); }
 	Aabb* aabb=static_cast<Aabb*>(bv.get());
@@ -642,7 +642,7 @@ void Bo1_Cylinder_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, c
 	}
 }
 
-void Bo1_ChainedCylinder_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* b){
+void Bo1_ChainedCylinder_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* /*b*/){
 	ChainedCylinder* cylinder = static_cast<ChainedCylinder*>(cm.get());
 	if(!bv){ bv=shared_ptr<Bound>(new Aabb); }
 	Aabb* aabb=static_cast<Aabb*>(bv.get());

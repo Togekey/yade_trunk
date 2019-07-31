@@ -141,7 +141,7 @@ Real Law2_ScGeom_ElectrostaticPhys::DL_DichoAdimExp_integrate_u(Real const& un, 
 	return d;
 }
 
-Real Law2_ScGeom_ElectrostaticPhys::ObjF(Real const& un, Real const& eps, Real const& alpha, Real const& prevDotU, Real const& dt, Real const& prev_d, Real const& undot, Real const& Z, Real const& K, Real const& d)
+Real Law2_ScGeom_ElectrostaticPhys::ObjF(Real const& un, Real const& eps, Real const& alpha, Real const& prevDotU, Real const& dt, Real const& prev_d, Real const& /*undot*/, Real const& Z, Real const& K, Real const& d)
 {
 	Real a = (std::exp(d) < eps) ? alpha : 0.;
 	

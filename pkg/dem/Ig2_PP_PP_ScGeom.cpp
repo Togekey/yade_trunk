@@ -37,7 +37,7 @@ YADE_PLUGIN((Ig2_PP_PP_ScGeom)
 CREATE_LOGGER(Ig2_PP_PP_ScGeom);
 
 
-bool Ig2_PP_PP_ScGeom::go(const shared_ptr<Shape>& cm1,const shared_ptr<Shape>& cm2,const State& state1, const State& state2, const Vector3r& shift2, const bool& force,const shared_ptr<Interaction>& c) {
+bool Ig2_PP_PP_ScGeom::go(const shared_ptr<Shape>& cm1,const shared_ptr<Shape>& cm2,const State& state1, const State& state2, const Vector3r& /*shift2*/, const bool& force,const shared_ptr<Interaction>& c) {
 
 	PotentialParticle *s1=static_cast<PotentialParticle*>(cm1.get());
 	PotentialParticle *s2=static_cast<PotentialParticle*>(cm2.get());

@@ -3,7 +3,7 @@
 YADE_PLUGIN((InteractionLoop));
 CREATE_LOGGER(InteractionLoop);
 
-void InteractionLoop::pyHandleCustomCtorArgs(boost::python::tuple& t, boost::python::dict& d){
+void InteractionLoop::pyHandleCustomCtorArgs(boost::python::tuple& t, boost::python::dict& /*d*/){
 	if(boost::python::len(t)==0) return; // nothing to do
 	if(boost::python::len(t)!=3) throw invalid_argument("Exactly 3 lists of functors must be given");
 	// parse custom arguments (3 lists) and do in-place modification of args

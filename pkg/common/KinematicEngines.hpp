@@ -21,7 +21,7 @@ REGISTER_SERIALIZABLE(CombinedKinematicEngine);
 
 struct KinematicEngine: public PartialEngine{
 	virtual void action();
-	virtual void apply(const vector<Body::id_t>& ids){ LOG_ERROR("KinematicEngine::apply called, derived class ("<<getClassName()<<") did not override that method?"); }
+	virtual void apply(const vector<Body::id_t>& /*ids*/){ LOG_ERROR("KinematicEngine::apply called, derived class ("<<getClassName()<<") did not override that method?"); }
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(KinematicEngine,PartialEngine,"Abstract engine for applying prescribed displacement.\n\n.. note:: Derived classes should override the ``apply`` with given list of ``ids`` (not ``action`` with :yref:`PartialEngine.ids`), so that they work when combined together; :yref:`velocity<State.vel>` and :yref:`angular velocity<State.angVel>` of all subscribed bodies is reset before the ``apply`` method is called, it should therefore only increment those quantities.",
 		/* attrs*/, /* ctor */, /* py */ .def("__add__",&CombinedKinematicEngine::fromTwo) 
 	)

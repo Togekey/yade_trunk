@@ -63,7 +63,7 @@ boost::tuple<Vector3r,bool, double, double,double> Ig2_Sphere_PFacet_ScGridCoGeo
 
 bool Ig2_Sphere_PFacet_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 						const shared_ptr<Shape>& cm2,
-						const State& state1, const State& state2, const Vector3r& shift2, const bool& force,
+						const State& state1, const State& /*state2*/, const Vector3r& shift2, const bool& force,
 						const shared_ptr<Interaction>& c)
 {
 	TIMING_DELTAS_START();
@@ -464,7 +464,7 @@ bool Ig2_Sphere_PFacet_ScGridCoGeom::goReverse(	const shared_ptr<Shape>& cm1,
 }
 YADE_PLUGIN((Ig2_Sphere_PFacet_ScGridCoGeom));
 
-bool Ig2_GridConnection_PFacet_ScGeom::go( const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c)
+bool Ig2_GridConnection_PFacet_ScGeom::go( const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& /*state1*/, const State& /*state2*/, const Vector3r& /*shift2*/, const bool& /*force*/, const shared_ptr<Interaction>& c)
 {
 	GridConnection* gridCo    = YADE_CAST<GridConnection*>(cm1.get());
 	PFacet* Pfacet = YADE_CAST<PFacet*>(cm2.get());
@@ -509,7 +509,7 @@ YADE_PLUGIN((Ig2_GridConnection_PFacet_ScGeom));
 
 
 
-bool Ig2_PFacet_PFacet_ScGeom::go( const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c)
+bool Ig2_PFacet_PFacet_ScGeom::go( const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& /*state1*/, const State& /*state2*/, const Vector3r& /*shift2*/, const bool& /*force*/, const shared_ptr<Interaction>& c)
 {
 	PFacet* Pfacet1 = YADE_CAST<PFacet*>(cm1.get());
 	PFacet* Pfacet2 = YADE_CAST<PFacet*>(cm2.get());
@@ -771,7 +771,7 @@ YADE_PLUGIN((Ig2_PFacet_PFacet_ScGeom));
 
 /********* Wall + Sphere **********/
 
-bool Ig2_Wall_PFacet_ScGeom::go(const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c){
+bool Ig2_Wall_PFacet_ScGeom::go(const shared_ptr<Shape>& /*cm1*/, const shared_ptr<Shape>& cm2, const State& /*state1*/, const State& /*state2*/, const Vector3r& /*shift2*/, const bool& /*force*/, const shared_ptr<Interaction>& c){
 	
 	PFacet* Pfacet = YADE_CAST<PFacet*>(cm2.get());
 
@@ -803,7 +803,7 @@ bool Ig2_Wall_PFacet_ScGeom::go(const shared_ptr<Shape>& cm1, const shared_ptr<S
 YADE_PLUGIN((Ig2_Wall_PFacet_ScGeom));
 //!##################	Bounds   #####################
 
-void Bo1_PFacet_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* b)
+void Bo1_PFacet_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& /*se3*/, const Body* /*b*/)
 {	
 	PFacet* Pfacet = YADE_CAST<PFacet*>(cm.get());
 	if(!bv){ bv=shared_ptr<Bound>(new Aabb); }

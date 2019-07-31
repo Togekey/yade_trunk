@@ -34,8 +34,8 @@ class PeriodicCellInfo : public FlowCellInfo_FlowEngine_PeriodicInfo
 		volumeSign=0;}
 	~PeriodicCellInfo (void) {}
 
-	inline const double shiftedP (void) const {return isGhost? (*_pression)+pShift() :(*_pression) ;}
-	inline const double pShift (void) const {return deltaP[0]*period[0] + deltaP[1]*period[1] +deltaP[2]*period[2];}
+	inline double shiftedP (void) const {return isGhost? (*_pression)+pShift() :(*_pression) ;}
+	inline double pShift (void) const {return deltaP[0]*period[0] + deltaP[1]*period[1] +deltaP[2]*period[2];}
 // 	inline const double p (void) {return shiftedP();}
 	inline void setP (const Real& p) {pression=p;}
 	bool isReal (void) {return !(isFictious || isGhost);}

@@ -60,7 +60,7 @@ void NewtonIntegrator::updateEnergy(const shared_ptr<Body>& b, const State* stat
 	scene->energy->add(-gravity.dot(b->state->vel)*b->state->mass*scene->dt,"gravWork",fieldWorkIx,/*non-incremental*/false);
 }
 
-void NewtonIntegrator::saveMaximaVelocity(const Body::id_t& id, State* state){
+void NewtonIntegrator::saveMaximaVelocity(const Body::id_t& /*id*/, State* state){
 	#ifdef YADE_OPENMP
 		Real& thrMaxVSq=threadMaxVelocitySq[omp_get_thread_num()]; thrMaxVSq=max(thrMaxVSq,state->vel.squaredNorm());
 	#else

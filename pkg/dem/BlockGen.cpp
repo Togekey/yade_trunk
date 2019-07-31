@@ -61,7 +61,7 @@ YADE_PLUGIN((BlockGen));
 
 BlockGen::~BlockGen () {}
 //std::ofstream BlockGen::output("BlockGenFindExtreme.txt", fstream::trunc); // it was always creating files "BlkGen" "BlockGenFindExtreme.txt", but they are not used in the code, so I commented this out, Janek
-bool BlockGen::generate(string& message)
+bool BlockGen::generate(string& /*message*/)
 {
 
 	
@@ -2888,7 +2888,7 @@ model2.scaling(0);
   //delete & model2;
   return s;
 }
-void BlockGen::positionRootBody(shared_ptr<Scene>& scene)
+void BlockGen::positionRootBody(shared_ptr<Scene>& /*scene*/)
 {
 }
 #endif // YADE_POTENTIAL_BLOCKS

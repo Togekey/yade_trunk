@@ -40,7 +40,7 @@ bool Collider::mayCollide(const Body* b1, const Body* b2
 	;
 }
 
-void Collider::pyHandleCustomCtorArgs(boost::python::tuple& t, boost::python::dict& d){
+void Collider::pyHandleCustomCtorArgs(boost::python::tuple& t, boost::python::dict& /*d*/){
 	if(boost::python::len(t)==0) return; // nothing to do
 	if(boost::python::len(t)!=1) throw invalid_argument(("Collider optionally takes exactly one list of BoundFunctor's as non-keyword argument for constructor ("+boost::lexical_cast<string>(boost::python::len(t))+" non-keyword ards given instead)").c_str());
 	typedef std::vector<shared_ptr<BoundFunctor> > vecBound;

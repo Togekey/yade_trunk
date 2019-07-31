@@ -46,7 +46,7 @@ class BodyContainer: public Serializable{
 			smart_iterator& operator=(const smart_iterator& rhs) {ContainerT::iterator::operator=(rhs); end=rhs.end; return *this;}
 			smart_iterator() {}
 			smart_iterator(const ContainerT::iterator& source) {(*this)=source;}
-			smart_iterator(const smart_iterator& source) {(*this)=source; end=source.end;}
+			smart_iterator(const smart_iterator& source) : ContainerT::iterator()  {(*this)=source; end=source.end;}
 		};
 		using iterator = smart_iterator ;
 		using const_iterator = const smart_iterator ;
@@ -67,11 +67,11 @@ class BodyContainer: public Serializable{
 			return temp;
 		}
 
-		const size_t size() const { return body.size(); }
+		size_t size() const { return body.size(); }
 		shared_ptr<Body>& operator[](unsigned int id){ return body[id];}
 		const shared_ptr<Body>& operator[](unsigned int id) const { return body[id]; }
 
-		const bool exists(Body::id_t id) const {
+		bool exists(Body::id_t id) const {
 			return ((id>=0) && ((size_t)id<body.size()) && ((bool)body[id]));
 		}
 		bool erase(Body::id_t id, bool eraseClumpMembers);

@@ -125,9 +125,9 @@ class ForceContainer {
 		// perhaps should be private and friend Scene or whatever the only caller should be
 		void reset(long iter, bool resetAll=false);
 		//! say for how many threads we have allocated space
-		const int getNumAllocatedThreads() const;
-		const bool getMoveRotUsed() const;
-		const bool getPermForceUsed() const;
+		int getNumAllocatedThreads() const;
+		bool getMoveRotUsed() const;
+		bool getPermForceUsed() const;
 
 	DECLARE_LOGGER;
 };

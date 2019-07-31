@@ -914,7 +914,7 @@ bool foundBreak = false;
 }
 
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
-void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::applyForces(Solver& flow)
+void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::applyForces(Solver& /*flow*/)
 {
 	Vector3r force;
 	Vector3r torque;

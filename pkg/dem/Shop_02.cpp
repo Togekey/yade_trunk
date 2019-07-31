@@ -134,7 +134,7 @@ Vector3r Shop::inscribedCircleCenter(const Vector3r& v0, const Vector3r& v1, con
 	return v0+((v2-v0)*(v1-v0).norm()+(v1-v0)*(v2-v0).norm())/((v1-v0).norm()+(v2-v1).norm()+(v0-v2).norm());
 }
 
-void Shop::getViscoelasticFromSpheresInteraction( Real tc, Real en, Real es, shared_ptr<ViscElMat> b)
+void Shop::getViscoelasticFromSpheresInteraction( Real /*tc*/, Real /*en*/, Real /*es*/, shared_ptr<ViscElMat> /*b*/)
 {
     throw runtime_error("Setting parameters in ViscoElastic model is changed. You do not need to use getViscoelasticFromSpheresInteraction function any more, because this functino is deprecated. You need to set the parameters tc, en and es directly in material properties. Please, update your scripts. How to do it you can see in the following commit https://gitlab.com/yade-dev/trunk/commit/1987c2febdb8a6ce2d27f2dc1bb29df0dc5f686e");
 }
@@ -915,7 +915,7 @@ Real Shop::getVoidRatio2D(const shared_ptr<Scene>& _scene, Real _zlen){
 }
 
 /*! Added function to get stress tensor and tangent operator tensor. By Ning Guo */
-py::tuple Shop::getStressAndTangent(Real volume, bool symmetry){
+py::tuple Shop::getStressAndTangent(Real volume, bool /*symmetry*/){
 	Scene* scene=Omega::instance().getScene().get();
 	if (volume==0) volume = scene->isPeriodic?scene->cell->hSize.determinant():1;
 	Matrix3r stress = Matrix3r::Zero();

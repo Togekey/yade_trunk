@@ -214,7 +214,7 @@ void CircularFactory::pickRandomPosition(Vector3r& c, Real r){
 	c = center+q*Vector3r(cos(angle)*rr,sin(angle)*rr,0)+normal*l;
 }
 
-void BoxFactory::pickRandomPosition(Vector3r& c, Real r){
+void BoxFactory::pickRandomPosition(Vector3r& c, Real /*r*/){
 	const Quaternionr q(Quaternionr().setFromTwoVectors(Vector3r::UnitZ(),normal));
 	//c=center+q*Vector3r((randomUnit()-.5)*2*(extents[0]-r),(randomUnit()-.5)*2*(extents[1]-r),(randomUnit()-.5)*2*(extents[2]-r));
 	c=center+q*Vector3r((randomUnit()-.5)*2*(extents[0]),(randomUnit()-.5)*2*(extents[1]),(randomUnit()-.5)*2*(extents[2]));

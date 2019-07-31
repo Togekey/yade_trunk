@@ -22,7 +22,7 @@ YADE_PLUGIN((GlobalStiffnessTimeStepper));
 
 GlobalStiffnessTimeStepper::~GlobalStiffnessTimeStepper() {}
 
-void GlobalStiffnessTimeStepper::findTimeStepFromBody(const shared_ptr<Body>& body, Scene * ncb)
+void GlobalStiffnessTimeStepper::findTimeStepFromBody(const shared_ptr<Body>& body, Scene * /*ncb*/)
 {
 	State* sdec=body->state.get();
 	Vector3r&  stiffness= stiffnesses[body->getId()];

@@ -91,7 +91,7 @@ bool LBMnode::checkIsNewFluid(){
     } else return(false);
 }
 
-void LBMnode::DispatchBoundaryConditions(int SizeNx,int SizeNy,int SizeNz){
+void LBMnode::DispatchBoundaryConditions(int SizeNx,int SizeNy,int /*SizeNz*/){
     applyBC                  =false;
     applyXmBC                =false;
     applyYmXmBC              =false;

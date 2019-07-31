@@ -209,7 +209,7 @@ Real Law2_ScGeom_ImplicitLubricationPhys::DichoAdimExp_integrate_u(Real const& u
 	return d;
 }
 
-Real Law2_ScGeom_ImplicitLubricationPhys::ObjF(Real const& un, Real const& eps, Real const& alpha, Real const& prevDotU, Real const& dt, Real const& prev_d, Real const& undot, Real const& d, Real const& ladh)
+Real Law2_ScGeom_ImplicitLubricationPhys::ObjF(Real const& un, Real const& eps, Real const& alpha, Real const& prevDotU, Real const& dt, Real const& prev_d, Real const& /*undot*/, Real const& d, Real const& ladh)
 {
 	Real a = (std::exp(d) < (eps + ladh)) ? alpha : 0.;
 	return theta*(-(1.+a)*std::exp(d) + a*eps+un) + (1.-theta)*prevDotU*std::exp(prev_d-d) - 1./dt*(1. - std::exp(prev_d-d));

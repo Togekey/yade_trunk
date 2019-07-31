@@ -801,7 +801,7 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setNewCellTemps(bool addT
 }
 
 template<class _Tesselation, class FlowType>
-int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::taucsSolve(Real dt)
+int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::taucsSolve(Real /*dt*/)
 {
 #ifdef TAUCS_LIB
 	if (debugOut) cerr <<endl<<"TAUCS solve"<<endl;
@@ -857,7 +857,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::taucsSolve(Real dt)
 	return 0;
 }
 template<class _Tesselation, class FlowType>
-int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolve(Real dt)
+int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolve(Real /*dt*/)
 {
 	cerr <<endl<<"PardisoSolve solve"<<endl;
 	#ifndef PARDISO

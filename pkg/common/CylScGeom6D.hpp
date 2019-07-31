@@ -29,7 +29,7 @@ REGISTER_SERIALIZABLE(CylScGeom);
 class CylScGeom6D: public ScGeom6D {
 public:
     virtual ~CylScGeom6D() {};
-    void precomputeRotations(const State& rbp1, const State& rbp2, bool isNew, bool creep=false) {
+    void precomputeRotations(const State& rbp1, const State& rbp2, bool /*isNew*/, bool /*creep*/=false) {
       initRotations(rbp1,rbp2);
     }
     void initRotations(const State& rbp1, const State& rbp2){

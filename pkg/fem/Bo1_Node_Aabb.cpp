@@ -11,7 +11,7 @@
 #include <pkg/fem/Node.hpp>
 #include <pkg/common/Aabb.hpp>
 
-void Bo1_Node_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* b){
+void Bo1_Node_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* /*b*/){
 	Node* node = static_cast<Node*>(cm.get());
 	if(!bv){ bv=shared_ptr<Bound>(new Aabb); }
 	Aabb* aabb=static_cast<Aabb*>(bv.get());
