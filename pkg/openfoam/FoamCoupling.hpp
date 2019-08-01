@@ -8,18 +8,25 @@
 #include <core/Body.hpp>
 #include <core/Omega.hpp>
 #include <vector> 
-#include <core/InteractionContainer.hpp> 
 #include <lib/serialization/Serializable.hpp>
-#include <core/Subdomain.hpp>
 #include <pkg/common/Aabb.hpp>
 #include <pkg/common/Dispatching.hpp>
 #include <lib/base/Logging.hpp>
+#include <core/InteractionContainer.hpp> 
+#include <core/Subdomain.hpp>
 
 
 
 namespace yade { // Cannot have #include directive inside.
 
 class Scene; 
+
+// class particleContainer{
+// 	public: 
+// 		std::vector<double> particleData;
+// 		int fluidRank;  
+// }; 
+
 
 class FoamCoupling : public GlobalEngine {
 	private:
@@ -86,7 +93,14 @@ class FoamCoupling : public GlobalEngine {
 		void runCoupling(); 
 		bool exchangeData();
                 void castTerminate(); 
-		Real getViscousTimeScale();  	// not fully implemented, piece of code left in foam.
+		Real getViscousTimeScale();  // not fully implemented, piece of code left in foam.
+		void getParticleForce();
+		void verifyParticleDetection(); 
+		void buildSharedIds(); 
+		bool ifFluidDomain(const Body::id_t& );
+		unsigned ifSharedId(const Body::id_t& ); 
+		bool checkSharedDomains(const int& ); 
+		
 		virtual void action(); 
 		virtual ~FoamCoupling(){}; 
 		
@@ -95,15 +109,18 @@ class FoamCoupling : public GlobalEngine {
 		std::vector<double> particleData;
 		std::vector<int>  procList; 
 		std::vector<Body::id_t> fluidDomains; 
-		std::vector<int> sendRecvRanks; 
+		std::vector<int> sendRecvRanks;
+		std::vector< std::pair <Body::id_t, std::vector<Body::id_t>>  > sharedIds; //  
 		
 		Real foamDeltaT; 
+		
 		long int  dataExchangeInterval=1; 
 		bool recvdFoamDeltaT; 
 		bool isGaussianInterp;
 		void getFluidDomainBbox(); 
 		void findIntersections();
 		bool ifDomainBodies(const shared_ptr<Body>& );
+		void sendBodyData(); 
 		void sendIntersectionToFluidProcs(); 
 		int commSzdff; 
       
