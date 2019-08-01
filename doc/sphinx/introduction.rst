@@ -145,7 +145,7 @@ To create simulation, one can either use a specialized class of type :yref:`File
 	In [1]: TriaxialTest(numberOfGrains=200).load()
 
 	In [1]: len(O.bodies)
-	1006
+	206
 
 Generators are regular yade objects that support attribute access.
 
@@ -172,6 +172,8 @@ As explained below, the loop consists in running defined sequence of engines. St
 	In [1]: O.time
 
 	In [1]: O.dt=1e-4
+	
+	In [1]: O.dynDt=False #else it would be adjusted automaticaly during first iteration
 
 	In [1]: O.step()
 
@@ -182,7 +184,7 @@ As explained below, the loop consists in running defined sequence of engines. St
 	1e-4
 
 Normal simulations, however, are run continuously. Starting/stopping the loop is done by ``O.run()`` and ``O.pause()``; note that ``O.run()`` returns control to Python and the simulation runs in background; if you want to wait for it to finish, use ``O.wait()``. Fixed number of steps can be run with ``O.run(1000)``, ``O.run(1000,True)`` will run and wait. To stop at absolute step number, ``O.stopAtIter`` can be set and ``O.run()`` called normally.
-
+In many cases it is better to let ``O.dt`` be determined automaticaly by a :yref:`GlobalStiffnessTimeStepper`.
 .. ipython::
 
 	In [1]: O.run()
