@@ -7,7 +7,7 @@
 *************************************************************************/
 
 //FIXME: handle that a better way
-#define MAX_ID 200000
+#define MAX_ID 2000000
 
 namespace CGT {
 
