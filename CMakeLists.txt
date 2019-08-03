@@ -149,12 +149,11 @@ FIND_PACKAGE(Eigen3 REQUIRED)
 FIND_PACKAGE(NumPy QUIET)
 #================== Use compiler warnings ==================
 if(ENABLE_USEFUL_ERRORS)
-  # https://stackoverflow.com/questions/5088460/flags-to-enable-thorough-and-verbose-g-warnings
   # Enable as many warnings as possible, and treat them as errors (using -Werror flag).
-  # Three warnings are impossible to fix:
+  # Three warnings are impossible to fix, because they are in external libraries:
   #   (1) libeigen: -Wmaybe-uninitialized, -Wcomment
   #   (2) open mpi: -Wcast-function-type
-  # So depending on compiler version I need to turn them off.
+  # So depending on compiler version I need to turn these errors off.
   # They will be still printed as warnings. But they will not be an error due to -Werror flag.
   IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 8.0)
     SET(USE_WARNING_ERRORS "-Wno-error=cast-function-type")
@@ -180,6 +179,7 @@ if(ENABLE_USEFUL_ERRORS)
 # SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Werror -Wformat -Wformat-security -Wall -Wextra -Wshadow=compatible-local -Wnarrowing -Wreturn-type -Wuninitialized -Wno-error=maybe-uninitialized -Wno-error=comment -Wno-error=cast-function-type -Wno-error=cpp -std=c++14 -fdce")
 
 # Target flags, which will find every possible warning
+# https://stackoverflow.com/questions/5088460/flags-to-enable-thorough-and-verbose-g-warnings
 # SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Werror -Wformat -Wformat-security -Wall -Wextra -Wshadow                  -Wnarrowing -Wreturn-type -Wuninitialized                                                                                 -Wno-error=cpp -Werror=pedantic -Werror=conversion -Werror=sign-conversion -std=c++14 -fdce")
 
 ELSE(ENABLE_USEFUL_ERRORS)
