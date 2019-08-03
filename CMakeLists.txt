@@ -157,15 +157,15 @@ if(ENABLE_USEFUL_ERRORS)
   # They will be still printed as warnings. But they will not be an error due to -Werror flag.
   IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 8.0)
     SET(USE_WARNING_ERRORS "-Wno-error=cast-function-type")
-    IF((${EIGEN3_MAJOR_VERSION} EQUAL 3) AND ( (${EIGEN3_MINOR_VERSION} LESS 4) OR (${EIGEN3_MINOR_VERSION} EQUAL 4)))
-      # eigen <= 3.3.4
-      SET(USE_WARNING_ERRORS "${USE_WARNING_ERRORS} -Wno-error=shadow=compatible-local")
-    ENDIF()
   ENDIF()
   IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 7.0)
     SET(USE_WARNING_ERRORS "${USE_WARNING_ERRORS} -Wshadow=compatible-local")
     IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
       SET(USE_WARNING_ERRORS "${USE_WARNING_ERRORS} -Wno-error=int-in-bool-context")
+    ENDIF()
+    IF((${EIGEN3_MAJOR_VERSION} EQUAL 3) AND ( (${EIGEN3_MINOR_VERSION} LESS 4) OR (${EIGEN3_MINOR_VERSION} EQUAL 4)))
+      # eigen <= 3.3.4
+      SET(USE_WARNING_ERRORS "${USE_WARNING_ERRORS} -Wno-error=shadow=compatible-local")
     ENDIF()
   ENDIF()
 
