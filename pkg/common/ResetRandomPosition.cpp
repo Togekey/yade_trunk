@@ -99,8 +99,8 @@ void ResetRandomPosition::action()
 
 				// Test overlap with other bodies
 				vector<Body::id_t> probedBodies=bI->probeBoundingVolume(bv);
-				FOREACH(Body::id_t id, probedBodies){
-					if (iGME->explicitAction(b,Body::byId(id),/*force*/false)->geom){
+				FOREACH(Body::id_t id2, probedBodies){
+					if (iGME->explicitAction(b,Body::byId(id2),/*force*/false)->geom){
 						is_overlap=true;
 						break;
 					}

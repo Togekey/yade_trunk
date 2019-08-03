@@ -297,9 +297,11 @@ bool BlockGen::generate(string& /*message*/)
 			if(count == 11){
 				tension = valueDouble;
 				joint.push_back(Discontinuity(firstBlockCentre));
+				{
 				int i = joint.size()-1;
 				joint[i].a = a/l;   joint[i].b = b/l;   joint[i].c = c/l;  joint[i].d = 0.0;
 				joint[i].phi_b = phi_b; joint[i].phi_r = phi_r; joint[i].JRC = JRC; joint[i].JCS = JCS; joint[i].asperity = asperity; joint[i].sigmaC = sigmaC; joint[i].cohesion = cohesion; joint[i].tension = tension;
+				}
 				planeNormal = Vector3r(a/l,b/l,c/l); //save for later
 				//std::cout<<"planeNormal: "<<planeNormal<<endl;
 				int number = boundarySize/spacing;
@@ -328,7 +330,7 @@ bool BlockGen::generate(string& /*message*/)
 		/* skip first line */
 		getline ( file, value); 
 		int count = 0; //int linecount = 0; 
-		Real dip = 0.0;Real dipdir = 0.0; Vector3r jointCentre(0,0,0);
+		Real dip2 = 0.0;Real dipdir2 = 0.0; Vector3r jointCentre(0,0,0);
 		const double PI = std::atan(1.0)*4;
 		/* int boundaryNo = 0; int boundaryCount = 0; int abdCount=0; */  Vector3r planeNormal(0,0,0);  int jointNo = 0; //double persistenceA=0; double persistenceB=0; double spacing = 0;
 		boost::normal_distribution<> nd(0.0, 1.0);
@@ -341,17 +343,17 @@ bool BlockGen::generate(string& /*message*/)
 			//std::cout<<"count: "<<count<<", value: "<<value<<endl;
 		    	const char *valueChar = value.c_str(); 
 		    	double valueDouble = atof ( valueChar);  
-			if(count == 1) { dip = valueDouble;  }
+			if(count == 1) { dip2 = valueDouble;  }
 			if(count == 2) {
-				dipdir = valueDouble; 
+				dipdir2 = valueDouble; 
 				double dipdirN = 0.0;
-				double dipN = 90.0-dip;
-				if(dipdir > 180.0){
-					dipdirN = dipdir - 180.0;
+				double dipN = 90.0-dip2;
+				if(dipdir2 > 180.0){
+					dipdirN = dipdir2 - 180.0;
 				}else{
-					dipdirN = dipdir + 180.0;
+					dipdirN = dipdir2 + 180.0;
 				}
-				if(probabilisticOrientation == true && dip < 120.0 && dip > 60.0 ){
+				if(probabilisticOrientation == true && dip2 < 120.0 && dip2 > 60.0 ){
 					double perturb = gen_normal_3(generator);
 					dipN = dipN + perturb;
 					std::cout<<"perturb: "<<perturb<<endl;
@@ -372,7 +374,7 @@ bool BlockGen::generate(string& /*message*/)
 			if(count == 5) {jointCentre.z() = valueDouble; joint[jointNo].centre = jointCentre; }
 			if(count == 6) {
 				
-				double strike = dipdir - 90.0;
+				double strike = dipdir2 - 90.0;
 				double strikeRad = strike/180.0*PI;
 				Vector3r Nstrike = Vector3r(cos(strikeRad), sin(strikeRad), 0.0);
 				Vector3r Ndip = planeNormal.cross(Nstrike); Ndip.normalize();
@@ -401,7 +403,7 @@ bool BlockGen::generate(string& /*message*/)
 				joint[jointNo].persistence_d.push_back(valueDouble);   joint[jointNo].persistence_d.push_back(valueDouble); 
 			}
 			if(count == 7){
-				double strike = dipdir - 90.0;
+				double strike = dipdir2 - 90.0;
 				double strikeRad = strike/180.0*PI;
 				Vector3r Nstrike = Vector3r(cos(strikeRad), sin(strikeRad), 0.0); std::cout<<"Nstrike: "<<Nstrike<<endl;
 				Vector3r Ndip = planeNormal.cross(Nstrike); Ndip.normalize(); std::cout<<"Ndip: "<<Ndip<<endl;
@@ -1570,11 +1572,11 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 	Eigen::MatrixXd tempA(planeNo,3);
 	Eigen::MatrixXd tempD(planeNo,1);
 	for (int i=0; i<planeNo; i++){
-		Vector3r plane(block.a[i],block.b[i],block.c[i]);
-		plane = q*plane; 
-		pBlock->a.push_back(plane.x());  block.a[i] = plane.x();
-		pBlock->b.push_back(plane.y());  block.b[i] = plane.y();
-		pBlock->c.push_back(plane.z());  block.c[i] = plane.z();
+		Vector3r plane2(block.a[i],block.b[i],block.c[i]);
+		plane2 = q*plane2; 
+		pBlock->a.push_back(plane2.x());  block.a[i] = plane2.x();
+		pBlock->b.push_back(plane2.y());  block.b[i] = plane2.y();
+		pBlock->c.push_back(plane2.z());  block.c[i] = plane2.z();
 		pBlock->d.push_back( block.d[i] /* newd */); 
 		pBlock->addPlaneStruct();
 		//#if 0
@@ -1725,15 +1727,15 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 				
 				if(fabs(det)>pow(10,-15) ){
 				
-					int ipiv[3];  int bColNo=1; int info=0; /* LU */ int three =3;
-					dgesv_( &three, &bColNo, Ax, &three, ipiv, D, &three, &info);
-					if (info!=0){
+					int ipiv[3];  int bColNo=1; int info2=0; /* LU */ int three =3;
+					dgesv_( &three, &bColNo, Ax, &three, ipiv, D, &three, &info2);
+					if (info2!=0){
 						//std::cout<<"linear algebra error"<<endl;
 					}else{
 						bool inside = true; Vector3r vertex(D[0],D[1],D[2]);
 					
-						for (int i=0; i<planeNo; i++){
-							Real plane =  pBlock->a[i]*vertex.x() + pBlock->b[i]*vertex.y() + pBlock->c[i]*vertex.z()  - pBlock->d[i]- pBlock->r; if (plane>pow(10,-3)){inside = false;} 	
+						for (int l=0; l<planeNo; l++){
+							Real plane =  pBlock->a[l]*vertex.x() + pBlock->b[l]*vertex.y() + pBlock->c[l]*vertex.z()  - pBlock->d[l]- pBlock->r; if (plane>pow(10,-3)){inside = false;}
 						}
 
 
@@ -1990,8 +1992,8 @@ void BlockGen::calculateInertia(struct Block block, Real& Ixx, Real& Iyy, Real& 
 					}else{
 						bool inside = true; Vector3r vertex(D[0],D[1],D[2]);
 					
-						for (int i=0; i<planeNo; i++){
-							Real plane =  block.a[i]*vertex.x() + block.b[i]*vertex.y() + block.c[i]*vertex.z()  - block.d[i]- block.r; if (plane>pow(10,-3)){inside = false;} 	
+						for (int l=0; l<planeNo; l++){
+							Real plane =  block.a[l]*vertex.x() + block.b[l]*vertex.y() + block.c[l]*vertex.z()  - block.d[l]- block.r; if (plane>pow(10,-3)){inside = false;}
 						}
 					
 						
@@ -2183,8 +2185,8 @@ Vector3r BlockGen::calCentroid(struct Block block, double & blockVol){
 					}else{
 						bool inside = true; Vector3r vertex(D[0],D[1],D[2]);
 					
-						for (int i=0; i<planeNo; i++){
-							Real plane =  block.a[i]*vertex.x() + block.b[i]*vertex.y() + block.c[i]*vertex.z()  - block.d[i]- block.r; if (plane>pow(10,-3)){inside = false;} 	
+						for (int l=0; l<planeNo; l++){
+							Real plane =  block.a[l]*vertex.x() + block.b[l]*vertex.y() + block.c[l]*vertex.z()  - block.d[l]- block.r; if (plane>pow(10,-3)){inside = false;}
 						}
 					
 						

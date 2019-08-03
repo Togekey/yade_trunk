@@ -303,8 +303,8 @@ void HydrodynamicsLawLBM::action()
         LBMlink bb;
         int link_id=-1;
          for (int nidx=0; nidx<Nx*Ny; nidx++){
-            int I=nodes[nidx].i;
-            int J=nodes[nidx].j;
+            int Ia=nodes[nidx].i;
+            int Ja=nodes[nidx].j;
             for (int dndx=0; dndx<NbDir; dndx++){
                 if(dndx==0) continue;
                 bb.PointingOutside=false;
@@ -316,7 +316,7 @@ void HydrodynamicsLawLBM::action()
                     nodes[bb.nid1].links_id[dndx]=link_id;
                     if(bb.nid2!=-1) nodes[bb.nid2].links_id[opp[dndx]]=link_id;
                 }else if(!strcmp(model.c_str(), "d2q9" )){
-                    if((I==0)&&(J!=0)&&((dndx==3)||(dndx==7))){
+                    if((Ia==0)&&(Ja!=0)&&((dndx==3)||(dndx==7))){
                         link_id++;bb.i=dndx; bb.nid1=nidx;
                         bb.nid2=nodes[nidx].neighbour_id[dndx];
                         bb.PointingOutside=true;
@@ -324,7 +324,7 @@ void HydrodynamicsLawLBM::action()
                         links.push_back(bb);
                         nodes[bb.nid1].links_id[dndx]=link_id;
                         if(bb.nid2!=-1) nodes[bb.nid2].links_id[opp[dndx]]=link_id;
-                    } else if((J==0)&&(I!=0)&&((dndx==4)||(dndx==7)||(dndx==8))){
+                    } else if((Ja==0)&&(Ia!=0)&&((dndx==4)||(dndx==7)||(dndx==8))){
                         link_id++;bb.i=dndx; bb.nid1=nidx;
                         bb.nid2=nodes[nidx].neighbour_id[dndx];
                         bb.PointingOutside=true;
@@ -332,7 +332,7 @@ void HydrodynamicsLawLBM::action()
                         links.push_back(bb);
                         nodes[bb.nid1].links_id[dndx]=link_id;
                         if(bb.nid2!=-1) nodes[bb.nid2].links_id[opp[dndx]]=link_id;
-                    } else if((I==0)&&(J==0)&&((dndx==3)||(dndx==4)||(dndx==7)||(dndx==8))){
+                    } else if((Ia==0)&&(Ja==0)&&((dndx==3)||(dndx==4)||(dndx==7)||(dndx==8))){
                         link_id++;bb.i=dndx; bb.nid1=nidx;
                         bb.nid2=nodes[nidx].neighbour_id[dndx];
                         bb.PointingOutside=true;

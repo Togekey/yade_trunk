@@ -332,12 +332,12 @@ bool Ig2_Tetra_Tetra_TTetraSimpleGeom::checkEdgeToTriangleCase2( // edge larger 
 				Real v3 = TetrahedronVolume(pp3);
 				Vector3r cg1,cg2,cg3;
 				Vector_3 n = CGAL::normal(taN[0],taN[1],taN[2]);
-				for (int l=0; l<3; l++) {
-					normal[l] = n[l];
-					#define OP(p) p->operator[](l)
-					cg1[l] = .25*(OP(p1)+OP(p2)+OP(p11)+OP(p12));
-					cg2[l] = .25*(OP(p2)+OP(p21)+OP(p22)+OP(p12));
-					cg3[l] = .25*(OP(p2)+OP(p21)+OP(p11)+OP(p12));
+				for (int r=0; r<3; r++) {
+					normal[r] = n[r];
+					#define OP(p) p->operator[](r)
+					cg1[r] = .25*(OP(p1)+OP(p2)+OP(p11)+OP(p12));
+					cg2[r] = .25*(OP(p2)+OP(p21)+OP(p22)+OP(p12));
+					cg3[r] = .25*(OP(p2)+OP(p21)+OP(p11)+OP(p12));
 					#undef OP
 				}
 				penetrationVolume = v1 + v2 + v3;

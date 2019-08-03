@@ -226,7 +226,7 @@ bool TriaxialState::from_file(const char* filename, bool bz2)
 	Statefile >> Nc;
 	contacts.resize(Nc);
 
-	for (long i=0 ; i < Nc ; ++i) {
+	for (long j=0 ; j < Nc ; ++j) {
 		Contact* c = new Contact;
 		Statefile >> id1 >> id2 >> normal >> c_pos >> old_fn >> old_fs >> fn >> fs >> frictional_work >> stat;
 		
@@ -244,8 +244,8 @@ bool TriaxialState::from_file(const char* filename, bool bz2)
 		c->fs = fs;
 		c->frictional_work = frictional_work;
 		c->status = (Contact::Status) stat;
-		if (contacts[i]) delete contacts[i];
-		contacts[i] = c;
+		if (contacts[j]) delete contacts[j];
+		contacts[j] = c;
 	}
 
 	//cout << "c_pos=" << contacts[10]->position << " old_fn=" << contacts[10]->old_fn << " normal=" << contacts[10]->normal << endl;

@@ -505,8 +505,8 @@ bool Law2_ScGridCoGeom_CohFrictPhys_CundallStrack::go(shared_ptr<IGeom>& ig, sha
 		}
 	}
 	
-	Vector3r& shearForce    = phys->shearForce;
-	if (contact->isFresh(scene) && geom->isDuplicate!=2) shearForce = Vector3r::Zero();
+	Vector3r& shearForceFirst    = phys->shearForce;
+	if (contact->isFresh(scene) && geom->isDuplicate!=2) shearForceFirst = Vector3r::Zero();
 	Real un     = geom->penetrationDepth;
 	Real Fn    = phys->kn*(un-phys->unp);
 	

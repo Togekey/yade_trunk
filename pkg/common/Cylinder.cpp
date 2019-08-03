@@ -601,11 +601,11 @@ void Gl1_ChainedCylinder::go(const shared_ptr<Shape>& cm, const shared_ptr<State
 	return;
 }
 
-void Gl1_Cylinder::drawCylinder(bool wire, Real radius, Real length, const Quaternionr& shift) const
+void Gl1_Cylinder::drawCylinder(bool wireNonMember, Real radius, Real length, const Quaternionr& shift) const
 {
    glPushMatrix();
    GLUquadricObj *quadObj = gluNewQuadric();
-   gluQuadricDrawStyle(quadObj, (GLenum) (wire ? GLU_SILHOUETTE : GLU_FILL));
+   gluQuadricDrawStyle(quadObj, (GLenum) (wireNonMember ? GLU_SILHOUETTE : GLU_FILL));
    gluQuadricNormals(quadObj, (GLenum) GLU_SMOOTH);
    gluQuadricOrientation(quadObj, (GLenum) GLU_OUTSIDE);
    AngleAxisr aa(shift);
@@ -730,8 +730,8 @@ bool Law2_CylScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, sha
     CylScGeom6D* geom= YADE_CAST<CylScGeom6D*>(ig.get());
     CohFrictPhys* currentContactPhysics = YADE_CAST<CohFrictPhys*>(ip.get());
 
-    Vector3r& shearForce    = currentContactPhysics->shearForce;			//force tangentielle
-    if (contact->isFresh(scene)) shearForce   = Vector3r::Zero(); 			//contact nouveau => force tengentielle = 0,0,0
+    Vector3r& shearForceFirst    = currentContactPhysics->shearForce;			//force tangentielle
+    if (contact->isFresh(scene)) shearForceFirst   = Vector3r::Zero(); 			//contact nouveau => force tengentielle = 0,0,0
     Real un     = geom->penetrationDepth;				//un : interpenetration
     Real Fn    = currentContactPhysics->kn*(un-currentContactPhysics->unp);		//Fn : force normale
     if (geom->isDuplicate) {
@@ -810,8 +810,8 @@ bool Law2_ChCylGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, sha
     intr->phys = c->phys;
     */
     
-    Vector3r& shearForce    = currentContactPhysics->shearForce;			//force tangentielle
-    if (contact->isFresh(scene)) shearForce   = Vector3r::Zero(); 			//contact nouveau => force tengentielle = 0,0,0
+    Vector3r& shearForceFirst    = currentContactPhysics->shearForce;			//force tangentielle
+    if (contact->isFresh(scene)) shearForceFirst   = Vector3r::Zero(); 			//contact nouveau => force tengentielle = 0,0,0
     Real un     = geom->penetrationDepth;				//un : interpenetration
     Real Fn    = currentContactPhysics->kn*(un-currentContactPhysics->unp);		//Fn : force normale
     

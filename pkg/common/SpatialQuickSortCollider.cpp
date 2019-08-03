@@ -36,15 +36,15 @@ void SpatialQuickSortCollider::action()
 	}
 
 	Vector3r min,max;
-	int i=0;
+	int n=0;
 	FOREACH(const shared_ptr<Body>& b, *bodies){
 		if(!b->bound) continue;
 		min = b->bound->min;
 		max = b->bound->max;
-		rank[i]->id = b->getId();
-		rank[i]->min = min;
-		rank[i]->max = max;
-		i++;
+		rank[n]->id = b->getId();
+		rank[n]->min = min;
+		rank[n]->max = max;
+		n++;
 	}
 	
 	const shared_ptr<InteractionContainer>& interactions=scene->interactions;

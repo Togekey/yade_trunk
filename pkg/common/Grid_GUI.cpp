@@ -47,11 +47,11 @@ void Gl1_GridConnection::go(const shared_ptr<Shape>& cm, const shared_ptr<State>
 	return;
 }
 
-void Gl1_GridConnection::drawCylinder(bool wire, Real radius, Real length, const Quaternionr& shift)
+void Gl1_GridConnection::drawCylinder(bool wireNonMember, Real radius, Real length, const Quaternionr& shift)
 {
    glPushMatrix();
    GLUquadricObj *quadObj = gluNewQuadric();
-   gluQuadricDrawStyle(quadObj, (GLenum) (wire ? GLU_SILHOUETTE : GLU_FILL));
+   gluQuadricDrawStyle(quadObj, (GLenum) (wireNonMember ? GLU_SILHOUETTE : GLU_FILL));
    gluQuadricNormals(quadObj, (GLenum) GLU_SMOOTH);
    gluQuadricOrientation(quadObj, (GLenum) GLU_OUTSIDE);
    AngleAxisr aa(shift);

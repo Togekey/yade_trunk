@@ -116,8 +116,8 @@ void Clump::updateProperties(const shared_ptr<Body>& clumpBody, unsigned int dis
 	if (discretization>0){
 		FOREACH(MemberMap::value_type& mm, clump->members){
 			const shared_ptr<Body> subBody1=Body::byId(mm.first);
-			FOREACH(MemberMap::value_type& mm, clump->members){
-				const shared_ptr<Body> subBody2=Body::byId(mm.first);
+			FOREACH(MemberMap::value_type& mmm, clump->members){
+				const shared_ptr<Body> subBody2=Body::byId(mmm.first);
 				if ((subBody1->shape->getClassIndex() ==  Sph_Index) && (subBody2->shape->getClassIndex() ==  Sph_Index) && (subBody1!=subBody2)){//clump members should be spheres
 					Vector3r dist = subBody1->state->pos - subBody2->state->pos;
 					const Sphere* sphere1 = YADE_CAST<Sphere*> (subBody1->shape.get());

@@ -81,9 +81,9 @@ shared_ptr<Interaction> IGeomDispatcher::explicitAction(const shared_ptr<Body>& 
 		I->functorCache.geom=getFunctor2D(b1->shape,b2->shape,swap);
 		if(!I->functorCache.geom) throw invalid_argument("IGeomDispatcher::explicitAction could not dispatch for given types ("+b1->shape->getClassName()+","+b2->shape->getClassName()+").");
 		if(swap){I->swapOrder();}
-		const shared_ptr<Body>& b1=Body::byId(I->getId1(),scene);
-		const shared_ptr<Body>& b2=Body::byId(I->getId2(),scene);
-		bool succ=I->functorCache.geom->go(b1->shape,b2->shape,*b1->state,*b2->state,shift2,/*force*/true,I);
+		const shared_ptr<Body>& b1Swp=Body::byId(I->getId1(),scene);
+		const shared_ptr<Body>& b2Swp=Body::byId(I->getId2(),scene);
+		bool succ=I->functorCache.geom->go(b1Swp->shape,b2Swp->shape,*b1Swp->state,*b2Swp->state,shift2,/*force*/true,I);
 		if(!succ) throw logic_error("Functor "+I->functorCache.geom->getClassName()+"::go returned false, even if asked to force IGeom creation. Please report bug.");
 		return I;
 	} else {

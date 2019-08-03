@@ -220,22 +220,22 @@ bool STLReader::open_binary(const char* filename,  OutV vertices, OutE edges, Ou
   
         //FIXME: Убрать дублирование кода с open_ascii
         int vid[3];
-        for(int i=0;i<3;++i)
+        for(int l=0;l<3;++l)
           {
-            (normals++) = n[i];
+            (normals++) = n[l];
             bool is_different=true;
             IsDifferent isd(tolerance);
             int j=0;
             for(int ej=vcs.size(); j<ej; ++j) 
-            if ( !(is_different = isd(v[i],vcs[j])) ) break;
+            if ( !(is_different = isd(v[l],vcs[j])) ) break;
             if (is_different) 
               {
-              vid[i] = vcs.size();
-              vcs.push_back(v[i]);
+              vid[l] = vcs.size();
+              vcs.push_back(v[l]);
               }
               else
-              vid[i] = j;
-              (facets++) = vid[i];
+              vid[l] = j;
+              (facets++) = vid[l];
           }
           egs.insert(minmax(vid[0], vid[1]));
           egs.insert(minmax(vid[1], vid[2]));

@@ -120,7 +120,7 @@
 					int n = fIter->facet_degree();
 					hfc0 = fIter->facet_begin();
 					int a = std::distance(P.vertices_begin(), hfc0->vertex());
-					for (int i=2; i<n; i++){
+					for (int j=2; j<n; j++){
 						++hfc0;
 						int b = std::distance(P.vertices_begin(), hfc0->vertex());
 						int c = std::distance(P.vertices_begin(), hfc0->next()->vertex());

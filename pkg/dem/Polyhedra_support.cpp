@@ -600,7 +600,7 @@ Polyhedron Polyhedron_Polyhedron_intersection(Polyhedron A, Polyhedron B, CGALpo
 
 	vector<Plane> planes1, planes2;
 	vector<CGALpoint> dual_planes;
-	Polyhedron::Plane_iterator pi;
+	//Polyhedron::Plane_iterator pi;
 	CGALpoint inside(0,0,0);
 	
 	bool intersection_found = false;

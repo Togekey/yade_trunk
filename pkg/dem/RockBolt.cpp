@@ -111,8 +111,8 @@ void RockBolt::action(){
 					//localCoordinates.push_back(tempCoord[0]);
 					/*add last*/
 					Vector3r endPoint = startingPoint + boltLength*boltDirection;
-					State* state1  = Body::byId(blockIDs[blockIDs.size()-1],scene)->state.get();
-					endPoint = state1 ->ori.conjugate()*(endPoint-state1->pos);
+					State* state1a  = Body::byId(blockIDs[blockIDs.size()-1],scene)->state.get();
+					endPoint = state1a ->ori.conjugate()*(endPoint-state1a->pos);
 					if(useMidPoint == false){
 						localCoordinates.push_back(tempCoord[0]);
 					}else{

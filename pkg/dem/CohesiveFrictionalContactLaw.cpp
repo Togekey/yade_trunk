@@ -109,9 +109,9 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 	const int &id2 = contact->getId2();
 	ScGeom6D* geom  = YADE_CAST<ScGeom6D*> (ig.get());
 	CohFrictPhys* phys = YADE_CAST<CohFrictPhys*> (ip.get());
-	Vector3r& shearForce    = phys->shearForce;
+	Vector3r& shearForceFirst    = phys->shearForce;
 
-	if (contact->isFresh(scene)) shearForce   = Vector3r::Zero();
+	if (contact->isFresh(scene)) shearForceFirst   = Vector3r::Zero();
 	Real un     = geom->penetrationDepth;
 	Real Fn    = phys->kn*(un-phys->unp);
 
@@ -129,7 +129,7 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 		State* de1 = Body::byId(id1,scene)->state.get();
 		State* de2 = Body::byId(id2,scene)->state.get();
 		///////////////////////// CREEP START ///////////
-		if (shear_creep) shearForce -= phys->ks*(shearForce*dt/creep_viscosity);
+		if (shear_creep) shearForceFirst -= phys->ks*(shearForceFirst*dt/creep_viscosity);
 		///////////////////////// CREEP END ////////////
 
 		Vector3r& shearForce = geom->rotate(phys->shearForce);

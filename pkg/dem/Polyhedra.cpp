@@ -60,9 +60,9 @@ void Polyhedra::Initialize(){
 	P = Simplify(P, 1E-9);
 
 	//modify order of v according to CGAl polyhedron 
-	int i = 0;
+	//int i = 0;
 	v.clear();
-	for (Polyhedron::Vertex_iterator vIter = P.vertices_begin(); vIter != P.vertices_end(); ++vIter, i++){
+	for (Polyhedron::Vertex_iterator vIter = P.vertices_begin(); vIter != P.vertices_end(); ++vIter /*, i++*/){
 		v.push_back(Vector3r(vIter->point().x(),vIter->point().y(),vIter->point().z()));
 	}
 

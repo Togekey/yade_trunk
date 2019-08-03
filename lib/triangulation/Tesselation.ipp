@@ -627,13 +627,13 @@ CVector _Tesselation<TT>::alphaVoronoiFaceArea (const Edge& ed_it, const AlphaSh
 			        //VERSION 1,intersection of orthogonal planes from two branches
 			        CVector tangent = cross_product(AB,p1-vv0);
 			        tangent = tangent/sqrt(tangent.squared_length());//this is orthogonal to the _previous_ branch segment of the polygonal contour
-			        double dotP = tangent*normal;
-			        coplanar=(abs(dotP)<1e-2);
+			        double dotP2 = tangent*normal;
+			        coplanar=(abs(dotP2)<1e-2);
 				CVector p1mp2=p1-p2;
 			        if (!coplanar) {
 					//make sure the construction is not singular (no intermediate vertex)
 					if ((p1mp2*(p1-vv0)>0) and (p1mp2*normal<0)) {
-					p12=p1-(p1mp2)*normal/dotP*tangent;
+					p12=p1-(p1mp2)*normal/dotP2*tangent;
 					
 // 					if (((p12-p1)*p1mp2)*(p12-p2)*p1mp2)<0) {//make sure the construction is not singular (no intermediate vertex)
 			        cerr<<"p12="<<p12<<" with p1="<< p1<<", p2="<<p2 <<" tangent="<<tangent<<" "<<AB <<" "<<p1-pA <<endl;
@@ -810,7 +810,7 @@ CVector _Tesselation<TT>::alphaVoronoiPartialCapArea ( const Edge& ed_it, const 
 					  
 					} else {
                                        
-                                        bool violate2;
+                                        //bool violate2;
                                         pp = circumCenter(ncell,nfacet,SAlpha,violate);
 					cerr<<"violate2 "<<violate<<endl;
 					}
@@ -895,7 +895,7 @@ CVector _Tesselation<TT>::alphaVoronoiPartialCapArea ( Facet facet, const AlphaS
 		else adjactF[k]=as.mirror_facet(*f);
 		const Facet& af = adjactF[k];
 		
-		Point p = circumCenter(af.first,af.second,alpha,violate[k+1],alphaSph[k+1],norml[k+1]);
+		Point p2 = circumCenter(af.first,af.second,alpha,violate[k+1],alphaSph[k+1],norml[k+1]);
 		short mirrorVtx = 0; while (af.first->vertex(facetVertices[af.second][mirrorVtx])== facet.first->vertex(jj) or af.first->vertex(facetVertices[af.second][mirrorVtx])== facet.first->vertex(jj)) mirrorVtx++;
 		
 		alphaSph[k+1] = Sphere(alphaSph[k+1].point(),shrinkedAlpha);

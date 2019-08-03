@@ -187,7 +187,7 @@ bool Ig2_Sphere_PFacet_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 				}	  
 			}
 			//SPhere-cylinder contact
-			const State*    sphereSt  = YADE_CAST<const State*>(&state1);
+			const State*    sphereSt2 = YADE_CAST<const State*>(&state1);
 			GridConnection* gridCo    = YADE_CAST<GridConnection*>(GridList[connnum]->shape.get());
 			GridNode*       gridNo1   = YADE_CAST<GridNode*>(gridCo->node1->shape.get());
 			GridNode*       gridNo2   = YADE_CAST<GridNode*>(gridCo->node2->shape.get());
@@ -197,7 +197,7 @@ bool Ig2_Sphere_PFacet_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 			Vector3r segt = gridCo->getSegment();
 			Real len = gridCo->getLength();
 			
-			Vector3r spherePos = sphereSt->pos;
+			Vector3r spherePos = sphereSt2->pos;
 			Vector3r branch = spherePos - gridNo1St->pos;
 			Vector3r branchN = spherePos - gridNo2St->pos;
 			for(int i=0;i<3;i++){
@@ -363,8 +363,8 @@ bool Ig2_Sphere_PFacet_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 				Vector3r fictiousPos=gridNo1St->pos+relPos*segt;
 				Vector3r branchF = fictiousPos - spherePos;
 
-				Real dist = branchF.norm();
-				bool SG= !(isNew && (dist > (sphere->radius + gridCo->radius)));
+				Real dist2 = branchF.norm();
+				bool SG= !(isNew && (dist2 > (sphere->radius + gridCo->radius)));
 				if(SG){
 				  //	Create the geometry :
 					if(isNew) c->geom=scm;
@@ -374,15 +374,15 @@ bool Ig2_Sphere_PFacet_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 					scm->id4=gridCo->node2->getId();
 			
 					scm->relPos=relPos;
-					Vector3r normal=branchF/dist;
-					scm->penetrationDepth = sphere->radius+gridCo->radius-dist;
+					Vector3r normal2=branchF/dist2;
+					scm->penetrationDepth = sphere->radius+gridCo->radius-dist2;
 					scm->fictiousState.pos = fictiousPos;
-					scm->contactPoint = spherePos + normal*(scm->radius1 - 0.5*scm->penetrationDepth);
+					scm->contactPoint = spherePos + normal2*(scm->radius1 - 0.5*scm->penetrationDepth);
 					scm->fictiousState.vel = (1-relPos)*gridNo1St->vel + relPos*gridNo2St->vel;
 					scm->fictiousState.angVel =
 						((1-relPos)*gridNo1St->angVel + relPos*gridNo2St->angVel).dot(segt/len)*segt/len //twist part : interpolated
 						+ segt.cross(gridNo2St->vel - gridNo1St->vel);// non-twist part : defined from nodes velocities
-					scm->precompute(state1,scm->fictiousState,scene,c,normal,isNew,shift2,true);//use sphere-sphere precompute (with a virtual sphere)
+					scm->precompute(state1,scm->fictiousState,scene,c,normal2,isNew,shift2,true);//use sphere-sphere precompute (with a virtual sphere)
 					return true;
 				}
 
@@ -735,8 +735,8 @@ bool Ig2_PFacet_PFacet_ScGeom::go( const shared_ptr<Shape>& cm1, const shared_pt
 				scene->interactions->insert(scm3);
 			}
 
-			Body::id_t ids1[3]={Pfacet1->conn1->getId(),Pfacet1->conn2->getId(),Pfacet1->conn3->getId()};
-			Body::id_t ids2[3]={Pfacet2->conn1->getId(),Pfacet2->conn2->getId(),Pfacet2->conn3->getId()};
+			Body::id_t ids1a[3]={Pfacet1->conn1->getId(),Pfacet1->conn2->getId(),Pfacet1->conn3->getId()};
+			Body::id_t ids2a[3]={Pfacet2->conn1->getId(),Pfacet2->conn2->getId(),Pfacet2->conn3->getId()};
 			
 			for (int i=0; i<3; i++){ 
 				for (int j=0; j<3; j++){ 
@@ -745,9 +745,9 @@ bool Ig2_PFacet_PFacet_ScGeom::go( const shared_ptr<Shape>& cm1, const shared_pt
 					string chaine = "scm";
 					oss << chaine << entier;
 					string chaine1=oss.str();
-					if (!scene->interactions->found(ids1[i],ids2[j])){ 
-						if((Body::byId(ids1[i])->getGroupMask()!=0)and(Body::byId(ids2[j])->getGroupMask()!=0)){
-							shared_ptr<Interaction> chaine1 (new Interaction(ids1[i],ids2[j]));
+					if (!scene->interactions->found(ids1a[i],ids2a[j])){ 
+						if((Body::byId(ids1a[i])->getGroupMask()!=0)and(Body::byId(ids2a[j])->getGroupMask()!=0)){
+							shared_ptr<Interaction> chaine1 (new Interaction(ids1a[i],ids2a[j]));
 							scene->interactions->insert(chaine1);
 						}
 					}
