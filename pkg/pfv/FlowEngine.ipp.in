@@ -499,7 +499,7 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
 void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::initializeVolumes ( Solver& flow )
 {
-	typedef typename Solver::FiniteVerticesIterator FiniteVerticesIterator;
+	//typedef typename Solver::FiniteVerticesIterator FiniteVerticesIterator;
 	
 	FiniteVerticesIterator vertices_end = flow.tesselation().Triangulation().finite_vertices_end();
 	CGT::CVector Zero(0,0,0);
@@ -725,7 +725,7 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 		for ( unsigned int k=0; k<flow.normalLubricationForce.size(); k++ ) flow.normalLubricationForce[k]=Vector3r::Zero();
 		for ( unsigned int k=0; k<flow.normalLubricationBodyStress.size(); k++) flow.normalLubricationBodyStress[k]=Matrix3r::Zero();
 
-		typedef typename Solver::Tesselation Tesselation;
+		//typedef typename Solver::Tesselation Tesselation;
 		const Tesselation& Tes = flow.tesselation();
 		flow.deltaShearVel.clear(); flow.normalV.clear(); flow.deltaNormVel.clear(); flow.surfaceDistance.clear(); flow.onlySpheresInteractions.clear(); flow.normalStressInteraction.clear(); flow.shearStressInteraction.clear();
 

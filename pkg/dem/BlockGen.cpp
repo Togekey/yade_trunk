@@ -345,7 +345,7 @@ bool BlockGen::generate(string& /*message*/)
 		    	double valueDouble = atof ( valueChar);  
 			if(count == 1) { dip2 = valueDouble;  }
 			if(count == 2) {
-				dipdir2 = valueDouble; 
+				dipdir2 = valueDouble;
 				double dipdirN = 0.0;
 				double dipN = 90.0-dip2;
 				if(dipdir2 > 180.0){
@@ -1573,7 +1573,7 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 	Eigen::MatrixXd tempD(planeNo,1);
 	for (int i=0; i<planeNo; i++){
 		Vector3r plane2(block.a[i],block.b[i],block.c[i]);
-		plane2 = q*plane2; 
+		plane2 = q*plane2;
 		pBlock->a.push_back(plane2.x());  block.a[i] = plane2.x();
 		pBlock->b.push_back(plane2.y());  block.b[i] = plane2.y();
 		pBlock->c.push_back(plane2.z());  block.c[i] = plane2.z();

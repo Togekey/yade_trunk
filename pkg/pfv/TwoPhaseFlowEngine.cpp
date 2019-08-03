@@ -2715,7 +2715,7 @@ vector<int> TwoPhaseFlowEngine::clusterInvadePore(PhaseCluster* cluster, CellHan
 	vector<int> newClusters; //for returning the list of possible sub-clusters, empty if we are removing the last pore of the base cluster
 	if (nPores==0) {LOG_WARN("Invading the empty cluster id="<<label); }
 	if (nPores==1) {cluster->reset(); cluster->label = label; return  newClusters;}
-	FOREACH(CellHandle& cell, cluster->pores) {cell->info().label=-1;} //mark all pores, and get them back in again below
+	FOREACH(CellHandle& cell2, cluster->pores) {cell2->info().label=-1;} //mark all pores, and get them back in again below
 	cell->info().label=0;//mark the invaded one
 	
 	//find a remaining pore	
@@ -2734,13 +2734,13 @@ vector<int> TwoPhaseFlowEngine::clusterInvadePore(PhaseCluster* cluster, CellHan
  	
 	// gen new clusters on the fly from the other neighbors of the invaded pore (for disconnected subclusters)
 	for (int neighborId=neighborStart+1 ; neighborId<=3; neighborId++) {//should be =1 if the cluster remain the same -1 removed pore
-		const CellHandle& nCell = cell->neighbor(neighborId);
-		if (nCell->info().label != -1 or solver->T[solver->currentTes].Triangulation().is_infinite(nCell)) continue; //already reached from another neighbour (connected domain): skip, else this is a new cluster
+		const CellHandle& nCell2 = cell->neighbor(neighborId);
+		if (nCell2->info().label != -1 or solver->T[solver->currentTes].Triangulation().is_infinite(nCell2)) continue; //already reached from another neighbour (connected domain): skip, else this is a new cluster
 		shared_ptr<PhaseCluster> clst (new PhaseCluster(solver->tesselation()));
 		clst->label=clusters.size();
 		newClusters.push_back(clst->label);
 		clusters.push_back(clst);
-		updateSingleCellLabelRecursion(nCell,clusters.back().get());
+		updateSingleCellLabelRecursion(nCell2,clusters.back().get());
 	}
 	return newClusters;// return list of created clusters
 }

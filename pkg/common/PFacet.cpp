@@ -745,7 +745,7 @@ bool Ig2_PFacet_PFacet_ScGeom::go( const shared_ptr<Shape>& cm1, const shared_pt
 					string chaine = "scm";
 					oss << chaine << entier;
 					string chaine1=oss.str();
-					if (!scene->interactions->found(ids1a[i],ids2a[j])){ 
+					if (!scene->interactions->found(ids1a[i],ids2a[j])){
 						if((Body::byId(ids1a[i])->getGroupMask()!=0)and(Body::byId(ids2a[j])->getGroupMask()!=0)){
 							shared_ptr<Interaction> chaine1 (new Interaction(ids1a[i],ids2a[j]));
 							scene->interactions->insert(chaine1);

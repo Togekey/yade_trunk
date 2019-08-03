@@ -125,9 +125,9 @@ void ThermalEngine::setReynoldsNumbers(){
 		double charLength = 0.000001;
 		//double NutimesFluidK = 2*fluidK;
 		double Nusselt=2.;
-		for(int i=0;i<4;i++) {
-			if(!cell->neighbor(i)->info().isFictious) {
-				l = cell->info() - cell->neighbor(i)->info();
+		for(int j=0;j<4;j++) {
+			if(!cell->neighbor(j)->info().isFictious) {
+				l = cell->info() - cell->neighbor(j)->info();
 				charLength = sqrt(l.squared_length());
 			}
 		}

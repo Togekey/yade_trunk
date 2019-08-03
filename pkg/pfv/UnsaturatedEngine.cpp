@@ -229,7 +229,7 @@ void UnsaturatedEngine::printSomething()
 {
 
     RTriangulation& Tri = solver->T[solver->currentTes].Triangulation();
-    FiniteEdgesIterator ed_it;
+//    FiniteEdgesIterator ed_it;
     for ( FiniteEdgesIterator ed_it = Tri.finite_edges_begin(); ed_it!=Tri.finite_edges_end();ed_it++ )
     {
       const VertexInfo& vi1=(ed_it->first)->vertex(ed_it->second)->info();
