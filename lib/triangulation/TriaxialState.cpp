@@ -122,7 +122,7 @@ TriaxialState::Tesselation& TriaxialState::Tesselate (void)
 			//vh->->info() = git->translation; FIXME : this could define displacements in the triangulation itself
 //			cerr << "Tes.insert(git->sphere.x(), git->sphere.y(), git->sphere.z(), git->sphere.weight(), git->id);" << endl;
 		}
-		Tes.redirected = true;//vertexHandle has been filled here, no need to do it again
+		Tes.redirect();
 		tesselated = true;
 		cerr << "Triangulated Grains : " << Tes.Triangulation().number_of_vertices() << endl;
 	}

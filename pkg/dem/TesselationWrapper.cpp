@@ -102,7 +102,6 @@ void build_triangulation_with_ids(const shared_ptr<BodyContainer>& bodies, Tesse
 	spheres.resize(Ng);
 	pointsPtrs.resize(Ng);
 	Tes.vertexHandles.resize(MaxId+1+max(0,6-nonSpheres),NULL);//+6 extra slots max for adding boundaries latter
-	Tes.redirected = 1;
 	std::random_shuffle(pointsPtrs.begin(), pointsPtrs.end());
 	spatial_sort(pointsPtrs.begin(),pointsPtrs.end(), RTraits_for_spatial_sort()/*, CGT::RTriangulation::Weighted_point*/);
 
@@ -127,6 +126,7 @@ void build_triangulation_with_ids(const shared_ptr<BodyContainer>& bodies, Tesse
 			++TW.n_spheres;
 		}
 	}
+	Tes.redirected = true;
 	//cerr << " loaded : " << Ng<<", triangulated : "<<TW.n_spheres<<", mean radius = " << TW.mean_radius<<endl;
 }
 

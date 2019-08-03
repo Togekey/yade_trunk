@@ -59,12 +59,11 @@ typename _Tesselation<TT>::VertexHandle _Tesselation<TT>::insert ( Real x, Real 
 {
 	VertexHandle Vh;
 	Vh = Tri->insert(Sphere(Point(x,y,z),pow(rad,2)));
+	redirected = false;
 	if ( Vh!=NULL )
 	{
 		Vh->info().setId(id);
 		Vh->info().isFictious = isFictious;
-		assert (vertexHandles.size()>id);
-		vertexHandles[id] = Vh;
 		/*if ( !isFictious ) */maxId = std::max ( maxId, (int) id );
 	}
 	else cout << id <<  " : Vh==NULL!!"<< " id=" << id << " Point=" << Point ( x,y,z ) << " rad=" << rad << endl;
@@ -1151,13 +1150,12 @@ typename Tesselation::VertexHandle PeriodicTesselation<Tesselation>::insert(Real
 	VertexHandle Vh;
 	if (!Tri) cerr<<"!Tri!"<<endl;
 	Vh = Tri->insert(Sphere(Point(x,y,z),pow(rad,2)));
+	redirected = false;
 	if ( Vh!=NULL )
 	{
 		Vh->info() = id;
 		Vh->info().isFictious = isFictious;
 		if (duplicateOfId<0) {
-			assert (vertexHandles.size()>id);
-			vertexHandles[id] = Vh;
 			maxId = std::max ( maxId, (int) id );
 			Vh->info().isGhost=0;
 		} else Vh->info().isGhost=1;
@@ -1173,7 +1171,6 @@ bool PeriodicTesselation<Tesselation>::redirect ( void )
 	{
 		//Set size of the redirection vector
 		if ( (unsigned int)maxId+1 != vertexHandles.size() ) vertexHandles.resize ( maxId+1,NULL );
-		cout << "!redirected" << endl;
 		maxId = 0;
 		FiniteVerticesIterator verticesEnd = Tri->finite_vertices_end ();
 		for ( FiniteVerticesIterator vIt = Tri->finite_vertices_begin (); vIt !=  verticesEnd; vIt++ )
