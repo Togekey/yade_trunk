@@ -146,6 +146,7 @@ ELSE()
 ENDIF()
 
 FIND_PACKAGE(Eigen3 REQUIRED)
+FIND_PACKAGE(NumPy QUIET)
 #================== Use compiler warnings ==================
 if(ENABLE_USEFUL_ERRORS)
   # https://stackoverflow.com/questions/5088460/flags-to-enable-thorough-and-verbose-g-warnings
