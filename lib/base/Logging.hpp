@@ -38,7 +38,7 @@
 	#define LOG_WARN(msg)     { BOOST_LOG_SEV(logger, Logging::SeverityLevel::eWARN)  << _LOG_HEAD << msg; }
 	#define LOG_ERROR(msg)    { BOOST_LOG_SEV(logger, Logging::SeverityLevel::eERROR) << _LOG_HEAD << msg; }
 	#define LOG_FATAL(msg)    { BOOST_LOG_SEV(logger, Logging::SeverityLevel::eFATAL) << _LOG_HEAD << msg; }
-	#define LOG_NOFILTER(msg) { boost::log::sources::severity_logger< Logging::SeverityLevel > slg; BOOST_LOG_SEV(slg, Logging::eNOFILTER ) << _LOG_HEAD << msg; };
+	#define LOG_NOFILTER(msg) { boost::log::sources::severity_logger< Logging::SeverityLevel > slg; BOOST_LOG_SEV(slg, Logging::eNOFILTER ) << _LOG_HEAD << msg; }
 
 	class Logging : public Singleton<Logging> {
 		public:
@@ -90,9 +90,9 @@
 		return strm;
 	}
 	// logger is local for every class, but if it is missing, we will use the parent's class logger automagically.
-	#define DECLARE_LOGGER public: static boost::log::sources::severity_logger< Logging::SeverityLevel > logger;
-	#define CREATE_LOGGER(classname) boost::log::sources::severity_logger< Logging::SeverityLevel > classname::logger=Logging::instance().createNamedLogger(#classname);
-	#define CREATE_CPP_LOCAL_LOGGER(filtername) namespace{ boost::log::sources::severity_logger< Logging::SeverityLevel > logger=Logging::instance().createNamedLogger(filtername); };
+	#define DECLARE_LOGGER public: static boost::log::sources::severity_logger< Logging::SeverityLevel > logger
+	#define CREATE_LOGGER(classname) boost::log::sources::severity_logger< Logging::SeverityLevel > classname::logger=Logging::instance().createNamedLogger(#classname)
+	#define CREATE_CPP_LOCAL_LOGGER(filtername) namespace{ boost::log::sources::severity_logger< Logging::SeverityLevel > logger=Logging::instance().createNamedLogger(filtername); }
 #else
 	#include <iostream>
 	#define _POOR_MANS_LOG(level,msg) {std::cerr<<level " "<<_LOG_HEAD<<msg<<std::endl;}
@@ -106,9 +106,9 @@
 		#define LOG_INFO(msg)  _POOR_MANS_LOG("INFO__4",msg)
 	#else
 		#define MAX_HARDCODED_LOG_LEVEL 3
-		#define LOG_TRACE(msg)
-		#define LOG_DEBUG(msg)
-		#define LOG_INFO(msg)
+		#define LOG_TRACE(msg) {}
+		#define LOG_DEBUG(msg) {}
+		#define LOG_INFO(msg)  {}
 	#endif
 
 	#define LOG_WARN(msg)     _POOR_MANS_LOG("WARN__3",msg)
@@ -124,12 +124,12 @@
 // macros for quick debugging
 #define TRACE LOG_TRACE("Been here")
 #define _TRV(x) #x"="<<x<<"; "
-#define TRVAR1(a) LOG_TRACE( _TRV(a) );
-#define TRVAR2(a,b) LOG_TRACE( _TRV(a) << _TRV(b) );
-#define TRVAR3(a,b,c) LOG_TRACE( _TRV(a) << _TRV(b) << _TRV(c) );
-#define TRVAR4(a,b,c,d) LOG_TRACE( _TRV(a) << _TRV(b) << _TRV(c) << _TRV(d) );
-#define TRVAR5(a,b,c,d,e) LOG_TRACE( _TRV(a) << _TRV(b) << _TRV(c) << _TRV(d) << _TRV(e) );
-#define TRVAR6(a,b,c,d,e,f) LOG_TRACE( _TRV(a) << _TRV(b) << _TRV(c) << _TRV(d) << _TRV(e) << _TRV(f) );
+#define TRVAR1(a) LOG_TRACE( _TRV(a) )
+#define TRVAR2(a,b) LOG_TRACE( _TRV(a) << _TRV(b) )
+#define TRVAR3(a,b,c) LOG_TRACE( _TRV(a) << _TRV(b) << _TRV(c) )
+#define TRVAR4(a,b,c,d) LOG_TRACE( _TRV(a) << _TRV(b) << _TRV(c) << _TRV(d) )
+#define TRVAR5(a,b,c,d,e) LOG_TRACE( _TRV(a) << _TRV(b) << _TRV(c) << _TRV(d) << _TRV(e) )
+#define TRVAR6(a,b,c,d,e,f) LOG_TRACE( _TRV(a) << _TRV(b) << _TRV(c) << _TRV(d) << _TRV(e) << _TRV(f) )
 
 // Logger aliases:
 #define LOG_6_TRACE(msg) LOG_TRACE(msg)
@@ -151,39 +151,39 @@
 // honor MAX_LOG_LEVEL cmake option to disable selected macros
 #if MAX_LOG_LEVEL<6
 	#undef LOG_TRACE
-	#define LOG_TRACE(msg)
+	#define LOG_TRACE(msg) {}
 #endif
 
 #if MAX_LOG_LEVEL<5
 	#undef LOG_DEBUG
-	#define LOG_DEBUG(msg)
+	#define LOG_DEBUG(msg) {}
 #endif
 
 #if MAX_LOG_LEVEL<4
 	#undef LOG_INFO
-	#define LOG_INFO(msg)
+	#define LOG_INFO(msg) {}
 #endif
 
 #if MAX_LOG_LEVEL<3
 	#undef LOG_WARN
-	#define LOG_WARN(msg)
+	#define LOG_WARN(msg) {}
 #endif
 
 #if MAX_LOG_LEVEL<2
 	#warning "MAX_LOG_LEVEL<2 means that all LOG_ERROR messages are ignored, be careful with this option."
 	#undef LOG_ERROR
-	#define LOG_ERROR(msg)
+	#define LOG_ERROR(msg) {}
 #endif
 
 #if MAX_LOG_LEVEL<1
 	#warning "MAX_LOG_LEVEL<1 means that all LOG_ERROR, LOG_FATAL messages are ignored, be careful with this option."
 	#undef LOG_FATAL
-	#define LOG_FATAL(msg)
+	#define LOG_FATAL(msg) {}
 #endif
 
 #if MAX_LOG_LEVEL<0
 	#warning "MAX_LOG_LEVEL<0 means that all LOG_ERROR, LOG_FATAL and LOG_NOFILTER messages are are ignored, be careful with this option."
 	#undef LOG_NOFILTER
-	#define LOG_NOFILTER(msg)
+	#define LOG_NOFILTER(msg) {}
 #endif
 
