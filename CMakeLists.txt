@@ -145,6 +145,7 @@ ELSE()
   ENDIF()
 ENDIF()
 
+FIND_PACKAGE(Eigen3 REQUIRED)
 #================== Use compiler warnings ==================
 if(ENABLE_USEFUL_ERRORS)
   # https://stackoverflow.com/questions/5088460/flags-to-enable-thorough-and-verbose-g-warnings
@@ -156,6 +157,10 @@ if(ENABLE_USEFUL_ERRORS)
   # They will be still printed as warnings. But they will not be an error due to -Werror flag.
   IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 8.0)
     SET(USE_WARNING_ERRORS "-Wno-error=cast-function-type")
+    IF((${EIGEN3_MAJOR_VERSION} EQUAL 3) AND ( (${EIGEN3_MINOR_VERSION} LESS 4) OR (${EIGEN3_MINOR_VERSION} EQUAL 4)))
+      # eigen <= 3.3.4
+      SET(USE_WARNING_ERRORS "${USE_WARNING_ERRORS} -Wno-error=compatible-local")
+    ENDIF()
   ENDIF()
   IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 7.0)
     SET(USE_WARNING_ERRORS "${USE_WARNING_ERRORS} -Wshadow=compatible-local")
@@ -163,7 +168,6 @@ if(ENABLE_USEFUL_ERRORS)
       SET(USE_WARNING_ERRORS "${USE_WARNING_ERRORS} -Wno-error=int-in-bool-context")
     ENDIF()
   ENDIF()
-
 
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Werror -Wformat -Wformat-security -Wall -Wextra                           -Wnarrowing -Wreturn-type -Wuninitialized -Wno-error=maybe-uninitialized -Wno-error=comment ${USE_WARNING_ERRORS}         -Wno-error=cpp -std=c++14 -fdce")
 
@@ -265,7 +269,6 @@ ENDIF()
 FIND_PACKAGE(Loki REQUIRED)
 INCLUDE_DIRECTORIES(${LOKI_INCLUDE_DIR})
 
-FIND_PACKAGE(Eigen3 REQUIRED)
 FIND_PACKAGE(BZip2 REQUIRED)
 FIND_PACKAGE(ZLIB REQUIRED)
 #===========================================================
