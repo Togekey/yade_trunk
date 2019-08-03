@@ -22,6 +22,7 @@ rMeanSpheres = dimModele * pow(3.0/4.0*(1-poros)/(pi*nSpheres),1.0/3.0)
 print('')
 print('Creating a cubic sample of spheres (may take some time and cause warnings)')
 print('')
+# maybe using seed=?? will fix the problem.
 sp = pack.randomDensePack(pred,radius=rMeanSpheres,rRelFuzz=0.3,memoizeDb='/tmp/gts-triax-packings.sqlite',returnSpherePack=True)
 sp.toSimulation(color=(0.9,0.8,0.6),wire=False,material=mat)
 print('')
