@@ -187,7 +187,7 @@
 	#define LOG_NOFILTER(msg) { _IGNORE_LOG(msg); }
 #endif
 
-// The msg must be used to be eliminate -Werror about unused variable.
+// The msg must be used to avoid -Werror about unused variable. But the code is eliminated anyway.
 // https://stackoverflow.com/questions/10809429/what-kind-of-dead-code-can-gcc-eliminate-from-the-final-output , added -fdce flag, to be sure.
 #define _IGNORE_LOG(msg) { if(false) { std::cerr << msg; } }
 
