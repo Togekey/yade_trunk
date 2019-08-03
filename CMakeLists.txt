@@ -143,15 +143,32 @@ ELSE()
   ENDIF()
 ENDIF()
 
+#================== Use compiler warnings ==================
 # https://stackoverflow.com/questions/5088460/flags-to-enable-thorough-and-verbose-g-warnings
+# Enable as many warnings as possible, and treat them as errors (using -Werror flag).
+# Three warnings are impossible to fix:
+#   (1) libeigen: -Wmaybe-uninitialized, -Wcomment
+#   (2) open mpi: -Wcast-function-type
+# So depending on compiler version I need to turn them off.
+# They will be still printed as warnings. But they will not be an error due to -Werror flag.
+IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 8.0)
+  SET(USE_WARNING_ERRORS "-Wno-error=cast-function-type")
+ENDIF()
+IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 7.0)
+  SET(USE_WARNING_ERRORS "${USE_WARNING_ERRORS} -Wshadow=compatible-local")
+ENDIF()
 
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Werror -Wformat -Wformat-security -Wall -Wextra -Wshadow=compatible-local -Wnarrowing -Wreturn-type -Wuninitialized -Wno-error=maybe-uninitialized -Wno-error=comment -Wno-error=cast-function-type -std=c++14")
+
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Werror -Wformat -Wformat-security -Wall -Wextra                           -Wnarrowing -Wreturn-type -Wuninitialized -Wno-error=maybe-uninitialized -Wno-error=comment ${USE_WARNING_ERRORS}         -std=c++14")
+
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Werror -Wformat -Wformat-security -Wall -Wextra -Wshadow=compatible-local -Wnarrowing -Wreturn-type -Wuninitialized -Wno-error=maybe-uninitialized -Wno-error=comment -Wno-error=cast-function-type -std=c++14")
 
 # Target flags, which will find every possible warning
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Werror -Wformat -Wformat-security -Wall -Wextra -Wshadow                  -Wnarrowing -Wreturn-type -Wuninitialized                                                                                 -Werror=pedantic -Werror=conversion -Werror=sign-conversion -std=c++14")
 
 # Previously used flags which produced a lot fewer warnings.
 # SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Wformat -Wformat-security -Werror=format-security -Wall -Wextra -std=c++14")
+#===========================================================
 
 
 IF (DEBUG)
