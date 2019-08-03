@@ -143,7 +143,7 @@ ELSE()
   ENDIF()
 ENDIF()
 
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Wformat -Wformat-security -Werror=format-security -Wall -Wextra -std=c++14")
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Wformat -Wformat-security -Werror=format-security -Wall -Wextra -Wshadow=compatible-local -Werror=narrowing -Werror=return-type -Werror=uninitialized -Wno-error=maybe-uninitialized -std=c++14")
 
 # Target flags, which will find every possible warning
 #SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Werror=narrowing -Werror=return-type -Werror=uninitialized -Wno-error=maybe-uninitialized -std=c++14")
