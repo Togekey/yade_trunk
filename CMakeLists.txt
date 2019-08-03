@@ -159,12 +159,12 @@ IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0 OR CMAKE_CXX_COMPILER_VERSION
 ENDIF()
 
 
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Werror -Wformat -Wformat-security -Wall -Wextra                           -Wnarrowing -Wreturn-type -Wuninitialized -Wno-error=maybe-uninitialized -Wno-error=comment ${USE_WARNING_ERRORS}         -Wno-error=cpp -std=c++14")
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Werror -Wformat -Wformat-security -Wall -Wextra                           -Wnarrowing -Wreturn-type -Wuninitialized -Wno-error=maybe-uninitialized -Wno-error=comment ${USE_WARNING_ERRORS}         -Wno-error=cpp -std=c++14 -fdce")
 
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Werror -Wformat -Wformat-security -Wall -Wextra -Wshadow=compatible-local -Wnarrowing -Wreturn-type -Wuninitialized -Wno-error=maybe-uninitialized -Wno-error=comment -Wno-error=cast-function-type -Wno-error=cpp -std=c++14")
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Werror -Wformat -Wformat-security -Wall -Wextra -Wshadow=compatible-local -Wnarrowing -Wreturn-type -Wuninitialized -Wno-error=maybe-uninitialized -Wno-error=comment -Wno-error=cast-function-type -Wno-error=cpp -std=c++14 -fdce")
 
 # Target flags, which will find every possible warning
-#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Werror -Wformat -Wformat-security -Wall -Wextra -Wshadow                  -Wnarrowing -Wreturn-type -Wuninitialized                                                                                 -Wno-error=cpp -Werror=pedantic -Werror=conversion -Werror=sign-conversion -std=c++14")
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Werror -Wformat -Wformat-security -Wall -Wextra -Wshadow                  -Wnarrowing -Wreturn-type -Wuninitialized                                                                                 -Wno-error=cpp -Werror=pedantic -Werror=conversion -Werror=sign-conversion -std=c++14 -fdce")
 
 # Previously used flags which produced a lot fewer warnings.
 # SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Wformat -Wformat-security -Werror=format-security -Wall -Wextra -std=c++14")

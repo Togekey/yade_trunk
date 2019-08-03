@@ -106,9 +106,9 @@
 		#define LOG_INFO(msg)  _POOR_MANS_LOG("INFO__4",msg)
 	#else
 		#define MAX_HARDCODED_LOG_LEVEL 3
-		#define LOG_TRACE(msg) {}
-		#define LOG_DEBUG(msg) {}
-		#define LOG_INFO(msg)  {}
+		#define LOG_TRACE(msg) { _IGNORE_LOG(msg); }
+		#define LOG_DEBUG(msg) { _IGNORE_LOG(msg); }
+		#define LOG_INFO(msg)  { _IGNORE_LOG(msg); }
 	#endif
 
 	#define LOG_WARN(msg)     _POOR_MANS_LOG("WARN__3",msg)
@@ -151,39 +151,43 @@
 // honor MAX_LOG_LEVEL cmake option to disable selected macros
 #if MAX_LOG_LEVEL<6
 	#undef LOG_TRACE
-	#define LOG_TRACE(msg) {}
+	#define LOG_TRACE(msg) { _IGNORE_LOG(msg); }
 #endif
 
 #if MAX_LOG_LEVEL<5
 	#undef LOG_DEBUG
-	#define LOG_DEBUG(msg) {}
+	#define LOG_DEBUG(msg) { _IGNORE_LOG(msg); }
 #endif
 
 #if MAX_LOG_LEVEL<4
 	#undef LOG_INFO
-	#define LOG_INFO(msg) {}
+	#define LOG_INFO(msg) { _IGNORE_LOG(msg); }
 #endif
 
 #if MAX_LOG_LEVEL<3
 	#undef LOG_WARN
-	#define LOG_WARN(msg) {}
+	#define LOG_WARN(msg) { _IGNORE_LOG(msg); }
 #endif
 
 #if MAX_LOG_LEVEL<2
 	#warning "MAX_LOG_LEVEL<2 means that all LOG_ERROR messages are ignored, be careful with this option."
 	#undef LOG_ERROR
-	#define LOG_ERROR(msg) {}
+	#define LOG_ERROR(msg) { _IGNORE_LOG(msg); }
 #endif
 
 #if MAX_LOG_LEVEL<1
 	#warning "MAX_LOG_LEVEL<1 means that all LOG_ERROR, LOG_FATAL messages are ignored, be careful with this option."
 	#undef LOG_FATAL
-	#define LOG_FATAL(msg) {}
+	#define LOG_FATAL(msg) { _IGNORE_LOG(msg); }
 #endif
 
 #if MAX_LOG_LEVEL<0
 	#warning "MAX_LOG_LEVEL<0 means that all LOG_ERROR, LOG_FATAL and LOG_NOFILTER messages are are ignored, be careful with this option."
 	#undef LOG_NOFILTER
-	#define LOG_NOFILTER(msg) {}
+	#define LOG_NOFILTER(msg) { _IGNORE_LOG(msg); }
 #endif
+
+// The msg must be used to be eliminate -Werror about unused variable.
+// https://stackoverflow.com/questions/10809429/what-kind-of-dead-code-can-gcc-eliminate-from-the-final-output , added -fdce flag, to be sure.
+#define _IGNORE_LOG(msg) { if(false) { std::cerr << msg; } }
 

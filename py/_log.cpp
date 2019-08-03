@@ -39,11 +39,6 @@ void setDefaultLogLevel(int level) {
 }
 
 void testAllLevels() {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpragmas"
-// ignore unused variable warning because when log level is low, they are not used (not printed).
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 	int testInt     = 0;
 	std::string testStr = "test string";
 	Real testReal(11);
@@ -68,7 +63,6 @@ void testAllLevels() {
 	TRVAR6(testInt,testStr,testReal,testVec,testMat,testComplex);
 
 	TRACE;
-#pragma GCC diagnostic pop
 }
 
 // accepted streams: "clog", "cerr", "cout", "filename"
