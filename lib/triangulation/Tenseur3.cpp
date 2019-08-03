@@ -97,7 +97,7 @@ Tenseur_sym3::~Tenseur_sym3(void)
 
 Tenseur_sym3::Tenseur_sym3(const Tenseur_sym3& source)
 {
-	for (int i=0; i<6; i++)
+//	for (int i=0; i<6; i++)
 	{
 		for (int i=0; i<6; i++) T[i] = source.T[i];
 	}
@@ -179,7 +179,7 @@ Tenseur_anti3::~Tenseur_anti3(void)
 
 Tenseur_anti3::Tenseur_anti3(const Tenseur_anti3& source)
 {
-	for (int i=0; i<6; i++)
+//	for (int i=0; i<6; i++)
 	{
 		for (int i=0; i<6; i++) T[i] = source.T[i];
 	}
