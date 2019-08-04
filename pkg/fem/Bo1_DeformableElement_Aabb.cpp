@@ -75,5 +75,5 @@ void Bo1_DeformableElement_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Boun
 //	aabb->max = scene->cell->unshearPt(se3.position)+halfSize;
 }
 	
-YADE_PLUGIN((Bo1_DeformableElement_Aabb));
+YADE_PLUGIN((Bo1_DeformableElement_Aabb))
 #endif //YADE_FEM

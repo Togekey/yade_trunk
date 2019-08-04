@@ -18,10 +18,10 @@
 #include <lib/pyutil/doc_opts.hpp>
 
 
-template<typename T> void preLoad(T&){};
-template<typename T> void postLoad(T&){};
-template<typename T> void preSave(T&){};
-template<typename T> void postSave(T&){};
+template<typename T> void preLoad(T&){}
+template<typename T> void postLoad(T&){}
+template<typename T> void preSave(T&){}
+template<typename T> void postSave(T&){}
 
 
 // attribute flags
@@ -29,8 +29,8 @@ namespace yade{
 	namespace Attr{
 		// keep in sync with py/wrapper/yadeWrapper.cpp !
 		enum flags { noSave=1, readonly=2, triggerPostLoad=4, hidden=8, noResize=16 };
-	};
-};
+	}
+}
 using namespace yade;
 
 // see:
@@ -65,7 +65,7 @@ namespace yade{
 	template<> struct py_wrap_ref<Vector2i>: public boost::true_type{};
 	template<> struct py_wrap_ref<Quaternionr>: public boost::true_type{};
 	template<> struct py_wrap_ref<Matrix3r>: public boost::true_type{};
-};
+}
 // ADL only works within the same namespace
 // this duplicate is for classes that are not in yade:: namespace (yet)
 template<class C, typename T, T C::*A>
@@ -248,7 +248,7 @@ if(key==BOOST_PP_STRINGIZE(_DEPREC_OLDNAME(z))){ \
 	_YADE_CLASS_PYCLASS_BASE_DOC_ATTRS_DEPREC_PY(thisClass,pyClassName,baseClass,docString,BOOST_PP_SEQ_FOR_EACH(_ATTRS_EMBED_INI_TYP_IN_DOC,~,attrDecls),deprec,extras)
 
 
-#define REGISTER_SERIALIZABLE(name) REGISTER_FACTORABLE(name); BOOST_CLASS_EXPORT_KEY(name);
+#define REGISTER_SERIALIZABLE(name) BOOST_CLASS_EXPORT_KEY(name) REGISTER_FACTORABLE(name)
 
 // for static classes (Gl1 functors, for instance)
 #define YADE_CLASS_BASE_DOC_STATICATTRS(thisClass,baseClass,docString,attrs)\
@@ -266,7 +266,7 @@ if(key==BOOST_PP_STRINGIZE(_DEPREC_OLDNAME(z))){ \
 
 class Serializable: public Factorable {
 	public:
-		template <class ArchiveT> void serialize(ArchiveT & /*ar*/, unsigned int /*version*/){ };
+		template <class ArchiveT> void serialize(ArchiveT & /*ar*/, unsigned int /*version*/){ }
 		// lovely cast members like in eigen :-)
 		template <class DerivedT> const DerivedT& cast() const { return *static_cast<DerivedT*>(this); }
 		template <class DerivedT> DerivedT& cast(){ return *static_cast<DerivedT*>(this); }

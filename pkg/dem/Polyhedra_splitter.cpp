@@ -11,7 +11,7 @@
 #include <pkg/dem/Polyhedra_splitter.hpp>
 #include <sys/stat.h>
 
-YADE_PLUGIN((PolyhedraSplitter)(SplitPolyTauMax)(SplitPolyMohrCoulomb));
+YADE_PLUGIN((PolyhedraSplitter)(SplitPolyTauMax)(SplitPolyMohrCoulomb))
 
 CREATE_LOGGER(PolyhedraSplitter);
 CREATE_LOGGER(SplitPolyTauMax);

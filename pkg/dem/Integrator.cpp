@@ -6,7 +6,7 @@
   #include<omp.h>
 #endif
 
-YADE_PLUGIN((Integrator));
+YADE_PLUGIN((Integrator))
 
 
 

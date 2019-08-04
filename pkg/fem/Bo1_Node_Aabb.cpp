@@ -36,5 +36,5 @@ void Bo1_Node_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const
 	aabb->max = scene->cell->unshearPt(se3.position)+halfSize;
 }
 	
-YADE_PLUGIN((Bo1_Node_Aabb));
+YADE_PLUGIN((Bo1_Node_Aabb))
 #endif //YADE_FEM

@@ -14,7 +14,7 @@
 
 #include <numpy/ndarraytypes.h>
 
-CREATE_CPP_LOCAL_LOGGER("_polyhedra_utils.cpp");
+CREATE_CPP_LOCAL_LOGGER("_polyhedra_utils.cpp")
 
 namespace py = boost::python;
 

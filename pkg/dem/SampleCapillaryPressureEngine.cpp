@@ -15,7 +15,7 @@
 #include<pkg/dem/FrictPhys.hpp>
 #include<lib/base/Math.hpp>
 
-YADE_PLUGIN((SampleCapillaryPressureEngine));
+YADE_PLUGIN((SampleCapillaryPressureEngine))
 CREATE_LOGGER(SampleCapillaryPressureEngine);
 
 SampleCapillaryPressureEngine::~SampleCapillaryPressureEngine()

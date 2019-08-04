@@ -31,7 +31,7 @@ class DummyVertexInfo : public FlowVertexInfo_DummyFlowEngineT {
 
 typedef TemplateFlowEngine_DummyFlowEngineT<DummyCellInfo,DummyVertexInfo> DummyFlowEngineT;
 REGISTER_SERIALIZABLE(DummyFlowEngineT);
-YADE_PLUGIN((DummyFlowEngineT));
+YADE_PLUGIN((DummyFlowEngineT))
 
 class DummyFlowEngine : public DummyFlowEngineT
 {
@@ -53,7 +53,7 @@ class DummyFlowEngine : public DummyFlowEngineT
 	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(DummyFlowEngine);
-YADE_PLUGIN((DummyFlowEngine));
+YADE_PLUGIN((DummyFlowEngine))
 
 void DummyFlowEngine::fancyFunction(Real what) {std::cerr<<"yes, I'm a new function"<<std::endl;}
 #endif //DummyFLOW

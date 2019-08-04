@@ -1,6 +1,6 @@
 #include"ForceTorqueRecorder.hpp"
 
-YADE_PLUGIN((ForceRecorder)(TorqueRecorder));
+YADE_PLUGIN((ForceRecorder)(TorqueRecorder))
 
 CREATE_LOGGER(ForceRecorder);
 void ForceRecorder::action(){

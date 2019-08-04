@@ -11,7 +11,7 @@
 #include "TwoPhaseFlowEngine.hpp"
 #include <boost/range/algorithm_ext/erase.hpp>
 
-YADE_PLUGIN((TwoPhaseFlowEngineT)(TwoPhaseFlowEngine)(PhaseCluster));
+YADE_PLUGIN((TwoPhaseFlowEngineT)(TwoPhaseFlowEngine)(PhaseCluster))
 
 CREATE_LOGGER(TwoPhaseFlowEngine);
 CREATE_LOGGER(PhaseCluster);

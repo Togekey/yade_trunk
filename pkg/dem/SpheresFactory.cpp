@@ -7,7 +7,7 @@
 
 
 
-YADE_PLUGIN((SpheresFactory)(CircularFactory)(BoxFactory));
+YADE_PLUGIN((SpheresFactory)(CircularFactory)(BoxFactory))
 CREATE_LOGGER(SpheresFactory);
 CREATE_LOGGER(CircularFactory);
 CREATE_LOGGER(BoxFactory);
@@ -205,7 +205,7 @@ void SpheresFactory::action(){
 		
 	} 
 	//std::cout<<"mass flow rate: "<<totalMass<<endl;totalMass =0.0;
-};
+}
 
 void CircularFactory::pickRandomPosition(Vector3r& c, Real r){
 	const Quaternionr q(Quaternionr().setFromTwoVectors(Vector3r::UnitZ(),normal));

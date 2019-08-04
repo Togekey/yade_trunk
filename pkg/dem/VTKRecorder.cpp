@@ -45,7 +45,7 @@
 	#include<pkg/dem/ViscoelasticCapillarPM.hpp>
 #endif
 
-YADE_PLUGIN((VTKRecorder));
+YADE_PLUGIN((VTKRecorder))
 CREATE_LOGGER(VTKRecorder);
 
 #ifdef YADE_MASK_ARBITRARY
@@ -1172,7 +1172,7 @@ void VTKRecorder::action(){
 			writer->Write();	
 		}
 	#endif
-};
+}
 
 void VTKRecorder::addWallVTK (vtkSmartPointer<vtkQuad>& boxes, vtkSmartPointer<vtkPoints>& boxesPos, Vector3r& W1, Vector3r& W2, Vector3r& W3, Vector3r& W4) {
 	//Function for exporting walls of boxes
@@ -1189,7 +1189,7 @@ void VTKRecorder::addWallVTK (vtkSmartPointer<vtkQuad>& boxes, vtkSmartPointer<v
 	
 	boxesPos->InsertNextPoint(W4[0], W4[1], W4[2]);
 	boxes->GetPointIds()->SetId(3,nbPoints+3);
-};
+}
 
 #endif /* YADE_VTK */
 #undef GET_MASK

@@ -133,7 +133,7 @@ public:
 
 typedef TemplateFlowEngine_DFNFlowEngineT<DFNCellInfo,DFNVertexInfo, DFNTesselation,DFNBoundingSphere> DFNFlowEngineT;
 REGISTER_SERIALIZABLE(DFNFlowEngineT);
-YADE_PLUGIN((DFNFlowEngineT));
+YADE_PLUGIN((DFNFlowEngineT))
 class DFNFlowEngine : public DFNFlowEngineT
 {
 	public :
@@ -177,7 +177,7 @@ class DFNFlowEngine : public DFNFlowEngineT
 	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(DFNFlowEngine);
-YADE_PLUGIN((DFNFlowEngine));
+YADE_PLUGIN((DFNFlowEngine))
 
 /// In this version, we never update positions when !updatePositions, i.e. keep triangulating the same positions
 //void DFNFlowEngine::setPositionsBuffer(bool current)

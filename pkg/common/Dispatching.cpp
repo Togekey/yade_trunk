@@ -1,10 +1,10 @@
 #include<pkg/common/Dispatching.hpp>
 
-YADE_PLUGIN((BoundFunctor)(IGeomFunctor)(IPhysFunctor)(LawFunctor)(BoundDispatcher)(IGeomDispatcher)(IPhysDispatcher)(LawDispatcher));
-BoundFunctor::~BoundFunctor(){};
-IGeomFunctor::~IGeomFunctor(){};
-IPhysFunctor::~IPhysFunctor(){};
-LawFunctor::~LawFunctor(){};
+YADE_PLUGIN((BoundFunctor)(IGeomFunctor)(IPhysFunctor)(LawFunctor)(BoundDispatcher)(IGeomDispatcher)(IPhysDispatcher)(LawDispatcher))
+BoundFunctor::~BoundFunctor(){}
+IGeomFunctor::~IGeomFunctor(){}
+IPhysFunctor::~IPhysFunctor(){}
+LawFunctor::~LawFunctor(){}
 
 
 /********************************************************************

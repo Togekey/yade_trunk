@@ -10,12 +10,12 @@
 	#include<GL/glu.h>
 #endif
 
-YADE_PLUGIN((L3Geom)(L6Geom)(Ig2_Sphere_Sphere_L3Geom)(Ig2_Wall_Sphere_L3Geom)(Ig2_Facet_Sphere_L3Geom)(Ig2_Sphere_Sphere_L6Geom)(Law2_L3Geom_FrictPhys_ElPerfPl)(Law2_L6Geom_FrictPhys_Linear)
-	#ifdef YADE_OPENGL
-		(Gl1_L3Geom)(Gl1_L6Geom)
-	#endif
-		
-);
+YADE_PLUGIN((L3Geom)(L6Geom)(Ig2_Sphere_Sphere_L3Geom)(Ig2_Wall_Sphere_L3Geom)(Ig2_Facet_Sphere_L3Geom)(Ig2_Sphere_Sphere_L6Geom)(Law2_L3Geom_FrictPhys_ElPerfPl)(Law2_L6Geom_FrictPhys_Linear))
+
+#ifdef YADE_OPENGL
+YADE_PLUGIN((Gl1_L3Geom)(Gl1_L6Geom))
+#endif
+
 
 L3Geom::~L3Geom(){}
 void L3Geom::applyLocalForceTorque(const Vector3r& localF, const Vector3r& localT, const Interaction* I, Scene* scene, NormShearPhys* nsp) const {
@@ -40,11 +40,11 @@ L6Geom::~L6Geom(){}
 
 bool Ig2_Sphere_Sphere_L3Geom::go(const shared_ptr<Shape>& s1, const shared_ptr<Shape>& s2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& I){
 	return genericGo(/*is6Dof*/false,s1,s2,state1,state2,shift2,force,I);
-};
+}
 
 bool Ig2_Sphere_Sphere_L6Geom::go(const shared_ptr<Shape>& s1, const shared_ptr<Shape>& s2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& I){
 	return genericGo(/*is6Dof*/true,s1,s2,state1,state2,shift2,force,I);
-};
+}
 
 
 CREATE_LOGGER(Ig2_Sphere_Sphere_L3Geom);
@@ -69,7 +69,7 @@ bool Ig2_Sphere_Sphere_L3Geom::genericGo(bool is6Dof, const shared_ptr<Shape>& s
 
 	return true;
 
-};
+}
 
 /*
 Generic function to compute L3Geom (with colinear points), used for {sphere,facet,wall}+sphere contacts now
@@ -189,7 +189,7 @@ void Ig2_Sphere_Sphere_L3Geom::handleSpheresLikeContact(const shared_ptr<Interac
 		// perhaps not consistent when spheres have different radii (depends how bending moment is computed)
 		I->geom->cast<L6Geom>().phi+=midTrsf*(scene->dt*(state2.angVel-state1.angVel));
 	}
-};
+}
 
 bool Ig2_Wall_Sphere_L3Geom::go(const shared_ptr<Shape>& s1, const shared_ptr<Shape>& s2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& I){
 	if(scene->isPeriodic) throw std::logic_error("Ig2_Wall_Sphere_L3Geom does not handle periodic boundary conditions.");
@@ -211,7 +211,7 @@ bool Ig2_Wall_Sphere_L3Geom::go(const shared_ptr<Shape>& s1, const shared_ptr<Sh
 	}
 	handleSpheresLikeContact(I,state1,state2,shift2,/*is6Dof*/false,normal,contPt,uN,/*r1*/0,/*r2*/radius);
 	return true;
-};
+}
 
 bool Ig2_Facet_Sphere_L3Geom::go(const shared_ptr<Shape>& s1, const shared_ptr<Shape>& s2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& I){
 	const Facet& facet(s1->cast<Facet>());
@@ -316,6 +316,6 @@ void Gl1_L3Geom::draw(const shared_ptr<IGeom>& ig, bool isL6Geom, const Real& ph
 		if(isL6Geom && phiScale>0) GLUtils::GLDrawLine(Vector3r::Zero(),ig->cast<L6Geom>().relPhi()/Mathr::PI*rMin*phiScale,Vector3r(.8,0,1));
 	}
 	glLineWidth(1.);
-};
+}
 
 #endif

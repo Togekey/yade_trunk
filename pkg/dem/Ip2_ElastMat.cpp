@@ -3,7 +3,7 @@
 #include <pkg/common/NormShearPhys.hpp>
 #include <pkg/dem/DemXDofGeom.hpp>
 
-YADE_PLUGIN((Ip2_ElastMat_ElastMat_NormPhys)(Ip2_ElastMat_ElastMat_NormShearPhys));
+YADE_PLUGIN((Ip2_ElastMat_ElastMat_NormPhys)(Ip2_ElastMat_ElastMat_NormShearPhys))
 
 
 void Ip2_ElastMat_ElastMat_NormPhys::go( const shared_ptr<Material>& b1
@@ -29,7 +29,7 @@ void Ip2_ElastMat_ElastMat_NormPhys::go( const shared_ptr<Material>& b1
 		Kn = 2*Ea*Eb/(Ea+Eb);
 	}
 	phys->kn = Kn;
-};
+}
 
 
 void Ip2_ElastMat_ElastMat_NormShearPhys::go( const shared_ptr<Material>& b1
@@ -60,4 +60,4 @@ void Ip2_ElastMat_ElastMat_NormShearPhys::go( const shared_ptr<Material>& b1
 	}
 	phys->kn = Kn;
 	phys->ks = Ks;
-};
+}

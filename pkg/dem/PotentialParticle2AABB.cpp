@@ -57,6 +57,6 @@ void PotentialParticle2AABB::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& 
 
 }
 
-YADE_PLUGIN((PotentialParticle2AABB));
+YADE_PLUGIN((PotentialParticle2AABB))
 
 #endif // YADE_POTENTIAL_PARTICLES

@@ -158,7 +158,7 @@ init(PygtsObject *self, PyObject *args, PyObject *kwds)
     }
     if(ret) Py_RETURN_TRUE;
     Py_RETURN_FALSE;
-  };
+  }
 #else
   static int 
   compare(PygtsObject *o1, PygtsObject *o2)

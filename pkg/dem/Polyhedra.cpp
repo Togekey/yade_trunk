@@ -10,10 +10,11 @@
 
 YADE_PLUGIN(/* self-contained in hpp: */ (Polyhedra) (PolyhedraGeom) (Bo1_Polyhedra_Aabb) (PolyhedraPhys) (PolyhedraMat) (Ip2_PolyhedraMat_PolyhedraMat_PolyhedraPhys) (Ip2_FrictMat_PolyhedraMat_FrictPhys) (Law2_PolyhedraGeom_PolyhedraPhys_Volumetric)
 	/* some code in cpp (this file): */ 
-	#ifdef YADE_OPENGL
-		(Gl1_Polyhedra) (Gl1_PolyhedraGeom) (Gl1_PolyhedraPhys)
-	#endif
-	);
+)
+
+#ifdef YADE_OPENGL
+YADE_PLUGIN((Gl1_Polyhedra) (Gl1_PolyhedraGeom) (Gl1_PolyhedraPhys))
+#endif
 
 CREATE_LOGGER(Law2_PolyhedraGeom_PolyhedraPhys_Volumetric);
 
@@ -302,14 +303,14 @@ Polyhedron Polyhedra::GetPolyhedron() const {
 Polyhedra::~Polyhedra(){}
 
 //****************************************************************************************
-Real PolyhedraMat::GetStrength() const {return strength;};
-Real PolyhedraMat::GetStrengthTau() const {return strengthTau;};
-Real PolyhedraMat::GetStrengthSigmaCZ() const {return sigmaCZ;};
-Real PolyhedraMat::GetStrengthSigmaCD() const {return sigmaCD;};
-int PolyhedraMat::GetWeiM() const {return Wei_m;};
-Real PolyhedraMat::GetWeiS0() const {return Wei_S0;};
-Real PolyhedraMat::GetWeiV0() const {return Wei_V0;};
-Real PolyhedraMat::GetP() const {return Wei_P;};
+Real PolyhedraMat::GetStrength() const {return strength;}
+Real PolyhedraMat::GetStrengthTau() const {return strengthTau;}
+Real PolyhedraMat::GetStrengthSigmaCZ() const {return sigmaCZ;}
+Real PolyhedraMat::GetStrengthSigmaCD() const {return sigmaCD;}
+int PolyhedraMat::GetWeiM() const {return Wei_m;}
+Real PolyhedraMat::GetWeiS0() const {return Wei_S0;}
+Real PolyhedraMat::GetWeiV0() const {return Wei_V0;}
+Real PolyhedraMat::GetP() const {return Wei_P;}
 
 //****************************************************************************************
 /* Destructor */
@@ -392,7 +393,7 @@ void Bo1_Polyhedra_Aabb::go(const shared_ptr<Shape>& ig, shared_ptr<Bound>& bv, 
 	void Gl1_PolyhedraGeom::go(const shared_ptr<IGeom>& ig, const shared_ptr<Interaction>&,
 		const shared_ptr<Body>&, const shared_ptr<Body>&, bool) {draw(ig);}
 
-	void Gl1_PolyhedraGeom::draw(const shared_ptr<IGeom>& /*ig*/){};
+	void Gl1_PolyhedraGeom::draw(const shared_ptr<IGeom>& /*ig*/){}
 
 	GLUquadric* Gl1_PolyhedraPhys::gluQuadric=NULL;
 	Real Gl1_PolyhedraPhys::maxFn;
@@ -496,7 +497,7 @@ void Ip2_PolyhedraMat_PolyhedraMat_PolyhedraPhys::go( const shared_ptr<Material>
         contactPhysics->tangensOfFrictionAngle = std::tan(frictionAngle);
 	contactPhysics->kn = Kna*Knb/(Kna+Knb);
 	contactPhysics->ks = Ksa*Ksb/(Ksa+Ksb);
-};
+}
 
 void Ip2_FrictMat_PolyhedraMat_FrictPhys::go(const shared_ptr<Material>& pp1, const shared_ptr<Material>& pp2, const shared_ptr<Interaction>& interaction){
 	const shared_ptr<FrictMat>& mat1 = YADE_PTR_CAST<FrictMat>(pp1);

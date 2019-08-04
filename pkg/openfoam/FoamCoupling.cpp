@@ -6,7 +6,7 @@
 #include <iostream>
 
 CREATE_LOGGER(FoamCoupling);
-YADE_PLUGIN((FoamCoupling));
+YADE_PLUGIN((FoamCoupling))
 
 void FoamCoupling::getRank() {
 

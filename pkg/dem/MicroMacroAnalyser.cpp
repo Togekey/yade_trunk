@@ -23,7 +23,7 @@
 #include <pkg/dem/TriaxialCompressionEngine.hpp>
 #include "MicroMacroAnalyser.hpp"
 
-YADE_PLUGIN((MicroMacroAnalyser));
+YADE_PLUGIN((MicroMacroAnalyser))
 CREATE_LOGGER(MicroMacroAnalyser);
 
 MicroMacroAnalyser::~MicroMacroAnalyser(){ /*delete analyser;*/} //no need, its a shared_ptr now...

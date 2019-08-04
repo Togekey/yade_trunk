@@ -118,7 +118,7 @@ void Law2_ScGeom_CapillaryPhys_Capillarity1::triangulateData() {
     dtVbased.insert(pointsV.begin(), pointsV.end());
 }
  
-YADE_PLUGIN((Law2_ScGeom_CapillaryPhys_Capillarity1));
+YADE_PLUGIN((Law2_ScGeom_CapillaryPhys_Capillarity1))
 
 int firstIteration=1;
 int x=0;

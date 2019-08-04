@@ -641,7 +641,7 @@ void PotentialParticleVTKRecorder::action() {
 
 }
 
-YADE_PLUGIN((Gl1_PotentialParticle)(PotentialParticleVTKRecorder));
+YADE_PLUGIN((Gl1_PotentialParticle)(PotentialParticleVTKRecorder))
 
 
 //YADE_REQUIRE_FEATURE(OPENGL)

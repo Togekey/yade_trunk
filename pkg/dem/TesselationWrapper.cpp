@@ -22,7 +22,7 @@
 #include <lib/pyutil/numpy_boost.hpp>
 #pragma GCC diagnostic pop
 
-YADE_PLUGIN((TesselationWrapper));
+YADE_PLUGIN((TesselationWrapper))
 CREATE_LOGGER(TesselationWrapper);
 
 // helper macro do assign Matrix3r values to subarrays

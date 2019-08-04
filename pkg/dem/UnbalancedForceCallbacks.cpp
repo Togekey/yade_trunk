@@ -4,11 +4,11 @@
 #include<core/Body.hpp>
 #include<core/Scene.hpp>
 
-YADE_PLUGIN((SumIntrForcesCb)
+YADE_PLUGIN((SumIntrForcesCb))
+
 #ifdef YADE_BODY_CALLBACK
-	(SumBodyForcesCb)
+YADE_PLUGIN((SumBodyForcesCb))
 #endif
-);
 
 IntrCallback::FuncPtr SumIntrForcesCb::stepInit(){
 	// if(scene->iter%100 != 0) return NULL;

@@ -7,7 +7,7 @@
 *************************************************************************/
 #ifdef YADE_FEM
 #include <pkg/fem/LinElastMat.hpp>
-YADE_PLUGIN((DeformableElementMaterial)(LinIsoElastMat)(LinIsoRayleighDampElastMat));
+YADE_PLUGIN((DeformableElementMaterial)(LinIsoElastMat)(LinIsoRayleighDampElastMat))
 
 DeformableElementMaterial::~DeformableElementMaterial(void){}
 LinIsoElastMat::~LinIsoElastMat(void){}

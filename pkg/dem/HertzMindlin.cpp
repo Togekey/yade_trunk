@@ -13,7 +13,7 @@ YADE_PLUGIN(
 	(Law2_ScGeom_MindlinPhys_Mindlin)
 	(MindlinCapillaryPhys)
 	(Ip2_FrictMat_FrictMat_MindlinCapillaryPhys)
-);
+)
 
 Real Law2_ScGeom_MindlinPhys_Mindlin::getfrictionDissipation() {return (Real) frictionDissipation;}
 Real Law2_ScGeom_MindlinPhys_Mindlin::getshearEnergy() {return (Real) shearEnergy;}
@@ -593,6 +593,6 @@ void Ip2_FrictMat_FrictMat_MindlinCapillaryPhys::go( const shared_ptr<Material>&
 		contactPhysics->betan=betan ? (*betan)(mat1->id,mat2->id) : 0; 
 		contactPhysics->betas=betas ? (*betas)(mat1->id,mat2->id) : contactPhysics->betan;
 	}
-};
+}
 
 

@@ -1274,7 +1274,7 @@ void PotentialBlockVTKRecorder::action(){
 
 }
 
-YADE_PLUGIN((Gl1_PotentialBlock)(PotentialBlockVTKRecorder)(PotentialBlockVTKRecorderTunnel));
+YADE_PLUGIN((Gl1_PotentialBlock)(PotentialBlockVTKRecorder)(PotentialBlockVTKRecorderTunnel))
 
 
 //YADE_REQUIRE_FEATURE(OPENGL)

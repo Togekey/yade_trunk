@@ -58,7 +58,7 @@ class UnsaturatedEngine : public TwoPhaseFlowEngine
 };
 
 REGISTER_SERIALIZABLE(UnsaturatedEngine);
-YADE_PLUGIN((UnsaturatedEngine));
+YADE_PLUGIN((UnsaturatedEngine))
 
 UnsaturatedEngine::~UnsaturatedEngine(){}
 

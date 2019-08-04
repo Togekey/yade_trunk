@@ -5,9 +5,7 @@
 #include <core/Omega.hpp>
 #include <pkg/dem/PotentialParticle.hpp>
 
-YADE_PLUGIN((Law2_SCG_KnKsPhys_KnKsLaw)(Ip2_FrictMat_FrictMat_KnKsPhys)(KnKsPhys)
-
-           );
+YADE_PLUGIN((Law2_SCG_KnKsPhys_KnKsLaw)(Ip2_FrictMat_FrictMat_KnKsPhys)(KnKsPhys))
 
 
 

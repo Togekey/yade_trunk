@@ -2,11 +2,11 @@
 #include<pkg/dem/DemXDofGeom.hpp>
 #include<pkg/dem/Shop.hpp>
 
-YADE_PLUGIN((DomainLimiter)(LawTester)
-	#ifdef YADE_OPENGL
-		(GlExtra_LawTester)(GlExtra_OctreeCubes)
-	#endif
-);
+YADE_PLUGIN((DomainLimiter)(LawTester))
+
+#ifdef YADE_OPENGL
+YADE_PLUGIN((GlExtra_LawTester)(GlExtra_OctreeCubes))
+#endif
 
 void DomainLimiter::action(){
 	std::list<Body::id_t> out;

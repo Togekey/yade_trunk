@@ -19,7 +19,7 @@
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
 TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::~TemplateFlowEngine_@TEMPLATE_FLOW_NAME@() {}
 
-// YADE_PLUGIN((TFlowEng));
+// YADE_PLUGIN((TFlowEng))
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
 unsigned int TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::imposePressure(Vector3r pos, Real p)
 {

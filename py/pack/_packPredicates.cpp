@@ -5,7 +5,7 @@
 
 namespace py=boost::python;
 
-CREATE_CPP_LOCAL_LOGGER("_packPredicates.cpp");
+CREATE_CPP_LOCAL_LOGGER("_packPredicates.cpp")
 
 /*
 This file contains various predicates that say whether a given point is within the solid,

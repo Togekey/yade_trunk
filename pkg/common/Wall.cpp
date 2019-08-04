@@ -2,11 +2,11 @@
 #include<pkg/common/Wall.hpp>
 #include<pkg/common/Aabb.hpp>
 
-YADE_PLUGIN((Wall)(Bo1_Wall_Aabb)
-	#ifdef YADE_OPENGL
-		(Gl1_Wall)
-	#endif
-	);
+YADE_PLUGIN((Wall)(Bo1_Wall_Aabb))
+
+#ifdef YADE_OPENGL
+YADE_PLUGIN((Gl1_Wall))
+#endif
 
 Wall::~Wall(){} // vtable
 

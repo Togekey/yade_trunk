@@ -13,11 +13,11 @@ CapillaryPhys1::~CapillaryPhys1()
 {
 }
 
-YADE_PLUGIN((CapillaryPhys1));
+YADE_PLUGIN((CapillaryPhys1))
 
 
 
-YADE_PLUGIN((Ip2_FrictMat_FrictMat_CapillaryPhys1));
+YADE_PLUGIN((Ip2_FrictMat_FrictMat_CapillaryPhys1))
 
 void Ip2_FrictMat_FrictMat_CapillaryPhys1::go( const shared_ptr<Material>& b1 //FrictMat
 					, const shared_ptr<Material>& b2 // FrictMat

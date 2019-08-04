@@ -54,6 +54,6 @@ void Gl1_PFacet::go(const shared_ptr<Shape>& cm, const shared_ptr<State>& st,boo
 	}
 }
 
-YADE_PLUGIN((Gl1_PFacet));
+YADE_PLUGIN((Gl1_PFacet))
 
 #endif

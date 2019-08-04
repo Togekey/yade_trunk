@@ -37,4 +37,4 @@ void Facet::postLoad(Facet&)
 	icr = e[0].norm()*ne[0].dot(e[2])/p;
 }
 
-YADE_PLUGIN((Facet));
+YADE_PLUGIN((Facet))

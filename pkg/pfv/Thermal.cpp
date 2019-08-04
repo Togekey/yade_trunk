@@ -23,11 +23,11 @@ Caulk, R. and Chareyre, B. (2019) An open framework for the simulation of therma
 #include<pkg/common/Sphere.hpp>
 #include<pkg/dem/Shop.hpp>
 #include<pkg/dem/FrictPhys.hpp>
-//YADE_PLUGIN((ThermalState));
+//YADE_PLUGIN((ThermalState))
 //ThermalState::~ThermalState(){};
 
 CREATE_LOGGER(ThermalEngine);
-YADE_PLUGIN((ThermalEngine));
+YADE_PLUGIN((ThermalEngine))
 
 ThermalEngine::~ThermalEngine(){} // destructor
 

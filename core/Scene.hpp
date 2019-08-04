@@ -30,7 +30,7 @@ class Bound;
 #endif
 
 class Scene: public Serializable{
-	const unsigned int hostNameMax = 255;
+	static constexpr unsigned int hostNameMax = 255;
 	
 	public:
 		//! Adds material to Scene::materials. It also sets id of the material accordingly and returns it.

@@ -5,7 +5,7 @@
 #include<core/InteractionContainer.hpp>
 #include<pkg/common/Aabb.hpp>
 
-YADE_PLUGIN((UniaxialStrainer));
+YADE_PLUGIN((UniaxialStrainer))
 /************************ UniaxialStrainer **********************/
 CREATE_LOGGER(UniaxialStrainer);
 

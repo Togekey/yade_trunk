@@ -94,6 +94,6 @@ void Gl1_DeformableElement::go(const shared_ptr<Shape>& cm, const shared_ptr<Sta
 
 }
 
-YADE_PLUGIN((Gl1_DeformableElement));
+YADE_PLUGIN((Gl1_DeformableElement))
 #endif //YADE_FEM
 #endif /* YADE_OPENGL */

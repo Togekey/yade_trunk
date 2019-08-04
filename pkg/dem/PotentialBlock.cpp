@@ -3,7 +3,7 @@
  //! To implement potential particles (Houlsby 2009) using sphere
 #include "PotentialBlock.hpp"
 
-YADE_PLUGIN((PotentialBlock));
+YADE_PLUGIN((PotentialBlock))
 
 
 PotentialBlock::~PotentialBlock()

@@ -6,9 +6,7 @@
 #include<core/Omega.hpp>
 #include<pkg/dem/PotentialBlock.hpp>
 
-YADE_PLUGIN((Law2_SCG_KnKsPBPhys_KnKsPBLaw)(Ip2_FrictMat_FrictMat_KnKsPBPhys)(KnKsPBPhys)
-
-);
+YADE_PLUGIN((Law2_SCG_KnKsPBPhys_KnKsPBLaw)(Ip2_FrictMat_FrictMat_KnKsPBPhys)(KnKsPBPhys))
 
 
 /********************** Law2_Dem3DofGeom_RockPMPhys_Rpm ****************************/

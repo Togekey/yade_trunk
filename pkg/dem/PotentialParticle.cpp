@@ -4,7 +4,7 @@
 //! To implement potential particles (Houlsby 2009) using sphere
 #include "PotentialParticle.hpp"
 
-YADE_PLUGIN((PotentialParticle));
+YADE_PLUGIN((PotentialParticle))
 
 
 PotentialParticle::~PotentialParticle() {

@@ -20,7 +20,7 @@
 class Ip2_CohFrictMat_CohFrictMat_CohFrictPhys;
 
 CREATE_LOGGER(TriaxialCompressionEngine);
-YADE_PLUGIN((TriaxialCompressionEngine));
+YADE_PLUGIN((TriaxialCompressionEngine))
 
 TriaxialCompressionEngine::~TriaxialCompressionEngine()
 {

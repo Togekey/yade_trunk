@@ -29,9 +29,9 @@ class FlowEngine : public FlowEngineT
 };
 REGISTER_SERIALIZABLE(FlowEngine);
 
-YADE_PLUGIN((FlowEngineT));
+YADE_PLUGIN((FlowEngineT))
 CREATE_LOGGER(FlowEngine );
-YADE_PLUGIN((FlowEngine));
+YADE_PLUGIN((FlowEngine))
 
 #endif //FLOW_ENGINE
 

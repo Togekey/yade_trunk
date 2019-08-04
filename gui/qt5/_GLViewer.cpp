@@ -8,8 +8,8 @@
 
 namespace py=boost::python;
 
-qglviewer::Vec tuple2vec(py::tuple t){ qglviewer::Vec ret; for(int i=0;i<3;i++){py::extract<Real> e(t[i]); if(!e.check()) throw invalid_argument("Element #"+boost::lexical_cast<string>(i)+" is not a number"); ret[i]=e();} return ret;};
-py::tuple vec2tuple(qglviewer::Vec v){return py::make_tuple(v[0],v[1],v[2]);};
+qglviewer::Vec tuple2vec(py::tuple t){ qglviewer::Vec ret; for(int i=0;i<3;i++){py::extract<Real> e(t[i]); if(!e.check()) throw invalid_argument("Element #"+boost::lexical_cast<string>(i)+" is not a number"); ret[i]=e();} return ret;}
+py::tuple vec2tuple(qglviewer::Vec v){return py::make_tuple(v[0],v[1],v[2]);}
 
 class pyGLViewer{
 	const size_t viewNo;
@@ -61,7 +61,7 @@ pyGLViewer createView(){
 	return pyGLViewer((*OpenGLManager::self->views.rbegin())->viewId);
 }
 
-py::list getAllViews(){ py::list ret; FOREACH(const shared_ptr<GLViewer>& v, OpenGLManager::self->views){ if(v) ret.append(pyGLViewer(v->viewId)); } return ret; };
+py::list getAllViews(){ py::list ret; FOREACH(const shared_ptr<GLViewer>& v, OpenGLManager::self->views){ if(v) ret.append(pyGLViewer(v->viewId)); } return ret; }
 void centerViews(void){ OpenGLManager::self->centerAllViews(); }
 
 shared_ptr<OpenGLRenderer> getRenderer(){ return OpenGLManager::self->renderer; }
@@ -95,7 +95,7 @@ BOOST_PYTHON_MODULE(_GLViewer){
 		.def("fitAABB",&pyGLViewer::fitAABB,(py::arg("mn"),py::arg("mx")),"Adjust scene bounds so that Axis-aligned bounding box given by its lower and upper corners *mn*, *mx* fits in.")
 		.def("fitSphere",&pyGLViewer::fitSphere,(py::arg("center"),py::arg("radius")),"Adjust scene bounds so that sphere given by *center* and *radius* fits in.")
 		.def("showEntireScene",&pyGLViewer::showEntireScene)
-		.def("center",&pyGLViewer::center,(py::arg("median")=true),"Center view. View is centered either so that all bodies fit inside (*median* = False), or so that 75\% of bodies fit inside (*median* = True).")
+		.def("center",&pyGLViewer::center,(py::arg("median")=true),"Center view. View is centered either so that all bodies fit inside (*median* = False), or so that 75% of bodies fit inside (*median* = True).")
 		.def("saveState",&pyGLViewer::saveState,(py::arg("stateFilename")=".qglviewer.xml"),"Save display parameters into a file. Saves state for both :yref:`GLViewer<yade._qt.GLViewer>` and associated :yref:`OpenGLRenderer`.")
 		.def("loadState",&pyGLViewer::loadState,(py::arg("stateFilename")=".qglviewer.xml"),"Load display parameters from file saved previously into.")
 		.def("__repr__",&pyGLViewer::pyStr).def("__str__",&pyGLViewer::pyStr)

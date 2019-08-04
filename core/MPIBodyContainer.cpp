@@ -1,7 +1,7 @@
 
 #ifdef YADE_MPI
 #include "MPIBodyContainer.hpp"
-YADE_PLUGIN((MPIBodyContainer));
+YADE_PLUGIN((MPIBodyContainer))
 CREATE_LOGGER(MPIBodyContainer);
 
 

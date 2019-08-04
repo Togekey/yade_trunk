@@ -9,8 +9,8 @@
 #ifdef YADE_FEM
 #include <pkg/fem/Lin4NodeTetra_Lin4NodeTetra_InteractionElement.hpp>
 #include <pkg/fem/If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat.hpp>
-YADE_PLUGIN((If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat));
-If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat::~If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat(){};
+YADE_PLUGIN((If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat))
+If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat::~If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat(){}
 
 
 /********************************************************************

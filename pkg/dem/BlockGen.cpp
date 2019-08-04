@@ -52,7 +52,7 @@
 
 
 CREATE_LOGGER(BlockGen);
-YADE_PLUGIN((BlockGen));
+YADE_PLUGIN((BlockGen))
 
 //using namespace boost;
 //using namespace std;

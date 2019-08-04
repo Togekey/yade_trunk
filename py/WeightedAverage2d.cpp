@@ -33,5 +33,5 @@ BOOST_PYTHON_MODULE(WeightedAverage2d)
 		.add_property("cellArea",&pyGaussAverage::cellArea)
 		.add_property("cellDim",&pyGaussAverage::cellDim)
 	;
-};
+}
 

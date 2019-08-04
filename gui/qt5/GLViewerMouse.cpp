@@ -54,7 +54,7 @@ void GLViewer::mouseMovesCamera(){
   setMouseBinding(Qt::RightButton, CAMERA, TRANSLATE);
   camera()->frame()->setWheelSensitivity(-1.0f);
 #endif
-};
+}
 
 void GLViewer::mouseMovesManipulatedFrame(qglviewer::Constraint* c){
 	setMouseBinding(Qt::LeftButton + Qt::RightButton, FRAME, ZOOM);

@@ -15,7 +15,7 @@
 #include <pkg/fem/Node.hpp>
 #include <lib/base/Math.hpp>
 
-YADE_PLUGIN((Lin4NodeTetra_Lin4NodeTetra_InteractionElement));
+YADE_PLUGIN((Lin4NodeTetra_Lin4NodeTetra_InteractionElement))
 CREATE_LOGGER(Lin4NodeTetra_Lin4NodeTetra_InteractionElement);
 
 Lin4NodeTetra_Lin4NodeTetra_InteractionElement::~Lin4NodeTetra_Lin4NodeTetra_InteractionElement(){

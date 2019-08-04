@@ -1,6 +1,6 @@
 #include"InteractionLoop.hpp"
 
-YADE_PLUGIN((InteractionLoop));
+YADE_PLUGIN((InteractionLoop))
 CREATE_LOGGER(InteractionLoop);
 
 void InteractionLoop::pyHandleCustomCtorArgs(boost::python::tuple& t, boost::python::dict& /*d*/){

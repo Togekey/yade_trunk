@@ -118,6 +118,6 @@ extern "C" {
 	 void dgesv_(const int *N, const int *nrhs, double *Hessian, const int *lda, int *ipiv, double *gradient, const int *ldb, int *info);
 	void dsyev_(const char *jobz, const char *uplo, const int *N, double *A, const int *lda, double *W, double *work, int *lwork, int *info);
 #ifdef __cplusplus
-};
+}
 #endif
 #endif // YADE_POTENTIAL_BLOCKS

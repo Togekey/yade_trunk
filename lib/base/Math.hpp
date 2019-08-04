@@ -123,7 +123,7 @@ using Eigen::Quaternion;
 
 // in some cases, we want to initialize types that have no default constructor (OpenMPAccumulator, for instance)
 // template specialization will help us here
-template<typename EigenMatrix> EigenMatrix ZeroInitializer(){ return EigenMatrix::Zero(); };
+template<typename EigenMatrix> EigenMatrix ZeroInitializer(){ return EigenMatrix::Zero(); }
 template<> int ZeroInitializer<int>();
 template<> Real ZeroInitializer<Real>();
 
@@ -285,16 +285,16 @@ using Se3r = Se3<Real>;
 
 // fast serialization (no version infor and no tracking) for basic math types
 // http://www.boost.org/doc/libs/1_42_0/libs/serialization/doc/traits.html#bitwise
-BOOST_IS_BITWISE_SERIALIZABLE(Vector2r);
-BOOST_IS_BITWISE_SERIALIZABLE(Vector2i);
-BOOST_IS_BITWISE_SERIALIZABLE(Vector3r);
-BOOST_IS_BITWISE_SERIALIZABLE(Vector3i);
-BOOST_IS_BITWISE_SERIALIZABLE(Vector6r);
-BOOST_IS_BITWISE_SERIALIZABLE(Vector6i);
-BOOST_IS_BITWISE_SERIALIZABLE(Quaternionr);
-BOOST_IS_BITWISE_SERIALIZABLE(Se3r);
-BOOST_IS_BITWISE_SERIALIZABLE(Matrix3r);
-BOOST_IS_BITWISE_SERIALIZABLE(Matrix6r);
+BOOST_IS_BITWISE_SERIALIZABLE(Vector2r)
+BOOST_IS_BITWISE_SERIALIZABLE(Vector2i)
+BOOST_IS_BITWISE_SERIALIZABLE(Vector3r)
+BOOST_IS_BITWISE_SERIALIZABLE(Vector3i)
+BOOST_IS_BITWISE_SERIALIZABLE(Vector6r)
+BOOST_IS_BITWISE_SERIALIZABLE(Vector6i)
+BOOST_IS_BITWISE_SERIALIZABLE(Quaternionr)
+BOOST_IS_BITWISE_SERIALIZABLE(Se3r)
+BOOST_IS_BITWISE_SERIALIZABLE(Matrix3r)
+BOOST_IS_BITWISE_SERIALIZABLE(Matrix6r)
 
 namespace boost {
 namespace serialization {

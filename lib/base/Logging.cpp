@@ -216,7 +216,7 @@ boost::log::sources::severity_logger< Logging::SeverityLevel > Logging::createNa
 	l.add_attribute("NameTag", boost::log::attributes::constant< std::string >(name));
 	classLogLevels[name] = -1;
 	return l;
-};
+}
 
 std::map<std::string,short int>::iterator Logging::findFilterName(const std::string& name) {
 	auto it = classLogLevels.find(name);

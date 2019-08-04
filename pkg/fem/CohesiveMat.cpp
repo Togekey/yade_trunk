@@ -7,7 +7,7 @@
 *************************************************************************/
 #ifdef YADE_FEM
 #include <pkg/fem/CohesiveMat.hpp>
-YADE_PLUGIN((CohesiveDeformableElementMaterial)(LinCohesiveElasticMaterial)(LinCohesiveStiffPropDampElastMat));
+YADE_PLUGIN((CohesiveDeformableElementMaterial)(LinCohesiveElasticMaterial)(LinCohesiveStiffPropDampElastMat))
 
 CohesiveDeformableElementMaterial::~CohesiveDeformableElementMaterial(void){}
 LinCohesiveElasticMaterial::~LinCohesiveElasticMaterial(void){}

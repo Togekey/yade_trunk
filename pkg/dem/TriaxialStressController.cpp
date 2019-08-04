@@ -23,7 +23,7 @@
 #endif
 
 CREATE_LOGGER(TriaxialStressController);
-YADE_PLUGIN((TriaxialStressController));
+YADE_PLUGIN((TriaxialStressController))
 
 TriaxialStressController::~TriaxialStressController(){}
 

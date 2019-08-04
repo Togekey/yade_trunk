@@ -16,7 +16,7 @@
 #include <core/Omega.hpp>
 #include <core/Scene.hpp>
 
-YADE_PLUGIN((CapillaryStressRecorder));
+YADE_PLUGIN((CapillaryStressRecorder))
 CREATE_LOGGER(CapillaryStressRecorder);
 
 void CapillaryStressRecorder::action()

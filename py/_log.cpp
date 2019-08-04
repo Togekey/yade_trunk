@@ -14,7 +14,7 @@
 #include<lib/base/Logging.hpp>
 #include<string>
 
-CREATE_CPP_LOCAL_LOGGER("_log.cpp");
+CREATE_CPP_LOCAL_LOGGER("_log.cpp")
 
 namespace py = boost::python;
 

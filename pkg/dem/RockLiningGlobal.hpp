@@ -162,6 +162,6 @@ extern "C" {
 
 
 #ifdef __cplusplus
-};
+}
 #endif
 #endif // YADE_POTENTIAL_BLOCKS

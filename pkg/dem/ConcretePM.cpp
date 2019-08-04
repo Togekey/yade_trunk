@@ -9,11 +9,11 @@
 #include<pkg/common/Box.hpp>
 
 
-YADE_PLUGIN((CpmState)(CpmMat)(Ip2_CpmMat_CpmMat_CpmPhys)(Ip2_FrictMat_CpmMat_FrictPhys)(CpmPhys)(Law2_ScGeom_CpmPhys_Cpm)
-	#ifdef YADE_OPENGL
-		(Gl1_CpmPhys)
-	#endif	
-		(CpmStateUpdater));
+YADE_PLUGIN((CpmState)(CpmMat)(Ip2_CpmMat_CpmMat_CpmPhys)(Ip2_FrictMat_CpmMat_FrictPhys)(CpmPhys)(Law2_ScGeom_CpmPhys_Cpm)(CpmStateUpdater))
+
+#ifdef YADE_OPENGL
+YADE_PLUGIN((Gl1_CpmPhys))
+#endif	
 
 
 /********************** Ip2_CpmMat_CpmMat_CpmPhys ****************************/
@@ -107,7 +107,7 @@ void Ip2_CpmMat_CpmMat_CpmPhys::go(const shared_ptr<Material>& pp1, const shared
 CREATE_LOGGER(CpmPhys);
 
 // !! at least one virtual function in the .cpp file
-CpmPhys::~CpmPhys(){};
+CpmPhys::~CpmPhys(){}
 
 long CpmPhys::cummBetaIter=0, CpmPhys::cummBetaCount=0;
 

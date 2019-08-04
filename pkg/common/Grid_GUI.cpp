@@ -66,5 +66,5 @@ void Gl1_GridConnection::drawCylinder(bool wireNonMember, Real radius, Real leng
    gluDeleteQuadric(quadObj);
    glPopMatrix();
 }
-YADE_PLUGIN((Gl1_GridConnection));
+YADE_PLUGIN((Gl1_GridConnection))
 #endif

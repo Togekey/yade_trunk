@@ -8,7 +8,7 @@
 #include <numpy/arrayobject.h>
 #pragma GCC diagnostic pop
 
-CREATE_CPP_LOCAL_LOGGER("_utils.cpp");
+CREATE_CPP_LOCAL_LOGGER("_utils.cpp")
 
 py::tuple negPosExtremeIds(int axis, Real distFactor){
 	py::tuple extrema=Shop::aabbExtrema();
@@ -45,8 +45,8 @@ void setRefSe3(){
 	}
 }
 
-Real PWaveTimeStep(){return Shop::PWaveTimeStep();};
-Real RayleighWaveTimeStep(){return Shop::RayleighWaveTimeStep();};
+Real PWaveTimeStep(){return Shop::PWaveTimeStep();}
+Real RayleighWaveTimeStep(){return Shop::RayleighWaveTimeStep();}
 
 py::tuple interactionAnglesHistogram(int axis, int mask, size_t bins, py::tuple aabb, bool sphSph, Real minProjLen){
 	if(axis<0||axis>2) throw invalid_argument("Axis must be from {0,1,2}=x,y,z.");

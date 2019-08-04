@@ -18,10 +18,10 @@
 
 // #include <lib/pyutil/numpy_boost.hpp>
 
-YADE_PLUGIN((Subdomain));
+YADE_PLUGIN((Subdomain))
 CREATE_LOGGER(Subdomain);
 
-YADE_PLUGIN((Bo1_Subdomain_Aabb)/*(Bo1_Facet_Aabb)(Bo1_Box_Aabb)*/);
+YADE_PLUGIN((Bo1_Subdomain_Aabb)/*(Bo1_Facet_Aabb)(Bo1_Box_Aabb)*/)
 CREATE_LOGGER(Bo1_Subdomain_Aabb);
 
 void Subdomain::setMinMax()

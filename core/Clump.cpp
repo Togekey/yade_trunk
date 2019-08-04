@@ -6,7 +6,7 @@
 #include<core/State.hpp>
 #include<pkg/common/Sphere.hpp>
 
-YADE_PLUGIN((Clump));
+YADE_PLUGIN((Clump))
 CREATE_LOGGER(Clump);
 
 boost::python::dict Clump::members_get(){

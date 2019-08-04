@@ -15,7 +15,7 @@
 #include <boost/random/variate_generator.hpp>
 #include <boost/optional.hpp>
 
-YADE_PLUGIN((HydroForceEngine));
+YADE_PLUGIN((HydroForceEngine))
 
 void HydroForceEngine::action(){
 	/* Application of hydrodynamical forces */

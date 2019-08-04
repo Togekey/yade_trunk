@@ -1,6 +1,6 @@
 #include "FrictPhys.hpp"
 #include <pkg/dem/ScGeom.hpp>
-YADE_PLUGIN((FrictPhys)(ViscoFrictPhys)(Ip2_FrictMat_FrictMat_ViscoFrictPhys)(Ip2_FrictMat_FrictMat_FrictPhys));
+YADE_PLUGIN((FrictPhys)(ViscoFrictPhys)(Ip2_FrictMat_FrictMat_ViscoFrictPhys)(Ip2_FrictMat_FrictMat_FrictPhys))
 
 // The following code was moved from Ip2_FrictMat_FrictMat_FrictPhys.hpp
 
@@ -39,7 +39,7 @@ void Ip2_FrictMat_FrictMat_FrictPhys::go( const shared_ptr<Material>& b1
 	contactPhysics->tangensOfFrictionAngle = std::tan(frictionAngle);
 	contactPhysics->kn = Kn;
 	contactPhysics->ks = Ks;
-};
+}
 
 void Ip2_FrictMat_FrictMat_ViscoFrictPhys::go( const shared_ptr<Material>& b1
 					, const shared_ptr<Material>& b2
@@ -70,4 +70,4 @@ void Ip2_FrictMat_FrictMat_ViscoFrictPhys::go( const shared_ptr<Material>& b1
 	contactPhysics->tangensOfFrictionAngle = std::tan(frictionAngle);
 	contactPhysics->kn = Kn;
 	contactPhysics->ks = Ks;
-};
+}

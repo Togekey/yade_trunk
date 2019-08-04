@@ -36,7 +36,7 @@ namespace bfs=boost::filesystem;
 inline Vector3i vect3rToVect3i(Vector3r vect){Vector3i newvect((int)vect[0],(int)vect[1],(int)vect[2]);return(newvect);}
 
 
-HydrodynamicsLawLBM::~HydrodynamicsLawLBM() {};
+HydrodynamicsLawLBM::~HydrodynamicsLawLBM() {}
 
 bool HydrodynamicsLawLBM::isActivated(){
     DEM_ITER=scene->iter;//+1;
@@ -1361,7 +1361,7 @@ void HydrodynamicsLawLBM::CalculateAndApplyForcesAndTorquesOnBodies(bool mean,bo
     }
     return;
 }
-YADE_PLUGIN((HydrodynamicsLawLBM));
+YADE_PLUGIN((HydrodynamicsLawLBM))
 
 #endif //LBM_ENGINE
 

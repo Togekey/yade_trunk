@@ -14,7 +14,7 @@
 #include<core/Interaction.hpp>
 #include<core/IPhys.hpp>
 
-#define RENDERS(name) public: virtual string renders() const { return #name;}; FUNCTOR1D(name);
+#define RENDERS(name) public: virtual string renders() const { return #name;}; FUNCTOR1D(name)
 
 struct GLViewInfo{
 	GLViewInfo(): sceneCenter(Vector3r::Zero()), sceneRadius(1.){}
@@ -29,10 +29,10 @@ class OpenGLRenderer;
 	virtual string renders() const { throw std::runtime_error(#Klass ": unregistered gldraw class.\n"); };\
 	virtual void initgl(){/*WARNING: it must deal with static members, because it is called from another instance!*/};\
 	YADE_CLASS_BASE_DOC(Klass,Functor,"Abstract functor for rendering :yref:`" #renderedType "` objects."); \
-	}; REGISTER_SERIALIZABLE(Klass); 
+	}; REGISTER_SERIALIZABLE(Klass)
 #define GL_DISPATCHER(Klass,Functor) class Klass: public Dispatcher1D<Functor>{public:\
 	YADE_DISPATCHER1D_FUNCTOR_DOC_ATTRS_CTOR_PY(Klass,Functor,/*optional doc*/,/*attrs*/,/*ctor*/,/*py*/); \
-	}; REGISTER_SERIALIZABLE(Klass);
+	}; REGISTER_SERIALIZABLE(Klass)
 
 GL_FUNCTOR(GlBoundFunctor,TYPELIST_2(const shared_ptr<Bound>&, Scene*),Bound);
 GL_FUNCTOR(GlShapeFunctor,TYPELIST_4(const shared_ptr<Shape>&, const shared_ptr<State>&,bool,const GLViewInfo&),Shape);

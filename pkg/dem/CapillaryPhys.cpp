@@ -1,7 +1,7 @@
 #include <pkg/dem/CapillaryPhys.hpp>
 #include <pkg/dem/ScGeom.hpp>
 
-YADE_PLUGIN((CapillaryPhys)(Ip2_FrictMat_FrictMat_CapillaryPhys));
+YADE_PLUGIN((CapillaryPhys)(Ip2_FrictMat_FrictMat_CapillaryPhys))
 
 // The following code was moved from Ip2_FrictMat_FrictMat_CapillaryPhys.cpp
 
@@ -36,4 +36,4 @@ void Ip2_FrictMat_FrictMat_CapillaryPhys::go( const shared_ptr<Material>& b1 //F
 			contactPhysics->ks = Ks;
 		}
 	}
-};
+}

@@ -11,7 +11,7 @@
 #include <pkg/fem/FEInternalForceDispatchers.hpp>
 #include <pkg/fem/FEInternalForceEngine.hpp>
 
-YADE_PLUGIN((FEInternalForceEngine));
+YADE_PLUGIN((FEInternalForceEngine))
 CREATE_LOGGER(FEInternalForceEngine);
 
 void FEInternalForceEngine::pyHandleCustomCtorArgs(boost::python::tuple& t, boost::python::dict& /*d*/){

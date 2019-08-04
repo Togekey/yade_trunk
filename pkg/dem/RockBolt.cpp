@@ -608,5 +608,5 @@ double f = evaluateFNoSphereVol(s1,state1,intersectionPt);
 
 }
 
-YADE_PLUGIN((RockBolt));
+YADE_PLUGIN((RockBolt))
 #endif // YADE_POTENTIAL_BLOCKS

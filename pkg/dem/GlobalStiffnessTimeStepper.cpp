@@ -18,7 +18,7 @@
 #include<pkg/dem/ViscoelasticPM.hpp>
 
 CREATE_LOGGER(GlobalStiffnessTimeStepper);
-YADE_PLUGIN((GlobalStiffnessTimeStepper));
+YADE_PLUGIN((GlobalStiffnessTimeStepper))
 
 GlobalStiffnessTimeStepper::~GlobalStiffnessTimeStepper() {}
 

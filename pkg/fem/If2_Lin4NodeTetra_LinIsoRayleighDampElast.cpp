@@ -9,8 +9,8 @@
 #ifdef YADE_FEM
 #include <pkg/fem/DeformableElement.hpp>
 #include <pkg/fem/If2_Lin4NodeTetra_LinIsoRayleighDampElast.hpp>
-YADE_PLUGIN((If2_Lin4NodeTetra_LinIsoRayleighDampElast));
-If2_Lin4NodeTetra_LinIsoRayleighDampElast::~If2_Lin4NodeTetra_LinIsoRayleighDampElast(){};
+YADE_PLUGIN((If2_Lin4NodeTetra_LinIsoRayleighDampElast))
+If2_Lin4NodeTetra_LinIsoRayleighDampElast::~If2_Lin4NodeTetra_LinIsoRayleighDampElast(){}
 
 
 /********************************************************************

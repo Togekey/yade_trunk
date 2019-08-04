@@ -15,7 +15,7 @@
 #endif
 
 using std::isfinite;
-YADE_PLUGIN((ViscElMat)(ViscElPhys)(Ip2_ViscElMat_ViscElMat_ViscElPhys)(Law2_ScGeom_ViscElPhys_Basic));
+YADE_PLUGIN((ViscElMat)(ViscElPhys)(Ip2_ViscElMat_ViscElMat_ViscElPhys)(Law2_ScGeom_ViscElPhys_Basic))
 
 /* ViscElMat */
 ViscElMat::~ViscElMat(){}
@@ -390,7 +390,7 @@ T fkt(T R, T dR, vector<T> z)
 }
 
 
-YADE_PLUGIN((DeformControl));
+YADE_PLUGIN((DeformControl))
 void DeformControl::action()
 {
   Scene* scene=Omega::instance().getScene().get();

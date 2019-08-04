@@ -42,7 +42,7 @@ void Gl1_Node::go(const shared_ptr<Shape>& cm, const shared_ptr<State>& ,bool wi
 	}
 	return;
 }
-YADE_PLUGIN((Gl1_Node));
+YADE_PLUGIN((Gl1_Node))
 
 void Gl1_Node::subdivideTriangle(Vector3r& v1,Vector3r& v2,Vector3r& v3, int depth){
 	Vector3r v;

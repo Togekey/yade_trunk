@@ -49,7 +49,7 @@
 
 #include "TriaxialTest.hpp"
 CREATE_LOGGER(TriaxialTest);
-YADE_PLUGIN((TriaxialTest));
+YADE_PLUGIN((TriaxialTest))
 
 TriaxialTest::~TriaxialTest () {}
 

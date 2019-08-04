@@ -15,7 +15,7 @@
 #include <pkg/fem/Node.hpp>
 #include <lib/base/Math.hpp>
 
-YADE_PLUGIN((Lin4NodeTetra));
+YADE_PLUGIN((Lin4NodeTetra))
 CREATE_LOGGER(Lin4NodeTetra);
 
 Lin4NodeTetra::~Lin4NodeTetra(){

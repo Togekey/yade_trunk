@@ -10,19 +10,19 @@
 //!##################	SHAPES   #####################
 
 GridNode::~GridNode(){}
-YADE_PLUGIN((GridNode));
+YADE_PLUGIN((GridNode))
 
 GridConnection::~GridConnection(){}
-YADE_PLUGIN((GridConnection));
+YADE_PLUGIN((GridConnection))
 
 GridNodeGeom6D::~GridNodeGeom6D(){}
-YADE_PLUGIN((GridNodeGeom6D));
+YADE_PLUGIN((GridNodeGeom6D))
 
 ScGridCoGeom::~ScGridCoGeom(){}
-YADE_PLUGIN((ScGridCoGeom));
+YADE_PLUGIN((ScGridCoGeom))
 
 GridCoGridCoGeom::~GridCoGridCoGeom(){}
-YADE_PLUGIN((GridCoGridCoGeom));
+YADE_PLUGIN((GridCoGridCoGeom))
 
 void GridNode::addConnection(shared_ptr<Body> GC){
 	ConnList.push_back(GC);
@@ -48,7 +48,7 @@ void GridConnection::addPFacet(shared_ptr<Body> PF){
 }
 
 PFacet::~PFacet(){}
-YADE_PLUGIN((PFacet));
+YADE_PLUGIN((PFacet))
 
 
 //!##################	IGeom Functors   #####################
@@ -86,7 +86,7 @@ bool Ig2_GridNode_GridNode_GridNodeGeom6D::goReverse( const shared_ptr<Shape>& c
 {
 	return go(cm1,cm2,state2,state1,-shift2,force,c);
 }
-YADE_PLUGIN((Ig2_GridNode_GridNode_GridNodeGeom6D));
+YADE_PLUGIN((Ig2_GridNode_GridNode_GridNodeGeom6D))
 
 //!			\\//
 bool Ig2_GridConnection_GridConnection_GridCoGridCoGeom::go( const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& /*state1*/, const State& /*state2*/, const Vector3r& shift2, const bool& /*force*/, const shared_ptr<Interaction>& c)
@@ -197,7 +197,7 @@ bool Ig2_GridConnection_GridConnection_GridCoGridCoGeom::goReverse( const shared
 {
 	return go(cm1,cm2,state2,state1,-shift2,force,c);
 }
-YADE_PLUGIN((Ig2_GridConnection_GridConnection_GridCoGridCoGeom));
+YADE_PLUGIN((Ig2_GridConnection_GridConnection_GridCoGridCoGeom))
 
 //!			O/
 bool Ig2_Sphere_GridConnection_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
@@ -416,7 +416,7 @@ bool Ig2_Sphere_GridConnection_ScGridCoGeom::goReverse(	const shared_ptr<Shape>&
 	c->swapOrder();
 	return go(cm2,cm1,state2,state1,-shift2,force,c);
 }
-YADE_PLUGIN((Ig2_Sphere_GridConnection_ScGridCoGeom));
+YADE_PLUGIN((Ig2_Sphere_GridConnection_ScGridCoGeom))
 
 
 //!##################	Laws   #####################
@@ -488,7 +488,7 @@ bool Law2_ScGridCoGeom_FrictPhys_CundallStrack::go(shared_ptr<IGeom>& ig, shared
 	
 	return true;
 }
-YADE_PLUGIN((Law2_ScGridCoGeom_FrictPhys_CundallStrack));
+YADE_PLUGIN((Law2_ScGridCoGeom_FrictPhys_CundallStrack))
 
 
 bool Law2_ScGridCoGeom_CohFrictPhys_CundallStrack::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& ip, Interaction* contact){
@@ -556,7 +556,7 @@ bool Law2_ScGridCoGeom_CohFrictPhys_CundallStrack::go(shared_ptr<IGeom>& ig, sha
 		return true;
 	}
 }
-YADE_PLUGIN((Law2_ScGridCoGeom_CohFrictPhys_CundallStrack));
+YADE_PLUGIN((Law2_ScGridCoGeom_CohFrictPhys_CundallStrack))
 
 bool Law2_GridCoGridCoGeom_FrictPhys_CundallStrack::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& ip, Interaction* contact){
 	int id1 = contact->getId1(), id2 = contact->getId2();
@@ -614,7 +614,7 @@ bool Law2_GridCoGridCoGeom_FrictPhys_CundallStrack::go(shared_ptr<IGeom>& ig, sh
 	scene->forces.addTorque(id22,geom->relPos2*torque2);
 	return true;
 }
-YADE_PLUGIN((Law2_GridCoGridCoGeom_FrictPhys_CundallStrack));
+YADE_PLUGIN((Law2_GridCoGridCoGeom_FrictPhys_CundallStrack))
 //!##################	Bounds   #####################
 
 void Bo1_GridConnection_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& /*se3*/, const Body* /*b*/){
@@ -641,4 +641,4 @@ void Bo1_GridConnection_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>&
 	}
 }
 
-YADE_PLUGIN((Bo1_GridConnection_Aabb));
+YADE_PLUGIN((Bo1_GridConnection_Aabb))

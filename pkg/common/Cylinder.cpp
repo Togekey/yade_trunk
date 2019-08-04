@@ -14,12 +14,15 @@ ChainedState::~ChainedState(){}
 // Ig2_Sphere_ChainedCylinder_CylScGeom::~Ig2_Sphere_ChainedCylinder_CylScGeom() {}
 // Ig2_ChainedCylinder_ChainedCylinder_ScGeom6D::~Ig2_ChainedCylinder_ChainedCylinder_ScGeom6D() {}
 
-YADE_PLUGIN((Cylinder)(ChainedCylinder)(ChainedState)(Ig2_Sphere_ChainedCylinder_CylScGeom)(Ig2_Sphere_ChainedCylinder_CylScGeom6D)(Ig2_ChainedCylinder_ChainedCylinder_ScGeom6D)(Law2_CylScGeom6D_CohFrictPhys_CohesionMoment)(Law2_ChCylGeom6D_CohFrictPhys_CohesionMoment)(Law2_CylScGeom_FrictPhys_CundallStrack)
-	#ifdef YADE_OPENGL
-		(Gl1_Cylinder)(Gl1_ChainedCylinder)
-	#endif
-	(Bo1_Cylinder_Aabb)(Bo1_ChainedCylinder_Aabb)
-);
+YADE_PLUGIN((Cylinder)(ChainedCylinder)(ChainedState)(Ig2_Sphere_ChainedCylinder_CylScGeom)(Ig2_Sphere_ChainedCylinder_CylScGeom6D)
+(Ig2_ChainedCylinder_ChainedCylinder_ScGeom6D)(Law2_CylScGeom6D_CohFrictPhys_CohesionMoment)(Law2_ChCylGeom6D_CohFrictPhys_CohesionMoment)
+(Law2_CylScGeom_FrictPhys_CundallStrack)(Bo1_Cylinder_Aabb)(Bo1_ChainedCylinder_Aabb)
+)
+
+#ifdef YADE_OPENGL
+YADE_PLUGIN((Gl1_Cylinder)(Gl1_ChainedCylinder))
+#endif
+
 
 vector<vector<int> > ChainedState::chains;
 unsigned int ChainedState::currentChain=0;

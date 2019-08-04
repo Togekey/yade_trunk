@@ -18,7 +18,7 @@
 
 #include<core/Timing.hpp>
 
-YADE_PLUGIN((WireMat)(WireState)(WirePhys)(Ip2_WireMat_WireMat_WirePhys)(Law2_ScGeom_WirePhys_WirePM));
+YADE_PLUGIN((WireMat)(WireState)(WirePhys)(Ip2_WireMat_WireMat_WirePhys)(Law2_ScGeom_WirePhys_WirePM))
 
 
 /********************** WireMat ****************************/

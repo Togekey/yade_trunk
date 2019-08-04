@@ -12,7 +12,7 @@
 #include<core/Scene.hpp>
 #include<boost/regex.hpp>
 
-YADE_PLUGIN((GravityEngine)(CentralGravityEngine)(AxialGravityEngine)(HdapsGravityEngine));
+YADE_PLUGIN((GravityEngine)(CentralGravityEngine)(AxialGravityEngine)(HdapsGravityEngine))
 CREATE_LOGGER(GravityEngine);
 
 void GravityEngine::action(){

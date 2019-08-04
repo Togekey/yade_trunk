@@ -465,7 +465,7 @@ void GLViewer::initFromDOMElement(const QDomElement& element){
 	}
 }
 
-boost::posix_time::ptime GLViewer::getLastUserEvent(){return last_user_event;};
+boost::posix_time::ptime GLViewer::getLastUserEvent(){return last_user_event;}
 
 #if QGLVIEWER_VERSION>=0x020603
 qreal YadeCamera::zNear() const

@@ -5,7 +5,7 @@
 #include<core/Scene.hpp>
 #include<pkg/common/Sphere.hpp>
 
-YADE_PLUGIN((LudingMat)(LudingPhys)(Ip2_LudingMat_LudingMat_LudingPhys)(Law2_ScGeom_LudingPhys_Basic));
+YADE_PLUGIN((LudingMat)(LudingPhys)(Ip2_LudingMat_LudingMat_LudingPhys)(Law2_ScGeom_LudingPhys_Basic))
 
 LudingMat::~LudingMat(){}
 

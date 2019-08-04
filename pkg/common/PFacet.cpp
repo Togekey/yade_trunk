@@ -462,7 +462,7 @@ bool Ig2_Sphere_PFacet_ScGridCoGeom::goReverse(	const shared_ptr<Shape>& cm1,
 	c->swapOrder();
 	return go(cm2,cm1,state2,state1,-shift2,force,c);
 }
-YADE_PLUGIN((Ig2_Sphere_PFacet_ScGridCoGeom));
+YADE_PLUGIN((Ig2_Sphere_PFacet_ScGridCoGeom))
 
 bool Ig2_GridConnection_PFacet_ScGeom::go( const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& /*state1*/, const State& /*state2*/, const Vector3r& /*shift2*/, const bool& /*force*/, const shared_ptr<Interaction>& c)
 {
@@ -505,7 +505,7 @@ bool Ig2_GridConnection_PFacet_ScGeom::goReverse( const shared_ptr<Shape>& cm1, 
 {
 	return go(cm1,cm2,state2,state1,-shift2,force,c);
 }
-YADE_PLUGIN((Ig2_GridConnection_PFacet_ScGeom));
+YADE_PLUGIN((Ig2_GridConnection_PFacet_ScGeom))
 
 
 
@@ -766,7 +766,7 @@ bool Ig2_PFacet_PFacet_ScGeom::goReverse( const shared_ptr<Shape>& cm1, const sh
 {
 	return go(cm1,cm2,state2,state1,-shift2,force,c);
 }
-YADE_PLUGIN((Ig2_PFacet_PFacet_ScGeom));
+YADE_PLUGIN((Ig2_PFacet_PFacet_ScGeom))
 
 
 /********* Wall + Sphere **********/
@@ -800,7 +800,7 @@ bool Ig2_Wall_PFacet_ScGeom::go(const shared_ptr<Shape>& /*cm1*/, const shared_p
 	
 }
 
-YADE_PLUGIN((Ig2_Wall_PFacet_ScGeom));
+YADE_PLUGIN((Ig2_Wall_PFacet_ScGeom))
 //!##################	Bounds   #####################
 
 void Bo1_PFacet_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& /*se3*/, const Body* /*b*/)
@@ -835,4 +835,4 @@ void Bo1_PFacet_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, con
 	}
 }
 
-YADE_PLUGIN((Bo1_PFacet_Aabb));
+YADE_PLUGIN((Bo1_PFacet_Aabb))

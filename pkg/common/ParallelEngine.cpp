@@ -1,5 +1,5 @@
 #include <pkg/common/ParallelEngine.hpp>
-YADE_PLUGIN((ParallelEngine));
+YADE_PLUGIN((ParallelEngine))
 
 #ifdef YADE_OPENMP
   #include<omp.h>

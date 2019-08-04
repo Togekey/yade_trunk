@@ -19,7 +19,7 @@
 //#include<pkg/dem/BodyMacroParameters.hpp>
 #include"ResetRandomPosition.hpp"
 
-YADE_PLUGIN((ResetRandomPosition));
+YADE_PLUGIN((ResetRandomPosition))
 CREATE_LOGGER(ResetRandomPosition);
 
 boost::variate_generator<boost::mt19937,boost::uniform_real<> > 

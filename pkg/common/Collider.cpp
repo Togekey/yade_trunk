@@ -7,7 +7,7 @@
 *************************************************************************/
 #include<pkg/common/Collider.hpp>
 
-YADE_PLUGIN((Collider));
+YADE_PLUGIN((Collider))
 
 
 int Collider::avoidSelfInteractionMask = 0 ;

@@ -64,7 +64,7 @@ extern "C" {
 void dgesv_(const int *N, const int *nrhs, Real *Hessian, const int *lda, int *ipiv, Real *gradient, const int *ldb, int *info);
 void dsyev_(const char *jobz, const char *uplo, const int *N, Real *A, const int *lda, Real *W, Real *work, int *lwork, int *info);
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif // YADE_POTENTIAL_PARTICLES

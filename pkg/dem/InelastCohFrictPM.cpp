@@ -1,6 +1,6 @@
 #include "InelastCohFrictPM.hpp"
 
-YADE_PLUGIN((InelastCohFrictMat)(InelastCohFrictPhys)(Ip2_2xInelastCohFrictMat_InelastCohFrictPhys)(Law2_ScGeom6D_InelastCohFrictPhys_CohesionMoment));
+YADE_PLUGIN((InelastCohFrictMat)(InelastCohFrictPhys)(Ip2_2xInelastCohFrictMat_InelastCohFrictPhys)(Law2_ScGeom6D_InelastCohFrictPhys_CohesionMoment))
 
 
 void Ip2_2xInelastCohFrictMat_InelastCohFrictPhys::go(const shared_ptr<Material>& b1    // InelastCohFrictMat
@@ -60,7 +60,7 @@ void Ip2_2xInelastCohFrictMat_InelastCohFrictPhys::go(const shared_ptr<Material>
 			contactPhysics->maxTwist = 2*pi*min(sdec1->etaMaxTwist,sdec2->etaMaxTwist);
 		}
 	}
-};
+}
 
 
 

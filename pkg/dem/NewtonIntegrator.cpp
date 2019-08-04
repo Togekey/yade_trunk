@@ -12,7 +12,7 @@
 #include<lib/base/Math.hpp>
 
 
-YADE_PLUGIN((NewtonIntegrator));
+YADE_PLUGIN((NewtonIntegrator))
 CREATE_LOGGER(NewtonIntegrator);
 
 // 1st order numerical damping

@@ -17,10 +17,10 @@
 
 
 //! macro for registering both class and its base
-#define REGISTER_CLASS_AND_BASE(cn,bcn) REGISTER_CLASS_NAME(cn); REGISTER_BASE_CLASS_NAME(bcn);
+#define REGISTER_CLASS_AND_BASE(cn,bcn) REGISTER_CLASS_NAME(cn); REGISTER_BASE_CLASS_NAME(bcn)
 
 #define REGISTER_CLASS_NAME(cn)								\
-	public : virtual string getClassName() const { return #cn; };
+	public : virtual string getClassName() const { return #cn; }
 
 // FIXME[1] - that macro below should go to another class! factorable has nothing to do with inheritance tree.
 

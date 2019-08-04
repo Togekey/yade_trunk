@@ -8,7 +8,7 @@
 #include<pkg/dem/Shop.hpp>
 
 
-	YADE_PLUGIN((Gl1_NormPhys));
+	YADE_PLUGIN((Gl1_NormPhys))
 
 	GLUquadric* Gl1_NormPhys::gluQuadric=NULL;
 	Real Gl1_NormPhys::maxFn;

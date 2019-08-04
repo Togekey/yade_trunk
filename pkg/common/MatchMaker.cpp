@@ -2,7 +2,7 @@
 
 #include <pkg/common/MatchMaker.hpp>
 
-YADE_PLUGIN((MatchMaker));
+YADE_PLUGIN((MatchMaker))
 
 Real MatchMaker::operator()(int id1, int id2, Real val1, Real val2) const {
 	const int minId = std::min(id1, id2);

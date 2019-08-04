@@ -2,7 +2,7 @@
 
 
 
-YADE_PLUGIN((BubbleMat)(Ip2_BubbleMat_BubbleMat_BubblePhys)(BubblePhys)(Law2_ScGeom_BubblePhys_Bubble));
+YADE_PLUGIN((BubbleMat)(Ip2_BubbleMat_BubbleMat_BubblePhys)(BubblePhys)(Law2_ScGeom_BubblePhys_Bubble))
 
 
 /********************** Ip2_BubbleMat_BubbleMat_BubblePhys ****************************/

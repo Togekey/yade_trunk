@@ -32,11 +32,11 @@
 
 
 
-YADE_PLUGIN((Ig2_PB_PB_ScGeom) 
+YADE_PLUGIN((Ig2_PB_PB_ScGeom)
 //#ifdef YADE_OPENGL
 //		(Gl1_Ig2_PB_PB_ScGeom)
 //	#endif 
-);
+)
 
 
 CREATE_LOGGER(Ig2_PB_PB_ScGeom);

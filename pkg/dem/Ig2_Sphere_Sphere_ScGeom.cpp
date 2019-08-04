@@ -55,7 +55,7 @@ bool Ig2_Sphere_Sphere_ScGeom::goReverse(	const shared_ptr<Shape>& cm1,
 	return go(cm1,cm2,state2,state1,-shift2,force,c);
 }
 
-YADE_PLUGIN((Ig2_Sphere_Sphere_ScGeom));
+YADE_PLUGIN((Ig2_Sphere_Sphere_ScGeom))
 
 bool Ig2_Sphere_Sphere_ScGeom6D::go( const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c)
 {
@@ -76,4 +76,4 @@ bool Ig2_Sphere_Sphere_ScGeom6D::goReverse( const shared_ptr<Shape>& cm1, const 
 	return go(cm1,cm2,state2,state1,-shift2,force,c);
 }
 
-YADE_PLUGIN((Ig2_Sphere_Sphere_ScGeom6D));
+YADE_PLUGIN((Ig2_Sphere_Sphere_ScGeom6D))

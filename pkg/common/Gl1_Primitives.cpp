@@ -19,10 +19,10 @@
 #include <lib/opengl/OpenGLWrapper.hpp>
 #include <core/Scene.hpp>
 
-YADE_PLUGIN((Gl1_Aabb)(Gl1_Box)(Gl1_Facet));
+YADE_PLUGIN((Gl1_Aabb)(Gl1_Box)(Gl1_Facet))
 YADE_PLUGIN((GlBoundFunctor)(GlShapeFunctor)(GlIGeomFunctor)(GlIPhysFunctor)(GlStateFunctor)
             (GlBoundDispatcher)(GlShapeDispatcher)(GlIGeomDispatcher)(GlIPhysDispatcher)
-            (GlStateDispatcher));
+            (GlStateDispatcher))
 
 
 void Gl1_Aabb::go(const shared_ptr<Bound>& bv, Scene* scene){
@@ -160,7 +160,7 @@ void Gl1_Sphere::go(const shared_ptr<Shape>& cm, const shared_ptr<State>& ,bool 
 	}
 	return;
 }
-YADE_PLUGIN((Gl1_Sphere));
+YADE_PLUGIN((Gl1_Sphere))
 
 void Gl1_Sphere::subdivideTriangle(Vector3r& v1,Vector3r& v2,Vector3r& v3, int depth){
 	Vector3r v;

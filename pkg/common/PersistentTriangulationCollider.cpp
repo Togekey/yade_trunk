@@ -114,6 +114,6 @@ void PersistentTriangulationCollider::action ()
 
 }
 
-YADE_PLUGIN((PersistentTriangulationCollider));
+YADE_PLUGIN((PersistentTriangulationCollider))
 
 #endif /* YADE_CGAL */

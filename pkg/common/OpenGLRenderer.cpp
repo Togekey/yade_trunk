@@ -14,7 +14,7 @@
 #include <GL/gl.h>
 #include <GL/glut.h>
 
-YADE_PLUGIN((OpenGLRenderer)(GlExtraDrawer));
+YADE_PLUGIN((OpenGLRenderer)(GlExtraDrawer))
 CREATE_LOGGER(OpenGLRenderer);
 
 void GlExtraDrawer::render(){ throw runtime_error("GlExtraDrawer::render called from class "+getClassName()+". (did you forget to override it in the derived class?)"); }

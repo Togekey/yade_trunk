@@ -30,7 +30,7 @@ void SpherePack::fromList(const py::list& l){
 		PyErr_SetString(PyExc_TypeError, "List elements must be (Vector3, float) or (Vector3, float, int)!");
 		py::throw_error_already_set();
 	}
-};
+}
 
 void SpherePack::fromLists(const vector<Vector3r>& centers, const vector<Real>& radii){
 	pack.clear();
@@ -46,7 +46,7 @@ py::list SpherePack::toList() const {
 	py::list ret;
 	FOREACH(const Sph& s, pack) ret.append(s.asTuple());
 	return ret;
-};
+}
 
 void SpherePack::fromFile(string file) {
 	typedef boost::tuple<Vector3r,Real,int> tupleVector3rRealInt;
@@ -66,7 +66,7 @@ void SpherePack::toFile(const string fname) const {
 		f<<s.c[0]<<" "<<s.c[1]<<" "<<s.c[2]<<" "<<s.r<<" "<<s.clumpId<<endl;
 	}
 	f.close();
-};
+}
 
 void SpherePack::fromSimulation() {
 	pack.clear();

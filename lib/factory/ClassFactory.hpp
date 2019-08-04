@@ -34,10 +34,10 @@
 #include<boost/serialization/nvp.hpp>
 
 
-#define REGISTER_FACTORABLE(name) 						\
-	inline shared_ptr< Factorable > CreateShared##name()			\
+#define REGISTER_FACTORABLE(name)							\
+	inline shared_ptr< Factorable > CreateShared##name()				\
 	{										\
-		return shared_ptr< name > ( new name );				\
+		return shared_ptr< name > ( new name );					\
 	}										\
 	inline Factorable* Create##name()						\
 	{										\
@@ -51,7 +51,7 @@
 		ClassFactory::instance().registerFactorable( 	#name ,			\
 								Create##name ,		\
 								CreateShared##name ,	\
-								CreatePureCustom##name);
+								CreatePureCustom##name)
 
 
 class Factorable;
@@ -157,7 +157,7 @@ class ClassFactory : public Singleton<ClassFactory>
  * be unique and avoids use of __COUNTER__ which didn't appear in gcc until 4.3.
  */
 
-#define _YADE_PLUGIN_BOOST_REGISTER(x,y,z) BOOST_CLASS_EXPORT_IMPLEMENT(z); BOOST_SERIALIZATION_FACTORY_0(z);
+#define _YADE_PLUGIN_BOOST_REGISTER(x,y,z) BOOST_CLASS_EXPORT_IMPLEMENT(z) BOOST_SERIALIZATION_FACTORY_0(z)
 
 
 #define _YADE_PLUGIN_REPEAT(x,y,z) BOOST_PP_STRINGIZE(z),

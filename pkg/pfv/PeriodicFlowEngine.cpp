@@ -70,7 +70,7 @@ typedef TemplateFlowEngine_FlowEngine_PeriodicInfo<	PeriodicCellInfo,
 				FlowEngine_PeriodicInfo;
 
 REGISTER_SERIALIZABLE(FlowEngine_PeriodicInfo);
-YADE_PLUGIN((FlowEngine_PeriodicInfo));
+YADE_PLUGIN((FlowEngine_PeriodicInfo))
 
 
 class PeriodicFlowEngine : public FlowEngine_PeriodicInfo
@@ -529,7 +529,7 @@ void PeriodicFlowEngine::preparePShifts()
 }
 
 
-YADE_PLUGIN((PeriodicFlowEngine));
+YADE_PLUGIN((PeriodicFlowEngine))
 #endif //FLOW_ENGINE
 
 #endif /* YADE_CGAL */

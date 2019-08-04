@@ -8,7 +8,7 @@
  
 #include <pkg/common/Bo1_Aabb.hpp>
 
-YADE_PLUGIN((Bo1_Sphere_Aabb)(Bo1_Facet_Aabb)(Bo1_Box_Aabb));
+YADE_PLUGIN((Bo1_Sphere_Aabb)(Bo1_Facet_Aabb)(Bo1_Box_Aabb))
 
 void Bo1_Sphere_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* /*b*/){
 	Sphere* sphere = static_cast<Sphere*>(cm.get());

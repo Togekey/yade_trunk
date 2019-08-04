@@ -18,14 +18,15 @@
 YADE_PLUGIN(/* self-contained in hpp: */ (Tetra) (TTetraGeom) (TTetraSimpleGeom) (Bo1_Tetra_Aabb) 
 	/* some code in cpp (this file): */ (TetraVolumetricLaw) 
 	(Ig2_Tetra_Tetra_TTetraGeom)
-	#ifdef YADE_CGAL
-		(Ig2_Tetra_Tetra_TTetraSimpleGeom)
-		(Law2_TTetraSimpleGeom_NormPhys_Simple)
-	#endif
-	#ifdef YADE_OPENGL
-		(Gl1_Tetra)
-	#endif	
-	);
+)
+
+#ifdef YADE_CGAL
+YADE_PLUGIN((Ig2_Tetra_Tetra_TTetraSimpleGeom)(Law2_TTetraSimpleGeom_NormPhys_Simple))
+#endif
+
+#ifdef YADE_OPENGL
+YADE_PLUGIN((Gl1_Tetra))
+#endif	
 
 Tetra::~Tetra(){}
 TTetraGeom::~TTetraGeom(){}

@@ -57,7 +57,7 @@ void Ip2_MortarMat_MortarMat_MortarPhys::go(const shared_ptr<Material>& material
 
 CREATE_LOGGER(MortarPhys);
 
-MortarPhys::~MortarPhys(){};
+MortarPhys::~MortarPhys(){}
 
 bool MortarPhys::failureCondition(Real sigmaN, Real sigmaT) {
 	bool cond1 = sigmaN - tensileStrength > 0;

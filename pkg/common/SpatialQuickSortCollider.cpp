@@ -11,7 +11,7 @@
 #include <cmath>
 #include <algorithm>
 
-YADE_PLUGIN((SpatialQuickSortCollider));
+YADE_PLUGIN((SpatialQuickSortCollider))
 
 void SpatialQuickSortCollider::action()
 {

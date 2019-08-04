@@ -11,14 +11,14 @@
 #include<core/Omega.hpp>
 #include<core/Scene.hpp>
 
-YADE_PLUGIN((FrictViscoMat)(FrictViscoPhys)(Ip2_FrictViscoMat_FrictViscoMat_FrictViscoPhys)(Ip2_FrictMat_FrictViscoMat_FrictViscoPhys)(Law2_ScGeom_FrictViscoPhys_CundallStrackVisco));
+YADE_PLUGIN((FrictViscoMat)(FrictViscoPhys)(Ip2_FrictViscoMat_FrictViscoMat_FrictViscoPhys)(Ip2_FrictMat_FrictViscoMat_FrictViscoPhys)(Law2_ScGeom_FrictViscoPhys_CundallStrackVisco))
 
 FrictViscoMat::~FrictViscoMat(){}
 
 /********************** Ip2_FrictViscoMat_FrictMat_FrictViscoPhys ****************************/
 CREATE_LOGGER(FrictViscoPhys);
 
-FrictViscoPhys::~FrictViscoPhys(){};
+FrictViscoPhys::~FrictViscoPhys(){}
 
 /********************** Ip2_FrictViscoMat_FrictMat_FrictViscoPhys ****************************/
 CREATE_LOGGER(Ip2_FrictViscoMat_FrictViscoMat_FrictViscoPhys);

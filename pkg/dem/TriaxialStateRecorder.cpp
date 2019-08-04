@@ -19,7 +19,7 @@
 #include <pkg/dem/Shop.hpp>
 
 CREATE_LOGGER(TriaxialStateRecorder);
-TriaxialStateRecorder::~TriaxialStateRecorder() {};
+TriaxialStateRecorder::~TriaxialStateRecorder() {}
 
 void TriaxialStateRecorder::action ()
 {
@@ -69,4 +69,4 @@ void TriaxialStateRecorder::action ()
  	<< endl;
 }
 
-YADE_PLUGIN((TriaxialStateRecorder));
+YADE_PLUGIN((TriaxialStateRecorder))

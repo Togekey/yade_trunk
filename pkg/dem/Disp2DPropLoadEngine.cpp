@@ -15,7 +15,7 @@
 
 #include <boost/filesystem.hpp>
 
-YADE_PLUGIN((Disp2DPropLoadEngine));
+YADE_PLUGIN((Disp2DPropLoadEngine))
 
 void Disp2DPropLoadEngine::postLoad(Disp2DPropLoadEngine&)
 {

@@ -6,7 +6,7 @@
 #include <pkg/dem/Shop.hpp> // for direct use of aabbExtrema
 
 
-YADE_PLUGIN((MeasureCapStress));
+YADE_PLUGIN((MeasureCapStress))
 
 void MeasureCapStress::action() {
   shared_ptr<BodyContainer>& bodies = scene->bodies;

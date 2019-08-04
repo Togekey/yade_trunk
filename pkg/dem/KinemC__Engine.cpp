@@ -8,7 +8,7 @@
 
 #include<pkg/dem/KinemC__Engine.hpp>
 
-YADE_PLUGIN((KinemCTDEngine)(KinemCNDEngine)(KinemCNLEngine)(KinemCNSEngine));
+YADE_PLUGIN((KinemCTDEngine)(KinemCNDEngine)(KinemCNLEngine)(KinemCNSEngine))
 
 void KinemCTDEngine::action()
 {

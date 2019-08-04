@@ -27,7 +27,7 @@ class SoluteCellInfo : public FlowCellInfo_SoluteFlowEngineT
 
 typedef TemplateFlowEngine_SoluteFlowEngineT<SoluteCellInfo,FlowVertexInfo_SoluteFlowEngineT> SoluteFlowEngineT;
 REGISTER_SERIALIZABLE(SoluteFlowEngineT);
-YADE_PLUGIN((SoluteFlowEngineT));
+YADE_PLUGIN((SoluteFlowEngineT))
 
 class SoluteFlowEngine : public SoluteFlowEngineT
 {
@@ -208,7 +208,7 @@ double SoluteFlowEngine::getAverageConcentration()
 
 
 
-YADE_PLUGIN ( ( SoluteFlowEngine ) );
+YADE_PLUGIN ( ( SoluteFlowEngine ) )
 
 #endif //SOLUTE_FLOW
 #endif //FLOW_ENGINE

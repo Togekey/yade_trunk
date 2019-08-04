@@ -2,7 +2,7 @@
 
 #include"SnapshotEngine.hpp"
 
-YADE_PLUGIN((SnapshotEngine));
+YADE_PLUGIN((SnapshotEngine))
 CREATE_LOGGER(SnapshotEngine);
 
 void SnapshotEngine::action(){

@@ -395,7 +395,7 @@ Real Shop::getVoxelPorosity(const shared_ptr<Scene>& _scene, int _resolution, Ve
 	}
 
 	return ( std::pow(S,3) - Vv ) / std::pow(S,3);
-};
+}
 
 vector<boost::tuple<Vector3r,Real,int> > Shop::loadSpheresFromFile(const string& fname, Vector3r& minXYZ, Vector3r& maxXYZ, Vector3r* cellSize){
 	if(!boost::filesystem::exists(fname)) {

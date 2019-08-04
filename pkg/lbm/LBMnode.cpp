@@ -12,8 +12,8 @@
 #include "LBMlink.hpp"
 #include "LBMbody.hpp"
 
-YADE_PLUGIN((LBMnode)(LBMlink)(LBMbody));
-LBMnode::~LBMnode(){};
+YADE_PLUGIN((LBMnode)(LBMlink)(LBMbody))
+LBMnode::~LBMnode(){}
 
 
 

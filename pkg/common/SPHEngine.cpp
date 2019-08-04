@@ -288,6 +288,6 @@ bool computeForceSPH(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interac
     return false;
   }
 }
-YADE_PLUGIN((SPHEngine));
+YADE_PLUGIN((SPHEngine))
 #endif
 

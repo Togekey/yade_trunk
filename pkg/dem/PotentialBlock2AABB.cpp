@@ -65,5 +65,5 @@ void PotentialBlock2AABB::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv,
 	
 }
 	
-YADE_PLUGIN((PotentialBlock2AABB));
+YADE_PLUGIN((PotentialBlock2AABB))
 #endif // YADE_POTENTIAL_BLOCKS

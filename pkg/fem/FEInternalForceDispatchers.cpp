@@ -8,8 +8,8 @@
 #ifdef YADE_FEM
 #include <pkg/fem/DeformableElement.hpp>
 #include <pkg/fem/FEInternalForceDispatchers.hpp>
-YADE_PLUGIN((InternalForceFunctor)(InternalForceDispatcher));
-InternalForceFunctor::~InternalForceFunctor(){};
+YADE_PLUGIN((InternalForceFunctor)(InternalForceDispatcher))
+InternalForceFunctor::~InternalForceFunctor(){}
 
 
 /********************************************************************

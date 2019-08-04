@@ -15,7 +15,7 @@
 #include<lib/base/Math.hpp>
 #include<pkg/common/InteractionLoop.hpp>
 
-YADE_PLUGIN((Ig2_Facet_Sphere_ScGeom)(Ig2_Facet_Sphere_ScGeom6D)(Ig2_Wall_Sphere_ScGeom));
+YADE_PLUGIN((Ig2_Facet_Sphere_ScGeom)(Ig2_Facet_Sphere_ScGeom6D)(Ig2_Wall_Sphere_ScGeom))
 
 CREATE_LOGGER(Ig2_Facet_Sphere_ScGeom);
 

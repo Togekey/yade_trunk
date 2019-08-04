@@ -5,7 +5,7 @@
 #include <core/Scene.hpp>
 #include <pkg/common/Sphere.hpp>
 
-YADE_PLUGIN((ViscElCapMat)(ViscElCapPhys)(Ip2_ViscElCapMat_ViscElCapMat_ViscElCapPhys)(Law2_ScGeom_ViscElCapPhys_Basic));
+YADE_PLUGIN((ViscElCapMat)(ViscElCapPhys)(Ip2_ViscElCapMat_ViscElCapMat_ViscElCapPhys)(Law2_ScGeom_ViscElCapPhys_Basic))
 
 /* ViscElCapMat */
 ViscElCapMat::~ViscElCapMat(){}
@@ -406,7 +406,7 @@ Real Law2_ScGeom_ViscElCapPhys_Basic::None_f(const ScGeom& /*geom*/, ViscElCapPh
 }
 
 #ifdef YADE_LIQMIGRATION
-YADE_PLUGIN((LiqControl));
+YADE_PLUGIN((LiqControl))
 void LiqControl::action(){
   // This function implements liquid migration model, introduced here [Mani2013]
   mapBodyInt bI;
