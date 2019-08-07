@@ -65,7 +65,8 @@ public:
 	/// Reset the triangulation
     	void clear(void);
     	void clear2(void);
-
+	
+	void	build_triangulation_with_ids(const shared_ptr<BodyContainer>& bodies, bool reset=true);
 	/// Add axis aligned bounding planes (modelised as spheres with (almost) infinite radius)
   	void 	addBoundingPlanes (void);
 	/// Force boudaries at positions not equal to precomputed ones

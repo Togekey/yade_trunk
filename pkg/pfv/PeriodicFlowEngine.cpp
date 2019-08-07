@@ -271,10 +271,9 @@ void PeriodicFlowEngine::triangulate( FlowSolver& flow )
                                                 for ( int k=0;k<3;k++ ) vh->info().period[k]=i[k]-period[k];}}
 				}
 		//re-assign the original vertex pointer since duplicates may have overwrite it
-		Tes.vertexHandles[id]=vh0;
+		Tes.vertexHandles[id]=vh0; // populate vertexHandles
         }
-//         Tes.redirected=true;//By inserting one-by-one, we already redirected
-        Tes.redirect();// populate vertexHandles
+        Tes.redirected=true;
         flow.shearLubricationForces.resize ( Tes.maxId+1 );
 	flow.shearLubricationTorques.resize ( Tes.maxId+1 );
 	flow.pumpLubricationTorques.resize ( Tes.maxId+1 );

@@ -60,54 +60,51 @@ struct RTraits_for_spatial_sort : public CGT::SimpleTriangulationTypes::RTriangu
 //and setting the info field to the bodies id.
 //Possible improvements : use bodies pointers to avoid one copy, use aabb's lists to replace the shuffle/sort part
 // template <class Triangulation>
-void build_triangulation_with_ids(const shared_ptr<BodyContainer>& bodies, TesselationWrapper &TW, bool reset=true)
+void TesselationWrapper::build_triangulation_with_ids(const shared_ptr<BodyContainer>& bodies, bool reset)
 {
-	if (reset) TW.clear();
+	if (reset) clear();
 	typedef SimpleTesselation::RTriangulation RTriangulation; 
-	SimpleTesselation& Tes = *(TW.Tes);
-	RTriangulation& T = Tes.Triangulation();
+	RTriangulation& T = Tes->Triangulation();
 	std::vector<CGT::Sphere> spheres;
 	std::vector<std::pair<const CGT::Sphere*,Body::id_t> > pointsPtrs;
-	spheres.reserve(bodies->size());
-	pointsPtrs.reserve(bodies->size());
+	spheres.reserve(bodies->size()+6);
+	pointsPtrs.reserve(bodies->size()+6);
 
 	BodyContainer::iterator biBegin    = bodies->begin();
 	BodyContainer::iterator biEnd = bodies->end();
 	BodyContainer::iterator bi = biBegin;
 
 	Body::id_t Ng = 0;
-	Body::id_t& MaxId=Tes.maxId;
-	TW.mean_radius = 0;
+	Body::id_t& MaxId=Tes->maxId;
+	mean_radius = 0;
 	int nonSpheres =0;
 	shared_ptr<Sphere> sph (new Sphere);
 	int Sph_Index = sph->getClassIndexStatic();
 	Scene* scene = Omega::instance().getScene().get();
+	Vector3r wrappedPos;
+	
 	for (; bi!=biEnd ; ++bi) {
 		if ( (*bi)->shape->getClassIndex() ==  Sph_Index ) {
 			const Sphere* s = YADE_CAST<Sphere*> ((*bi)->shape.get());
-//FIXME: is the scene periodicity verification useful in the next line ? Tesselation seems to work in both periodic and non-periodic conditions with "scene->cell->wrapShearedPt((*bi)->state->pos)". I keep the verification to be consistent with all other uses of "wrapShearedPt" function.
-			const Vector3r& pos = scene->isPeriodic	? scene->cell->wrapShearedPt((*bi)->state->pos)
+			const Vector3r& pos = scene->isPeriodic	? (wrappedPos=scene->cell->wrapShearedPt((*bi)->state->pos))
 								: (*bi)->state->pos;
 			const Real rad = s->radius;
 			CGT::Sphere sp(CGT::Point(pos[0],pos[1],pos[2]),rad*rad);
 			spheres.push_back(sp);
 			pointsPtrs.push_back(std::make_pair(&(spheres[Ng]/*.point()*/),(*bi)->getId()));
-			TW.Pmin = CGT::Point(min(TW.Pmin.x(),pos.x()-rad),min(TW.Pmin.y(), pos.y()-rad),min(TW.Pmin.z(), pos.z()-rad));
-			TW.Pmax = CGT::Point(max(TW.Pmax.x(),pos.x()+rad),max(TW.Pmax.y(),pos.y()+rad),max(TW.Pmax.z(),pos.z()+rad));
-			Ng++; TW.mean_radius += rad;
+			Pmin = CGT::Point(min(Pmin.x(),pos.x()-rad),min(Pmin.y(), pos.y()-rad),min(Pmin.z(), pos.z()-rad));
+			Pmax = CGT::Point(max(Pmax.x(),pos.x()+rad),max(Pmax.y(),pos.y()+rad),max(Pmax.z(),pos.z()+rad));
+			Ng++; mean_radius += rad;
 			MaxId = max(MaxId,(*bi)->getId());
 		} else ++nonSpheres;
 	}
-	TW.mean_radius /= Ng; TW.rad_divided = true;
-	spheres.resize(Ng);
-	pointsPtrs.resize(Ng);
-	Tes.vertexHandles.resize(MaxId+1+max(0,6-nonSpheres),NULL);//+6 extra slots max for adding boundaries latter
+	mean_radius /= Ng; rad_divided = true;
 	std::random_shuffle(pointsPtrs.begin(), pointsPtrs.end());
 	spatial_sort(pointsPtrs.begin(),pointsPtrs.end(), RTraits_for_spatial_sort()/*, CGT::RTriangulation::Weighted_point*/);
 
 	RTriangulation::Cell_handle hint;
 
-	TW.n_spheres = 0;
+	n_spheres = 0;
 	for (std::vector<std::pair<const CGT::Sphere*,Body::id_t> >::const_iterator
 			p = pointsPtrs.begin();p != pointsPtrs.end(); ++p) {
 		RTriangulation::Locate_type lt;
@@ -115,18 +112,18 @@ void build_triangulation_with_ids(const shared_ptr<BodyContainer>& bodies, Tesse
 		int li, lj;
 		c = T.locate(* (p->first), lt, li, lj, hint);
 		RTriangulation::Vertex_handle v = T.insert(*(p->first),lt,c,li,lj);
-		if (v==RTriangulation::Vertex_handle())
+		if (v==RTriangulation::Vertex_handle()) {
 			hint=c;
-		else {
+			LOG_ERROR("please report this error");
+		} else {
 			v->info().setId((const unsigned int) p->second);
 			//Vh->info().isFictious = false;//false is the default
-			Tes.maxId = std::max(Tes.maxId,(int) p->second);
-			Tes.vertexHandles[p->second]=v;
+			Tes->maxId = std::max(Tes->maxId,(int) p->second);
 			hint=v->cell();
-			++TW.n_spheres;
+			++n_spheres;
 		}
 	}
-	Tes.redirected = true;
+	Tes->redirected = false;
 	//cerr << " loaded : " << Ng<<", triangulated : "<<TW.n_spheres<<", mean radius = " << TW.mean_radius<<endl;
 }
 
@@ -165,7 +162,7 @@ void TesselationWrapper::insertSceneSpheres(bool reset)
 // 	Real_timer clock;
 //         clock.start();
         const shared_ptr<BodyContainer>& bodies = scene->bodies;
-	build_triangulation_with_ids(bodies, *this, reset);
+	build_triangulation_with_ids(bodies, reset);
 // 	clock.top("Triangulation");
 }
 
@@ -243,52 +240,27 @@ bool TesselationWrapper::nextFacet(std::pair<unsigned int,unsigned int>& facet)
 
 void TesselationWrapper::addBoundingPlanes(double pminx, double pmaxx, double pminy, double pmaxy, double pminz, double pmaxz)
 {
-	if (!bounded) {
-		if (!rad_divided) {
-			mean_radius /= n_spheres;
-			rad_divided = true;
-		}
-		// Insert the 6 additional vertices in the right place (usually they will be ids 0 to 5 when walls/facets/boxes are used, but not always)
-		// append them at the end if the initial list is full
-		int freeIds [6];
-		int i=0;
-		for (int k=0; k<6; k++) {
-			while (Tes->vertexHandles[i]!=NULL) ++i;
-			freeIds[k] = i;}
-		// now insert
-		Tes->vertexHandles[freeIds[0]]=Tes->insert(0.5*(pminx+pmaxx),pminy-far*(pmaxx-pminx),0.5*(pmaxz+pminz),far*(pmaxx-pminx)+thickness,freeIds[0],true);
-		Tes->vertexHandles[freeIds[1]]=Tes->insert(0.5*(pminx+pmaxx), pmaxy+far*(pmaxx-pminx),0.5*(pmaxz+pminz),far*(pmaxx-pminx)+thickness, freeIds[1], true);
-		Tes->vertexHandles[freeIds[2]]=Tes->insert(pminx-far*(pmaxy-pminy), 0.5*(pmaxy+pminy), 0.5*(pmaxz+pminz), far*(pmaxy-pminy)+thickness, freeIds[2], true);
-		Tes->vertexHandles[freeIds[3]]=Tes->insert(pmaxx+far*(pmaxy-pminy), 0.5*(pmaxy+pminy), 0.5*(pmaxz+pminz), far*(pmaxy-pminy)+thickness, freeIds[3], true);
-		Tes->vertexHandles[freeIds[4]]=Tes->insert(0.5*(pminx+pmaxx), 0.5*(pmaxy+pminy), pminz-far*(pmaxy-pminy), far*(pmaxy-pminy)+thickness, freeIds[4], true);
-		Tes->vertexHandles[freeIds[5]]=Tes->insert(0.5*(pminx+pmaxx), 0.5*(pmaxy+pminy), pmaxz+far*(pmaxy-pminy), far*(pmaxy-pminy)+thickness, freeIds[5], true);
+	if (!bounded) {		
+		if (!rad_divided) {mean_radius /= n_spheres; rad_divided = true;} //update here if needed
 		
+		// Append bounding planes with ids=maxId+[1,...,6]
+		// Tes.maxId will be incremented after each line
+		Tes->insert(0.5*(pminx+pmaxx),pminy-far*(pmaxx-pminx),0.5*(pmaxz+pminz),far*(pmaxx-pminx)+thickness,Tes->maxId+1,true);
+		Tes->insert(0.5*(pminx+pmaxx), pmaxy+far*(pmaxx-pminx),0.5*(pmaxz+pminz),far*(pmaxx-pminx)+thickness, Tes->maxId+1, true);
+		Tes->insert(pminx-far*(pmaxy-pminy), 0.5*(pmaxy+pminy), 0.5*(pmaxz+pminz), far*(pmaxy-pminy)+thickness, Tes->maxId+1, true);
+		Tes->insert(pmaxx+far*(pmaxy-pminy), 0.5*(pmaxy+pminy), 0.5*(pmaxz+pminz), far*(pmaxy-pminy)+thickness, Tes->maxId+1, true);
+		Tes->insert(0.5*(pminx+pmaxx), 0.5*(pmaxy+pminy), pminz-far*(pmaxy-pminy), far*(pmaxy-pminy)+thickness, Tes->maxId+1, true);
+		Tes->insert(0.5*(pminx+pmaxx), 0.5*(pmaxy+pminy), pmaxz+far*(pmaxy-pminy), far*(pmaxy-pminy)+thickness, Tes->maxId+1, true);		
 		bounded = true;
 	}
 	
 }
 
 void  TesselationWrapper::addBoundingPlanes(void) {addBoundingPlanes(Pmin.x(),Pmax.x(),Pmin.y(),Pmax.y(),Pmin.z(),Pmax.z());}
-// {
-// 	if (!bounded) {
-// 		if (!rad_divided) {
-// 			mean_radius /= n_spheres;
-// 			rad_divided = true;
-// 		}
-// 		double FAR = 10000;
-// 		//Add big bounding spheres with isFictious=true
-// 		Tes->vertexHandles[0]=Tes->insert(0.5*(Pmin.x()+Pmax.x()),Pmin.y()-FAR*(Pmax.x()-Pmin.x()),0.5*(Pmax.z()+Pmin.z()),FAR*(Pmax.x()-Pmin.x()), 0, true);
-// 		Tes->vertexHandles[1]=Tes->insert(0.5*(Pmin.x()+Pmax.x()),Pmax.y()+FAR*(Pmax.x()-Pmin.x()),0.5*(Pmax.z()+Pmin.z()),FAR*(Pmax.x()-Pmin.x()), 1, true);
-// 		Tes->vertexHandles[2]=Tes->insert(Pmin.x()-FAR*(Pmax.y()-Pmin.y()),0.5*(Pmax.y()+Pmin.y()),0.5*(Pmax.z()+Pmin.z()),FAR*(Pmax.y()-Pmin.y()),2, true);
-// 		Tes->vertexHandles[3]=Tes->insert(Pmax.x()+FAR*(Pmax.y()-Pmin.y()),0.5*(Pmax.y()+Pmin.y()),0.5*(Pmax.z()+Pmin.z()),FAR*(Pmax.y()-Pmin.y()),3,true);
-// 		Tes->vertexHandles[4]=Tes->insert(0.5*(Pmin.x()+Pmax.x()),0.5*(Pmax.y()+Pmin.y()),Pmin.z()-FAR*(Pmax.y()-Pmin.y()),FAR*(Pmax.y()-Pmin.y()),4,true);
-// 		Tes->vertexHandles[5]=Tes->insert(0.5*(Pmin.x()+Pmax.x()),0.5*(Pmax.y()+Pmin.y()),Pmax.z()+FAR*(Pmax.y()-Pmin.y()),FAR*(Pmax.y()-Pmin.y()),5, true);
-// 		bounded = true;
-// 	}
-// }
 
 void  TesselationWrapper::RemoveBoundingPlanes(void)
 {
+	//FIXME: this function will not work with boundaries appended with largest ids, probably broken -> don't use it
 	Tes->remove(0);
 	Tes->remove(1);
 	Tes->remove(2);
@@ -425,7 +397,7 @@ boost::python::list TesselationWrapper::getAlphaCaps(double alpha, double shrink
 void TesselationWrapper::applyAlphaForces(Matrix3r stress, double alpha, double shrinkedAlpha, bool fixedAlpha)
 {
 	Scene* scene = Omega::instance().getScene().get();
-	if (Tes->Triangulation().number_of_vertices()<=0) build_triangulation_with_ids(scene->bodies,*this,true);//if not already triangulated do it now	
+	if (Tes->Triangulation().number_of_vertices()<=0) build_triangulation_with_ids(scene->bodies,true);//if not already triangulated do it now	
 	vector<AlphaCap> caps;
 	Tes->setExtendedAlphaCaps(caps,alpha,shrinkedAlpha,fixedAlpha);
 	for (auto f=caps.begin();f!=caps.end();f++) scene->forces.setPermForce(f->id,stress*makeVector3r(f->normal));

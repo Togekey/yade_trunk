@@ -6,9 +6,6 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
-//FIXME: handle that a better way
-#define MAX_ID 200000
-
 namespace CGT {
 
 using std::cerr;
@@ -30,8 +27,6 @@ _Tesselation<TT>::_Tesselation ( void )
 	TotalInternalVoronoiPorosity=0;
 	TotalInternalVoronoiVolume=0;
 	redirected = false;
-	//FIXME : find a better way to avoid segfault when insert() is used before resizing this vector
-	vertexHandles.resize(MAX_ID+1,NULL);
 }
 template<class TT>
 _Tesselation<TT>::_Tesselation ( RTriangulation &T ) : Tri ( &T ), Tes ( &T ), computed ( false )
@@ -51,7 +46,6 @@ void _Tesselation<TT>::Clear ( void )
 	Tri->clear();
 	redirected = false;
 	vertexHandles.clear();
-	vertexHandles.resize(MAX_ID+1,NULL);
 	maxId=0;
 }
 template<class TT>
@@ -92,11 +86,13 @@ bool _Tesselation<TT>::redirect ( void )
 	if ( !redirected )
 	{
 		//Set size of the redirection vector
-		if ( (unsigned int)maxId+1 != vertexHandles.size() ) vertexHandles.resize ( maxId+1,NULL );
+		vertexHandles.clear()
+		vertexHandles.resize ( maxId+1,NULL );
 		maxId = 0;
 		FiniteVerticesIterator verticesEnd = Tri->finite_vertices_end ();
 		for ( FiniteVerticesIterator vIt = Tri->finite_vertices_begin (); vIt !=  verticesEnd; vIt++ )
 		{
+			if (vertexHandles[vIt->info().id()]!=NULL) cerr<<"Two vertices with equal id, check consistency of wallIds"<<endl;
 			vertexHandles[vIt->info().id()]= vIt;
 			maxId = max(maxId, (int) vIt->info().id());
 		}
