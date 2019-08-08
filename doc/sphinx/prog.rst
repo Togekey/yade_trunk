@@ -1767,7 +1767,7 @@ During each step in the simulation, the following operations are performed on in
 
 	* clumps may not enter interactions (only their members can)
 	* clump members may not interact if they belong to the same clump
-	* bitwise AND on both bodies' :yref:`masks<Body::groupMask>` must be non-zero (i.e. there must be at least one bit set in common)
+	* `bitwise <https://en.cppreference.com/w/c/language/operator_arithmetic#Bitwise_logic>`_ AND on both bodies' :yref:`masks<Body::groupMask>` must be non-zero (i.e. there must be at least one bit set in common)
 
 #. Collider erases interactions that were requested for being erased (see below).
 

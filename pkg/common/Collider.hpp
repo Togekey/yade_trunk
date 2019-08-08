@@ -46,7 +46,7 @@ class Collider: public GlobalEngine {
 		((shared_ptr<BoundDispatcher>,boundDispatcher,new BoundDispatcher,Attr::readonly,":yref:`BoundDispatcher` object that is used for creating :yref:`bounds <Body.bound>` on collider's request as necessary.")),
 		/*ctor*/,
 		.add_property("avoidSelfInteractionMask",&Collider::get_avoidSelfInteractionMask,&Collider::set_avoidSelfInteractionMask , R"""(
-This mask is used to avoid the interactions inside a group of particles. To do so, the particles must have the exact same mask and that mask should have one bit in common with this :yref:`avoidSelfInteractionMask<Collider.avoidSelfInteractionMask>` as for their binary representations. The `bitwise operator <https://en.cppreference.com/w/c/language/operator_arithmetic#Bitwise_logic>`_ & (and), and bitwise operator | (or) are used here.
+This mask is used to avoid the interactions inside a group of particles. To do so, the particles must have the exact same mask and that mask should have one bit in common with this :yref:`avoidSelfInteractionMask<Collider.avoidSelfInteractionMask>` as for their binary representations. The `bitwise operator <https://en.cppreference.com/w/c/language/operator_arithmetic#Bitwise_logic>`_ & (and), and bitwise operator | (or) are used here. See :ref:`interaction-flow` for details.
 
 In an example with 3 mask values assigned to particles: ``0b10`` = "blue" = 2, ``0b01`` = "green" = 1, ``0b11`` = "red" = 3, and a with collider.avoidSelfInteractionMask = ``0b01`` = 1:
 
