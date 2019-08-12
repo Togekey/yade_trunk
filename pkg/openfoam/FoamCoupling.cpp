@@ -8,9 +8,9 @@
 
 CREATE_LOGGER(FoamCoupling);
 YADE_PLUGIN((FoamCoupling));
-YADE_PLUGIN((FluidDomainBbox));
-CREATE_LOGGER(FluidDomainBbox);
-YADE_PLUGIN((Bo1_FluidDomainBbox_Aabb));
+// YADE_PLUGIN((FluidDomainBbox));
+// CREATE_LOGGER(FluidDomainBbox);
+// YADE_PLUGIN((Bo1_FluidDomainBbox_Aabb));
 
 
 // void Bo1_FluidDomainBbox_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* b){

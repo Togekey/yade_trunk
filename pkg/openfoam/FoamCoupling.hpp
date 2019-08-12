@@ -80,37 +80,37 @@ REGISTER_SERIALIZABLE(FoamCoupling);
 
 
 /* a class for holding info on the min and max bounds of the fluid mesh. Each fluid proc has a domain minmax and */
-class FluidDomainBbox : public Shape{
-	public:
-		std::vector<double> minMaxBuff; // a buffer to receive the min max during MPI_Recv. 
-		bool recvdMinMax = false; 
-		bool setMinMax(){
-			if (!recvdMinMax){LOG_ERROR("minmax not received from fluid proces.");  return false; }
-			/* blah */
-		}
-		virtual ~FluidDomainBbox() {}; 
-		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(FluidDomainBbox,Shape,"The bounding box of a fluid grid from one OpenFOAM/YALES2 proc",
-		((int,domainRank,-1,,"rank of the OpenFOAM/YALES2 proc"))
-		((std::vector<Body::id_t>,bIds,std::vector<Body::id_t>(), , "ids of bodies intersecting with this subdomain, "))
-		((Vector3r,minBounds,Vector3r(NaN, NaN, NaN),,"min bounds of the fluid grid ")) // maybe not required, just for debugging 
-		((Vector3r,maxBounds,Vector3r(NaN, NaN, NaN),,"max bounds of the fluid grid"))	// maybe not required, just for debugging 
-		((bool,hasIntersection,false,,"if this Yade subdomain has intersection with this OpenFOAM/YALES2 subdomain"))
-		,
-		,
-		); 
-		DECLARE_LOGGER;
-		REGISTER_CLASS_INDEX(FluidDomainBbox, Shape);   
-}; 
-REGISTER_SERIALIZABLE(FluidDomainBbox); 
-
-class Bo1_FluidDomainBbox_Aabb : public BoundFunctor{
-	public:
-		void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body*); 
-		FUNCTOR1D(FluidDomainBbox);  
-		YADE_CLASS_BASE_DOC(Bo1_FluidDomainBbox_Aabb,BoundFunctor, "creates/updates an :yref:`Aabb` of a :yref:`FluidDomainBbox`."); 
-}; 
-REGISTER_SERIALIZABLE(Bo1_FluidDomainBbox_Aabb); 
-
+// class FluidDomainBbox : public Shape{
+// 	public:
+// 		std::vector<double> minMaxBuff; // a buffer to receive the min max during MPI_Recv. 
+// 		bool recvdMinMax = false; 
+// 		bool setMinMax(){
+// 			if (!recvdMinMax){LOG_ERROR("minmax not received from fluid proces.");  return false; }
+// 			/* blah */
+// 		}
+// 		virtual ~FluidDomainBbox() {}; 
+// 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(FluidDomainBbox,Shape,"The bounding box of a fluid grid from one OpenFOAM/YALES2 proc",
+// 		((int,domainRank,-1,,"rank of the OpenFOAM/YALES2 proc"))
+// 		((std::vector<Body::id_t>,bIds,std::vector<Body::id_t>(), , "ids of bodies intersecting with this subdomain, "))
+// 		((Vector3r,minBounds,Vector3r(NaN, NaN, NaN),,"min bounds of the fluid grid ")) // maybe not required, just for debugging 
+// 		((Vector3r,maxBounds,Vector3r(NaN, NaN, NaN),,"max bounds of the fluid grid"))	// maybe not required, just for debugging 
+// 		((bool,hasIntersection,false,,"if this Yade subdomain has intersection with this OpenFOAM/YALES2 subdomain"))
+// 		,
+// 		,
+// 		); 
+// 		DECLARE_LOGGER;
+// 		REGISTER_CLASS_INDEX(FluidDomainBbox, Shape);   
+// }; 
+// REGISTER_SERIALIZABLE(FluidDomainBbox); 
+// 
+// class Bo1_FluidDomainBbox_Aabb : public BoundFunctor{
+// 	public:
+// 		void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body*); 
+// 		FUNCTOR1D(FluidDomainBbox);  
+// 		YADE_CLASS_BASE_DOC(Bo1_FluidDomainBbox_Aabb,BoundFunctor, "creates/updates an :yref:`Aabb` of a :yref:`FluidDomainBbox`."); 
+// }; 
+// REGISTER_SERIALIZABLE(Bo1_FluidDomainBbox_Aabb); 
+// 
 
 
 
