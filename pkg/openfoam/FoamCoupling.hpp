@@ -28,6 +28,8 @@ class Scene;
 // }; 
 
 
+
+
 class FoamCoupling : public GlobalEngine {
 	private:
 
@@ -98,7 +100,7 @@ class FoamCoupling : public GlobalEngine {
 		void verifyParticleDetection(); 
 		void buildSharedIds(); 
 		bool ifFluidDomain(const Body::id_t& );
-		unsigned ifSharedId(const Body::id_t& ); 
+		int ifSharedId(const Body::id_t& ); 
 		bool checkSharedDomains(const int& ); 
 		
 		virtual void action(); 
@@ -110,7 +112,10 @@ class FoamCoupling : public GlobalEngine {
 		std::vector<int>  procList; 
 		std::vector<Body::id_t> fluidDomains; 
 		std::vector<int> sendRecvRanks;
-		std::vector< std::pair <Body::id_t, std::vector<Body::id_t>>  > sharedIds; //  
+		std::vector<std::pair<Body::id_t, std::vector<Body::id_t> > > sharedIds; 
+		//std::vector< std::pair <Body::id_t, std::pair<std::vector<Body::id_t> int>  > sharedIds; //  
+		std::vector<std::pair<int, std::map<int, int> > > sharedIdsMapIndx; 
+		
 		
 		Real foamDeltaT; 
 		
@@ -123,6 +128,8 @@ class FoamCoupling : public GlobalEngine {
 		void sendBodyData(); 
 		void sendIntersectionToFluidProcs(); 
 		int commSzdff; 
+		void buildSharedIdsMap(); 
+		int ifSharedIdMap(const Body::id_t& ); 
       
     YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(FoamCoupling,GlobalEngine, "An engine for coupling Yade with the finite volume fluid solver OpenFOAM in parallel." " \n Requirements : Yade compiled with MPI libs, OpenFOAM-6 (openfoam is not required for compilation)." "Yade is executed under MPI environment with OpenFOAM simultaneously, and using MPI communication  routines data is exchanged between the solvers."
    " \n \n 1. Yade broadcasts the particle data -> position, velocity, ang-velocity, radius to all the foam processes as in :yref:`castParticle <FoamCoupling::castParticle>` \n"
