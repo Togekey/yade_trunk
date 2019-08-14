@@ -115,7 +115,7 @@ class FoamCoupling : public GlobalEngine {
 		std::vector<std::pair<Body::id_t, std::vector<Body::id_t> > > sharedIds; 
 		//std::vector< std::pair <Body::id_t, std::pair<std::vector<Body::id_t> int>  > sharedIds; //  
 		std::vector<std::pair<int, std::map<int, int> > > sharedIdsMapIndx; 
-		
+		//std::vector<int> intrFluidRanks; 
 		
 		Real foamDeltaT; 
 		
