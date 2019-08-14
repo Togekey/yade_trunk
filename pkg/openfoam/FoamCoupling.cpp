@@ -559,7 +559,7 @@ void FoamCoupling::verifyParticleDetection() {
 			}
 			++count; 
 		}
-		if ( (count == mpSz) && (found = false) ) {
+		if ( (count == mpSz) && (!found) ) {
 			const Vector3r& pos = (*scene->bodies)[bodyId]->state->pos; 
 			LOG_ERROR("Particle ID  = " << bodyId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain");
 		}
@@ -571,8 +571,44 @@ void FoamCoupling::verifyParticleDetection() {
 
 
 void FoamCoupling::getParticleForce(){
-	return ; 
+	
+	std::vector<std::pair<int, std::vector<double>> > hForce; 
+	
+	for (const auto& fdId : fluidDomains){
+		const shared_ptr<Body>& flbdy  = (*scene->bodies)[fdId]; 
+		if (flbdy){
+			const shared_ptr<FluidDomainBbox>& flbox  = YADE_PTR_CAST<FluidDomainBbox>(flbdy->shape); 
+			std::vector<double> forceVec(6*flbox->bIds.size(), 0.0); 
+			hForce.push_back(std::make_pair(flbox->domainRank, std::move(forceVec))); 
+		}
+	}
+	
+	for (auto& recvForce : hForce){
+		 std::vector<double>& tmpForce = recvForce.second; 
+		 int recvRank = recvForce.first; 
+		 int buffSz = tmpForce.size(); 
+		 MPI_Status status; 
+		 /* fluid procs having no particles will send 0 force, torque */
+		 MPI_Recv(&tmpForce.front(),buffSz, MPI_DOUBLE, recvRank, 1010, MPI_COMM_WORLD, &status); 
+	}
+	
+	// add the force  
+	
+	for (const auto& rf : hForce){
+		int indx = abs(rf.first-commSzdff); 
+		const std::vector<double>& forceVec = rf.second; 
+		const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fluidDomains[indx]]->shape);
+		for (unsigned int i=0; i != flbox->bIds.size(); ++i){
+			Vector3r fx; fx[0] = forceVec[6*i]; fx[1] = forceVec[6*i+1]; fx[2] = forceVec[6*i+2]; 
+			Vector3r tx; tx[0] = forceVec[6*i+3]; tx[1] = forceVec[6*i+4]; tx[2] = forceVec[6*i+5]; 
+			scene->forces.addForce(flbox->bIds[i], fx); 
+			scene->forces.addTorque(flbox->bIds[i], tx); 
+		}
+	}
+	
+	
 }
+
 
 
 
