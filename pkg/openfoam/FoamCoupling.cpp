@@ -236,7 +236,10 @@ void FoamCoupling::runCoupling() {
 
 
 void FoamCoupling::getFluidDomainBbox() {
-	
+	/* get the bounding box of the grid from each fluid solver processes, this gird minmax is used to set the min/max of the body of shape FluidDomainBbox. 
+	 All Yade processes have ranks from 0 to yadeCommSize - 1 in the  MPI_COMM_WORLD communicator, the fluid Ranks are then from yadeCommSize to size(M
+	 PI_COMM_WORLD) -1, all yade ranks receive the min max of the fluid domains, and insert it to their body containers. The fluid subdomain bodies have subdomain=0, they are actually owned 
+	 by the master process (rank=0) in the yade communicator. */ 
 	
 	int localCommSize, localRank, worldCommSize, worldRank; 
 	const shared_ptr<Body>& thisSubdomainBody = (*scene->bodies)[scene->thisSubdomainId]; 
@@ -255,6 +258,7 @@ void FoamCoupling::getFluidDomainBbox() {
 	commSzdff = abs(localCommSize-worldCommSize); 
 	//std::vector<int> fluidRanks(szdff, -1); 
 	
+	// vector to hold the minMax buff 
 	std::vector<std::vector<double> > minMaxBuff; 
 	
 	//alloc memory 
@@ -287,7 +291,41 @@ void FoamCoupling::getFluidDomainBbox() {
   
 }
 
+
+void FoamCoupling::buildSharedIdsMap(){
+	/*Builds the list of ids interacting with a fluid subdomain and stores those body ids that has intersections with several fluid domains. 
+	 sharedIdsMapIndx = a vector of std::pair<Body::id_t, std::map<fluidDomainId, indexOfthebodyinthefluidDomain aka index in flbdy-> bIds> > */
+	const shared_ptr<Subdomain>& subd = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
+	for (int bodyId : subd->ids){
+		std::map<int, int> testMap; 
+		const auto& bIntrs = (*scene->bodies)[bodyId]->intrs; 
+		for (const auto& itIntr : bIntrs){
+			const shared_ptr<Interaction>& intr = itIntr.second; 
+			Body::id_t otherId; 
+			if (bodyId  == intr->getId1()){otherId = intr->getId2(); } else {otherId = intr->getId1(); } 
+			if (ifFluidDomain(otherId)){
+				const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox> ((*scene->bodies)[otherId]->shape); 
+				flbox->bIds.push_back(bodyId); 
+				flbox->hasIntersection = true; 
+				int indx = flbox->bIds.size()-1; 
+				testMap.insert(std::make_pair(otherId,indx)); 
+				
+			}
+		}
+		if (testMap.size() > 1) {	// this body has intersections with more than one fluid domains, hence this is a shared id . 
+			sharedIdsMapIndx.push_back(std::make_pair(bodyId, testMap)); 
+		}
+	}
+  
+}
+
+
+
 void FoamCoupling::buildSharedIds() {
+	/*It is possible to have one yade body to have interactions with several  fluid subdomains, (we just have the bounding box of the fluid domain, the fluid domain is a regular polygon with several faces). 
+	 Building a list of those ids which are have several interactions helps to identify those fliud procs from whom to receive the hydrodynamic force and tracking. This is used in the function 
+	verifyParticleDetection. */
+	
 	const shared_ptr<Body>& subdBody = (*scene->bodies)[scene->thisSubdomainId]; 
 	const shared_ptr<Subdomain>& subD = YADE_PTR_CAST<Subdomain>(subdBody->shape); 
 	for (int bodyId = 0; bodyId != static_cast<int>(subD->ids.size()); ++bodyId){
@@ -296,62 +334,72 @@ void FoamCoupling::buildSharedIds() {
 		for (const auto& bIntrs : testBody->intrs){
 			const shared_ptr<Interaction>& intr = bIntrs.second; 
 			Body::id_t otherId; 
-			if (testBody->id == intr->getId1()){otherId = intr->getId2();  } else { otherId = intr->getId2(); }
+			if (testBody->id == intr->getId1()){otherId = intr->getId2();  } else { otherId = intr->getId1(); }
 			if (ifFluidDomain(otherId)){ fluidIds.push_back(otherId); }
 		}
-		if (fluidIds.size()){sharedIds.push_back(std::make_pair(subD->ids[bodyId], fluidIds)); } 
+		if (fluidIds.size() > 1){sharedIds.push_back(std::make_pair(subD->ids[bodyId], fluidIds)); }  // this body has interaction with  more than one fluid  grids. 
 	}
 }
 
-unsigned  FoamCoupling::ifSharedId(const Body::id_t& testId){
-	
-	if (! sharedIds.size()) {return false; } 
-	bool inIds; unsigned res = 0; 
+int FoamCoupling::ifSharedId(const Body::id_t& testId){
+	/*function to check if given body id is a shared id. */
+	if (! sharedIds.size()) {return false; } // this subdomain does not have any shared ids. 
+	int res = -1; 
 	for (unsigned indx =0; indx != sharedIds.size(); ++indx ){
 		if (testId == sharedIds[indx].first) {
-			res = testId; 
+			res = indx; 
 		}
 	}
+	
 	return res; 
 	
 }
 
 
-// bool FoamCoupling::
+int FoamCoupling::ifSharedIdMap(const Body::id_t& testId){
+	int indx = 0; 
+	for (const auto& it : sharedIdsMapIndx){
+		if (it.first == testId) {return indx; }
+		++indx; 
+	}
+	
+	return -1; 
+}
 
-
-bool FoamCoupling::ifFluidDomain(const Body::id_t&  testId ){ 
+bool FoamCoupling::ifFluidDomain(const Body::id_t&  testId ){
+	/* function to check if the body is fluidDomainBox*/ 
+	
 	const auto& iter = std::find(fluidDomains.begin(), fluidDomains.end(), testId);  
 	if (iter != fluidDomains.end()){return true; } else {return false;}
   
 }
 
-void FoamCoupling::findIntersections(){
-	
-	/*find bodies intersecting with the fluid domain bbox, get their ids and ranks of the intersecting fluid processes.  */
-		
-	for (unsigned f = 0; f != fluidDomains.size(); ++f){
-		shared_ptr<Body>& fdomain = (*scene->bodies)[fluidDomains[f]]; 
-		if (fdomain){
-			for (const auto& fIntrs : fdomain->intrs){
-				Body::id_t otherId; 
-				const shared_ptr<Interaction>& intr = fIntrs.second;
-				if (fdomain->id == intr->getId1()){otherId = intr->getId2(); } else { otherId = intr->getId1(); }
-				const shared_ptr<Body>& testBody = (*scene->bodies)[otherId]; 
-				if (testBody) {
-					if (testBody->subdomain==scene->subdomain){
-						if (!ifDomainBodies(testBody)){
-							const shared_ptr<FluidDomainBbox>& flBox = YADE_PTR_CAST<FluidDomainBbox>(fdomain->shape); 
-							flBox->bIds.push_back(testBody->id); 
-							flBox->hasIntersection = true; 
-						}
-					}
-				} 
-			}
-		
-	}
-	}
-}
+// void FoamCoupling::findIntersections(){
+// 	
+// 	/*find bodies intersecting with the fluid domain bbox, get their ids and ranks of the intersecting fluid processes.  */
+// 		
+// 	for (unsigned f = 0; f != fluidDomains.size(); ++f){
+// 		shared_ptr<Body>& fdomain = (*scene->bodies)[fluidDomains[f]]; 
+// 		if (fdomain){
+// 			for (const auto& fIntrs : fdomain->intrs){
+// 				Body::id_t otherId; 
+// 				const shared_ptr<Interaction>& intr = fIntrs.second;
+// 				if (fdomain->id == intr->getId1()){otherId = intr->getId2(); } else { otherId = intr->getId1(); }
+// 				const shared_ptr<Body>& testBody = (*scene->bodies)[otherId]; 
+// 				if (testBody) {
+// 					if (testBody->subdomain==scene->subdomain){
+// 						if (!ifDomainBodies(testBody)){
+// 							const shared_ptr<FluidDomainBbox>& flBox = YADE_PTR_CAST<FluidDomainBbox>(fdomain->shape); 
+// 							flBox->bIds.push_back(testBody->id); 
+// 							flBox->hasIntersection = true; 
+// 						}
+// 					}
+// 				} 
+// 			}
+// 		
+// 	}
+// 	}
+// }
 
 bool FoamCoupling::ifDomainBodies(const shared_ptr<Body>& b) {
 	// check if body is subdomain, wall, facet, or other fluidDomainBbox 
@@ -371,7 +419,8 @@ bool FoamCoupling::ifDomainBodies(const shared_ptr<Body>& b) {
 void FoamCoupling::sendIntersectionToFluidProcs(){
 	
 	// notify the fluid procs about intersection based on number of intersecting bodies. 
-	// vector of sendRecvRanks, with each vector element containing the number of bodies, if no bodies
+	// vector of sendRecvRanks, with each vector element containing the number of bodies, if no bodies, send negative val. 
+
 	sendRecvRanks.resize(fluidDomains.size()); 
 	
 	for (unsigned f=0;  f != fluidDomains.size(); ++f){
@@ -379,7 +428,7 @@ void FoamCoupling::sendIntersectionToFluidProcs(){
 		if (fdomain){
 			const shared_ptr<FluidDomainBbox>& fluidBox = YADE_PTR_CAST<FluidDomainBbox>(fdomain->shape); 
 			if (fluidBox->hasIntersection){
-				sendRecvRanks[f] = fluidBox->bIds.size(); // how about setting up of ids& data here? 
+				sendRecvRanks[f] = fluidBox->bIds.size(); 
 				
 			} else {sendRecvRanks[f] = -1; }
 		} 
@@ -388,7 +437,7 @@ void FoamCoupling::sendIntersectionToFluidProcs(){
 	// 
 	int buffSz = fluidDomains.size(); 
 	
-	//MPI_Send or bcast.. 
+	//MPI_Send .. 
 	for (int rnk = 0; rnk != commSzdff; ++ rnk){
 		MPI_Send(&sendRecvRanks.front(), buffSz, MPI_INT, rnk+commSzdff, 2500, MPI_COMM_WORLD); 
 		
@@ -441,46 +490,84 @@ void FoamCoupling::sendBodyData(){
 
 
 void FoamCoupling::verifyParticleDetection() {
-	//TODO: from here
-// 	std::map<int, std::vector<int> > verifyTracking; 
-// 	for (unsigned int  f=0; f != fluidDomains.size(); ++f) {
-// 		const shared_ptr<Body>& flbdy  = (*scene->bodies)[fluidDomains[f]]; 
-// 		if (flbdy){
-// 			const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>(flbdy->shape);
-// 			std::vector<int> vt(flbox->bIds.size(), -1); 
-// 			verifyTracking.insert(std::make_pair(flbox->domainRank, std::move(vt))); 
-// 		}
-// 	}
-// 	
-// 	for (auto& it : verifyTracking){
-// 		std::vector<int>& vt = it.second; 
-// 		int rnk = it.first; 
-// 		MPI_Status status; 
-// 		int buffSz = vt.size(); 
-// 		MPI_Recv(&vt.front(), buffSz, MPI_INT, rnk , 1002, MPI_COMM_WORLD, &status); 
-// 		
-// 	}
-// 	
-// 
-// 	for (const auto& it : verifyTracking){
-// 		const std::vector<int>& testV = it.second; 
-// 		int indx = abs((it.first)-commSzdff); 
-// // 		
-// 		
-// 	}
-// 		
-// 		
-	
-	
-	
-}
-
-
-bool FoamCoupling::checkSharedDomains(const int& indx) {
-	const std::vector<int>& fDomains = sharedIds[indx].second; 
-	return true; 
   
+	/* check if the sent particles are located on the fluid procs, verify all particles (in fluid coupling) owned by the yade process has been accounted for. Some particles may intersect the 
+	 fluid domains bounding box but may not be actually inside the fluid mesh. 
+	 Method : Everty fluid proc sents a vector of it's search result. if found res = 1, else res =0, for each particle. 
+	 each yade rank receives this vector from intersecting fluid ranks, looks through the vector to find the fails. 
+	 if fail is found : see if this id is a sharedid. if not this particle has been 'lost'. if shared id :  check the vector of verifyTracking of the intersecting fluid domain till found in 
+	 at least one intersecting fluid box. if not particle has been lost. */ 
+	
+	//std::map<int, std::vector<int> > verifyTracking;  //map containing domainRank, vector of "found/misses" for each body, miss = 0, found = 1 (we cannot use bool in MPI :( ).  
+	std::vector<std::pair<int, std::vector<int>> > verifyTracking; 
+	for (unsigned int  f=0; f != fluidDomains.size(); ++f) {
+		const shared_ptr<Body>& flbdy  = (*scene->bodies)[fluidDomains[f]]; 
+		if (flbdy){
+			const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>(flbdy->shape);
+			std::vector<int> vt(flbox->bIds.size(), -1); 
+			verifyTracking.push_back(std::make_pair(flbox->domainRank, std::move(vt))); 
+		}
+	}
+	
+	// recv the vec. 
+	for (auto& it : verifyTracking){
+		std::vector<int>& vt = it.second; 
+		int rnk = it.first; 
+		MPI_Status status; 
+		int buffSz = vt.size(); 
+		MPI_Recv(&vt.front(), buffSz, MPI_INT, rnk , 1002, MPI_COMM_WORLD, &status); 
+		
+	}
+	
+	
+	//check for misses 
+	
+	std::map<Body::id_t, bool> unFoundSharedIds; 
+	//std::vector<std::pair<int, std::map<int,int>> > unFoundSharedIds; 
+	
+	for (const auto& vt : verifyTracking){
+		const int& flBdyIndx = abs(vt.first-commSzdff); 
+		const shared_ptr<FluidDomainBbox>& flbody = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fluidDomains[flBdyIndx]]->shape); 
+		int bIndx = 0; 
+		for (const auto& val : vt.second){
+			if (val < 0) {
+				// this body was not found in the fluid domain. 
+				const Body::id_t&  testId = (*scene->bodies)[flbody->bIds[bIndx]]->id;
+				// check if this body is a sharedId  from sharedIdsMap. 
+				int sharedIndx = ifSharedIdMap(testId); 
+				if(sharedIndx < 0) {
+					const Vector3r& pos = (*scene->bodies)[testId]->state->pos; 
+					LOG_ERROR("Particle ID  = " << testId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain");
+				}
+			}
+			++bIndx; 
+		}
+	} 
+	
+	// check if the 'sharedIds' has been located in any of the fluid procs. 
+	
+	for (const auto& idPair : sharedIdsMapIndx){
+		const auto& bodyId = idPair.first; 
+		const int& mpSz = idPair.second.size(); 
+		int count = 0;  bool found = false; 
+		for (const auto& fdIndx : idPair.second){
+			for (unsigned int j =0; j != verifyTracking.size(); ++j){
+				if (fdIndx.first == abs(verifyTracking[j].first-commSzdff)){
+					const std::vector<int>& vtVec = verifyTracking[j].second; 
+					if (vtVec[fdIndx.second] > 0) {found = true; }
+				}
+			}
+			++count; 
+		}
+		if ( (count == mpSz) && (found = false) ) {
+			const Vector3r& pos = (*scene->bodies)[bodyId]->state->pos; 
+			LOG_ERROR("Particle ID  = " << bodyId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain");
+		}
+	}
+	
 }
+
+
 
 
 void FoamCoupling::getParticleForce(){
