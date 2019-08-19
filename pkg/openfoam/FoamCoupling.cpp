@@ -21,7 +21,7 @@ CREATE_LOGGER(FluidDomainBbox);
 YADE_PLUGIN((Bo1_FluidDomainBbox_Aabb));
 
 
-void Bo1_FluidDomainBbox_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body* b){
+void Bo1_FluidDomainBbox_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv){
 	
 	FluidDomainBbox* domain = static_cast<FluidDomainBbox*>(cm.get());
 	if (!bv){bv = shared_ptr<Bound> (new Aabb); }
