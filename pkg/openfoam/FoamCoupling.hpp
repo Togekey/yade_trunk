@@ -201,7 +201,7 @@ REGISTER_SERIALIZABLE(FluidDomainBbox);
 
 class Bo1_FluidDomainBbox_Aabb : public BoundFunctor{
 	public:
-		void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body*); 
+		void go(const shared_ptr<Shape>& , shared_ptr<Bound>& ); 
 		FUNCTOR1D(FluidDomainBbox);  
 		YADE_CLASS_BASE_DOC(Bo1_FluidDomainBbox_Aabb,BoundFunctor, "creates/updates an :yref:`Aabb` of a :yref:`FluidDomainBbox`."); 
 }; 
