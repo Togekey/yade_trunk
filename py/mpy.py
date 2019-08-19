@@ -74,13 +74,14 @@ DOMAIN_DECOMPOSITION = False
 NUM_MERGES = 0
 SEND_BYTEARRAYS = True
 ENABLE_PFACETS = False    #PFacets need special (and expensive) tricks, if PFacets are not used skip the tricks
-
 DISTRIBUTED_INSERT = False  #if True each worker is supposed to "O.bodies.insertAtId" its own bodies
 REALLOCATE_FREQUENCY = 0  # if >0 checkAndCollide() will automatically reallocate bodies to subdomains, if =1 realloc. happens each time collider is triggered, if >1 it happens every N trigger
 REALLOCATE_FILTER = None # pointer to filtering function, will be set to 'medianFilter' hereafter, could point to other ones if implemented
 AUTO_COLOR = True
 MINIMAL_INTERSECTIONS = False # Reduces the size of position/velocity comms (at the end of the colliding phase, we can exclude those bodies with no interactions besides body<->subdomain from intersections). 
 REALLOCATE_MINIMAL = False # if true, intersections are minimized before reallocations, hence minimizing the number of reallocated bodies
+fibreList = []
+
 
 #tags for mpi messages
 _SCENE_=11
@@ -726,13 +727,12 @@ def splitScene():
 		if DOMAIN_DECOMPOSITION: #if not already partitionned by the user we partition here
 			if rank == 0:
 				decomposition = dd.decompBodiesSerial(comm) 
-				decomposition.partitionDomain()
+				decomposition.partitionDomain(fibreList) 
 		
 		maxid = len(O.bodies)-1
 		if DISTRIBUTED_INSERT: #find max id before inserting subdomains
 			maxid = timing_comm.allreduce("splitScene",maxid,op=MPI.MAX)
 			wprint("Splitting with maxId=",maxid)
-			
 		if rank == 0 or DISTRIBUTED_INSERT:
 			subdomains=[] #list subdomains by body ids
 			#insert "meta"-bodies
