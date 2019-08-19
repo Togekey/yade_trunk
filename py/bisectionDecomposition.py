@@ -168,11 +168,18 @@ class decompBodiesSerial:
 		
 		
 	
-	def partitionDomain(self):
+	def partitionDomain(self, fibreList = None):
 	  
 		''' The main driver function  '''
+		blst = []
+		if not fibreList: 
+			blst = [(b.state.pos, b.id) for b in O.bodies if not (isinstance(b.shape, Wall) or isinstance(b.shape, Box) or b.isSubdomain)]
+		else : 
+			
+			blst = [(O.bodies[j.cntrId].state.pos, j.cntrId) for j in fibreList]
+			
+			
 		
-		blst = [(b.state.pos, b.id) for b in O.bodies if not (isinstance(b.shape, Wall) or isinstance(b.shape, Box) or b.isSubdomain)]
 		if self.ifPw2(self.numWorkers) : 
 			self._partitionDomain(blst, self.numWorkers, strideRank = 0)
 		else : 
@@ -181,5 +188,18 @@ class decompBodiesSerial:
 			for i in range(len(parts)): 
 				nr = nr - parts[i]
 				self._partitionDomain(wIds[i], parts[i], nr-1)
+				
+				
+		if fibreList : 
+			for fib in fibreList: 
+				for j in fib.nodes:
+					O.bodies[j].subdomain = O.bodies[fib.cntrId].subdomain 
+					O.bodies[j].shape.color = O.bodies[fib.cntrId].shape.color
+					for intr in O.bodies[j].intrs(): 
+						O.bodies[intr.geom.connectionBody.id].subdomain = O.bodies[fib.cntrId].subdomain 
+						O.bodies[intr.geom.connectionBody.id].shape.color = O.bodies[fib.cntrId].shape.color
+				
+
+  
 
 
