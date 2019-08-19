@@ -61,8 +61,10 @@ MERGE_W_INTERACTIONS = True
 COPY_MIRROR_BODIES_WHEN_COLLIDE = True 
 RESET_SUBDOMAINS_WHEN_COLLIDE = False
 DOMAIN_DECOMPOSITION = False
+decompose_fibres = False
 NUM_MERGES = 0 
 LOAD_SIM = False # to enable restart of mpi simulations after O.load('sim')
+fibreList = []
 
 #tags for mpi messages
 _SCENE_=11
@@ -609,7 +611,9 @@ def splitScene():
 			
 			if rank == 0:
 				decomposition = dd.decompBodiesSerial(comm) 
-				decomposition.partitionDomain() 
+				decomposition.partitionDomain(fibreList) 
+				
+				
 
 		if rank == 0:
 			
