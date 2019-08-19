@@ -66,11 +66,12 @@ DOMAIN_DECOMPOSITION = False
 NUM_MERGES = 0
 SEND_BYTEARRAYS = True
 ENABLE_PFACETS = False    #PFacets need special (and expensive) tricks, if PFacets are not used skip the tricks
-
 DISTRIBUTED_INSERT = False  #if True each worker is supposed to "O.bodies.insertAtId" its own bodies
 REALLOCATE_FREQUENCY = 0  # if >0 checkAndCollide() will automatically reallocate bodies to subdomains, if =1 realloc. happens each time collider is triggered, if >1 it happens every N trigger
 REALLOCATE_FILTER = None # pointer to filtering function, will be set to 'medianFilter' hereafter, could point to other ones if implemented
 AUTO_COLOR = True
+fibreList = []
+
 
 #tags for mpi messages
 _SCENE_=11
@@ -631,13 +632,13 @@ def splitScene():
 		if DOMAIN_DECOMPOSITION: #if not already partitionned by the user we partition here
 			if rank == 0:
 				decomposition = dd.decompBodiesSerial(comm) 
-				decomposition.partitionDomain() 
+				decomposition.partitionDomain(fibreList) 
 		if rank == 0 or DISTRIBUTED_INSERT: 
 			O.subD=Subdomain() #for storage only, this one will not be used beyond that 
 			subD= O.subD #alias
 			#insert "meta"-bodies
 			subD.subdomains=[] #list subdomains by body ids
-			if mit_mode: subD.comm=comm #make sure the c++ uses the merged intracommunicator
+			if mit_mode or commSplit : O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 			
 			for k in range(1,numThreads):
 				domainBody=Body(shape=Subdomain(ids=[b.id for b in O.bodies if b.subdomain==k]),subdomain=k) #note: not clear yet how shape.subDomainIndex and body.subdomain should interact, currently equal values
