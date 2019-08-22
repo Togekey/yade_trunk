@@ -6,11 +6,13 @@
 *  This program is free software; it is licensed under the terms of the  *
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
-
+// Experimental engine under development 
 #ifdef PARTIALSAT
 #include "PartialSatClayEngine.hpp"
 #include <boost/range/algorithm_ext/erase.hpp>
 #include<pkg/dem/CohesiveFrictionalContactLaw.hpp>
+#include<pkg/common/Sphere.hpp>
+#include<core/Body.hpp>
 
 CREATE_LOGGER(PartialSatClayEngine);
 YADE_PLUGIN((PartialSatClayEngine));
@@ -34,8 +36,8 @@ void PartialSatClayEngine::action(){
 	  backgroundCompleted=true;
           if (partialSatEngine) {
 		initializeSaturations(*solver);
-		if (particleSwelling) setOriginalParticleValues();
-		cout << "Particle swelling model active, original particle volumes set" << endl;
+		if (particleSwelling && volumes) setOriginalParticleValues();
+		if (debug) cout << "Particle swelling model active, original particle volumes set" << endl;
 	  }
 	}
 	#ifdef YADE_OPENMP
@@ -66,12 +68,14 @@ void PartialSatClayEngine::action(){
 		if (partialSatEngine) {
 			initializeSaturations(*solver);
 			//updateSaturation(*solver);
+			if (debug) cout << "finished initializing saturations" << endl;
 		}
 	}
 	if (particleSwelling) {
-		collectParticleSuction(*solver);
-		swellParticles();
+		if (suction) collectParticleSuction(*solver);
+		if (swelling) swellParticles();
 	}
+	if (debug) cout << "finished collecting suction and swelling " << endl;
 	if (freeSwelling && crackModelActive) determineFracturePaths();
         timingDeltas->checkpoint ( "compute_Forces" );
         ///Application of vicscous forces
@@ -81,6 +85,7 @@ void PartialSatClayEngine::action(){
 	timingDeltas->checkpoint ( "viscous forces" );
 	if (!decoupleForces) applyForces(*solver);
         timingDeltas->checkpoint ( "Applying Forces" );
+	if (debug) cout << "finished cmputing forces and applying" <<endl;
 	///End compute flow and forces
 	#ifdef LINSOLV
 	int sleeping = 0;
@@ -636,49 +641,222 @@ void PartialSatClayEngine::exposureRecursion(CellHandle cell)
     }
 }
 
-//void PartialSatClayEngine::buildTriangulation ( double pZero, Solver& flow )
+bool PartialSatClayEngine::findInscribedRadiusAndLocation(CellHandle& cell, std::vector<double>& coordAndRad)
+{
+	//cout << "using least sq to find inscribed radius " << endl;
+	const float prec = 1e-5;
+	Eigen::MatrixXd A(4,3);
+	Eigen::Vector4d b;
+	Eigen::Vector3d x;
+	Eigen::Vector4d r;
+	//std::vector<double> r(4);
+	//std::vector<double> coordAndRad(4); 
+	CVector baryCenter ( 0,0,0 ); // use cell barycenter as initial guess
+	for ( int k=0;k<4;k++ ){
+		baryCenter= baryCenter + 0.25* (cell->vertex(k)->point().point()-CGAL::ORIGIN);
+		if (cell->vertex(k)->info().isFictious) return 0;
+	}
+	double xo,yo,zo;
+	int count=0;
+	double rMean;
+	xo=baryCenter[0];yo=baryCenter[1];zo=baryCenter[2];
+	bool finished = false;
+	while (finished==false) { 
+		count += 1;
+		if (count>1000) {
+			cerr<<"too many iterations during sphere inscription, quitting"<<endl;
+			return 0;
+		}
+		// build A matrix (and part of b)
+		for (int i=0;i<4;i++){
+			double xi,yi,zi;
+			xi=cell->vertex(i)->point().x();yi=cell->vertex(i)->point().y();zi=cell->vertex(i)->point().z();
+			A(i,0) = xo - cell->vertex(i)->point().x(); 
+			A(i,1) = yo - cell->vertex(i)->point().y(); 
+			A(i,2) = zo - cell->vertex(i)->point().z();
+			const double sqrdD = pow(xo - xi,2) + pow(yo - yi,2) + pow(zo - zi,2);
+			r(i) = sqrt(sqrdD) - sqrt(cell->vertex(i)->point().weight());
+		}	
+		rMean = r.sum()/4.;
+	
+		// build b 
+		for (int i=0;i<4;i++){
+			double xi,yi,zi;
+			xi=cell->vertex(i)->point().x();yi=cell->vertex(i)->point().y();zi=cell->vertex(i)->point().z();
+			b(i) =( pow(rMean+sqrt(cell->vertex(i)->point().weight()),2.) - (pow(xo-xi,2.) + pow(yo-yi,2.) + pow(zo-zi,2.)) )/2.;
+		}
+	
+		// use least squares (normal equation) to minimize residuals
+		x = (A.transpose() * A).ldlt().solve(A.transpose()*b);
+		// if the values are greater than precision, update the guess and repeat
+		if (abs(x(0))>prec || abs(x(1))>prec || abs(x(2))>prec){
+			xo += x(0);
+			yo += x(1);
+			zo += x(2);
+		} else {
+			coordAndRad[0]=xo+x(0);coordAndRad[1]=yo+x(1);coordAndRad[2]=zo+x(2);coordAndRad[3]=rMean;
+			if (rMean > sqrt(cell->vertex(0)->point().weight())) return 0; // inscribed sphere might be excessively large if it is in a flat boundary cell
+			finished = true;
+		}
+	
+	} // end while finished == false
+	
+	return 1;
+
+}
+
+void PartialSatClayEngine::insertMicroPores(const float fracMicroPore)
+{
+	cout << "Inserting micro pores in " << fracMicroPore << " perc. of existing pores " << endl;
+	Eigen::MatrixXd M(6,6);
+	//if (!solver->T[solver->currentTes]){cerr << "No triangulation, not inserting micropores" << endl; return}
+	Tesselation& Tes = solver->T[solver->currentTes];
+	//cout << "Tes set" << endl;
+	const long size = Tes.cellHandles.size();
+	std::vector<bool> visited(size);
+	std::vector<int> poreIndices(int(ceil(fracMicroPore*size)));
+	bool numFound;
+	// randomly select the pore indices that we will turn into micro pores
+	#pragma omp parallel for
+    	for (unsigned int i=0; i<poreIndices.size(); i++){
+		numFound=false;
+		while (!numFound) { 
+			const double num = rand() % size;  // + 1?
+			if ( !visited[num] && !Tes.cellHandles[num]->info().isFictious){
+				visited[num]=true;
+				poreIndices[i]=num;
+				numFound=true;
+			}
+		}
+	}
+	cout << "find inscribed sphere radius" << endl;
+
+	// find inscribed sphere radius in selected pores and add body 
+	// FIXME How do we deal with inscribed spheres that might be overlapping after inscription?
+	std::vector<double> coordsAndRad(4);
+	//#pragma omp parallel for
+      	for (unsigned int i=0; i<poreIndices.size(); i++){
+		const int idx = poreIndices[i];
+		CellHandle& cell = Tes.cellHandles[idx];
+		for (int j=0;j<4;j++) if(cell->neighbor(j)->info().isFictious) continue; // avoid inscribing spheres in very flat exterior cells (FIXME: we can avoid this by using a proper alpha shape)
+		//if (cell->info().Pcondition) continue;
+		bool inscribed = findInscribedRadiusAndLocation(cell,coordsAndRad);
+		if (!inscribed) continue; // sphere couldn't be inscribed, continue loop
+		bool contained = checkSphereContainedInTet(cell,coordsAndRad);
+		if (!contained) continue;
+		//cout << "converting to Vector3r" << endl;
+		Vector3r coords; coords[0]=Real(coordsAndRad[0]); coords[1]=Real(coordsAndRad[1]); coords[2]=Real(coordsAndRad[2]);
+		const double radius = coordsAndRad[3];
+		//cout << "adding body" << endl;
+		shared_ptr<Body> body;
+		createSphere(body,coords,radius,false,true);
+		scene->bodies->insert(body);
+	}
+}
+
+//bool PartialSatClayEngine::checkSphereContainedInTet(CellHandle& cell,std::vector<double>& coordsAndRad)
 //{
-// 	if (first) flow.currentTes=0;
-//        else {  flow.currentTes=!flow.currentTes; if (debug) cout << "--------RETRIANGULATION-----------" << endl;}
-//	flow.resetNetwork();
-//	initSolver(flow);
+//	Eigen::Vector3d inscSphere(coordsAndRad[0],coordsAndRad[1],coordsAndRad[2]);
+//	Eigen::Vector3d cellLoc(cell->info()[0],cell->info()[1],cell->info()[2]);
+//	double radius = coordsAndRad[3];
+//	 for ( int i=0; i<4; i++ ) {
+//		Eigen::Vector3d neighborCellLoc(cell->neighbor(i)->info()[0],cell->neighbor(i)->info()[1],cell->neighbor(i)->info()[2]);
+//		Eigen::Vector3d vertexLoc(cell->vertex(facetVertices[i][0])->point().x(),cell->vertex(facetVertices[i][0])->point().y(),cell->vertex(facetVertices[i][0])->point().z());
 
-//        addBoundary ( flow );
-//        triangulate ( flow );
-//        if ( debug ) cout << endl << "Tesselating------" << endl << endl;
-//        flow.tesselation().compute();
-//        flow.defineFictiousCells();
-//	// For faster loops on cells define this vector
-//	flow.tesselation().cellHandles.clear();
-//	flow.tesselation().cellHandles.reserve(flow.tesselation().Triangulation().number_of_finite_cells());
-//	FiniteCellsIterator cell_end = flow.tesselation().Triangulation().finite_cells_end();
-//	int k=0;
-//	for ( FiniteCellsIterator cell = flow.tesselation().Triangulation().finite_cells_begin(); cell != cell_end; cell++ ){
-//		flow.tesselation().cellHandles.push_back(cell);
-//		cell->info().id=k++;}//define unique numbering now, corresponds to position in cellHandles
-//        flow.displayStatistics ();
-//	if(!blockHook.empty()){ LOG_INFO("Running blockHook: "<<blockHook); pyRunString(blockHook); }
-//        flow.computePermeability();
-
-//	if (multithread && fluidBulkModulus>0) initializeVolumes(flow);  // needed for multithreaded compressible flow (old site, fixed bug https://bugs.launchpad.net/yade/+bug/1687355)
-//	trickPermeability(&flow); //This virtual function does nothing yet, derived class may overload it to make permeability different (see DFN engine)
-//        porosity = flow.vPoralPorosity/flow.vTotalPorosity;
-
-//        boundaryConditions ( flow );
-//        flow.initializePressure ( pZero );
-//	if (thermalEngine) {
-//		//initializeVolumes(flow);
-//		thermalBoundaryConditions ( flow ); 
-//		flow.initializeTemperatures ( tZero );
-//		flow.sphericalVertexAreaCalculated=false;
+//		Eigen::Vector3d Surfk = cellLoc-neighborCellLoc;
+//		Eigen::Vector3d SurfkNormed = Surfk.normalized();
+//		Eigen::Vector3d branch = vertexLoc - inscSphere;
+//		double distToFacet = branch.dot(SurfkNormed);
+//		if (distToFacet<0){
+//			cerr<< "sphere center outside tet, skipping insertion"<<endl;
+//			return 0;
+//		} else if (distToFacet<radius) {
+//			cerr << "inscribed sphere too large for tetrahedral, decreasing size from "<< radius <<" to "<<distToFacet<<endl;
+//			coordsAndRad[3] = distToFacet;
+//			radius = distToFacet;
+//		}
 //	}
-
-//	
-//        if ( !first && !multithread && (useSolver==0 || fluidBulkModulus>0 || doInterpolate || thermalEngine)) flow.interpolate ( flow.T[!flow.currentTes], flow.tesselation() );
-//        if ( waveAction ) flow.applySinusoidalPressure ( flow.tesselation().Triangulation(), sineMagnitude, sineAverage, 30 );
-//	else if (boundaryPressure.size()!=0) flow.applyUserDefinedPressure ( flow.tesselation().Triangulation(), boundaryXPos , boundaryPressure);
-//        if (normalLubrication || shearLubrication || viscousShear) flow.computeEdgesSurfaces();
+//	return 1;		
 //}
+
+bool PartialSatClayEngine::checkSphereContainedInTet(CellHandle& cell,std::vector<double>& coordsAndRad)
+{
+	Eigen::Vector3d inscSphere(coordsAndRad[0],coordsAndRad[1],coordsAndRad[2]);
+	const double origRadius = coordsAndRad[3];
+	//Eigen::Vector3d neighborCellLoc(cell->neighbor(i)->info()[0],cell->neighbor(i)->info()[1],cell->neighbor(i)->info()[2]);
+//	Eigen::MatrixXd A(3,4);
+//	Eigen::Vector4d x;
+//	Eigen::Vector3d bvec(0,0,0);
+//	double a,b,c,d;
+	double radius = coordsAndRad[3];
+	 for ( int i=0; i<4; i++ ) {
+
+		// using same logic as above but more explicit 
+		Eigen::Vector3d nhat(cell->info().facetSurfaces[i][0],cell->info().facetSurfaces[i][1],cell->info().facetSurfaces[i][2]);
+		nhat = nhat/sqrt(cell->info().facetSurfaces[i].squared_length());
+		Eigen::Vector3d xi(cell->vertex(facetVertices[i][0])->point().x(),cell->vertex(facetVertices[i][0])->point().y(),cell->vertex(facetVertices[i][0])->point().z());
+		double distToFacet = nhat.dot(inscSphere-xi);
+		double exampleScale = sqrt(cell->vertex(facetVertices[i][0])->point().weight());
+		double scale = exampleScale*minMicroRadFrac;
+		// even more explicit, creating plane out of 3 verticies!
+//		for (int j=0;j<3;j++){
+//			A(j,0) = cell->vertex(facetVertices[i][j])->point().x();
+//			A(j,1) = cell->vertex(facetVertices[i][j])->point().y();
+//			A(j,2) = cell->vertex(facetVertices[i][j])->point().z();
+//			A(j,3) = 1;
+//		}
+		if(!(distToFacet>=scale)) {
+			cout<<"minimum radius size doesn't fit,in tet skipping"<<endl;
+			return 0;
+		}
+//		x = A.colPivHouseholderQr().solve(bvec);
+//		a=x(0);b=x(1);c=x(2);d=x(3);
+//		double sqrtSum = sqrt(a*a+b*b+c*c);
+//		double distToFacet = (a*coordsAndRad[0]+b*coordsAndRad[1]+c*coordsAndRad[2]+d)/sqrtSum; 
+
+		if (distToFacet<0){
+			cerr<< "sphere center outside tet, skipping insertion"<<endl;
+			return 0;
+		} else if (distToFacet<radius) {
+			cerr << "inscribed sphere too large for tetrahedral, decreasing size from "<< radius <<" to "<<distToFacet<<endl;
+			coordsAndRad[3] = distToFacet;//*(1.-minMicroRadFrac);
+			radius = distToFacet;//*(1.-minMicroRadFrac);
+		} //else {
+			//cerr << "inscribed sphere too small, skipping insertion, btw rad*minMicro= " << exampleScale*minMicroRadFrac << " while dist to facet = " << distToFacet << " and the logic " << (distToFacet>=scale) << endl;
+		//	return 0;
+		//}
+	}
+	return 1;
+}
+
+void PartialSatClayEngine::createSphere(shared_ptr<Body>& body, Vector3r position, Real radius, bool big, bool dynamic )
+{
+	body = shared_ptr<Body>(new Body); body->groupMask=2;
+	shared_ptr<Aabb> aabb(new Aabb);
+	shared_ptr<Sphere> iSphere(new Sphere);
+	body->state->blockedDOFs=State::DOF_NONE;
+	const double volume = 4./3. * M_PI*pow(radius,3.);
+	body->state->mass	= volume*microStructureRho;
+	//body->state->inertia	= Vector3r(2.0/5.0*body->state->mass*radius*radius,
+	//			2.0/5.0*body->state->mass*radius*radius,
+	//			2.0/5.0*body->state->mass*radius*radius);
+	body->state->pos=position;
+	body->state->volumeOriginal = volume;
+	body->state->radiiOriginal = radius;
+	shared_ptr<CohFrictMat> mat(new CohFrictMat);
+	mat->young		= microStructureE;
+	mat->poisson		= microStructureNu;
+	mat->frictionAngle	= microStructurePhi * Mathr::PI/180.0; //compactionFrictionDeg * Mathr::PI/180.0;
+	mat->normalCohesion = mat->shearCohesion = microStructureAdh;	
+	aabb->color		= Vector3r(0,1,0);
+	iSphere->radius		= radius;
+	//iSphere->color	= Vector3r(0.4,0.1,0.1);
+	//iSphere->color           = Vector3r(Mathr::UnitRandom(),Mathr::UnitRandom(),Mathr::UnitRandom());
+	//iSphere->color.normalize();
+	body->shape	= iSphere;
+	body->bound	= aabb;
+	body->material	= mat;
+}
 
 //double PartialSatClayEngine::dsdp(CellHandle cell, double pw)
 //{
@@ -730,432 +908,6 @@ void PartialSatClayEngine::exposureRecursion(CellHandle cell)
 //  if(pw != pw){std::cout << "Non existing capillary pressure!";}
 ////   if(pw < 100 * waterBoundaryPressure){std::cout << "huge PC!" << pw << " saturation=" << cell->info().saturation << " hasIFace=" << cell->info().hasInterface << " NWRES=" << cell->info().isNWRes; pw = 100 * waterBoundaryPressure;}
 //  return pw; 
-//}
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////....................................Triangulation while maintaining saturation field ............................................//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//void PartialSatClayEngine::reTriangulate()
-//{
-//      //Governing function to apply triangulation while maintaining saturation distribution.
-//      if(debugTPF){std::cerr << endl << "Apply retriangulation";} 
-//      initializationTriangulation();
-//      readTriangulation();      
-//      keepTriangulation = false;
-//      initialization();
-//      assignWaterVolumesTriangulation();
-//      actionMergingAlgorithm();
-//      equalizeSaturationOverMergedCells();
-//}
-
-//void PartialSatClayEngine::initializationTriangulation()
-//{
-//  //Resize all relevant functions 
-//  
-//  //per sphere
-//  leftOverVolumePerSphere.resize(scene->bodies->size(),0);
-//  untreatedAreaPerSphere.resize(scene->bodies->size(),0);
-//  leftOverDVPerSphere.resize(scene->bodies->size(),0);
-//  //per tetrahedra
-//  finishedUpdating.resize(solver->T[solver->currentTes].cellHandles.size(),0);
-//  waterVolume.resize(solver->T[solver->currentTes].cellHandles.size(),0);
-//  deltaVoidVolume.resize(solver->T[solver->currentTes].cellHandles.size(),0);
-//  tetrahedra.resize(solver->T[solver->currentTes].cellHandles.size());
-//  solidFractionSpPerTet.resize(solver->T[solver->currentTes].cellHandles.size());
-//  for(unsigned int i =0; i<solver->T[solver->currentTes].cellHandles.size(); i++){
-//    tetrahedra[i].resize(4,0);
-//    solidFractionSpPerTet[i].resize(4,0);
-//  }
-//}
-
-
-
-//void PartialSatClayEngine::setInitialConditions()
-//{
-//    if(debugTPF){std::cerr<<endl<<"Set initial condition";}
-
-//    //four possible initial configurations are allowed: primary drainage, primary imbibition, secondary drainage, secondary imbibition
-//    RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
-//    FiniteCellsIterator cellEnd = tri.finite_cells_end();
-//    for (FiniteCellsIterator cell = tri.finite_cells_begin(); cell != cellEnd; cell++) {
-//        
-//    }
-//}
-
-
-
-//    
-//void PartialSatClayEngine::solvePressure()
-//{	
-//    RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
-//    FiniteCellsIterator cellEnd = tri.finite_cells_end();  
-//    double oldDT = 0.0;
-//    
-//    //Define matrix, triplet list, and linear solver
-//    tripletList.clear(); // tripletList.resize(T_nnz);
-//    Eigen::VectorXd residualsList(numberOfPores);
-//    Eigen::VectorXd pressuresList(numberOfPores); //Solve aMatrix * pressuresList = residualsList
-//    
-//    //define lists
-//    if((deformation && remesh) || firstDynTPF){
-//	aMatrix.resize(numberOfPores,numberOfPores);
-//	saturationList.assign(numberOfPores,0.0);
-//	hasInterfaceList.assign(numberOfPores,false);
-//	listOfFlux.assign(numberOfPores,0.0);
-//	listOfMergedVolume.assign(numberOfPores,0.0);										//NOTE CHANGED AFTER PUSH ON GIT
-//    }
-//    
-//    //reset various lists
-//    for(unsigned int i = 0; i < numberOfPores; i++){
-//      residualsList[i] = 0.0;
-//      pressuresList[i] = 0.0;
-//      saturationList[i] = listOfPores[i]->info().saturation;
-//      hasInterfaceList[i] = listOfPores[i]->info().hasInterface;
-//      listOfFlux[i] = 0.0;
-//    } 
-//    
-//    //Fill matrix
-//    for(unsigned int i = 0; i < numberOfPores; i++){
-//      
-//       //Get diagonal coeff
-//       double dsdp2 = 0.0;
-//       double coeffA = 0.0, coeffA2 = 0.0;
-//       if(hasInterfaceList[i] && !firstDynTPF){
-//	    if(listOfPores[i]->info().p() == 0){
-//	      std::cout << endl << "Error, pressure = 0 "<< listOfPores[i]->info().p() << listOfPores[i]->info().id;
-//	      listOfPores[i]->info().p() = -1.0 * listOfPores[i]->info().thresholdPressure;
-//	    }
-//	    dsdp2 = dsdp(listOfPores[i],listOfPores[i]->info().p());
-//	    coeffA = dsdp2 * ((listOfPores[i]->info().mergedVolume / scene->dt) + (listOfPores[i]->info().accumulativeDV - listOfPores[i]->info().accumulativeDVSwelling)); //Only consider the change in porosity due to particle movement
-//	}
-
-//           
-//       //fill matrix off-diagonals
-//       if(!listOfPores[i]->info().isWResInternal ){	
-//	  for(unsigned int j = 0; j < listOfPores[i]->info().poreNeighbors.size(); j++){ 
-//	      tripletList.push_back(ETriplet(i,listOfPores[i]->info().poreNeighbors[j],-1.0 * listOfPores[i]->info().listOfkNorm[j]));
-//	      coeffA2 += listOfPores[i]->info().listOfkNorm[j];
-//	  }
-//       }
-
-//	//Set boundary conditions
-//	if(listOfPores[i]->info().isWResInternal){	
-//	  tripletList.push_back(ETriplet(i,i, 1.0));
-//	  residualsList[i] = waterBoundaryPressure;
-//	}
-//	
-//	//Fill matrix diagonal
-//	if(!listOfPores[i]->info().isWResInternal ){	
-//	  if(hasInterfaceList[i]){residualsList[i] += -1.0*listOfPores[i]->info().saturation * (listOfPores[i]->info().accumulativeDV - listOfPores[i]->info().accumulativeDVSwelling) + coeffA * listOfPores[i]->info().p();}
-//	  if(!hasInterfaceList[i] && deformation && listOfPores[i]->info().saturation > listOfPores[i]->info().minSaturation){residualsList[i] += -1.0*(listOfPores[i]->info().accumulativeDV - listOfPores[i]->info().accumulativeDVSwelling);} 
-//	  tripletList.push_back(ETriplet(i,i, coeffA +  coeffA2));
-//	}
-//    }
-//    
-//    
-//    //Solve Matrix
-//    aMatrix.setFromTriplets(tripletList.begin(),tripletList.end());
-//    eSolver.analyzePattern(aMatrix);
-//    eSolver.factorize(aMatrix);
-//    eSolver.compute(aMatrix);
-//    
-//    
-//    //Solve for pressure: FIXME: add check for quality of matrix, if problematic, skip all below. 
-//	pressuresList = eSolver.solve(residualsList);
-//	
-//	//Compute flux
-//	double flux = 0.0;
-//	double accumulativeDefFlux = 0.0;
-//	double waterBefore = 0.0, waterAfter = 0.0;
-//	double boundaryFlux = 0.0, lostVolume = 0.0;
-//	oldDT = scene->dt;
-//	
-//	//check water balance
-// 	for(unsigned int i = 0; i < numberOfPores; i++){
-//	  waterBefore += listOfPores[i]->info().saturation * listOfPores[i]->info().mergedVolume; 
-// 	}
-//	
-//	//compute flux
-//	for(unsigned int i = 0; i < numberOfPores; i++){
-//	  flux = 0.0;
-//	    for(unsigned int j = 0; j < listOfPores[i]->info().poreNeighbors.size(); j++){
-//		  flux += listOfPores[i]->info().listOfkNorm[j] * (pressuresList[i] - pressuresList[ listOfPores[i]->info().poreNeighbors[j] ]) ;  
-//	    }
-//	  listOfFlux[i] = flux;
-// 	  if(listOfPores[i]->info().saturation > listOfPores[i]->info().minSaturation){accumulativeDefFlux += listOfPores[i]->info().accumulativeDV;}
-//	  if(listOfPores[i]->info().isWResInternal){	
-//	    boundaryFlux += flux;
-//	   }
-//	   if(!listOfPores[i]->info().isWResInternal && !hasInterfaceList[i] && std::abs(listOfFlux[i]) > 1e-15 && !deformation){
-//	      std::cerr << " | Flux not 0.0" << listOfFlux[i] << " isNWRES:  "<< listOfPores[i]->info().isNWRes << " saturation: "<< listOfPores[i]->info().saturation << " P:"<< listOfPores[i]->info().p() << " isNWef:" << 
-//	      listOfPores[i]->info().isNWResDef << "|";
-//	      lostVolume += listOfFlux[i] * scene->dt;
-//	   }	  	 
-//	}
-
-//	
-//	double summFluxList = 0.0;
-//	double summFluxUnsat = 0.0;
-//	for(unsigned int i = 0; i < numberOfPores; i++){
-//	  if(hasInterfaceList[i]){summFluxUnsat += listOfFlux[i];}
-//	  summFluxList += listOfFlux[i];
-//	}
-
-//	//update saturation
-//	for(unsigned int i = 0; i < numberOfPores; i++){
-//	  if(!deformation && hasInterfaceList[i] && listOfFlux[i] != 0.0 && !listOfPores[i]->info().isWResInternal){		
-//       	      double ds = -1.0 * scene->dt * (listOfFlux[i]) / (listOfPores[i]->info().mergedVolume +  listOfPores[i]->info().accumulativeDV * scene->dt);
-//	      saturationList[i] = ds + (saturationList[i] * listOfPores[i]->info().mergedVolume / (listOfPores[i]->info().mergedVolume +  listOfPores[i]->info().accumulativeDV * scene->dt )); 
-//          }
-// 	    if(deformation && hasInterfaceList[i] && !listOfPores[i]->info().isWResInternal){
-// 		saturationList[i] = saturationList[i] + (pressuresList[i] - listOfPores[i]->info().p())*dsdp(listOfPores[i],listOfPores[i]->info().p()) + (scene->dt / (listOfPores[i]->info().mergedVolume +  (listOfPores[i]->info().accumulativeDV - listOfPores[i]->info().accumulativeDVSwelling) * scene->dt )) * listOfPores[i]->info().accumulativeDVSwelling;
-// 	    }
-//	  
-//	}
-//	
-//        for(unsigned int i = 0; i < numberOfPores; i++){
-//	  waterAfter += saturationList[i] * (listOfPores[i]->info().mergedVolume +   listOfPores[i]->info().accumulativeDV * scene->dt); 							
-//        }
-
-//	
-//	accumulativeFlux += (summFluxList) * scene->dt;
-//	accumulativeDeformationFlux += accumulativeDefFlux * scene->dt;
-//	
-//	fluxInViaWBC += boundaryFlux * scene->dt;
-//	
-//	  
-// 	if(!deformation && std::abs(boundaryFlux * scene->dt + (waterBefore - waterAfter)) / std::abs(boundaryFlux * scene->dt) > 1e-3 && std::abs(boundaryFlux) > 1e-18){	//FIXME test has to optimized for deforming pore units
-// 	  std::cerr << endl << "No volume balance! Flux balance: WBFlux:" << std::abs(boundaryFlux * scene->dt + (waterBefore - waterAfter)) / std::abs(boundaryFlux * scene->dt)  << " " <<boundaryFlux * scene->dt << "Flux: " << summFluxList*scene->dt <<  "deltaVolume: " << waterBefore - waterAfter  << "Flux in IFACE: "<< summFluxUnsat * scene->dt << " lostVolume: " << lostVolume * scene->dt;
-//// 	  stopSimulation = true;
-// 	}
-//	// --------------------------------------find new dt -----------------------------------------------------
-//	double dt = 0.0, finalDT = 1e6;
-//	int saveID = -1;
-//	for(unsigned int i = 0; i < numberOfPores; i++){
-//	  //Time step for deforming pore units
-//	  if(deformation){
-//	    dt = -1.0 * listOfPores[i]->info().mergedVolume / (listOfPores[i]->info().accumulativeDV + listOfPores[i]->info().accumulativeDVSwelling);	//Residence time total pore volume
-//	    if(dt > deltaTimeTruncation && dt < finalDT){finalDT = dt;saveID = -1;}
-//	    
-//	    if(listOfPores[i]->info().accumulativeDVSwelling > 0.0 || listOfPores[i]->info().accumulativeDV > 0.0){ // Residence time during increase in pore size
-//	      if(listOfPores[i]->info().accumulativeDVSwelling > listOfPores[i]->info().accumulativeDV){
-//		dt = listOfPores[i]->info().mergedVolume * (1.0 - saturationList[i]) / listOfPores[i]->info().accumulativeDVSwelling;
-//	      }
-//	      if(listOfPores[i]->info().accumulativeDVSwelling <= listOfPores[i]->info().accumulativeDV){
-//		dt = listOfPores[i]->info().mergedVolume * (1.0 - saturationList[i]) / listOfPores[i]->info().accumulativeDV;
-//	      }
-//	      if(dt > deltaTimeTruncation && dt < finalDT){finalDT = dt;saveID = -2;}
-//	    }
-//	    if(listOfPores[i]->info().accumulativeDVSwelling < 0.0 || listOfPores[i]->info().accumulativeDV < 0.0){
-//		if(listOfPores[i]->info().accumulativeDVSwelling < listOfPores[i]->info().accumulativeDV){
-//		  dt = -1.0 * listOfPores[i]->info().mergedVolume * saturationList[i] / listOfPores[i]->info().accumulativeDVSwelling;
-//		}
-//		if(listOfPores[i]->info().accumulativeDVSwelling >= listOfPores[i]->info().accumulativeDV){
-//		  dt = -1.0 * listOfPores[i]->info().mergedVolume * saturationList[i] / listOfPores[i]->info().accumulativeDV;
-//		}
-//		if(dt > deltaTimeTruncation && dt < finalDT){finalDT = dt;saveID = -2;}
-//	    }
-//	  }
-//	  
-//	  //Time step for dynamic flow
-//	  if(hasInterfaceList[i]){		
-//	      //thresholdSaturation
-//	      if(std::abs(listOfPores[i]->info().thresholdSaturation - saturationList[i]) > truncationPrecision){
-//		dt =  -1.0 * (listOfPores[i]->info().thresholdSaturation - saturationList[i]) * listOfPores[i]->info().mergedVolume / listOfFlux[i];
-//		if(dt > deltaTimeTruncation && dt < finalDT){finalDT = dt;/*saveID = 1;*/}
-//	      }
-//	      //Empty pore
-//	      if(std::abs(0.0 - saturationList[i]) > truncationPrecision && listOfFlux[i] > 0.0){ //only for drainage
-//		dt =  -1.0 * (0.0 - saturationList[i]) * listOfPores[i]->info().mergedVolume / listOfFlux[i];
-//		if(dt > deltaTimeTruncation && dt < finalDT){finalDT = dt;/*saveID = 2;*/}
-//	      }
-//	      //Saturated pore
-//	      if(std::abs(1.0 - saturationList[i]) > truncationPrecision && listOfFlux[i] < 0.0){ //only for imbibition
-//		dt =  -1.0 * (1.0 - saturationList[i]) * listOfPores[i]->info().mergedVolume / listOfFlux[i];
-//		if(dt > deltaTimeTruncation && dt < finalDT){finalDT = dt;/*saveID = 3;*/}
-//	      }
-//	  }
-//	}
-//	if(finalDT == 1e6){
-//            finalDT = deltaTimeTruncation;
-//            saveID = 5;
-//            if(!firstDynTPF && !remesh){
-//                std::cout << endl << "NO dt found!";
-//                stopSimulation = true;}            
-//        }
-//	scene->dt = finalDT * safetyFactorTimeStep;
-//	if(debugTPF){std::cerr<<endl<< "Time step: " << finalDT << " Limiting process:" << saveID;}
-//	    
-//	
-//	
-//	// --------------------------------------update cappilary pressure (need to correct for linearization of ds/dp)-----------------------------------------------------
-//	for(unsigned int i = 0; i < numberOfPores; i++){
-//	  if(hasInterfaceList[i] && !listOfPores[i]->info().isWResInternal && (!deformation || listOfPores[i]->info().saturation != 0.0)){
-//	    pressuresList[i] = porePressureFromPcS(listOfPores[i],saturationList[i]);}
-//	}
-//	
-
-//	// --------------------------------------Find invasion events-----------------------------------------------------
-//	for(unsigned int i = 0; i < numberOfPores; i++){
-//	  if(saturationList[i] > 1.0 - truncationPrecision &&  (listOfFlux[i] < 0.0 || deformation) && saturationList[i] != 1.0){
-//		if(saturationList[i] > 1.0){
-//		 if(saturationList[listOfPores[i]->info().invadedFrom] >= 1.0){
-//		   	waterVolumeTruncatedLost +=  (saturationList[i] - 1.0) * listOfPores[i]->info().mergedVolume;
-//			saturationList[i] = 1.0;
-//		 }
-//		 if(saturationList[listOfPores[i]->info().invadedFrom] < 1.0){
-//		   saturationList[listOfPores[i]->info().invadedFrom] += (saturationList[i] - 1.0) * listOfPores[i]->info().mergedVolume / listOfPores[listOfPores[i]->info().invadedFrom]->info().mergedVolume;
-//		   saturationList[i] = 1.0;
-//		   if(saturationList[listOfPores[i]->info().invadedFrom] > 1.0){
-//		    waterVolumeTruncatedLost +=  (saturationList[listOfPores[i]->info().invadedFrom] - 1.0) * listOfPores[listOfPores[i]->info().invadedFrom]->info().mergedVolume;
-//		    saturationList[listOfPores[i]->info().invadedFrom] = 1.0;
-//		   }
-//		 }	 
-//		 
-//		}
-// 		saturationList[i] = 1.0;
-// 		hasInterfaceList[i] = false;
-//		listOfPores[i]->info().isNWResDef = true;
-//	  }
-//	}
-//	
-//	//Check for drainage
-//	for(unsigned int i = 0; i < numberOfPores; i++){
-//	  if((fractionMinSaturationInvasion == -1 && hasInterfaceList[i] && saturationList[i] <  listOfPores[i]->info().thresholdSaturation) || (fractionMinSaturationInvasion > 0.0 && saturationList[i] < fractionMinSaturationInvasion)){
-//	    for(unsigned int j = 0; j < listOfPores[i]->info().poreNeighbors.size(); j++){
-//	      if(airBoundaryPressure - pressuresList[listOfPores[i]->info().poreNeighbors[j]] > listOfPores[i]->info().listOfEntryPressure[j] &&
-//		!hasInterfaceList[listOfPores[i]->info().poreNeighbors[j]] && 
-//		!listOfPores[listOfPores[i]->info().poreNeighbors[j]]->info().isWResInternal && 
-//		saturationList[listOfPores[i]->info().poreNeighbors[j]] > listOfPores[listOfPores[i]->info().poreNeighbors[j]]->info().minSaturation &&
-//		saturationList[listOfPores[i]->info().poreNeighbors[j]] <= 1.0		
-//	      ){
-//		  hasInterfaceList[listOfPores[i]->info().poreNeighbors[j]] = true;
-//		  saturationList[listOfPores[i]->info().poreNeighbors[j]] = 1.0 - truncationPrecision;
-//		  pressuresList[listOfPores[i]->info().poreNeighbors[j]] = porePressureFromPcS(listOfPores[i], 1.0 - truncationPrecision);
-//		  listOfPores[listOfPores[i]->info().poreNeighbors[j]]->info().invadedFrom = i;
-
-// 	      }
-//	    }
-//	  }
-//	}
-//	    
-//	
-//	
-//	//truncate saturation
-//	for(unsigned int i = 0; i < numberOfPores; i++){
-//	  if((saturationList[i] < truncationPrecision || saturationList[i] <= listOfPores[i]->info().minSaturation)){		
-//	    waterVolumeTruncatedLost -=  (listOfPores[i]->info().minSaturation - saturationList[i]) * listOfPores[i]->info().mergedVolume;
-//	    saturationList[i] = listOfPores[i]->info().minSaturation; 
-//// 	    hasInterfaceList[i] = false; // NOTE: in case of deactivation of empty cell, set hasInterfaceList[i] to false
-//	    pressuresList[i] =  porePressureFromPcS(listOfPores[i], listOfPores[i]->info().minSaturation); //waterBoundaryPressure;				
-//	    listOfPores[i]->info().isNWRes = true;
-//	    for(unsigned int j = 0; j < listOfPores[i]->info().poreNeighbors.size(); j++){
-//		if(!hasInterfaceList[listOfPores[i]->info().poreNeighbors[j]] && !listOfPores[listOfPores[i]->info().poreNeighbors[j]]->info().isNWRes && listOfFlux[listOfPores[i]->info().poreNeighbors[j]] >= 0.0 && !listOfPores[listOfPores[i]->info().poreNeighbors[j]]->info().isWResInternal){
-//		  hasInterfaceList[listOfPores[i]->info().poreNeighbors[j]] = true;
-//		  saturationList[listOfPores[i]->info().poreNeighbors[j]] = 1.0 - truncationPrecision;
-//		  pressuresList[listOfPores[i]->info().poreNeighbors[j]] = porePressureFromPcS(listOfPores[listOfPores[i]->info().poreNeighbors[j]], 1.0 - truncationPrecision);
-//		}
-//	    }
-//	  }
-//	  
-//	  if(listOfPores[i]->info().isNWResDef && saturationList[i] < listOfPores[i]->info().thresholdSaturation){
-//	    listOfPores[i]->info().isNWResDef = false;
-//	  }
-//	  
-//	}
-// 
-
-
-
-//    
-//    if(deformation){
-//	for (FiniteCellsIterator cell = tri.finite_cells_begin(); cell != cellEnd; cell++){
-//	  cell->info().poreBodyVolume += cell->info().dv() * oldDT;			
-//	}
-//	//copyPoreDataToCells();  //NOTE: For two-way coupling this function should be activated, but it is a bit costly for computations.
-//    }
-//    for(unsigned int i = 0; i < numberOfPores; i++){
-//		if(deformation){
-//		  listOfPores[i]->info().mergedVolume  += listOfPores[i]->info().accumulativeDV * oldDT;
-//		  listOfPores[i]->info().poreBodyRadius = getChi(listOfPores[i]->info().numberFacets)*std::pow(listOfPores[i]->info().mergedVolume,(1./3.));			
-//		}
-//		if(saturationList[i]  > 1.0){
-//		 std::cerr << endl << "Error!, saturation larger than 1? "; 
-//		 saturationList[i] = 1.0;								//NOTE ADDED AFTER TRUNK UPDATE should be 0.0?
-//// 		 stopSimulation = true;
-//		}
-//		listOfPores[i]->info().saturation = saturationList[i];
-//		listOfPores[i]->info().p() = pressuresList[i];
-//		listOfPores[i]->info().hasInterface = bool(hasInterfaceList[i]);
-//		listOfPores[i]->info().flux = listOfFlux[i];
-//		listOfPores[i]->info().dv() = 0.0;							//NOTE ADDED AFTER TRUNK UPDATE
-//		listOfPores[i]->info().accumulativeDV = 0.0;
-//    }
-//}
-
-
-//        
-//void PartialSatClayEngine::actionTPF()
-//{
-//  iterationTPF += 1;
-//  if(firstDynTPF){
-//      std::cout << endl << "Welcome to the two-phase flow Engine" << endl << "by T.Sweijen, B.Chareyre and S.M.Hassanizadeh" << endl << "For contact: T.Sweijen@uu.nl";
-//      solver->computePermeability();
-//      scene->time = 0.0;
-//      initialization();
-//      actionMergingAlgorithm();
-//      calculateResidualSaturation();
-//      setInitialConditions();
-//      setBoundaryConditions();
-//      verifyCompatibilityBC();
-//      setPoreNetwork();
-//      scene->dt = 1e-20;
-//      setListOfPores();
-//      solvePressure();
-//      getQuantities();
-//      firstDynTPF = false;
-//  }
-//  if(!firstDynTPF && !stopSimulation){
-////    bool remesh = false;
-//   //Time steps + deformation, but no remeshing
-//   scene->time = scene->time + scene->dt;
-//   if(deformation && !remesh){
-//     updateDeformationFluxTPF();
-//     if(int(float(iterationTPF)/10.0) == float(iterationTPF)/10.0){
-//	updatePoreUnitProperties();
-//   }
-//  }
-//   //Update pore throat radii etc. 
-//   
-//   if(deformation && remesh){
-//     reTriangulate(); //retriangulation + merging
-//     calculateResidualSaturation();
-//     transferConditions(); //get saturation, hasInterface from previous network
-//     setBoundaryConditions();
-//     setPoreNetwork();
-//   }
-//   setListOfPores();
-//   if(solvePressureSwitch){solvePressure();}
-//   if(deformation){if(int(float(iterationTPF)/50.0) == float(iterationTPF)/50.0){getQuantities();}}	//FIXME update of quantities has to be made more appropiate
-
-//   
-////    getQuantities();//NOTE FIX
-//   
-//    if(!deformation ){
-//      if(!getQuantitiesUpdateCont){
-//	if(int(float(iterationTPF)/100.0) == float(iterationTPF)/100.0){getQuantities();}
-//      }
-//      if(getQuantitiesUpdateCont){
-//	getQuantities();
-//      }
-//    }
-
-//   
-//   if(remesh){remesh = false;} //Remesh bool is also used in solvePressure();
-
-//  }
 //}
 
 

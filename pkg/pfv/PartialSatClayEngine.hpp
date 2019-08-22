@@ -101,7 +101,10 @@ class PartialSatClayEngine : public PartialSatClayEngineT
 	void setOriginalParticleValues();
 	void exposureRecursion(CellHandle cell);
 	void determineFracturePaths();
-
+	void createSphere(shared_ptr<Body>& body, Vector3r position, Real radius, bool big, bool dynamic );
+	void insertMicroPores(const float fracMicroPore);
+	bool findInscribedRadiusAndLocation(CellHandle& cell, std::vector<double>& coordAndRad);
+	bool checkSphereContainedInTet(CellHandle& cell, std::vector<double>& coordAndRad);
 	// fracture network 
 	void trickPermeability(Solver* flow);
 	void interpolateCrack(Tesselation& Tes,Tesselation& NewTes);
@@ -164,6 +167,16 @@ class PartialSatClayEngine : public PartialSatClayEngineT
 	((double,residualAperture,0.,,"residual aperture of induced cracks"))
 	((double,apertureFactor,1.,,"factor to consider tortuosity"))
 	((bool,calcCrackArea,true,,"The amount of crack per pore is updated if calcCrackArea=True")) 
+	((double,microStructureE,1e6,,"The amount of crack per pore is updated if calcCrackArea=True")) 
+	((double,microStructureNu,0.3,,"The amount of crack per pore is updated if calcCrackArea=True")) 
+	((double,microStructurePhi,18.,,"The amount of crack per pore is updated if calcCrackArea=True")) 
+	((double,microStructureRho,2600,,"The amount of crack per pore is updated if calcCrackArea=True")) 
+	((double,microStructureAdh,6e6,,"Adhesion between microstructure particles"))
+	((bool,swelling,true,,"turn just particle swelling off (for debug)"))
+	((bool,suction,true,,"turn just particle suction off (for debug)"))
+	((bool,volumes,true,,"turn just particle volumes off (for debug)"))
+	((double,minMicroRadFrac,0.1,,"Used during sphere insertion checks, if inscribed sphere contacts facet it cannot be reduced further than minMicroRadFrac*originalInscribedRadius"))
+//	((bool,saturation,true,,"turn just particle saturation off (for debug)"))
 	,/*PartialSatClayEngineT()*/,
 	solver = shared_ptr<FlowSolver> (new FlowSolver);
 	,
@@ -171,6 +184,7 @@ class PartialSatClayEngine : public PartialSatClayEngineT
 	.def("getCellSaturation",&PartialSatClayEngine::getCellSaturation,(boost::python::arg("pos")),"Measure cell saturation in position pos[0],pos[1],pos[2]")
 //	.def("getCellSaturation",&TwoPhaseFlowEngine::getCellSaturation,"Get saturation of cell")
 	.def("saveUnsatVtk",&PartialSatClayEngine::saveUnsatVtk,(boost::python::arg("folder")="./VTK",boost::python::arg("withBoundaries")=false),"Save pressure and saturation field in vtk format. Specify a folder name for output. The cells adjacent to the bounding spheres are generated conditionally based on :yref:`withBoundaries` (not compatible with periodic boundaries)")
+	.def("insertMicroPores",&PartialSatClayEngine::insertMicroPores,(boost::python::arg("fracMicroPores")),"run to inscribe spheres in a desired fraction of existing pores.")
 	)
 	DECLARE_LOGGER;
 };

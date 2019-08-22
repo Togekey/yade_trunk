@@ -85,6 +85,7 @@ void VTKRecorder::action(){
 		else if(rec=="boxes") recActive[REC_BOXES]=true;
 		else if(rec=="mass") recActive[REC_MASS]=true;
 		else if(rec=="thermal") recActive[REC_TEMP]=true;
+		else if(rec=="partialSat") recActive[REC_PARTIALSAT]=true;
 		else if((rec=="colors") || (rec=="color"))recActive[REC_COLORS]=true;
 		else if(rec=="cpm") recActive[REC_CPM]=true;
 		else if(rec=="wpm") recActive[REC_WPM]=true;
@@ -639,6 +640,13 @@ void VTKRecorder::action(){
 					spheresTemp->InsertNextValue(thState->temp);
 				}
 			#endif
+			#ifdef PARTIALSAT
+				if (recActive[REC_PARTIALSAT]) {
+					auto* state = b->state.get();
+					spheresRadiiChange->InsertNextValue(state->radiiChange);
+					spheresSuction->InsertNextValue(state->suction);
+				}
+			#endif
 				if (recActive[REC_CLUMPID]) clumpId->InsertNextValue(b->clumpId);
 				if (recActive[REC_COLORS]){
 					const Vector3r& color = sphere->color;
@@ -884,6 +892,12 @@ void VTKRecorder::action(){
 		if (recActive[REC_MASK]) spheresUg->GetPointData()->AddArray(spheresMask);
 		if (recActive[REC_MASS]) spheresUg->GetPointData()->AddArray(spheresMass);
 		if (recActive[REC_TEMP]) spheresUg->GetPointData()->AddArray(spheresTemp);
+#ifdef PARTIALSAT
+		if (recActive[REC_PARTIALSAT]) {
+			spheresUg->GetPointData()->AddArray(spheresRadiiChange);
+			spheresUg->GetPointData()->AddArray(spheresSuction);
+		}
+#endif
 		if (recActive[REC_CLUMPID]) spheresUg->GetPointData()->AddArray(clumpId);
 		if (recActive[REC_COLORS]) spheresUg->GetPointData()->AddArray(spheresColors);
 		if (recActive[REC_VELOCITY]){
