@@ -37,9 +37,14 @@ class FoamCoupling : public GlobalEngine {
 
 	// some variables for MPI_Send/Recv 
 		const int sendTag=500;  
+		int rank, commSize; // for serial Yade-OpenFOAM 
 		MPI_Status status; 
-		int rank, commSize; 
-		int szdff, localCommSize, worldCommSize; 
+		int szdff, localCommSize, worldCommSize, localRank, worldRank; 
+		const int TAG_GRID_BBOX = 1001; 
+		const int TAG_PRT_DATA = 1002;
+		const int TAG_FORCE = 1005; 
+		const int TAG_SEARCH_RES = 1004; 
+		const int TAG_SZ_BUFF = 1003; 
 
   private:
     // some variables for MPI_Send/Recv 
@@ -110,6 +115,7 @@ class FoamCoupling : public GlobalEngine {
 		void resetCommunications(); 
 		void runCouplingParallel(); 
 		void setParticleForce(); 
+		void exchangeDeltaTParallel(); 
 		virtual void action(); 
 		virtual ~FoamCoupling(){}; 
 		
@@ -120,9 +126,9 @@ class FoamCoupling : public GlobalEngine {
 		std::vector<Body::id_t> fluidDomains; 
 		std::vector<int> sendRecvRanks;
 		std::vector<std::pair<Body::id_t, std::vector<Body::id_t> > > sharedIds; 
-		//std::vector< std::pair <Body::id_t, std::pair<std::vector<Body::id_t> int>  > sharedIds; //  
 		std::vector<std::pair<int, std::map<int, int> > > sharedIdsMapIndx; 
 		std::vector<std::pair<int, std::vector<double>> > hForce; 
+		Real fluidDt; 
 		//std::vector<int> intrFluidRanks; 
 		
 		Real foamDeltaT; 
@@ -150,6 +156,7 @@ class FoamCoupling : public GlobalEngine {
     ((int,numParticles,1, , "number of particles in coupling."))
     ((double,particleDensity,1, , "particle Density")) //not needed  as this is set in foam  
     ((double,fluidDensity,1, ,"fluidDensity")) //not needed  as this is set in foam  
+    ((bool,parallelCoupling,false, ,"set true if Yade-MPI is being used. ")) 
     ,
     ,
     ,
