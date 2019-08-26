@@ -102,7 +102,10 @@ class FoamCoupling : public GlobalEngine {
 		bool ifFluidDomain(const Body::id_t& );
 		int ifSharedId(const Body::id_t& ); 
 		bool checkSharedDomains(const int& ); 
-		
+		int stride = 0; 
+		void resetCommunications(); 
+		void runCouplingParallel(); 
+		void setParticleForce(); 
 		virtual void action(); 
 		virtual ~FoamCoupling(){}; 
 		
@@ -115,6 +118,7 @@ class FoamCoupling : public GlobalEngine {
 		std::vector<std::pair<Body::id_t, std::vector<Body::id_t> > > sharedIds; 
 		//std::vector< std::pair <Body::id_t, std::pair<std::vector<Body::id_t> int>  > sharedIds; //  
 		std::vector<std::pair<int, std::map<int, int> > > sharedIdsMapIndx; 
+		std::vector<std::pair<int, std::vector<double>> > hForce; 
 		//std::vector<int> intrFluidRanks; 
 		
 		Real foamDeltaT; 
@@ -130,6 +134,7 @@ class FoamCoupling : public GlobalEngine {
 		int commSzdff; 
 		void buildSharedIdsMap(); 
 		int ifSharedIdMap(const Body::id_t& ); 
+		bool commSizeSet; 
       
     YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(FoamCoupling,GlobalEngine, "An engine for coupling Yade with the finite volume fluid solver OpenFOAM in parallel." " \n Requirements : Yade compiled with MPI libs, OpenFOAM-6 (openfoam is not required for compilation)." "Yade is executed under MPI environment with OpenFOAM simultaneously, and using MPI communication  routines data is exchanged between the solvers."
    " \n \n 1. Yade broadcasts the particle data -> position, velocity, ang-velocity, radius to all the foam processes as in :yref:`castParticle <FoamCoupling::castParticle>` \n"
@@ -164,9 +169,9 @@ REGISTER_SERIALIZABLE(FoamCoupling);
 /* a class for holding info on the min and max bounds of the fluid mesh. Each fluid proc has a domain minmax and */
 class FluidDomainBbox : public Shape{
 	public:
-		std::vector<double> minMaxBuff; // a buffer to receive the min max during MPI_Recv. 
-		void setMinMax(std::vector<double>& minmaxbuff){
-			if (minMaxBuff.size() != 6){LOG_ERROR("incorrect minmaxbuff size. FAIL"); return; }
+		//std::vector<double> minMaxBuff; // a buffer to receive the min max during MPI_Recv. 
+		void setMinMax(const std::vector<double>& minmaxbuff){
+			if (minmaxbuff.size() != 6){LOG_ERROR("incorrect minmaxbuff size. FAIL"); return; }
 			minBound[0] = minmaxbuff[0]; 
 			minBound[1] = minmaxbuff[1];
 			minBound[2] = minmaxbuff[2]; 
@@ -195,9 +200,9 @@ REGISTER_SERIALIZABLE(FluidDomainBbox);
 
 class Bo1_FluidDomainBbox_Aabb : public BoundFunctor{
 	public:
-		void go(const shared_ptr<Shape>& , shared_ptr<Bound>& ); 
-		FUNCTOR1D(FluidDomainBbox);  
-		YADE_CLASS_BASE_DOC(Bo1_FluidDomainBbox_Aabb,BoundFunctor, "creates/updates an :yref:`Aabb` of a :yref:`FluidDomainBbox`."); 
+		void go(const shared_ptr<Shape>& , shared_ptr<Bound>& , const Se3r& se3, const Body*); 
+	FUNCTOR1D(FluidDomainBbox);  
+	YADE_CLASS_BASE_DOC(Bo1_FluidDomainBbox_Aabb,BoundFunctor, "creates/updates an :yref:`Aabb` of a :yref:`FluidDomainBbox`."); 
 }; 
 REGISTER_SERIALIZABLE(Bo1_FluidDomainBbox_Aabb); 
 
