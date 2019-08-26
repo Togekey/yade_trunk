@@ -33,6 +33,8 @@ void Bo1_FluidDomainBbox_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>
 }
 
 
+/******serial version *****/ 
+
 void FoamCoupling::getRank() {
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -249,15 +251,15 @@ void FoamCoupling::getFluidDomainBbox() {
 	 PI_COMM_WORLD) -1, all yade ranks receive the min max of the fluid domains, and insert it to their body containers. The fluid subdomain bodies have subdomain=0, they are actually owned 
 	 by the master process (rank=0) in the yade communicator. */ 
 	
-	int localCommSize, localRank, worldCommSize, worldRank; 
 	const shared_ptr<Body>& thisSubdomainBody = (*scene->bodies)[scene->thisSubdomainId]; 
 	const shared_ptr<Subdomain>& thisSd = YADE_PTR_CAST<Subdomain>(thisSubdomainBody->shape); 
 	
-	
-	
+		
 	//get local comm size
 	MPI_Comm_size(thisSd->selfComm(), &localCommSize); 
 	MPI_Comm_rank(thisSd->selfComm(), &localRank); 
+	
+	std::cout << "local size and local rank = " << localCommSize << localRank << std::endl; 
 	
 	//world comm size and world rank 
 	
@@ -267,6 +269,9 @@ void FoamCoupling::getFluidDomainBbox() {
 	commSzdff = abs(localCommSize-worldCommSize); 
 	
 	if (worldRank-localCommSize < 0 ) {stride = localCommSize; }
+	
+	std::cout << "stride val = " << std::endl; 
+	
 	//std::vector<int> fluidRanks(szdff, -1); 
 	
 	// vector to hold the minMax buff 
@@ -282,8 +287,9 @@ void FoamCoupling::getFluidDomainBbox() {
 	//recv the grid minmax from fluid solver. 
 	
 	for (int rnk=0; rnk != commSzdff; ++rnk){
+		MPI_Status status; 
 		std::vector<double>& buff = minMaxBuff[rnk]; 
-		MPI_Bcast(&buff.front(), 6,MPI_DOUBLE, rnk+stride, MPI_COMM_WORLD); 
+		MPI_Recv(&buff.front(), 6, MPI_DOUBLE, rnk+stride , TAG_GRID_BBOX, MPI_COMM_WORLD, &status); 
 		
 	}
 	
@@ -300,6 +306,9 @@ void FoamCoupling::getFluidDomainBbox() {
 		
 	}
 	
+
+	std::cout << "recvd grid min max, rank = " <<  localRank  << std::endl; 
+	
 	commSizeSet = true; 
 	
   
@@ -309,6 +318,8 @@ void FoamCoupling::getFluidDomainBbox() {
 void FoamCoupling::buildSharedIdsMap(){
 	/*Builds the list of ids interacting with a fluid subdomain and stores those body ids that has intersections with several fluid domains. 
 	 sharedIdsMapIndx = a vector of std::pair<Body::id_t, std::map<fluidDomainId, indexOfthebodyinthefluidDomain aka index in flbdy-> bIds> > */
+	
+	std::cout << "In build shared Ids Map rank =  " <<  std::endl; 
 	const shared_ptr<Subdomain>& subd = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
 	for (int bodyId : subd->ids){
 		std::map<int, int> testMap; 
@@ -322,7 +333,7 @@ void FoamCoupling::buildSharedIdsMap(){
 				flbox->bIds.push_back(bodyId); 
 				flbox->hasIntersection = true; 
 				int indx = flbox->bIds.size()-1; 
-				testMap.insert(std::make_pair(otherId,indx)); 
+				testMap.insert(std::make_pair(flbox->domainRank,indx)); // get the fluiddomainbbox rank and index in flbody->bIds, this will be used in the verifyTracking function 
 				
 			}
 		}
@@ -334,7 +345,7 @@ void FoamCoupling::buildSharedIdsMap(){
 }
 
 
-
+//unused. 
 void FoamCoupling::buildSharedIds() {
 	/*It is possible to have one yade body to have interactions with several  fluid subdomains, (we just have the bounding box of the fluid domain, the fluid domain is a regular polygon with several faces). 
 	 Building a list of those ids which are have several interactions helps to identify those fliud procs from whom to receive the hydrodynamic force and tracking. This is used in the function 
@@ -355,6 +366,7 @@ void FoamCoupling::buildSharedIds() {
 	}
 }
 
+//unused. 
 int FoamCoupling::ifSharedId(const Body::id_t& testId){
 	/*function to check if given body id is a shared id. */
 	if (! sharedIds.size()) {return false; } // this subdomain does not have any shared ids. 
@@ -451,9 +463,10 @@ void FoamCoupling::sendIntersectionToFluidProcs(){
 	// 
 	int buffSz = fluidDomains.size(); 
 	
-	//MPI_Send .. 
+	//MPI_Send ..
+	
 	for (int rnk = 0; rnk != commSzdff; ++ rnk){
-		MPI_Send(&sendRecvRanks.front(), buffSz, MPI_INT, rnk+stride, 2500, MPI_COMM_WORLD); 
+		MPI_Send(&sendRecvRanks.front(), buffSz, MPI_INT, rnk+stride, TAG_SZ_BUFF, MPI_COMM_WORLD); 
 		
 	}
 	
@@ -463,7 +476,7 @@ void FoamCoupling::sendIntersectionToFluidProcs(){
 
 void FoamCoupling::sendBodyData(){
 	/* send the particle data to the associated fluid procs. prtData -> pos, vel, angvel, raidus (for sphere), if fiber -> ori  */ 
-  
+	std::cout <<  "sending body data " << std::endl;  
 	bool isPeriodic = scene->isPeriodic; 
 	for (int f = 0; f != static_cast<int>(fluidDomains.size()); ++f){
 		const shared_ptr<Body>& flbody = (*scene->bodies)[fluidDomains[f]];
@@ -496,7 +509,7 @@ void FoamCoupling::sendBodyData(){
 				}
 				
 				int sz = prtData.size();  
-				MPI_Send(&prtData.front(),sz, MPI_DOUBLE, flbox->domainRank, 1000, MPI_COMM_WORLD ); 
+				MPI_Send(&prtData.front(),sz, MPI_DOUBLE, flbox->domainRank, TAG_PRT_DATA, MPI_COMM_WORLD ); 
 			}
 		}
 	}
@@ -512,7 +525,7 @@ void FoamCoupling::verifyParticleDetection() {
 	 if fail is found : see if this id is a sharedid. if not this particle has been 'lost'. if shared id :  check the vector of verifyTracking of the intersecting fluid domain till found in 
 	 at least one intersecting fluid box. if not particle has been lost. */ 
 	
-	//std::map<int, std::vector<int> > verifyTracking;  //map containing domainRank, vector of "found/misses" for each body, miss = 0, found = 1 (we cannot use bool in MPI :( ).  
+	//std::map<int, std::vector<int> > verifyTracking;  //vector containing domainRank, vector of "found/misses" for each body, miss = 0, found = 1 (we cannot use bool in MPI  ).  
 	std::vector<std::pair<int, std::vector<int>> > verifyTracking; 
 	for (unsigned int  f=0; f != fluidDomains.size(); ++f) {
 		const shared_ptr<Body>& flbdy  = (*scene->bodies)[fluidDomains[f]]; 
@@ -529,7 +542,7 @@ void FoamCoupling::verifyParticleDetection() {
 		int rnk = it.first; 
 		MPI_Status status; 
 		int buffSz = vt.size(); 
-		MPI_Recv(&vt.front(), buffSz, MPI_INT, rnk , 1002, MPI_COMM_WORLD, &status); 
+		MPI_Recv(&vt.front(), buffSz, MPI_INT, rnk , TAG_SEARCH_RES, MPI_COMM_WORLD, &status); 
 		
 	}
 	
@@ -566,7 +579,7 @@ void FoamCoupling::verifyParticleDetection() {
 		int count = 0;  bool found = false; 
 		for (const auto& fdIndx : idPair.second){
 			for (unsigned int j =0; j != verifyTracking.size(); ++j){
-				if (fdIndx.first == abs(verifyTracking[j].first-commSzdff)){
+				if (fdIndx.first == abs(verifyTracking[j].first-stride)){
 					const std::vector<int>& vtVec = verifyTracking[j].second; 
 					if (vtVec[fdIndx.second] > 0) {found = true; }
 				}
@@ -580,8 +593,6 @@ void FoamCoupling::verifyParticleDetection() {
 	}
 	
 }
-
-
 
 
 void FoamCoupling::getParticleForce(){
@@ -602,25 +613,12 @@ void FoamCoupling::getParticleForce(){
 		 int buffSz = tmpForce.size(); 
 		 MPI_Status status; 
 		 /* fluid procs having no particles will send 0 force, torque */
-		 MPI_Recv(&tmpForce.front(),buffSz, MPI_DOUBLE, recvRank, 1010, MPI_COMM_WORLD, &status); 
+		 MPI_Recv(&tmpForce.front(),buffSz, MPI_DOUBLE, recvRank, TAG_FORCE, MPI_COMM_WORLD, &status); 
 	}
 	
 
 }
 
-
-void FoamCoupling::runCouplingParallel(){
-	if (! commSizeSet){
-		getFluidDomainBbox(); // recieve the bbox of the fluid mesh. 
-	  }
-	  buildSharedIdsMap(); 
-	  sendIntersectionToFluidProcs(); 
-	  sendBodyData(); 
-	  verifyParticleDetection(); 
-	  getParticleForce(); 
-	  setParticleForce(); 
-	  resetCommunications(); 
-}
 
 
 
@@ -654,9 +652,47 @@ void FoamCoupling::setParticleForce(){
 		}
 	}
 	
-	
-	
 }
+
+
+
+
+void FoamCoupling::exchangeDeltaTParallel() {
+
+	int masterFluid = 100; 
+	MPI_Recv(&fluidDt,1,MPI_DOUBLE,masterFluid,sendTag,MPI_COMM_WORLD,&status);
+	//bcast yadedt to others.
+// 	MPI_Bcast(&yadeDt,1,MPI_DOUBLE, rank, MPI_COMM_WORLD);
+	// calculate the interval . TODO: to include hydrodynamic time scale if inertial in openfoam
+	// here -> hDeltaT = getViscousTimeScale();
+	
+	Real  yadeDt = scene-> dt;
+	dataExchangeInterval = (long int) ((yadeDt < foamDeltaT) ? foamDeltaT/yadeDt : 1);
+
+}
+
+
+
+
+void FoamCoupling::runCouplingParallel(){
+	if (!commSizeSet){
+		getFluidDomainBbox(); // recieve the bbox of the fluid mesh. 
+	}
+	  
+	
+	  
+	if (localRank > 0) {
+		buildSharedIdsMap(); 
+		sendIntersectionToFluidProcs(); 
+		sendBodyData(); 
+		verifyParticleDetection(); 
+		getParticleForce(); 
+		resetCommunications(); 
+		setParticleForce();   
+	}
+}
+
+
 
 void FoamCoupling::killMPI() { 
 	castTerminate(); 
