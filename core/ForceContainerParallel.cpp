@@ -1,4 +1,5 @@
 #include <core/ForceContainer.hpp>
+#include<boost/date_time/posix_time/posix_time.hpp>
 
 CREATE_LOGGER(ForceContainer);
 
@@ -167,6 +168,7 @@ const Vector3r ForceContainer::getRotSingle(Body::id_t id) {
 }
 
 void ForceContainer::sync(){
+  boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
   for(int i=0; i<nThreads; i++){
     if (_maxId[i] > 0) { synced = false;}
   }
@@ -174,11 +176,17 @@ void ForceContainer::sync(){
   boost::mutex::scoped_lock lock(globalMutex);
   if(synced) return; // if synced meanwhile
   
+  boost::posix_time::time_duration t1 = boost::posix_time::microsec_clock::local_time() - start;
+  start = boost::posix_time::microsec_clock::local_time();  
+  
   for(int i=0; i<nThreads; i++){
     if (_maxId[i] > 0) { ensureSize(_maxId[i],i);}
   }
-  
+  boost::posix_time::time_duration t2 = boost::posix_time::microsec_clock::local_time() - start;
+  start = boost::posix_time::microsec_clock::local_time();  
   syncSizesOfContainers();
+  boost::posix_time::time_duration t3 = boost::posix_time::microsec_clock::local_time() - start;
+  start = boost::posix_time::microsec_clock::local_time();  
 
   for(long id=0; id<(long)size; id++){
     Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
@@ -193,7 +201,13 @@ void ForceContainer::sync(){
       _move[id]=sumM; _rot[id]=sumR;
     }
   }
+  boost::posix_time::time_duration t4 = boost::posix_time::microsec_clock::local_time() - start;
+
   synced=true; syncCount++;
+  std::cerr<<"force sync timings"<<boost::posix_time::to_simple_string(t1) <<" "
+			<<boost::posix_time::to_simple_string(t2) <<" "
+			<<boost::posix_time::to_iso_string(t3) <<" "
+			<<boost::posix_time::to_simple_string(t4) <<std::endl;
 }
 
 #pragma GCC diagnostic push
