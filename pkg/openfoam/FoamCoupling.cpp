@@ -21,13 +21,15 @@ CREATE_LOGGER(FluidDomainBbox);
 YADE_PLUGIN((Bo1_FluidDomainBbox_Aabb));
 
 
-void Bo1_FluidDomainBbox_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv){
+void Bo1_FluidDomainBbox_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& , const Body* ){
 	
 	FluidDomainBbox* domain = static_cast<FluidDomainBbox*>(cm.get());
 	if (!bv){bv = shared_ptr<Bound> (new Aabb); }
 	Aabb* aabb = static_cast<Aabb*>(bv.get()); 
+	
 	aabb-> min = domain -> minBound; 
 	aabb-> max = domain -> maxBound; 
+	return ; 
 }
 
 
@@ -235,7 +237,13 @@ void FoamCoupling::runCoupling() {
 }
 
 
+/***********parallel version *******/
+
+
+
 void FoamCoupling::getFluidDomainBbox() {
+  
+	
 	/* get the bounding box of the grid from each fluid solver processes, this gird minmax is used to set the min/max of the body of shape FluidDomainBbox. 
 	 All Yade processes have ranks from 0 to yadeCommSize - 1 in the  MPI_COMM_WORLD communicator, the fluid Ranks are then from yadeCommSize to size(M
 	 PI_COMM_WORLD) -1, all yade ranks receive the min max of the fluid domains, and insert it to their body containers. The fluid subdomain bodies have subdomain=0, they are actually owned 
@@ -244,6 +252,7 @@ void FoamCoupling::getFluidDomainBbox() {
 	int localCommSize, localRank, worldCommSize, worldRank; 
 	const shared_ptr<Body>& thisSubdomainBody = (*scene->bodies)[scene->thisSubdomainId]; 
 	const shared_ptr<Subdomain>& thisSd = YADE_PTR_CAST<Subdomain>(thisSubdomainBody->shape); 
+	
 	
 	
 	//get local comm size
@@ -256,6 +265,8 @@ void FoamCoupling::getFluidDomainBbox() {
 	MPI_Comm_rank(MPI_COMM_WORLD, &worldRank); 
 	
 	commSzdff = abs(localCommSize-worldCommSize); 
+	
+	if (worldRank-localCommSize < 0 ) {stride = localCommSize; }
 	//std::vector<int> fluidRanks(szdff, -1); 
 	
 	// vector to hold the minMax buff 
@@ -268,10 +279,11 @@ void FoamCoupling::getFluidDomainBbox() {
 	  
 	}
 
-	//recv thegird minmax from fluid solver. 
+	//recv the grid minmax from fluid solver. 
+	
 	for (int rnk=0; rnk != commSzdff; ++rnk){
 		std::vector<double>& buff = minMaxBuff[rnk]; 
-		MPI_Bcast(&buff.front(), 6,MPI_DOUBLE, rnk+localCommSize, MPI_COMM_WORLD); 
+		MPI_Bcast(&buff.front(), 6,MPI_DOUBLE, rnk+stride, MPI_COMM_WORLD); 
 		
 	}
 	
@@ -281,12 +293,14 @@ void FoamCoupling::getFluidDomainBbox() {
 		shared_ptr<FluidDomainBbox> flBodyshape(shared_ptr<FluidDomainBbox>  (new FluidDomainBbox())); 
 		std::vector<double>& buff = minMaxBuff[fd];
 		flBodyshape->setMinMax(buff); 
-		flBodyshape->domainRank = localCommSize+fd; 
+		flBodyshape->domainRank = stride+fd; 
 		flBodyshape->hasIntersection = false; 
 		flBody->shape = flBodyshape;  // casting?!  
 		fluidDomains.push_back(scene->bodies->insert(flBody)); 
 		
 	}
+	
+	commSizeSet = true; 
 	
   
 }
@@ -439,7 +453,7 @@ void FoamCoupling::sendIntersectionToFluidProcs(){
 	
 	//MPI_Send .. 
 	for (int rnk = 0; rnk != commSzdff; ++ rnk){
-		MPI_Send(&sendRecvRanks.front(), buffSz, MPI_INT, rnk+commSzdff, 2500, MPI_COMM_WORLD); 
+		MPI_Send(&sendRecvRanks.front(), buffSz, MPI_INT, rnk+stride, 2500, MPI_COMM_WORLD); 
 		
 	}
 	
@@ -526,7 +540,7 @@ void FoamCoupling::verifyParticleDetection() {
 	//std::vector<std::pair<int, std::map<int,int>> > unFoundSharedIds; 
 	
 	for (const auto& vt : verifyTracking){
-		const int& flBdyIndx = abs(vt.first-commSzdff); 
+		const int& flBdyIndx = abs(vt.first-stride); 
 		const shared_ptr<FluidDomainBbox>& flbody = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fluidDomains[flBdyIndx]]->shape); 
 		int bIndx = 0; 
 		for (const auto& val : vt.second){
@@ -572,7 +586,6 @@ void FoamCoupling::verifyParticleDetection() {
 
 void FoamCoupling::getParticleForce(){
 	
-	std::vector<std::pair<int, std::vector<double>> > hForce; 
 	
 	for (const auto& fdId : fluidDomains){
 		const shared_ptr<Body>& flbdy  = (*scene->bodies)[fdId]; 
@@ -592,7 +605,42 @@ void FoamCoupling::getParticleForce(){
 		 MPI_Recv(&tmpForce.front(),buffSz, MPI_DOUBLE, recvRank, 1010, MPI_COMM_WORLD, &status); 
 	}
 	
-	// add the force  
+
+}
+
+
+void FoamCoupling::runCouplingParallel(){
+	if (! commSizeSet){
+		getFluidDomainBbox(); // recieve the bbox of the fluid mesh. 
+	  }
+	  buildSharedIdsMap(); 
+	  sendIntersectionToFluidProcs(); 
+	  sendBodyData(); 
+	  verifyParticleDetection(); 
+	  getParticleForce(); 
+	  setParticleForce(); 
+	  resetCommunications(); 
+}
+
+
+
+void FoamCoupling::resetCommunications(){
+	// clear the vector ids held fluidDomainBbox->bIds 
+	for (unsigned f = 0; f != fluidDomains.size(); ++f) {
+		const shared_ptr<Body>& fdomain = (*scene->bodies)[fluidDomains[f]]; 
+		if (fdomain){
+			const shared_ptr<FluidDomainBbox>& fluidBox = YADE_PTR_CAST<FluidDomainBbox>(fdomain->shape); 
+			fluidBox->bIds.clear(); 
+		}
+	}
+	
+	sharedIdsMapIndx.clear(); 
+	hForce.clear(); 
+}
+
+
+void FoamCoupling::setParticleForce(){
+ 	// add the force  
 	
 	for (const auto& rf : hForce){
 		int indx = abs(rf.first-commSzdff); 
@@ -607,10 +655,8 @@ void FoamCoupling::getParticleForce(){
 	}
 	
 	
+	
 }
-
-
-
 
 void FoamCoupling::killMPI() { 
 	castTerminate(); 
