@@ -16,6 +16,11 @@
 #include<pkg/common/Sphere.hpp>
 #include<pkg/dem/Shop.hpp>
 #include<pkg/dem/ViscoelasticPM.hpp>
+#ifdef YADE_MPI 
+	#include <mpi.h> 
+	#include <core/Subdomain.hpp>
+#endif
+
 
 namespace yade { // Cannot have #include directive inside.
 
