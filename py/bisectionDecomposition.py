@@ -171,6 +171,7 @@ class decompBodiesSerial:
 	def partitionDomain(self, fibreList = None):
 	  
 		''' The main driver function  '''
+		
 		blst = []
 		if not fibreList: 
 			blst = [(b.state.pos, b.id) for b in O.bodies if not (isinstance(b.shape, Wall) or isinstance(b.shape, Box) or b.isSubdomain)]
