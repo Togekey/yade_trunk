@@ -701,5 +701,6 @@ void FoamCoupling::killMPI() {
 }
 
 
-#endif
+
 }
+#endif

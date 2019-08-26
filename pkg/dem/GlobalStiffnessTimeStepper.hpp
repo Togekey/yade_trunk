@@ -47,6 +47,9 @@ class GlobalStiffnessTimeStepper : public TimeStepper
 			((Real,previousDt,Mathr::MAX_REAL,,"last computed dt |yupdate|"))
 			((Real,timestepSafetyCoefficient,0.8,,"safety factor between the minimum eigen-period and the final assigned dt (less than 1)"))
 			((bool,densityScaling,false,,"|yupdate| don't modify this value if you don't plan to modify the scaling factor manually for some bodies. In most cases, it is enough to set :yref:`NewtonIntegrator::densityScaling` and let this one be adjusted automatically."))
+#ifdef YADE_MPI 
+			((bool,parallelMode,false,,"if parallelMode, dt is set to min of all subdomain dt. "))
+#endif			
 			((Real,targetDt,1,,"if :yref:`NewtonIntegrator::densityScaling` is active, this value will be used as the simulation  timestep and the scaling will use this value of dt as the target value. The value of targetDt is arbitrary and should have no effect in the result in general. However if some bodies have imposed velocities, for instance, they will move more or less per each step depending on this value."))
 			((bool,viscEl,false,,"To use with :yref:`ViscElPhys`. if True, evaluate separetly the minimum eigen-period in the problem considering only the elastic contribution on one hand (spring only), and only the viscous contribution on the other hand (dashpot only). Take then the minimum of the two and use the safety coefficient :yref:`GlobalStiffnessTimestepper::timestepSafetyCoefficient` to take into account the possible coupling between the two contribution.")),
 			computedOnce=false;)
