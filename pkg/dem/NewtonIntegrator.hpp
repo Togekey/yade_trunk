@@ -80,6 +80,7 @@ class NewtonIntegrator : public FieldApplier{
 		((int,mask,-1,,"If mask defined and the bitwise AND between mask and body`s groupMask gives 0, the body will not move/rotate. Velocities and accelerations will be calculated not paying attention to this parameter."))
 		,
 		/*ctor*/
+			timingDeltas=shared_ptr<TimingDeltas>(new TimingDeltas);
 			densityScaling=false;
 			#ifdef YADE_OPENMP
 				threadMaxVelocitySq.resize(omp_get_max_threads()); syncEnsured=false;
