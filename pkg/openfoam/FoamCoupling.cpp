@@ -251,13 +251,11 @@ void FoamCoupling::getFluidDomainBbox() {
 	 PI_COMM_WORLD) -1, all yade ranks receive the min max of the fluid domains, and insert it to their body containers. The fluid subdomain bodies have subdomain=0, they are actually owned 
 	 by the master process (rank=0) in the yade communicator. */ 
 	
-	const shared_ptr<Body>& thisSubdomainBody = (*scene->bodies)[scene->thisSubdomainId]; 
-	const shared_ptr<Subdomain>& thisSd = YADE_PTR_CAST<Subdomain>(thisSubdomainBody->shape); 
 	
 		
 	//get local comm size
-	MPI_Comm_size(thisSd->selfComm(), &localCommSize); 
-	MPI_Comm_rank(thisSd->selfComm(), &localRank); 
+	MPI_Comm_size(scene->mpiComm, &localCommSize); 
+	MPI_Comm_rank(scene->mpiComm, &localRank); 
 	
 	std::cout << "local size and local rank = " << localCommSize << localRank << std::endl; 
 	
