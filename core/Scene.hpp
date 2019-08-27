@@ -19,10 +19,13 @@
 #include <core/ForceContainer.hpp>
 #include <core/InteractionContainer.hpp>
 #include <core/EnergyTracker.hpp>
-
+#ifdef YADE_MPI 
+	#include<mpi.h>
+#endif
 #ifdef YADE_OPENMP
 	#include<omp.h>
 #endif
+
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -70,7 +73,11 @@ class Scene: public Serializable{
 		#ifdef YADE_OPENGL
 			shared_ptr<OpenGLRenderer> renderer;
 		#endif
-
+			
+		#ifdef YADE_MPI
+			MPI_Comm mpiComm; 
+		#endif 
+		
 		void postLoad(Scene&);
 
 		boost::posix_time::ptime prevTime; //Time value on the previous step
