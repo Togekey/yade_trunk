@@ -144,6 +144,8 @@ void Subdomain::getRankSize() {
 	    MPI_Comm_rank(selfComm(), &subdomainRank);
 	    MPI_Comm_size(selfComm(), &commSize); 
 	    ranksSet = true; 
+	    shared_ptr<Scene> scene = Omega::instance().getScene(); 
+	    scene->mpiComm = selfComm(); 
 	  } else {return; }
 }
 
