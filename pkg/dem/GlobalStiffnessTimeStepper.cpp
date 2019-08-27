@@ -146,6 +146,25 @@ void GlobalStiffnessTimeStepper::computeTimeStep(Scene* ncb)
 		scene->dt=previousDt;
 		computedOnce = true;}
 	else if (!computedOnce) scene->dt=defaultDt;
+	
+#ifdef YADE_MPI 
+	
+	if (parallelMode ){
+		Real testDt; 
+		//const shared_ptr<Subdomain>& subD = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
+		int pRank;
+		MPI_Comm_rank(scene->mpiComm,&pRank); 
+		Real inDt; 
+		if (pRank == 0) {inDt = Mathr::MAX_REAL; } else {inDt = scene->dt; }
+		if  (!computedOnce){
+			MPI_Allreduce(&inDt, &testDt, 1, MPI_DOUBLE,  MPI_MIN, MPI_COMM_WORLD);
+			scene->dt = testDt; 
+		}
+		
+	}
+	
+#endif
+	
 // 	LOG_INFO("computed timestep " << newDt <<
 // 			(scene->dt==newDt ? string(", applied") :
 // 			string(", BUT timestep is ")+boost::lexical_cast<string>(scene->dt))<<".");
