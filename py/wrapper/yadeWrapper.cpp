@@ -629,6 +629,23 @@ class pyOmega{
 		if(dt<0){ if(!scene->timeStepperActivate(true)) /* not activated*/ throw runtime_error("No TimeStepper found in O.engines."); }
 		else { scene->dt=dt; }
 	}
+	
+	Body::id_t getSubdomainId(){
+		return OMEGA.getScene()->thisSubdomainId; 
+	}
+	
+	void setSubdomainId(Body::id_t subdId){
+		OMEGA.getScene()->thisSubdomainId = subdId; 
+	}
+	
+	void setSubdomainIds(std::vector<Body::id_t> subdIds){
+		OMEGA.getScene()->subdomainIds = subdIds; 
+	}
+	
+	std::vector<Body::id_t> getSubdomainIds() {
+		return OMEGA.getScene()->subdomainIds; 
+	}
+	
 	bool dynDt_get(){return OMEGA.getScene()->timeStepperActive();}
 	bool dynDt_set(bool activate){if(!OMEGA.getScene()->timeStepperActivate(activate)) /* not activated*/ throw runtime_error("No TimeStepper found in O.engines."); return true;}
 	bool dynDtAvailable_get(){ return OMEGA.getScene()->timeStepperPresent(); }
@@ -887,6 +904,8 @@ BOOST_PYTHON_MODULE(wrapper)
 		.add_property("dt",&pyOmega::dt_get,&pyOmega::dt_set,"Current timestep (Δt) value.")
 		.add_property("dynDt",&pyOmega::dynDt_get,&pyOmega::dynDt_set,"Whether a :yref:`TimeStepper` is used for dynamic Δt control. See :yref:`dt<Omega.dt>` on how to enable/disable :yref:`TimeStepper`.")
 		.add_property("dynDtAvailable",&pyOmega::dynDtAvailable_get,"Whether a :yref:`TimeStepper` is amongst :yref:`O.engines<Omega.engines>`, activated or not.")
+		.add_property("thisSubdomainId",&pyOmega::getSubdomainId, &pyOmega::setSubdomainId,"body id of the subdomain of the current proc.")
+		.add_property("subdomainIds", &pyOmega::getSubdomainIds, &pyOmega::setSubdomainIds," Ids of subdomain bodies including other procs. " )
 		.def("load",&pyOmega::load,(py::arg("file"),py::arg("quiet")=false),"Load simulation from file. The file should be :yref:`saved<Omega.save>` in the same version of Yade, otherwise compatibility is not guaranteed.")
 		.def("reload",&pyOmega::reload,(py::arg("quiet")=false),"Reload current simulation")
 		.def("save",&pyOmega::save,(py::arg("file"),py::arg("quiet")=false),"Save current simulation to file (should be .xml or .xml.bz2 or .yade or .yade.gz). .xml files are bigger than .yade, but can be more or less easily (due to their size) opened and edited, e.g. with text editors. .bz2 and .gz correspond both to compressed versions. All saved files should be :yref:`loaded<Omega.load>` in the same version of Yade, otherwise compatibility is not guaranteed.")
