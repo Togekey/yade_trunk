@@ -173,7 +173,7 @@ static std::vector<long> subdomainBodies=std::vector<long>();
 
 void ForceContainer::sync(){
 	
-  boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
+  //boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
   for(int i=0; i<nThreads; i++){
     if (_maxId[i] > 0) { synced = false;}
   }
@@ -181,43 +181,45 @@ void ForceContainer::sync(){
   boost::mutex::scoped_lock lock(globalMutex);
   if(synced) return; // if synced meanwhile
   
-  boost::posix_time::time_duration t1 = boost::posix_time::microsec_clock::local_time() - start;
-  start = boost::posix_time::microsec_clock::local_time();  
+  //boost::posix_time::time_duration t1 = boost::posix_time::microsec_clock::local_time() - start;
+  //start = boost::posix_time::microsec_clock::local_time();  
   
   for(int i=0; i<nThreads; i++){
     if (_maxId[i] > 0) { ensureSize(_maxId[i],i);}
   }
-  boost::posix_time::time_duration t2 = boost::posix_time::microsec_clock::local_time() - start;
-  start = boost::posix_time::microsec_clock::local_time();  
+  //boost::posix_time::time_duration t2 = boost::posix_time::microsec_clock::local_time() - start;
+  //start = boost::posix_time::microsec_clock::local_time();  
   syncSizesOfContainers();
-  boost::posix_time::time_duration t3 = boost::posix_time::microsec_clock::local_time() - start;  
+  //boost::posix_time::time_duration t3 = boost::posix_time::microsec_clock::local_time() - start;  
   
-  start = boost::posix_time::microsec_clock::local_time(); 
-  for(long id=0; id<(long)size; id++){
-    Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
-    for(int thread=0; thread<nThreads; thread++){ sumF+=_forceData[thread][id]; sumT+=_torqueData[thread][id];}
-    _force[id]=sumF; _torque[id]=sumT;
-    if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
-  }
-  boost::posix_time::time_duration t4 = boost::posix_time::microsec_clock::local_time() - start;
-  start = boost::posix_time::microsec_clock::local_time();  
+ //start = boost::posix_time::microsec_clock::local_time(); 
+ // for(long id=0; id<(long)size; id++){
+ //   Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
+ //   for(int thread=0; thread<nThreads; thread++){ sumF+=_forceData[thread][id]; sumT+=_torqueData[thread][id];}
+ //   _force[id]=sumF; _torque[id]=sumT;
+ //   if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
+ // }
+ // boost::posix_time::time_duration t4 = boost::posix_time::microsec_clock::local_time() - start;
+ // start = boost::posix_time::microsec_clock::local_time();  
     
-  #pragma omp parallel for 
-  for(long id=0; id<(long)size; id++){
-    Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
-    for(int thread=0; thread<nThreads; thread++){ sumF+=_forceData[thread][id]; sumT+=_torqueData[thread][id];}
-    _force[id]=sumF; _torque[id]=sumT;
-    if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
-  }
+  //#pragma omp parallel for schedule(guided,100)
+  //for(long id=0; id<(long)size; id++){
+  //  Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
+  //  for(int thread=0; thread<nThreads; thread++){ sumF+=_forceData[thread][id]; sumT+=_torqueData[thread][id];}
+  //  _force[id]=sumF; _torque[id]=sumT;
+  //  if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
+ // }
   
-  boost::posix_time::time_duration t4b = boost::posix_time::microsec_clock::local_time() - start;
-  start = boost::posix_time::microsec_clock::local_time(); 
+  //boost::posix_time::time_duration t4b = boost::posix_time::microsec_clock::local_time() - start;
+  //start = boost::posix_time::microsec_clock::local_time(); 
   if (subdomainBodies.size()==0) {
 	shared_ptr<Scene> scene=Omega::instance().getScene();
 	for(long id=0; id<(long)scene->bodies->size(); id++){
 		if (Body::byId(id,scene).get() and Body::byId(id,scene)->subdomain == scene->subdomain) subdomainBodies.push_back(id);}
   }
-  #pragma omp parallel for 
+  //boost::posix_time::time_duration t4 = boost::posix_time::microsec_clock::local_time() - start;
+  //start = boost::posix_time::microsec_clock::local_time();
+  #pragma omp parallel for schedule(guided,100)
   for(long k=0; k<(long)subdomainBodies.size(); k++){
     long id=subdomainBodies[k];
     Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
@@ -225,18 +227,18 @@ void ForceContainer::sync(){
     _force[id]=sumF; _torque[id]=sumT;
     if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
   }
-  boost::posix_time::time_duration t4c = boost::posix_time::microsec_clock::local_time() - start;
-  start = boost::posix_time::microsec_clock::local_time();
+  //boost::posix_time::time_duration t4c = boost::posix_time::microsec_clock::local_time() - start;
+  //start = boost::posix_time::microsec_clock::local_time();
   
-  for(long k=0; k<(long)subdomainBodies.size(); k++){
-    long id=subdomainBodies[k];
-    Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
-    for(int thread=0; thread<nThreads; thread++){ sumF+=_forceData[thread][id]; sumT+=_torqueData[thread][id];}
-    _force[id]=sumF; _torque[id]=sumT;
-    if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
-  }
-  boost::posix_time::time_duration t4d = boost::posix_time::microsec_clock::local_time() - start;
-  start = boost::posix_time::microsec_clock::local_time();  
+  //for(long k=0; k<(long)subdomainBodies.size(); k++){
+  //  long id=subdomainBodies[k];
+   // Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
+  //  for(int thread=0; thread<nThreads; thread++){ sumF+=_forceData[thread][id]; sumT+=_torqueData[thread][id];}
+   // _force[id]=sumF; _torque[id]=sumT;
+   // if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
+  //}
+  //boost::posix_time::time_duration t4d = boost::posix_time::microsec_clock::local_time() - start;
+  //start = boost::posix_time::microsec_clock::local_time();  
   
   if(moveRotUsed){
     for(long id=0; id<(long)size; id++){
@@ -248,13 +250,14 @@ void ForceContainer::sync(){
   
 
   synced=true; syncCount++;
-  std::cerr<<"force sync timings"<<boost::posix_time::to_iso_string(t1) <<" "
-			<<boost::posix_time::to_iso_string(t2) <<" "
-			<<boost::posix_time::to_iso_string(t3) <<" "
-			<<boost::posix_time::to_iso_string(t4) <<" "
-			<<boost::posix_time::to_iso_string(t4b) <<" "
-			<<boost::posix_time::to_iso_string(t4c) <<" "
-			<<boost::posix_time::to_iso_string(t4d) <<std::endl;
+// if(Omega::instance().getScene()->subdomain ==1){
+//  std::cerr<<"force sync timings"//<<boost::posix_time::to_iso_string(t1) <<" "
+//			<<boost::posix_time::to_iso_string(t2) <<" "
+//			<<boost::posix_time::to_iso_string(t3) <<" "
+//			<<boost::posix_time::to_iso_string(t4) <<" "
+//			<<boost::posix_time::to_iso_string(t4b) <<" "
+//			<<boost::posix_time::to_iso_string(t4c) <<" "
+//			<<boost::posix_time::to_iso_string(t4d) <<std::endl;}
 }
 
 #pragma GCC diagnostic push
