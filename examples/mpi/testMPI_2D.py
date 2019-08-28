@@ -29,16 +29,6 @@ NSTEPS=1000 #turn it >0 to see time iterations, else only initilization TODO!HAC
 #NSTEPS=50 #turn it >0 to see time iterations, else only initilization
 N=50; M=50; #(columns, rows) per thread
 
-if("-ms" in sys.argv):
-	sys.argv.remove("-ms")
-	mergeSplit=True
-else: mergeSplit=False
-
-if("-bc" in sys.argv):
-	sys.argv.remove("-bc")
-	bodyCopy=True
-else: bodyCopy=False
-
 #################
 # Check MPI world
 # This is to know if it was run with or without mpiexec (see preamble of this script)
@@ -109,16 +99,16 @@ else: #######  MPI  ######
 	mp.ERASE_REMOTE=True #erase bodies not interacting wit a given subdomain?
 	mp.OPTIMIZE_COM=True #L1-optimization: pass a list of double instead of a list of states
 	mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
-	mp.MERGE_SPLIT=mergeSplit
-	mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = bodyCopy and not mergeSplit
+	mp.MERGE_SPLIT=False
+	mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = True
 
 	mp.mpirun(NSTEPS)
-	print("num. bodies:",len([b for b in O.bodies]),len(O.bodies))
+	if rank<5: print("num. bodies:",len([b for b in O.bodies]),len(O.bodies))
 	if rank==0:
 		mp.mprint( "Total force on floor="+str(O.forces.f(WALL_ID)[1]))
 		collectTiming()
-	else: mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
-	mp.mergeScene()
-	if rank==0: O.save('mergedScene.yade')
+	elif rank<5: mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
+	#mp.mergeScene()
+	#if rank==0: O.save('mergedScene.yade')
 	mp.MPI.Finalize()
 exit()
