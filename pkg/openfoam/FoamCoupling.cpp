@@ -192,11 +192,17 @@ void FoamCoupling::resetProcList() {
 
 void FoamCoupling::action() {
 
-	if ( exchangeData()) {
-		runCoupling();
-		exchangeDeltaT();
+	if (!couplingModeParallel) {
+		if ( exchangeData()) {
+			runCoupling();
+			exchangeDeltaT();
+		}
+		setHydroForce();  
+	} else {
+
+		runCouplingParallel(); 
+
 	}
-	setHydroForce();
 }
 
 bool FoamCoupling::exchangeData(){
@@ -251,7 +257,6 @@ void FoamCoupling::getFluidDomainBbox() {
 	 PI_COMM_WORLD) -1, all yade ranks receive the min max of the fluid domains, and insert it to their body containers. The fluid subdomain bodies have subdomain=0, they are actually owned 
 	 by the master process (rank=0) in the yade communicator. */ 
 	
-	
 		
 	//get local comm size
 	MPI_Comm_size(scene->mpiComm, &localCommSize); 
@@ -304,19 +309,16 @@ void FoamCoupling::getFluidDomainBbox() {
 		
 	}
 	
-
 	std::cout << "recvd grid min max, rank = " <<  localRank  << std::endl; 
 	
 	commSizeSet = true; 
-	
-  
+	  
 }
 
 
 void FoamCoupling::buildSharedIdsMap(){
 	/*Builds the list of ids interacting with a fluid subdomain and stores those body ids that has intersections with several fluid domains. 
 	 sharedIdsMapIndx = a vector of std::pair<Body::id_t, std::map<fluidDomainId, indexOfthebodyinthefluidDomain aka index in flbdy-> bIds> > */
-	
 	std::cout << "In build shared Ids Map rank =  " <<  std::endl; 
 	const shared_ptr<Subdomain>& subd = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
 	for (int bodyId : subd->ids){
@@ -468,8 +470,6 @@ void FoamCoupling::sendIntersectionToFluidProcs(){
 		
 	}
 	
-	
-	
 }
 
 void FoamCoupling::sendBodyData(){
@@ -617,9 +617,6 @@ void FoamCoupling::getParticleForce(){
 
 }
 
-
-
-
 void FoamCoupling::resetCommunications(){
 	// clear the vector ids held fluidDomainBbox->bIds 
 	for (unsigned f = 0; f != fluidDomains.size(); ++f) {
@@ -652,9 +649,6 @@ void FoamCoupling::setParticleForce(){
 	
 }
 
-
-
-
 void FoamCoupling::exchangeDeltaTParallel() {
 
 	int masterFluid = 100; 
@@ -670,15 +664,11 @@ void FoamCoupling::exchangeDeltaTParallel() {
 }
 
 
-
-
 void FoamCoupling::runCouplingParallel(){
 	if (!commSizeSet){
 		getFluidDomainBbox(); // recieve the bbox of the fluid mesh. 
 	}
-	  
-	
-	  
+	  	
 	if (localRank > 0) {
 		buildSharedIdsMap(); 
 		sendIntersectionToFluidProcs(); 
@@ -699,6 +689,6 @@ void FoamCoupling::killMPI() {
 }
 
 
-
 }
+
 #endif
