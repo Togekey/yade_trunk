@@ -119,7 +119,8 @@ void GlobalStiffnessTimeStepper::findTimeStepFromBody(const shared_ptr<Body>& bo
 
 bool GlobalStiffnessTimeStepper::isActivated()
 {
-	return (active && ((!computedOnce) || (scene->iter % timeStepUpdateInterval == 0) || (scene->iter < (long int) 2) ));
+      return  (active && ((!computedOnce) || (scene->iter % timeStepUpdateInterval == 0) || (scene->iter < (long int) 2) ));
+	
 }
 
 void GlobalStiffnessTimeStepper::computeTimeStep(Scene* ncb)
@@ -147,24 +148,16 @@ void GlobalStiffnessTimeStepper::computeTimeStep(Scene* ncb)
 		computedOnce = true;}
 	else if (!computedOnce) scene->dt=defaultDt;
 	
-#ifdef YADE_MPI 
-	
-	if (parallelMode ){
-		Real testDt; 
-		//const shared_ptr<Subdomain>& subD = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
-		int pRank;
-		MPI_Comm_rank(scene->mpiComm,&pRank); 
-		Real inDt; 
-		if (pRank == 0) {inDt = Mathr::MAX_REAL; } else {inDt = scene->dt; }
-		if  (!computedOnce){
-			MPI_Allreduce(&inDt, &testDt, 1, MPI_DOUBLE,  MPI_MIN, MPI_COMM_WORLD);
-			scene->dt = testDt; 
-		}
-		
-	}
-	
-#endif
-	
+#ifdef YADE_MPI
+	int rnk; 
+	MPI_Comm_rank(scene->mpiComm,& rnk); 
+	if (scene->iter % timeStepUpdateInterval == 0){
+		Real recvDt; Real myDt = scene->dt; 
+		MPI_Allreduce(&myDt,&recvDt,1, MPI_DOUBLE,MPI_MIN,scene->mpiComm); 
+		scene->dt = recvDt;  
+	}	
+#endif 
+ 
 // 	LOG_INFO("computed timestep " << newDt <<
 // 			(scene->dt==newDt ? string(", applied") :
 // 			string(", BUT timestep is ")+boost::lexical_cast<string>(scene->dt))<<".");
