@@ -184,23 +184,6 @@ void ForceContainer::sync(){
   boost::mutex::scoped_lock lock(globalMutex);
   if(synced) return; // if synced meanwhile
 
-  for(int i=0; i<nThreads; i++){
-    if (_maxId[i] > 0) { ensureSize(_maxId[i],i);}
-  }
-  syncSizesOfContainers();
-  if (subdomainBodies.size()==0) {
-	shared_ptr<Scene> scene=Omega::instance().getScene();
-	for(long id=0; id<(long)scene->bodies->size(); id++){
-		if (Body::byId(id,scene).get() and Body::byId(id,scene)->subdomain == scene->subdomain) subdomainBodies.push_back(id);}
-  }
-  #pragma omp parallel for schedule(guided,100)
-  for(long k=0; k<(long)subdomainBodies.size(); k++){
-    long id=subdomainBodies[k];
-    Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
-    for(int thread=0; thread<nThreads; thread++){ sumF+=_forceData[thread][id]; sumT+=_torqueData[thread][id];}
-    _force[id]=sumF; _torque[id]=sumT;
-    if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
-  }
   syncSizesOfContainers();
   
 #ifdef YADE_MPI
@@ -219,7 +202,6 @@ void ForceContainer::sync(){
     _force[id]=sumF; _torque[id]=sumT;
     if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
   }
-
   if(moveRotUsed){
     for(long id=0; id<(long)size; id++){
       Vector3r sumM(Vector3r::Zero()), sumR(Vector3r::Zero());
@@ -266,13 +248,10 @@ void ForceContainer::reset(long iter, bool resetAll) {
 
 int w=0;
 void ForceContainer::reset(long iter, bool resetAll) {
-// 	std::cerr<<"O1"<<std::endl;
 	syncSizesOfContainers();
-// 	std::cerr<<"O2"<<std::endl;
 	const shared_ptr<Scene>& scene=Omega::instance().getScene();
 	scene->bodies->updateSubdomainLists();
 	const vector<Body::id_t>& sdIds = scene->bodies->boundedSubDBodies;
-// 	if (scene->subdomain==w)  std::cerr<<"("<<scene->subdomain<<")Z: "<<sizeOfThreads[0]<<" "<<size<<" "<<_maxId[0]<<" " <<sdIds.size()<<" "<< nThreads<<std::endl;
 	
 	size_t currSize=sdIds.size();
 	
@@ -288,38 +267,22 @@ void ForceContainer::reset(long iter, bool resetAll) {
 			for (unsigned long k=0;k<currSize;k++) _rotData[thread][sdIds[k]]=Vector3r::Zero();
 		}
 	}
-// 	if (scene->subdomain==w) std::cerr<<"("<<scene->subdomain<<")C: "<<" "<<size<<" "<<sdIds.size()<< " "<<size <<std::endl;
-	
-// 	size=0;
-// 	for(int thread=0; thread<nThreads; thread++) size=std::max(size,sizeOfThreads[thread]);
-// 	#pragma omp parallel for schedule(static)
-	
-// 	if (size > _force.size()) {
-// // 		std::cerr<<"RESIZING to "<<size<<std::endl;
-// 		_force.resize(size,Vector3r::Zero());
-// 		_torque.resize(size,Vector3r::Zero());
-// 		_permForce.resize(size,Vector3r::Zero());
-// 		_permTorque.resize(size,Vector3r::Zero());}
 	#pragma omp parallel for schedule(static)
 	for (unsigned long k=0;k<currSize;k++) _force[sdIds[k]]=Vector3r::Zero();
 	#pragma omp parallel for schedule(static)
 	for (unsigned long k=0;k<currSize;k++) _torque[sdIds[k]]=Vector3r::Zero();
-// 	if (scene->subdomain==w) std::cerr<<"("<<scene->subdomain<<")D: "<<std::endl;
 	if(moveRotUsed){
 		for (unsigned long k=0;k<size;k++) _move[k]=Vector3r::Zero();
 		for (unsigned long k=0;k<size;k++) _force[k]=Vector3r::Zero();
 	}
 	if (resetAll){
-// 		std::cerr<<"RESET ALL!!!!!! "<<std::endl;
 		for (unsigned long k=0;k<currSize;k++) _permForce[sdIds[k]]=Vector3r::Zero();
 		for (unsigned long k=0;k<currSize;k++) _permTorque[sdIds[k]]=Vector3r::Zero();
 		permForceUsed = false;
 	}
-// 	if (scene->subdomain==w) std::cerr<<"("<<scene->subdomain<<")E: "<<std::endl;
 	if (!permForceUsed) synced=true; else synced=false;
 	moveRotUsed=false;
 	lastReset=iter;
-// 	if (scene->subdomain==w) std::cerr<<"("<<scene->subdomain<<")F: "<<std::endl;
 }
 
 #endif
