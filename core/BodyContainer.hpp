@@ -76,8 +76,18 @@ class BodyContainer: public Serializable{
 		}
 		bool erase(Body::id_t id, bool eraseClumpMembers);
 		
+		#ifdef YADE_MPI
+		void updateSubdomainLists();
+		#endif
+		
 		YADE_CLASS_BASE_DOC_ATTRS(BodyContainer,Serializable,"Standard body container for a scene",
 		((ContainerT,body,,,"The underlying vector<shared_ptr<Body> >"))
+		#ifdef YADE_MPI
+		((vector<Body::id_t>,boundedSubDBodies,vector<Body::id_t>(),,"The list of bounded bodies in the subdomain"))
+		((vector<Body::id_t>,subdomainBodies,vector<Body::id_t>(),,"The list of bodies owned by the subdomain (scene.subdomain == body.subdomain)"))
+		((bool,subdomainListsNeedUpdate,true,,"true if the scene has up-to-date lists for boundedBodies and subdomainBodies, turned false after insertion/removal of bodies"))
+		#endif
+		
 		)
 
 	DECLARE_LOGGER;

@@ -12,6 +12,9 @@ CREATE_LOGGER(BodyContainer);
 
 void BodyContainer::clear(){
 	body.clear();
+#ifdef YADE_MPI
+	subdomainListsNeedUpdate=true;
+#endif
 }
 
 Body::id_t BodyContainer::insert(shared_ptr<Body> b){
@@ -20,6 +23,9 @@ Body::id_t BodyContainer::insert(shared_ptr<Body> b){
 	b->timeBorn=scene->time;
 	b->id=body.size();
 	scene->doSort = true;
+#ifdef YADE_MPI
+	subdomainListsNeedUpdate=true;
+#endif
 	body.push_back(b);
 	// Notify ForceContainer about new id
 	scene->forces.addMaxId(b->id);
@@ -29,6 +35,9 @@ Body::id_t BodyContainer::insert(shared_ptr<Body> b){
 Body::id_t BodyContainer::insertAtId(shared_ptr<Body> b, Body::id_t candidate){
 	assert(candidate>=0);
 	if(body[candidate] or unsigned(candidate)>=size()) {LOG_ERROR("invalid candidate id"); return -1;}
+#ifdef YADE_MPI
+	subdomainListsNeedUpdate=true;
+#endif
 	const shared_ptr<Scene>& scene=Omega::instance().getScene(); 
 	b->iterBorn=scene->iter;
 	b->timeBorn=scene->time;
@@ -40,6 +49,9 @@ Body::id_t BodyContainer::insertAtId(shared_ptr<Body> b, Body::id_t candidate){
 
 bool BodyContainer::erase(Body::id_t id, bool eraseClumpMembers){//default is false (as before)
 	if(!body[id]) return false;
+#ifdef YADE_MPI
+	subdomainListsNeedUpdate=true;
+#endif
 	const shared_ptr<Body>& b=Body::byId(id);
 	if ((b) and (b->isClumpMember())) {
 		const shared_ptr<Body> clumpBody=Body::byId(b->clumpId);
@@ -74,3 +86,23 @@ bool BodyContainer::erase(Body::id_t id, bool eraseClumpMembers){//default is fa
 	body[id].reset();
 	return true;
 }
+
+#ifdef YADE_MPI
+void BodyContainer::updateSubdomainLists(){
+	if (not subdomainListsNeedUpdate) return;
+	unsigned long size1=subdomainBodies.size();
+	unsigned long size2=boundedSubDBodies.size();
+	subdomainBodies.clear();
+	boundedSubDBodies.clear();
+	subdomainBodies.reserve((long unsigned)(size1*1.1));
+	boundedSubDBodies.reserve((long unsigned)(size2*1.1));
+	const int& subdomain = Omega::instance().getScene()->subdomain;
+	FOREACH(const shared_ptr<Body>& b, *(Omega::instance().getScene()->bodies)){
+		if (not b) continue;
+		if (b->subdomain == subdomain and not b->getIsSubdomain()) subdomainBodies.push_back(b->id);
+// 		if (b->subdomain == 0) zeroBodies.push_back(b->id);
+		if (b->isBounded()) boundedSubDBodies.push_back(b->id);
+	}
+	subdomainListsNeedUpdate=false;
+}
+#endif

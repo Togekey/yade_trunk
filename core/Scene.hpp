@@ -72,7 +72,7 @@ class Scene: public Serializable{
 		void postLoad(Scene&);
 
 		boost::posix_time::ptime prevTime; //Time value on the previous step
-
+		
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Scene,Serializable,"Object comprising the whole simulation.",
 		((Real,dt,1e-8,,"Current timestep for integration."))
 		((long,iter,0,Attr::readonly,"Current iteration (computational step) number"))
@@ -87,9 +87,9 @@ class Scene: public Serializable{
 		((bool,doSort,false,Attr::readonly,"Used, when new body is added to the scene."))
 		((bool,runInternalConsistencyChecks,true,Attr::hidden,"Run internal consistency check, right before the very first simulation step."))
 		((Body::id_t,selectedBody,-1,,"Id of body that is selected by the user"))
-#ifdef YADE_MPI
+	#ifdef YADE_MPI
 		((int,subdomain,0,,"the subdomain this scene is assigned in MPI/domain decomposition."))
-#endif
+	#endif
 		((vector<string>,tags,,,"Arbitrary key=value associations (tags like mp3 tags: author, date, version, description etc.)"))
 		((vector<shared_ptr<Engine> >,engines,,Attr::hidden,"Engines sequence in the simulation."))
 		((vector<shared_ptr<Engine> >,_nextEngines,,Attr::hidden,"Engines to be used from the next step on; is returned transparently by O.engines if in the middle of the loop (controlled by subStep>=0)."))

@@ -20,27 +20,34 @@ void ForceContainer::addTorqueUnsynced(Body::id_t id, const Vector3r& m) {
 }
 
 void ForceContainer::resizePerm(size_t newSize) {
-  _permForce.resize(newSize,Vector3r::Zero());
-  _permTorque.resize(newSize,Vector3r::Zero());
-  if (size<newSize) size=newSize;
-  syncedSizes=false;
+  if (newSize<_permForce.size()) LOG_WARN("permForce may have been assigned to an id larger than maxId, and will be ignored in that case");
+  if (newSize>_permForce.size()){
+    _permForce.reserve(size_t(1.3*newSize));
+    _permTorque.reserve(size_t(1.3*newSize));
+    _permForce.resize(newSize,Vector3r::Zero());
+    _permTorque.resize(newSize,Vector3r::Zero());
+    syncedSizes=false;}
 }
 
 #ifdef YADE_OPENMP
 #include <omp.h>
 void ForceContainer::ensureSize(Body::id_t id, int threadN) {
-  assert(nThreads>omp_get_thread_num());
-  const Body::id_t idMaxTmp = max(id, _maxId[threadN]);
-  _maxId[threadN] = 0;
-  if (threadN<0) {
-    resizePerm(min((size_t)1.5*(idMaxTmp+100),(size_t)(idMaxTmp+2000)));
-  } else if (sizeOfThreads[threadN]<=(size_t)idMaxTmp) {
-    resize(min((size_t)1.5*(idMaxTmp+100),(size_t)(idMaxTmp+2000)),threadN);
-  }
+// 	assert(id < size);
+// 	if (not (id < Body::id_t(size))) LOG_ERROR("ensureSize failed "<<threadN);
+// 	std::cerr<<"ensureZie(1)"<< Omega::instance().getScene()->subdomain<<" "<<Omega::instance().getScene()->iter <<" "<< id<<" "<<threadN<<std::endl;
+//   assert(nThreads>omp_get_thread_num());
+//   const Body::id_t idMaxTmp = max(id, _maxId[threadN]);
+	_maxId[threadN] = std::max( _maxId[threadN],id);
+// //   std::cerr<<"ensureZie(2) "<< Omega::instance().getScene()->subdomain<<" "<<Omega::instance().getScene()->iter <<" "<< threadN<<std::endl;
+  if (threadN<0) resizePerm(id+1);
+  else if (not (sizeOfThreads[threadN]>unsigned(_maxId[threadN]))) resize(_maxId[threadN]+1,threadN);
+  
+//   std::cerr<<"ensureZie(3) "<< Omega::instance().getScene()->subdomain<<" "<<Omega::instance().getScene()->iter <<" "<< threadN<<std::endl;
 }
 
 ForceContainer::ForceContainer() {
   nThreads=omp_get_max_threads();
+  size=0;
   for(int i=0; i<nThreads; i++){
     _forceData.push_back(vvector());
     _torqueData.push_back(vvector());
@@ -57,8 +64,8 @@ const Vector3r& ForceContainer::getForce(Body::id_t id) {
 }
 
 void ForceContainer::addForce(Body::id_t id, const Vector3r& f){
-  ensureSize(id,omp_get_thread_num());
-  synced=false;
+//   ensureSize(id,omp_get_thread_num());
+//   synced=false;
   _forceData[omp_get_thread_num()][id]+=f;
 }
 
@@ -68,8 +75,8 @@ const Vector3r& ForceContainer::getTorque(Body::id_t id) {
 }
 
 void ForceContainer::addTorque(Body::id_t id, const Vector3r& t) {
-  ensureSize(id,omp_get_thread_num());
-  synced=false;
+//   ensureSize(id,omp_get_thread_num());
+//   synced=false;
   _torqueData[omp_get_thread_num()][id]+=t;
 }
 
@@ -98,7 +105,7 @@ void ForceContainer::addRot(Body::id_t id, const Vector3r& r) {
 }
 
 void ForceContainer::addMaxId(Body::id_t id) {
-  _maxId[omp_get_thread_num()]=id;
+	_maxId[omp_get_thread_num()]=std::max(id,_maxId[omp_get_thread_num()]);
 }
 
 void ForceContainer::setPermForce(Body::id_t id, const Vector3r& f) {
@@ -169,56 +176,23 @@ const Vector3r ForceContainer::getRotSingle(Body::id_t id) {
   return ret;
 }
 
-static std::vector<long> subdomainBodies=std::vector<long>();
-
 void ForceContainer::sync(){
-	
-  //boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
   for(int i=0; i<nThreads; i++){
     if (_maxId[i] > 0) { synced = false;}
   }
   if(synced) return;
   boost::mutex::scoped_lock lock(globalMutex);
   if(synced) return; // if synced meanwhile
-  
-  //boost::posix_time::time_duration t1 = boost::posix_time::microsec_clock::local_time() - start;
-  //start = boost::posix_time::microsec_clock::local_time();  
-  
+
   for(int i=0; i<nThreads; i++){
     if (_maxId[i] > 0) { ensureSize(_maxId[i],i);}
   }
-  //boost::posix_time::time_duration t2 = boost::posix_time::microsec_clock::local_time() - start;
-  //start = boost::posix_time::microsec_clock::local_time();  
   syncSizesOfContainers();
-  //boost::posix_time::time_duration t3 = boost::posix_time::microsec_clock::local_time() - start;  
-  
- //start = boost::posix_time::microsec_clock::local_time(); 
- // for(long id=0; id<(long)size; id++){
- //   Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
- //   for(int thread=0; thread<nThreads; thread++){ sumF+=_forceData[thread][id]; sumT+=_torqueData[thread][id];}
- //   _force[id]=sumF; _torque[id]=sumT;
- //   if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
- // }
- // boost::posix_time::time_duration t4 = boost::posix_time::microsec_clock::local_time() - start;
- // start = boost::posix_time::microsec_clock::local_time();  
-    
-  //#pragma omp parallel for schedule(guided,100)
-  //for(long id=0; id<(long)size; id++){
-  //  Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
-  //  for(int thread=0; thread<nThreads; thread++){ sumF+=_forceData[thread][id]; sumT+=_torqueData[thread][id];}
-  //  _force[id]=sumF; _torque[id]=sumT;
-  //  if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
- // }
-  
-  //boost::posix_time::time_duration t4b = boost::posix_time::microsec_clock::local_time() - start;
-  //start = boost::posix_time::microsec_clock::local_time(); 
   if (subdomainBodies.size()==0) {
 	shared_ptr<Scene> scene=Omega::instance().getScene();
 	for(long id=0; id<(long)scene->bodies->size(); id++){
 		if (Body::byId(id,scene).get() and Body::byId(id,scene)->subdomain == scene->subdomain) subdomainBodies.push_back(id);}
   }
-  //boost::posix_time::time_duration t4 = boost::posix_time::microsec_clock::local_time() - start;
-  //start = boost::posix_time::microsec_clock::local_time();
   #pragma omp parallel for schedule(guided,100)
   for(long k=0; k<(long)subdomainBodies.size(); k++){
     long id=subdomainBodies[k];
@@ -227,19 +201,25 @@ void ForceContainer::sync(){
     _force[id]=sumF; _torque[id]=sumT;
     if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
   }
-  //boost::posix_time::time_duration t4c = boost::posix_time::microsec_clock::local_time() - start;
-  //start = boost::posix_time::microsec_clock::local_time();
+  syncSizesOfContainers();
   
-  //for(long k=0; k<(long)subdomainBodies.size(); k++){
-  //  long id=subdomainBodies[k];
-   // Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
-  //  for(int thread=0; thread<nThreads; thread++){ sumF+=_forceData[thread][id]; sumT+=_torqueData[thread][id];}
-   // _force[id]=sumF; _torque[id]=sumT;
-   // if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
-  //}
-  //boost::posix_time::time_duration t4d = boost::posix_time::microsec_clock::local_time() - start;
-  //start = boost::posix_time::microsec_clock::local_time();  
-  
+#ifdef YADE_MPI
+  Omega::instance().getScene()->bodies->updateSubdomainLists();
+  const vector<Body::id_t>& boundedSubDBodies = Omega::instance().getScene()->bodies->boundedSubDBodies;
+  const unsigned long len=(long)boundedSubDBodies.size();  
+  #pragma omp parallel for schedule(static)
+  for(unsigned long k=0; k<len; k++){
+	  const Body::id_t& id=boundedSubDBodies[k];
+#else
+  for(long id=0; id<(long)size; id++){
+#endif
+    Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
+    for(int thread=0; thread<nThreads; thread++){ sumF+=_forceData[thread][id]; sumT+=_torqueData[thread][id];
+	    _forceData[thread][id]=Vector3r::Zero(); _torqueData[thread][id]=Vector3r::Zero(); }  //reset here so we don't have to do it later
+    _force[id]=sumF; _torque[id]=sumT;
+    if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
+  }
+
   if(moveRotUsed){
     for(long id=0; id<(long)size; id++){
       Vector3r sumM(Vector3r::Zero()), sumR(Vector3r::Zero());
@@ -247,32 +227,23 @@ void ForceContainer::sync(){
       _move[id]=sumM; _rot[id]=sumR;
     }
   }
-  
-
   synced=true; syncCount++;
-// if(Omega::instance().getScene()->subdomain ==1){
-//  std::cerr<<"force sync timings"//<<boost::posix_time::to_iso_string(t1) <<" "
-//			<<boost::posix_time::to_iso_string(t2) <<" "
-//			<<boost::posix_time::to_iso_string(t3) <<" "
-//			<<boost::posix_time::to_iso_string(t4) <<" "
-//			<<boost::posix_time::to_iso_string(t4b) <<" "
-//			<<boost::posix_time::to_iso_string(t4c) <<" "
-//			<<boost::posix_time::to_iso_string(t4d) <<std::endl;}
 }
+
+#ifndef YADE_MPI
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpragmas"
 // this is to remove warning about manipulating raw memory
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
-
 void ForceContainer::reset(long iter, bool resetAll) {
   syncSizesOfContainers();
   for(int thread=0; thread<nThreads; thread++){
-    memset(&_forceData [thread][0],0,sizeof(Vector3r)*sizeOfThreads[thread]);
-    memset(&_torqueData[thread][0],0,sizeof(Vector3r)*sizeOfThreads[thread]);
+    memset(&_forceData [thread][0],0,sizeof(Vector3r)*sizeOfThreads[0]);
+    memset(&_torqueData[thread][0],0,sizeof(Vector3r)*sizeOfThreads[0]);
     if(moveRotUsed){
-      memset(&_moveData  [thread][0],0,sizeof(Vector3r)*sizeOfThreads[thread]);
-      memset(&_rotData   [thread][0],0,sizeof(Vector3r)*sizeOfThreads[thread]);
+      memset(&_moveData  [thread][0],0,sizeof(Vector3r)*sizeOfThreads[0]);
+      memset(&_rotData   [thread][0],0,sizeof(Vector3r)*sizeOfThreads[0]);
     }
   }
   memset(&_force [0], 0,sizeof(Vector3r)*size);
@@ -281,7 +252,7 @@ void ForceContainer::reset(long iter, bool resetAll) {
     memset(&_move  [0], 0,sizeof(Vector3r)*size);
     memset(&_rot   [0], 0,sizeof(Vector3r)*size);
   }
-  if (resetAll){
+  if (resetAll and permForceUsed){
     memset(&_permForce [0], 0,sizeof(Vector3r)*size);
     memset(&_permTorque[0], 0,sizeof(Vector3r)*size);
     permForceUsed = false;
@@ -290,16 +261,84 @@ void ForceContainer::reset(long iter, bool resetAll) {
   moveRotUsed=false;
   lastReset=iter;
 }
+
+#else
+
+int w=0;
+void ForceContainer::reset(long iter, bool resetAll) {
+// 	std::cerr<<"O1"<<std::endl;
+	syncSizesOfContainers();
+// 	std::cerr<<"O2"<<std::endl;
+	const shared_ptr<Scene>& scene=Omega::instance().getScene();
+	scene->bodies->updateSubdomainLists();
+	const vector<Body::id_t>& sdIds = scene->bodies->boundedSubDBodies;
+// 	if (scene->subdomain==w)  std::cerr<<"("<<scene->subdomain<<")Z: "<<sizeOfThreads[0]<<" "<<size<<" "<<_maxId[0]<<" " <<sdIds.size()<<" "<< nThreads<<std::endl;
+	
+	size_t currSize=sdIds.size();
+	
+	#pragma omp parallel for schedule(static)
+	for(int thread=0; thread<nThreads; thread++){
+		// no need to reset threads since they are set to zero in sync() already
+// 		for (unsigned long k=0;k<currSize;k++) _forceData[thread][sdIds[k]]= Vector3r::Zero();
+// 		if (scene->subdomain==w) std::cerr<<"("<<scene->subdomain<<")AB: "<<thread<<"  "<<sizeOfThreads[thread]<<" "<<sdIds.size()<<std::endl;
+// 		for (unsigned long k=0;k<currSize;k++) _torqueData[thread][sdIds[k]]=Vector3r::Zero();
+// 		if (scene->subdomain==w) std::cerr<<"("<<scene->subdomain<<")B: "<<thread<<" "<<sizeOfThreads[thread]<<" "<<sdIds.size()<<std::endl;
+		if(moveRotUsed){
+			for (unsigned long k=0;k<currSize;k++) _moveData[thread][sdIds[k]]=Vector3r::Zero();
+			for (unsigned long k=0;k<currSize;k++) _rotData[thread][sdIds[k]]=Vector3r::Zero();
+		}
+	}
+// 	if (scene->subdomain==w) std::cerr<<"("<<scene->subdomain<<")C: "<<" "<<size<<" "<<sdIds.size()<< " "<<size <<std::endl;
+	
+// 	size=0;
+// 	for(int thread=0; thread<nThreads; thread++) size=std::max(size,sizeOfThreads[thread]);
+// 	#pragma omp parallel for schedule(static)
+	
+// 	if (size > _force.size()) {
+// // 		std::cerr<<"RESIZING to "<<size<<std::endl;
+// 		_force.resize(size,Vector3r::Zero());
+// 		_torque.resize(size,Vector3r::Zero());
+// 		_permForce.resize(size,Vector3r::Zero());
+// 		_permTorque.resize(size,Vector3r::Zero());}
+	#pragma omp parallel for schedule(static)
+	for (unsigned long k=0;k<currSize;k++) _force[sdIds[k]]=Vector3r::Zero();
+	#pragma omp parallel for schedule(static)
+	for (unsigned long k=0;k<currSize;k++) _torque[sdIds[k]]=Vector3r::Zero();
+// 	if (scene->subdomain==w) std::cerr<<"("<<scene->subdomain<<")D: "<<std::endl;
+	if(moveRotUsed){
+		for (unsigned long k=0;k<size;k++) _move[k]=Vector3r::Zero();
+		for (unsigned long k=0;k<size;k++) _force[k]=Vector3r::Zero();
+	}
+	if (resetAll){
+// 		std::cerr<<"RESET ALL!!!!!! "<<std::endl;
+		for (unsigned long k=0;k<currSize;k++) _permForce[sdIds[k]]=Vector3r::Zero();
+		for (unsigned long k=0;k<currSize;k++) _permTorque[sdIds[k]]=Vector3r::Zero();
+		permForceUsed = false;
+	}
+// 	if (scene->subdomain==w) std::cerr<<"("<<scene->subdomain<<")E: "<<std::endl;
+	if (!permForceUsed) synced=true; else synced=false;
+	moveRotUsed=false;
+	lastReset=iter;
+// 	if (scene->subdomain==w) std::cerr<<"("<<scene->subdomain<<")F: "<<std::endl;
+}
+
+#endif
 #pragma GCC diagnostic pop
 
 void ForceContainer::resize(size_t newSize, int threadN) {
+  if (sizeOfThreads[threadN]>=newSize) return;
   LOG_DEBUG("Resize ForceContainer from the size "<<size<<" to the size "<<newSize);
-  _forceData [threadN].resize(newSize,Vector3r::Zero());
+  _forceData[threadN].reserve(size_t(newSize*1.3));
+  _torqueData[threadN].reserve(size_t(newSize*1.3));
+  _forceData[threadN].resize(newSize,Vector3r::Zero());
   _torqueData[threadN].resize(newSize,Vector3r::Zero());
-  _moveData[threadN].resize(newSize,Vector3r::Zero());
-  _rotData[threadN].resize(newSize,Vector3r::Zero());
+  if (moveRotUsed) {
+    _moveData[threadN].reserve(size_t(newSize*1.3));
+    _rotData[threadN].reserve(size_t(newSize*1.3));
+    _moveData[threadN].resize(newSize,Vector3r::Zero());
+    _rotData[threadN].resize(newSize,Vector3r::Zero());}
   sizeOfThreads[threadN] = newSize;
-  if (size<newSize) size=newSize;
+  _maxId[threadN]=newSize-1;
   syncedSizes=false;
 }
 
@@ -308,17 +347,26 @@ bool ForceContainer::getMoveRotUsed() const {return moveRotUsed;}
 bool ForceContainer::getPermForceUsed() const {return permForceUsed;}
 
 void ForceContainer::syncSizesOfContainers() {
+  //check whether all containers have equal length, and if not resize it  
+  size_t maxThreadSize = 0;
+  for(int i=0; i<nThreads; i++) maxThreadSize = std::max(maxThreadSize,size_t(_maxId[i]+1));
+  if (maxThreadSize>size) syncedSizes=false;
   if (syncedSizes) return;
-  //check whether all containers have equal length, and if not resize it
-  for(int i=0; i<nThreads; i++){
-    if (sizeOfThreads[i]<size) resize(size,i);
-  }
-  _force.resize(size,Vector3r::Zero());
-  _torque.resize(size,Vector3r::Zero());
-  _permForce.resize(size,Vector3r::Zero());
-  _permTorque.resize(size,Vector3r::Zero());
-  _move.resize(size,Vector3r::Zero());
-  _rot.resize(size,Vector3r::Zero());
+  size_t newSize = std::max(size,maxThreadSize);  
+  for(int i=0; i<nThreads; i++) resize(newSize,i);
+
+  if (newSize>size){
+	  _force.reserve(size_t(newSize*1.3));
+	  _torque.reserve(size_t(newSize*1.3));
+	  _force.resize(newSize,Vector3r::Zero());
+	  _torque.resize(newSize,Vector3r::Zero());}
+  if (permForceUsed) resizePerm(newSize);
+  if (moveRotUsed and _move.size()<newSize) {
+	  _move.reserve(size_t(newSize*1.3));
+	  _rot.reserve(size_t(newSize*1.3));
+	  _move.resize(size,Vector3r::Zero());
+	  _rot.resize(size,Vector3r::Zero());}
   syncedSizes=true;
+  size=newSize;
 }
 #endif

@@ -251,14 +251,9 @@ void Omega::loadSimulation(const string& f, bool quiet){
 	sceneFile=f;
 	timeInit();
 	
-	//Add zero-force to the youngest body to be sure ForceContainer is large enough.
-	const int _sz = scene->bodies->size();
-	for(Body::id_t _id=0; _id<_sz; _id++) {
-		if((&scene->bodies)[_id]) {
-			scene->forces.addForce(_id, Vector3r::Zero());
-			break;
-		}
-	}
+	//ForceContainer is not serialized, better prepare it with correct size here
+	//Assumption: maxId is size-1
+	scene->forces.addMaxId(scene->bodies->size()-1);
 	
 	if(!quiet) LOG_DEBUG("Simulation loaded");
 }
