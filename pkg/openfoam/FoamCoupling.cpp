@@ -199,9 +199,11 @@ void FoamCoupling::action() {
 		}
 		setHydroForce();  
 	} else {
-
-		runCouplingParallel(); 
-
+		if (exchangeData()) {
+			runCouplingParallel(); 
+			exchangeDeltaTParallel(); 
+		}
+		
 	}
 }
 
@@ -247,8 +249,6 @@ void FoamCoupling::runCoupling() {
 
 /***********parallel version *******/
 
-
-
 void FoamCoupling::getFluidDomainBbox() {
   
 	
@@ -257,12 +257,10 @@ void FoamCoupling::getFluidDomainBbox() {
 	 PI_COMM_WORLD) -1, all yade ranks receive the min max of the fluid domains, and insert it to their body containers. The fluid subdomain bodies have subdomain=0, they are actually owned 
 	 by the master process (rank=0) in the yade communicator. */ 
 	
-		
-	//get local comm size
+	//get local comm size and local rank. 
+	
 	MPI_Comm_size(scene->mpiComm, &localCommSize); 
 	MPI_Comm_rank(scene->mpiComm, &localRank); 
-	
-	std::cout << "local size and local rank = " << localCommSize << localRank << std::endl; 
 	
 	//world comm size and world rank 
 	
@@ -271,7 +269,7 @@ void FoamCoupling::getFluidDomainBbox() {
 	
 	commSzdff = abs(localCommSize-worldCommSize); 
 	
-	if (worldRank-localCommSize < 0 ) {stride = localCommSize; }
+	if (worldRank-localCommSize < 0 ) {stride = localCommSize; } else { stride = 0; }
 	
 	std::cout << "stride val = " << std::endl; 
 	
@@ -310,8 +308,8 @@ void FoamCoupling::getFluidDomainBbox() {
 	}
 	
 	std::cout << "recvd grid min max, rank = " <<  localRank  << std::endl; 
-	
 	commSizeSet = true; 
+	minMaxBuff.clear(); // dealloc the recvd minMaxBuff; 
 	  
 }
 
@@ -320,8 +318,8 @@ void FoamCoupling::buildSharedIdsMap(){
 	/*Builds the list of ids interacting with a fluid subdomain and stores those body ids that has intersections with several fluid domains. 
 	 sharedIdsMapIndx = a vector of std::pair<Body::id_t, std::map<fluidDomainId, indexOfthebodyinthefluidDomain aka index in flbdy-> bIds> > */
 	std::cout << "In build shared Ids Map rank =  " <<  std::endl; 
-	const shared_ptr<Subdomain>& subd = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
-	for (int bodyId : subd->ids){
+	// const shared_ptr<Subdomain>& subd = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); //not needed as we have localIds list. 
+	for (int bodyId : localIds){
 		std::map<int, int> testMap; 
 		const auto& bIntrs = (*scene->bodies)[bodyId]->intrs; 
 		for (const auto& itIntr : bIntrs){
@@ -381,7 +379,6 @@ int FoamCoupling::ifSharedId(const Body::id_t& testId){
 	
 }
 
-
 int FoamCoupling::ifSharedIdMap(const Body::id_t& testId){
 	int indx = 0; 
 	for (const auto& it : sharedIdsMapIndx){
@@ -440,7 +437,6 @@ bool FoamCoupling::ifDomainBodies(const shared_ptr<Body>& b) {
 	else {return false; }
 	 
 }
-
 
 void FoamCoupling::sendIntersectionToFluidProcs(){
 	
@@ -592,9 +588,10 @@ void FoamCoupling::verifyParticleDetection() {
 	
 }
 
-
 void FoamCoupling::getParticleForce(){
 	
+	//clear previous hForce vec. 
+	hForce.clear(); 
 	
 	for (const auto& fdId : fluidDomains){
 		const shared_ptr<Body>& flbdy  = (*scene->bodies)[fdId]; 
@@ -604,7 +601,6 @@ void FoamCoupling::getParticleForce(){
 			hForce.push_back(std::make_pair(flbox->domainRank, std::move(forceVec))); 
 		}
 	}
-	
 	for (auto& recvForce : hForce){
 		 std::vector<double>& tmpForce = recvForce.second; 
 		 int recvRank = recvForce.first; 
@@ -628,11 +624,11 @@ void FoamCoupling::resetCommunications(){
 	}
 	
 	sharedIdsMapIndx.clear(); 
-	hForce.clear(); 
+	//hForce.clear(); 
 }
 
 
-void FoamCoupling::setParticleForce(){
+void FoamCoupling::setParticleForceParallel(){
  	// add the force  
 	
 	for (const auto& rf : hForce){
@@ -651,22 +647,39 @@ void FoamCoupling::setParticleForce(){
 
 void FoamCoupling::exchangeDeltaTParallel() {
 
-	int masterFluid = 100; 
-	MPI_Recv(&fluidDt,1,MPI_DOUBLE,masterFluid,sendTag,MPI_COMM_WORLD,&status);
-	//bcast yadedt to others.
-// 	MPI_Bcast(&yadeDt,1,MPI_DOUBLE, rank, MPI_COMM_WORLD);
+	// Recv foamdt  first and broadcast;
+	
+	if (localRank == yadeMaster){
+		MPI_Status status; 
+		int fluidMaster = stride;
+		MPI_Recv(&foamDeltaT,1,MPI_DOUBLE,fluidMaster,TAG_FLUID_DT,MPI_COMM_WORLD,&status);
+	}
+	
+	//bcast  the fluidDt to all yade_procs. 
+	// Real  yadeDt = scene-> dt;
+	MPI_Bcast(&foamDeltaT,1,MPI_DOUBLE, yadeMaster, scene->mpiComm);
+	
+	//do a MPI_Allreduce (min) and get the minDt of all the yade procs.. 
+	Real myDt = scene->dt; Real yadeDt;
+	MPI_Allreduce(&myDt,&yadeDt,1, MPI_DOUBLE,MPI_MIN,scene->mpiComm);  
+	
+	
+	// send the minDt to fluid proc (master .. ) 
+	if (localRank == yadeMaster) {
+		int fluidMaster = stride; 
+		MPI_Send(&yadeDt, 1, MPI_DOUBLE, fluidMaster, TAG_YADE_DT, MPI_COMM_WORLD);  
+	}
+	  
 	// calculate the interval . TODO: to include hydrodynamic time scale if inertial in openfoam
 	// here -> hDeltaT = getViscousTimeScale();
-	
-	Real  yadeDt = scene-> dt;
-	dataExchangeInterval = (long int) ((yadeDt < foamDeltaT) ? foamDeltaT/yadeDt : 1);
+	dataExchangeInterval = (long int) ((yadeDt < foamDeltaT) ? foamDeltaT/yadeDt : 1);  
 
 }
 
 
 void FoamCoupling::runCouplingParallel(){
 	if (!commSizeSet){
-		getFluidDomainBbox(); // recieve the bbox of the fluid mesh. 
+		getFluidDomainBbox(); // recieve the bbox of the fluid mesh,  move this from here. 
 	}
 	  	
 	if (localRank > 0) {
@@ -676,11 +689,24 @@ void FoamCoupling::runCouplingParallel(){
 		verifyParticleDetection(); 
 		getParticleForce(); 
 		resetCommunications(); 
-		setParticleForce();   
+		setParticleForceParallel();   
 	}
 }
 
 
+void FoamCoupling::buildLocalIds(){
+	
+	if (bodyList.size() == 0) { LOG_ERROR("Ids for coupling has no been set, FAIL!"); return;   } 
+	const shared_ptr<Subdomain> subD =  YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
+	if (! subD) {LOG_ERROR("subdomain not found"); return; }  
+	for (const auto& testId : bodyList) {
+		std::vector<Body::id_t>::iterator iter = std::find(subD->ids.begin(), subD->ids.end(), testId); 
+		if (iter != subD->ids.end()){
+			localIds.push_back(*iter); 
+		}
+	}
+	
+}
 
 void FoamCoupling::killMPI() { 
 	castTerminate(); 
@@ -689,6 +715,9 @@ void FoamCoupling::killMPI() {
 }
 
 
+<<<<<<< 5e2d19c4894e3b4a39f1e0ddba7f9c18766a55b2
 }
 
+=======
+>>>>>>> some fixes and additions : get dt from fluid procs, build local list of ids from global input of ids list
 #endif
