@@ -65,7 +65,7 @@ const Vector3r& ForceContainer::getForce(Body::id_t id) {
 
 void ForceContainer::addForce(Body::id_t id, const Vector3r& f){
 //   ensureSize(id,omp_get_thread_num());
-//   synced=false;
+   synced=false;
   _forceData[omp_get_thread_num()][id]+=f;
 }
 
@@ -76,7 +76,7 @@ const Vector3r& ForceContainer::getTorque(Body::id_t id) {
 
 void ForceContainer::addTorque(Body::id_t id, const Vector3r& t) {
 //   ensureSize(id,omp_get_thread_num());
-//   synced=false;
+   synced=false;
   _torqueData[omp_get_thread_num()][id]+=t;
 }
 
@@ -177,9 +177,6 @@ const Vector3r ForceContainer::getRotSingle(Body::id_t id) {
 }
 
 void ForceContainer::sync(){
-  for(int i=0; i<nThreads; i++){
-    if (_maxId[i] > 0) { synced = false;}
-  }
   if(synced) return;
   boost::mutex::scoped_lock lock(globalMutex);
   if(synced) return; // if synced meanwhile
@@ -199,7 +196,7 @@ void ForceContainer::sync(){
     Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
     for(int thread=0; thread<nThreads; thread++){ sumF+=_forceData[thread][id]; sumT+=_torqueData[thread][id];
 	    _forceData[thread][id]=Vector3r::Zero(); _torqueData[thread][id]=Vector3r::Zero(); }  //reset here so we don't have to do it later
-    _force[id]=sumF; _torque[id]=sumT;
+    _force[id]+=sumF; _torque[id]+=sumT;
     if (permForceUsed) {_force[id]+=_permForce[id]; _torque[id]+=_permTorque[id];}
   }
   if(moveRotUsed){

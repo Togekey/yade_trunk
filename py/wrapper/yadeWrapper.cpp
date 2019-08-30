@@ -497,8 +497,8 @@ class pyForceContainer{
 	public:
 		pyForceContainer(shared_ptr<Scene> _scene): scene(_scene) { }
 		void checkId(long id){ if(id<0 || (size_t)id>=scene->bodies->size()){ PyErr_SetString(PyExc_IndexError, "Body id out of range."); py::throw_error_already_set(); /* never reached */ throw; } }
-		Vector3r force_get(long id, bool sync){  checkId(id); if (!sync) return scene->forces.getForceSingle(id); scene->forces.sync(); return scene->forces.getForce(id);}
-		Vector3r torque_get(long id, bool sync){ checkId(id); if (!sync) return scene->forces.getTorqueSingle(id); scene->forces.sync(); return scene->forces.getTorque(id);}
+		Vector3r force_get(long id, bool sync){  checkId(id); if (!sync and !scene->forces.synced) return scene->forces.getForceSingle(id); scene->forces.sync(); return scene->forces.getForce(id);}
+		Vector3r torque_get(long id, bool sync){ checkId(id); if (!sync and !scene->forces.synced) return scene->forces.getTorqueSingle(id); scene->forces.sync(); return scene->forces.getTorque(id);}
 		Vector3r move_get(long id){ checkId(id); return scene->forces.getMoveSingle(id); }
 		Vector3r rot_get(long id){ checkId(id); return scene->forces.getRotSingle(id); }
 		void force_add(long id, const Vector3r& f, bool permanent){  checkId(id); if (!permanent) scene->forces.addForce (id,f); else { LOG_WARN("O.forces.addF(...,permanent=True) is deprecated, use O.forces.setPermF(...) instead"); scene->forces.setPermForce (id,f); } }
