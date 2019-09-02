@@ -44,8 +44,8 @@ class FoamCoupling : public GlobalEngine {
 		const int TAG_SEARCH_RES = 1004; 
 		const int yadeMaster = 0; 
 		const int TAG_SZ_BUFF = 1003; 
-		const int TAG_FLUID_DT = 400;  
-		const int TAG_YADE_DT = 500; 
+		const int TAG_FLUID_DT = 1050;  
+		const int TAG_YADE_DT = 1060; 
 
   private:
     // some variables for MPI_Send/Recv 
@@ -120,6 +120,7 @@ class FoamCoupling : public GlobalEngine {
 		bool eraseId(int);
 		int getNumBodies(); 
 		std::vector<int> getIdList(); 
+		MPI_Comm *localComm; 
     
 		
 		
@@ -153,7 +154,7 @@ class FoamCoupling : public GlobalEngine {
 		void buildSharedIdsMap(); 
 		int ifSharedIdMap(const Body::id_t& ); 
 		bool commSizeSet;
-		bool couplingModeParallel = false; 
+		//bool couplingModeParallel = false; 
 		bool getCouplingMode(){return couplingModeParallel; }
 		void setCouplingMode(bool val){couplingModeParallel = val; } 
 		bool initDone; 
@@ -167,11 +168,11 @@ class FoamCoupling : public GlobalEngine {
     ((int,numParticles,1, , "number of particles in coupling."))
     ((double,particleDensity,1, , "particle Density")) //not needed  as this is set in foam  
     ((double,fluidDensity,1, ,"fluidDensity")) //not needed  as this is set in foam  
-    ((bool,parallelCoupling,false, ,"set true if Yade-MPI is being used. ")) 
+    ((bool,couplingModeParallel,false, ,"set true if Yade-MPI is being used. ")) 
     ,
     ,
     ,
-    .add_property("couplingModeParallel",&FoamCoupling::setCouplingMode,&FoamCoupling::getCouplingMode,"coupling mode : if true, parllel coupling between Yade & YALES2") 
+    //.add_property("couplingModeParallel",&FoamCoupling::setCouplingMode,&FoamCoupling::getCouplingMode,"coupling mode : if true, parllel coupling between Yade & YALES2") 
 //     .def("")
 //     .def("")
     .def("setIdList", &FoamCoupling::setIdList,boost::python::arg("bodyIdlist"), "list of body ids in hydroForce coupling. (links to :yref: `FoamCoupling::bodyList` vector, used to build particle data :yref:`FoamCoupling::particleData`. :yref:`FoamCoupling::particleData` contains the particle pos, vel, angvel, radius and this is sent to foam. )")
