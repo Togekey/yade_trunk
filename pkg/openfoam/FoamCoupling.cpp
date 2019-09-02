@@ -246,6 +246,9 @@ void FoamCoupling::getFluidDomainBbox() {
 	
 	//get local comm size and local rank. 
 	
+	//const shared_ptr<Subdomain>&  subD = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
+	
+	
 	MPI_Comm_size(scene->mpiComm, &localCommSize); 
 	MPI_Comm_rank(scene->mpiComm, &localRank); 
 	
@@ -258,8 +261,11 @@ void FoamCoupling::getFluidDomainBbox() {
 	
 	if (worldRank-localCommSize < 0 ) {stride = localCommSize; } else { stride = 0; }
 	
-	std::cout << "stride val = " << std::endl; 
-	
+	std::cout << "stride val = " << stride << std::endl; 
+	std::cout << "world Rank = " << worldRank << std::endl ;
+	std::cout << "local Rank = " << localRank << std::endl; 
+	std::cout << "local size = " << localCommSize << std::endl; 
+	std::cout << "commSize diff= " << commSzdff << std::endl; 
 	//std::vector<int> fluidRanks(szdff, -1); 
 	
 	// vector to hold the minMax buff 
@@ -378,7 +384,6 @@ int FoamCoupling::ifSharedIdMap(const Body::id_t& testId){
 
 bool FoamCoupling::ifFluidDomain(const Body::id_t&  testId ){
 	/* function to check if the body is fluidDomainBox*/ 
-	
 	const auto& iter = std::find(fluidDomains.begin(), fluidDomains.end(), testId);  
 	if (iter != fluidDomains.end()){return true; } else {return false;}
   
@@ -386,10 +391,10 @@ bool FoamCoupling::ifFluidDomain(const Body::id_t&  testId ){
 
 
 void FoamCoupling::buildLocalIds(){
-	
+	if (localRank == yadeMaster) { return; }  // master has no bodies. 
 	if (bodyList.size() == 0) { LOG_ERROR("Ids for coupling has no been set, FAIL!"); return;   } 
 	const shared_ptr<Subdomain> subD =  YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
-	if (! subD) {LOG_ERROR("subdomain not found"); return; }  
+	if (! subD) {LOG_ERROR("subdomain not found for local rank/ world rank  = "  << localRank << "   " << worldRank); return; }  
 	for (const auto& testId : bodyList) {
 		std::vector<Body::id_t>::iterator iter = std::find(subD->ids.begin(), subD->ids.end(), testId); 
 		if (iter != subD->ids.end()){
@@ -698,7 +703,8 @@ void FoamCoupling::runCouplingParallel(){
 		getFluidDomainBbox(); // recieve the bbox of the fluid mesh,  move this from here. 
 	}
 	  	
-	if (localRank > 0) {
+	if (localRank > yadeMaster) { // master proc does not take part in the coupling except for timestep exchange and  receiving the grid minmax 
+		buildLocalIds();
 		buildSharedIdsMap(); 
 		sendIntersectionToFluidProcs(); 
 		sendBodyData(); 
@@ -713,7 +719,7 @@ void FoamCoupling::runCouplingParallel(){
 
 void FoamCoupling::action() {
 
-	if ( ! couplingModeParallel){
+	if ( !couplingModeParallel){
 		if ( exchangeData()) {
 			runCoupling();
 			exchangeDeltaT();
