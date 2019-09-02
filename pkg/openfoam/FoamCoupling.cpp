@@ -127,12 +127,13 @@ for (unsigned int i=0; i <  bodyList.size(); ++i)
 
 void FoamCoupling::castNumParticle(int value) {
 	MPI_Bcast(&value, 1, MPI_INT, rank, MPI_COMM_WORLD);
+
 }
 
 
 void FoamCoupling::castTerminate() {
-  int value = 10; 
-  MPI_Bcast(&value, 1, MPI_INT, rank, MPI_COMM_WORLD);
+	int value = 10; 
+	MPI_Bcast(&value, 1, MPI_INT, rank, MPI_COMM_WORLD);
 
 }
 
@@ -207,11 +208,7 @@ void FoamCoupling::action() {
 	}
 }
 
-bool FoamCoupling::exchangeData(){
 
-	return scene->iter%dataExchangeInterval==0;
-
-}
 
 void FoamCoupling::exchangeDeltaT() {
 
@@ -234,16 +231,6 @@ Real FoamCoupling::getViscousTimeScale() {
 //  MPI_Allreduce(&dummy, &hDeltaT, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
 //
 	return 0;
-}
-
-void FoamCoupling::runCoupling() {
-	castParticle();
-	updateProcList();
-	if (isGaussianInterp){
-		sumHydroForce();
-	} else {
-		recvHydroForce();
-	}
 }
 
 
@@ -396,6 +383,22 @@ bool FoamCoupling::ifFluidDomain(const Body::id_t&  testId ){
 	if (iter != fluidDomains.end()){return true; } else {return false;}
   
 }
+
+
+void FoamCoupling::buildLocalIds(){
+	
+	if (bodyList.size() == 0) { LOG_ERROR("Ids for coupling has no been set, FAIL!"); return;   } 
+	const shared_ptr<Subdomain> subD =  YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
+	if (! subD) {LOG_ERROR("subdomain not found"); return; }  
+	for (const auto& testId : bodyList) {
+		std::vector<Body::id_t>::iterator iter = std::find(subD->ids.begin(), subD->ids.end(), testId); 
+		if (iter != subD->ids.end()){
+			localIds.push_back(*iter); 
+		}
+	}
+	
+}
+
 
 // void FoamCoupling::findIntersections(){
 // 	
@@ -613,7 +616,7 @@ void FoamCoupling::getParticleForce(){
 
 }
 
-void FoamCoupling::resetCommunications(){
+void FoamCoupling::resetFluidDomains(){
 	// clear the vector ids held fluidDomainBbox->bIds 
 	for (unsigned f = 0; f != fluidDomains.size(); ++f) {
 		const shared_ptr<Body>& fdomain = (*scene->bodies)[fluidDomains[f]]; 
@@ -628,7 +631,7 @@ void FoamCoupling::resetCommunications(){
 }
 
 
-void FoamCoupling::setParticleForceParallel(){
+void FoamCoupling::setHydroForceParallel(){
  	// add the force  
 	
 	for (const auto& rf : hForce){
@@ -677,6 +680,19 @@ void FoamCoupling::exchangeDeltaTParallel() {
 }
 
 
+void FoamCoupling::runCoupling() {
+  
+		castParticle();
+		updateProcList();
+		if (isGaussianInterp){
+			sumHydroForce();
+		} else {
+			recvHydroForce();
+		}
+}
+
+
+
 void FoamCoupling::runCouplingParallel(){
 	if (!commSizeSet){
 		getFluidDomainBbox(); // recieve the bbox of the fluid mesh,  move this from here. 
@@ -688,24 +704,34 @@ void FoamCoupling::runCouplingParallel(){
 		sendBodyData(); 
 		verifyParticleDetection(); 
 		getParticleForce(); 
-		resetCommunications(); 
-		setParticleForceParallel();   
+		resetFluidDomains(); 
+		//setParticleForceParallel();   
 	}
 }
 
 
-void FoamCoupling::buildLocalIds(){
-	
-	if (bodyList.size() == 0) { LOG_ERROR("Ids for coupling has no been set, FAIL!"); return;   } 
-	const shared_ptr<Subdomain> subD =  YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
-	if (! subD) {LOG_ERROR("subdomain not found"); return; }  
-	for (const auto& testId : bodyList) {
-		std::vector<Body::id_t>::iterator iter = std::find(subD->ids.begin(), subD->ids.end(), testId); 
-		if (iter != subD->ids.end()){
-			localIds.push_back(*iter); 
+
+void FoamCoupling::action() {
+
+	if ( ! couplingModeParallel){
+		if ( exchangeData()) {
+			runCoupling();
+			exchangeDeltaT();
 		}
+		setHydroForce();
+	} else { 
+		if( exchangeData()){
+			runCouplingParallel(); 
+			exchangeDeltaTParallel(); 
+		}
+		setHydroForceParallel(); 
 	}
-	
+}
+
+bool FoamCoupling::exchangeData(){
+
+	return scene->iter%dataExchangeInterval==0;
+
 }
 
 void FoamCoupling::killMPI() { 
@@ -715,9 +741,5 @@ void FoamCoupling::killMPI() {
 }
 
 
-<<<<<<< 5e2d19c4894e3b4a39f1e0ddba7f9c18766a55b2
 }
-
-=======
->>>>>>> some fixes and additions : get dt from fluid procs, build local list of ids from global input of ids list
 #endif
