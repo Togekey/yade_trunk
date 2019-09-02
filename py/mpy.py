@@ -81,6 +81,8 @@ AUTO_COLOR = True
 MINIMAL_INTERSECTIONS = False # Reduces the size of position/velocity comms (at the end of the colliding phase, we can exclude those bodies with no interactions besides body<->subdomain from intersections). 
 REALLOCATE_MINIMAL = False # if true, intersections are minimized before reallocations, hence minimizing the number of reallocated bodies
 fibreList = []
+foamCoupling = False 
+fluidBodies = [] 
 
 
 #tags for mpi messages
@@ -779,7 +781,11 @@ def splitScene():
 		O._sceneObj.subdomain = rank
 		O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 		
-		O.subD.init()
+		O.subD.init() 
+		
+		if FLUID_COUPLING:
+			fluidCoupling = utils.typedEngine('FoamCoupling') 
+			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes.
 		
 		parallelCollide()
 		
