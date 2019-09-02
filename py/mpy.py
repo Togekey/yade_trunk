@@ -39,7 +39,7 @@ this = sys.modules[__name__]
 
 commSplit = False
 worldComm = MPI.COMM_WORLD
-color = 1; key =1; 
+color = 1; key =0; 
 comm = worldComm.Split(color, key)
 rank = comm.Get_rank() 
 numThreads = comm.Get_size() 
@@ -664,8 +664,11 @@ def splitScene():
 		
 		if FLUID_COUPLING:
 			fluidCoupling = utils.typedEngine('FoamCoupling') 
-			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes.
-		
+			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes from all yales2 procs. 
+			if (fluidBodies) :  # incase fluidBodies are not set to the engine directly in the user script. 
+				fluidCoupling.setIdList(fluidBodies) 
+			#fluidCoupling.comm = comm 
+			
 		updateMirrorIntersections()
 		
 		idx = O.engines.index(utils.typedEngine("NewtonIntegrator"))
