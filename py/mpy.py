@@ -66,6 +66,9 @@ NUM_MERGES = 0
 LOAD_SIM = False # to enable restart of mpi simulations after O.load('sim')
 fibreList = []
 
+foamCoupling = False 
+fluidBodies = [] 
+
 #tags for mpi messages
 _SCENE_=11
 _SUBDOMAINSIZE_=12
@@ -686,7 +689,11 @@ def splitScene():
 		
 		if mit_mode or commSplit : O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 		
-		O.subD.init()
+		O.subD.init() 
+		
+		if FLUID_COUPLING:
+			fluidCoupling = utils.typedEngine('FoamCoupling') 
+			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes.
 		
 		updateMirrorIntersections()
 		
