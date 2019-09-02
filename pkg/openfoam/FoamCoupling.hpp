@@ -90,7 +90,7 @@ class FoamCoupling : public GlobalEngine {
     
 		void getRank(); 
 		void setNumParticles(int); 
-		void setIdList(const boost::python::list& );  
+		void setIdList(const std::vector<int>& );  
 		void killMPI(); 
 		void updateProcList();
 		void castParticle();
@@ -111,11 +111,17 @@ class FoamCoupling : public GlobalEngine {
 		int ifSharedId(const Body::id_t& ); 
 		bool checkSharedDomains(const int& ); 
 		int stride = 0; 
-		void resetCommunications(); 
+		void resetFluidDomains(); 
 		void runCouplingParallel(); 
-		void setParticleForceParallel(); 
+		void setHydroForceParallel(); 
 		void buildLocalIds(); 
 		void exchangeDeltaTParallel(); 
+		void insertBodyId(int); 
+		bool eraseId(int);
+		int getNumBodies(); 
+		std::vector<int> getIdList(); 
+    
+		
 		
 		virtual void action(); 
 		virtual ~FoamCoupling(){}; 
@@ -130,7 +136,7 @@ class FoamCoupling : public GlobalEngine {
 		std::vector<std::pair<int, std::map<int, int> > > sharedIdsMapIndx; 
 		std::vector<std::pair<int, std::vector<double>> > hForce; 
 		std::vector<Body::id_t> localIds; // 'local', those Ids in the present subdomain  that are in coupling, used in parallel mode. 
-		Real fluidDt; 
+		
 		//std::vector<int> intrFluidRanks; 
 		
 		Real foamDeltaT; 
@@ -149,7 +155,8 @@ class FoamCoupling : public GlobalEngine {
 		bool commSizeSet;
 		bool couplingModeParallel = false; 
 		bool getCouplingMode(){return couplingModeParallel; }
-		void setCouplingMode(bool val){couplingModeParallel = val; }
+		void setCouplingMode(bool val){couplingModeParallel = val; } 
+		bool initDone; 
       
     YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(FoamCoupling,GlobalEngine, "An engine for coupling Yade with the finite volume fluid solver OpenFOAM in parallel." " \n Requirements : Yade compiled with MPI libs, OpenFOAM-6 (openfoam is not required for compilation)." "Yade is executed under MPI environment with OpenFOAM simultaneously, and using MPI communication  routines data is exchanged between the solvers."
    " \n \n 1. Yade broadcasts the particle data -> position, velocity, ang-velocity, radius to all the foam processes as in :yref:`castParticle <FoamCoupling::castParticle>` \n"
@@ -164,7 +171,9 @@ class FoamCoupling : public GlobalEngine {
     ,
     ,
     ,
-    .add_property("couplingModeParallel",&FoamCoupling::setCouplingMode,&FoamCoupling::getCouplingMode,"coupling mode : if true, parllel coupling between Yade & YALES2")
+    .add_property("couplingModeParallel",&FoamCoupling::setCouplingMode,&FoamCoupling::getCouplingMode,"coupling mode : if true, parllel coupling between Yade & YALES2") 
+//     .def("")
+//     .def("")
     .def("setIdList", &FoamCoupling::setIdList,boost::python::arg("bodyIdlist"), "list of body ids in hydroForce coupling. (links to :yref: `FoamCoupling::bodyList` vector, used to build particle data :yref:`FoamCoupling::particleData`. :yref:`FoamCoupling::particleData` contains the particle pos, vel, angvel, radius and this is sent to foam. )")
     .def("getRank", &FoamCoupling::getRank, "Initiallize MPI communicator for coupling. Should be called at the beginning of the script. :yref: `initMPI <FoamCoupling::initMPI>` Initializes  the MPI environment. " )
     .def("killMPI", &FoamCoupling::killMPI, "Destroy MPI, to be called at the end of the simulation, from :yref:`killMPI<FoamCoupling::killMPI>`") 
