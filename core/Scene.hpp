@@ -101,6 +101,7 @@ class Scene: public Serializable{
 		((std::vector<Body::id_t>,subdomainIds,vector<Body::id_t>(),,"Body ids of subdomains"))
 		((Body::id_t,thisSubdomainId,-1,,"Id of the subdomain handling the current process" ))
 		
+		
 #endif
 		((vector<string>,tags,,,"Arbitrary key=value associations (tags like mp3 tags: author, date, version, description etc.)"))
 		((vector<shared_ptr<Engine> >,engines,,Attr::hidden,"Engines sequence in the simulation."))
