@@ -147,7 +147,9 @@ void GlobalStiffnessTimeStepper::computeTimeStep(Scene* ncb)
 #ifdef YADE_MPI
 	int rnk; 
 	if (parallelMode){
-		MPI_Comm_rank(scene->mpiComm,& rnk); 
+	  
+		//const shared_ptr<Subdomain> & subD = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
+		MPI_Comm_rank(scene->mpiComm ,& rnk); 
 		if (scene->iter % timeStepUpdateInterval == 0){
 			Real recvDt; Real myDt = scene->dt; 
 			MPI_Allreduce(&myDt,&recvDt,1, MPI_DOUBLE,MPI_MIN,scene->mpiComm); 
