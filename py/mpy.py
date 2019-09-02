@@ -39,7 +39,7 @@ this = sys.modules[__name__]
 
 commSplit = False
 worldComm = MPI.COMM_WORLD
-color = 1; key =1; 
+color = 1; key =0; 
 comm = worldComm.Split(color, key)
 rank = comm.Get_rank() 
 numThreads = comm.Get_size() 
