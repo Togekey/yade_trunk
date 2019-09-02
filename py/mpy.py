@@ -71,6 +71,8 @@ REALLOCATE_FREQUENCY = 0  # if >0 checkAndCollide() will automatically reallocat
 REALLOCATE_FILTER = None # pointer to filtering function, will be set to 'medianFilter' hereafter, could point to other ones if implemented
 AUTO_COLOR = True
 fibreList = []
+foamCoupling = False 
+fluidBodies = [] 
 
 
 #tags for mpi messages
@@ -680,7 +682,11 @@ def splitScene():
 		O._sceneObj.subdomain = rank
 		if mit_mode or commSplit : O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 		
-		O.subD.init()
+		O.subD.init() 
+		
+		if FLUID_COUPLING:
+			fluidCoupling = utils.typedEngine('FoamCoupling') 
+			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes.
 		
 		parallelCollide()
 		
