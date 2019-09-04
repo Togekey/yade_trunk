@@ -22,7 +22,9 @@
 namespace yade { // Cannot have #include directive inside.
 
 class Scene; 
-
+class Subdomain; 
+class Interaction; 
+class BodyContainer; 
 // class particleContainer{
 // 	public: 
 // 		std::vector<double> particleData;
@@ -114,7 +116,7 @@ class FoamCoupling : public GlobalEngine {
 		bool ifFluidDomain(const Body::id_t& );
 		int ifSharedId(const Body::id_t& ); 
 		bool checkSharedDomains(const int& ); 
-		int stride = 0; 
+		int stride;  
 		void resetFluidDomains(); 
 		void runCouplingParallel(); 
 		void setHydroForceParallel(); 
@@ -124,10 +126,20 @@ class FoamCoupling : public GlobalEngine {
 		bool eraseId(int);
 		int getNumBodies(); 
 		std::vector<int> getIdList(); 
-		MPI_Comm *localComm; 
+		MPI_Comm *myComm_p; 
     
-		
-		
+		MPI_Comm selfComm() {if (myComm_p) return *myComm_p; else return MPI_COMM_WORLD;}
+	
+		// pass python-generated communicator to the c++ side
+		// inspired by https://bitbucket.org/mpi4py/mpi4py/src/master/demo/wrap-boost/helloworld.cxx
+		void setMyComm(boost::python::object py_comm) {
+			if (import_mpi4py() < 0) return;// must be somewhere to initialize mpi4py in c++, else segfault
+			PyObject* py_obj = py_comm.ptr();
+			myComm_p = PyMPIComm_Get(py_obj);
+			if (myComm_p == NULL) LOG_ERROR("invalid COMM received from Python");
+		}
+		PyObject* getMyComm() {	return PyMPIComm_New(*myComm_p);}
+
 		virtual void action(); 
 		virtual ~FoamCoupling(){}; 
 		
@@ -155,6 +167,7 @@ class FoamCoupling : public GlobalEngine {
 		void sendBodyData(); 
 		void sendIntersectionToFluidProcs(); 
 		int commSzdff; 
+		int otherCommSz; 
 		void buildSharedIdsMap(); 
 		int ifSharedIdMap(const Body::id_t& ); 
 		bool commSizeSet;
@@ -190,7 +203,8 @@ class FoamCoupling : public GlobalEngine {
     .def("getIdList", &FoamCoupling::getIdList, "get the ids of bodies in coupling")
     .def_readonly("foamDeltaT", &FoamCoupling::foamDeltaT, "timestep in openfoam solver from  :yref:`exchangeDeltaT <FoamCoupling::exchangeDeltaT>` ") 
     .def_readonly("dataExchangeInterval", &FoamCoupling::dataExchangeInterval, "Number of iterations/substepping : for stability and to be in sync with fluid solver calculated in :yref:`exchangeDeltaT <FoamCoupling::exchangeDeltaT>`")
-    .def_readwrite("isGaussianInterp", &FoamCoupling::isGaussianInterp, "switch for Gaussian interpolation of field varibles in openfoam. Uses  :yref:`sumHydroForce<FoamCoupling::sumHydroForce>` to obtain hydrodynamic force ") 
+    .def_readwrite("isGaussianInterp", &FoamCoupling::isGaussianInterp, "switch for Gaussian interpolation of field varibles in openfoam. Uses  :yref:`sumHydroForce<FoamCoupling::sumHydroForce>` to obtain hydrodynamic force ")
+    .add_property("comm",&FoamCoupling::getMyComm,&FoamCoupling::setMyComm,"Communicator to be used for MPI (converts mpi4py comm <-> c++ comm)")
     )
 	// clang-format on
     DECLARE_LOGGER; 
