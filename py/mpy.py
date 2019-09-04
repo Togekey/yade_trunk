@@ -751,6 +751,8 @@ def splitScene():
 
 			#tell the collider how to handle this new thing
 			collider.boundDispatcher.functors=collider.boundDispatcher.functors+[Bo1_Subdomain_Aabb()]
+			if FLUID_COUPLING: 
+				collider.boundDispatcher.functors = collider.boundDispatcher.functors+[Bo1_FluidDomainBbox_Aabb()]
 			collider.targetInterv=0
 			collider.keepListsShort=True # probably not needed, O.bodies.insertAtId should turn it on automaticaly 
 			O.bodies.useRedirection=True # idem
@@ -777,11 +779,13 @@ def splitScene():
 				if domainBody==None: wprint("SUBDOMAIN NOT FOUND FOR RANK=",rank)
 				O.subD = domainBody.shape
 				O.subD.subdomains = subdomains
-		
+				
 		O._sceneObj.subdomain = rank
 		O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 		
 		O.subD.init() 
+		
+		wprint("LEN OF BODIES BEFORE FLUID COUPLING = ", len(O.bodies))
 		
 		if FLUID_COUPLING:
 			fluidCoupling = utils.typedEngine('FoamCoupling') 
