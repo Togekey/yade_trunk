@@ -644,8 +644,9 @@ def splitScene():
 			
 			if not LOAD_SIM:
 				collider.boundDispatcher.functors=collider.boundDispatcher.functors+[Bo1_Subdomain_Aabb()]
+				if FLUID_COUPLING: 
+					collider.boundDispatcher.functors = collider.boundDispatcher.functors+[Bo1_FluidDomainBbox_Aabb()]
 				collider.targetInterv=0
-				
 				#BEGIN Garbage (should go to some init(), usually done in collider.__call__() but in the mpi case we want to collider.boundDispatcher.__call__() before collider.__call__()
 				collider.boundDispatcher.sweepDist=collider.verletDist;
 				collider.boundDispatcher.minSweepDistFactor=collider.minSweepDistFactor;
@@ -691,13 +692,19 @@ def splitScene():
 		
 		O.subD.init() 
 		
+		wprint("LEN OF BODIES BEFORE FLUID COUPLING = ", len(O.bodies))
+		
 		if FLUID_COUPLING:
 			fluidCoupling = utils.typedEngine('FoamCoupling') 
+			ids = fluidCoupling.getIdList()
+			fluidCoupling.comm = comm 
 			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes from all yales2 procs. 
-			if (fluidBodies) :  # incase fluidBodies are not set to the engine directly in the user script. 
-				fluidCoupling.setIdList(fluidBodies) 
-			#fluidCoupling.comm = comm 
+			fluidCoupling.setIdList(fluidBodies) 
+			#if (fluidBodies) :  # incase fluidBodies are not set to the engine directly in the user script. 
 			
+			
+		wprint("LEN OF BODIES AFTER FLUID COUPLING =  ", len(O.bodies))
+		
 		updateMirrorIntersections()
 		
 		if not LOAD_SIM:
@@ -716,7 +723,6 @@ def splitScene():
 		LOAD_SIM = False
 		
 
-	
 	else: 
 		if (DOMAIN_DECOMPOSITION and RESET_SUBDOMAINS_WHEN_COLLIDE):
 			if rank == 0:
