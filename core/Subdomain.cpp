@@ -147,7 +147,7 @@ void Subdomain::getRankSize() {
 	    std::cout << "In subdomains -->  local commsize = " << commSize << std::endl; 
 	    ranksSet = true; 
 	    shared_ptr<Scene> scene = Omega::instance().getScene(); 
-	    scene->mpiComm = selfComm(); 
+	    scene->mpiComm = myComm_p; 
 	  } else {return; }
 }
 
