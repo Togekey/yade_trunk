@@ -269,6 +269,10 @@ void FoamCoupling::getFluidDomainBbox() {
 	
 	stride = localCommSize; 
 /*
+	todo : allow running as
+	mpiexec -n 4 ./yade script.py : -n 5 ./y2test 
+	and 
+	mpiexec -n 5 ./y2test : -n 5 ./yade (both ways)
 	if (localRank == 0) {
 
 		if (worldRank >  0) {stride = 0 ;}  else {stride = localCommSize; }
@@ -343,7 +347,7 @@ void FoamCoupling::buildSharedIdsMap(){
 				flbox->bIds.push_back(bodyId); 
 				flbox->hasIntersection = true; 
 				int indx = flbox->bIds.size()-1; 
-				testMap.insert(std::make_pair(flbox->domainRank,indx)); // get the fluiddomainbbox rank and index in flbody->bIds, this will be used in the verifyTracking function 
+				testMap.insert(std::make_pair(otherId,indx)); // get the fluiddomainbbox body id and index in flbody->bIds, this will be used in the verifyTracking function 
 				
 			}
 		}
@@ -551,7 +555,7 @@ void FoamCoupling::verifyParticleDetection() {
 	 if fail is found : see if this id is a sharedid. if not this particle has been 'lost'. if shared id :  check the vector of verifyTracking of the intersecting fluid domain till found in 
 	 at least one intersecting fluid box. if not particle has been lost. */ 
 	
-	//std::map<int, std::vector<int> > verifyTracking;  //vector containing domainRank, vector of "found/misses" for each body, miss = 0, found = 1 (we cannot use bool in MPI  ).  
+	//std::map<int, std::vector<int> > verifyTracking;  //vector containing domainRank, vector of "found/misses" for each body, miss = -1, found = 1 (we cannot use bool in MPI  ).  
 	std::vector<std::pair<int, std::vector<int>> > verifyTracking; 
 	for (unsigned int  f=0; f != fluidDomains.size(); ++f) {
 		const shared_ptr<Body>& flbdy  = (*scene->bodies)[fluidDomains[f]]; 
@@ -574,12 +578,11 @@ void FoamCoupling::verifyParticleDetection() {
 	
 	
 	//check for misses 
-	
-	std::map<Body::id_t, bool> unFoundSharedIds; 
-	//std::vector<std::pair<int, std::map<int,int>> > unFoundSharedIds; 
-	
+	std::vector<Body::id_t> unFoundSharedIds; 
 	for (const auto& vt : verifyTracking){
 		const int& flBdyIndx = abs(vt.first-stride); 
+		std::cout << "fluid rank = " << vt.first << std::endl;  
+		std::cout << "flbdy index = " << flBdyIndx << "  my rank = " << localRank << std::endl;  
 		const shared_ptr<FluidDomainBbox>& flbody = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fluidDomains[flBdyIndx]]->shape); 
 		int bIndx = 0; 
 		for (const auto& val : vt.second){
@@ -592,6 +595,9 @@ void FoamCoupling::verifyParticleDetection() {
 					const Vector3r& pos = (*scene->bodies)[testId]->state->pos; 
 					LOG_ERROR("Particle ID  = " << testId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain");
 					LOG_ERROR("local rank = " << localRank << "fluid Rank = " << vt.first);  
+				} else {
+					Body::id_t unfoundId = testId; 
+					unFoundSharedIds.push_back(unfoundId); 
 				}
 			}
 			++bIndx; 
@@ -599,29 +605,51 @@ void FoamCoupling::verifyParticleDetection() {
 	} 
 	
 	// check if the 'sharedIds' has been located in any of the fluid procs. 
-	
-	for (const auto& idPair : sharedIdsMapIndx){
-		const auto& bodyId = idPair.first; 
-		const int& mpSz = idPair.second.size(); 
-		int count = 0;  bool found = false; 
-		for (const auto& fdIndx : idPair.second){
-			for (unsigned int j =0; j != verifyTracking.size(); ++j){
-				if (fdIndx.first == abs(verifyTracking[j].first-stride)){
-					const std::vector<int>& vtVec = verifyTracking[j].second; 
-					if (vtVec[fdIndx.second] > 0) {found = true; }
+	if (unFoundSharedIds.size() > 0) {
+		for (const auto& idPair : sharedIdsMapIndx){
+			const auto& bodyId = idPair.first; 
+			//const int mpSz = idPair.second.size(); 
+			bool found = false; 
+			for (const auto& fdIndx : idPair.second){
+				const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fdIndx.first]->shape); 
+				for (const auto& vt : verifyTracking){
+					if (vt.first == flbox->domainRank){
+						if (vt.second[fdIndx.second] > 0) found = true; 
+					}
 				}
 			}
-			++count; 
-		}
-		if ( (count == mpSz) && (!found) ) {
-			const Vector3r& pos = (*scene->bodies)[bodyId]->state->pos; 
-			
-			LOG_ERROR("Particle ID (SHARED ID )  = " << bodyId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain");
-			LOG_ERROR("lost particle proc rank (YADE) = " << localRank);  
-			//LOG_ERROR("local rank = " << localRank << "fluid Rank = " << vt.first);  
+			if (! found) {
+				const Vector3r& pos = (*scene->bodies)[bodyId]->state->pos; 
+				LOG_ERROR("Particle ID (SHARED ID )  = " << bodyId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain" << " lost particle in proc " << localRank);
+			}
 		}
 	}
 	
+	
+/*	
+	if (unFoundSharedIds.size() > 0) {
+		for (const auto& idPair : sharedIdsMapIndx){
+			const auto& bodyId = idPair.first; 
+			const int& mpSz = idPair.second.size(); 
+			int count = 0;  bool found = false; 
+			for (const auto& fdIndx : idPair.second){
+				std::cout << "fd indexes = " << fdIndx << std::endl; 
+				for (unsigned int j =0; j != verifyTracking.size(); ++j){
+					if (fdIndx.first == abs(verifyTracking[j].first-stride)){
+						const std::vector<int>& vtVec = verifyTracking[j].second; 
+						if (vtVec[fdIndx.second] > 0) {found = true; }
+					}
+				}
+				++count; 
+			}
+			if ( (count == mpSz) && (!found) ) {
+				const Vector3r& pos = (*scene->bodies)[bodyId]->state->pos; 
+				
+				LOG_ERROR("Particle ID (SHARED ID )  = " << bodyId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain" << " lost particle in proc " << localRank);
+				//LOG_ERROR("local rank = " << localRank << "fluid Rank = " << vt.first);  
+			}
+		}
+	}*/
 }
 
 void FoamCoupling::getParticleForce(){
@@ -661,14 +689,6 @@ void FoamCoupling::resetFluidDomains(){
 	//hForce.clear(); 
 }
 
-
-/*
-void FoamCoupling::setHydroForceParallel(){
-	if (localRank == yadeMaster) {return; }
-	
-	
-	
-}*/
 
 
 void FoamCoupling::setHydroForceParallel(){
