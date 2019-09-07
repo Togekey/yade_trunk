@@ -316,7 +316,9 @@ def unboundRemoteBodies():
 	Turn bounding boxes on/off depending on rank
 	'''
 	for b in O.bodies:# unbound the bodies assigned to workers (not interacting directly with other bodies in master scene)
-		if not b.isSubdomain and b.subdomain!=rank:
+		if (not(b.isSubdomain or isinstance(b.shape, FluidDomainBbox)) and b.subdomain!=rank):
+			#if b: 
+			#	if (isinstance(b.shape,FluidDomainBbox)):continue 
 			b.bounded=False
 			b.bound=None
 			
