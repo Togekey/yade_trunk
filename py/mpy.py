@@ -39,7 +39,7 @@ this = sys.modules[__name__]
 
 commSplit = False
 worldComm = MPI.COMM_WORLD
-color = 1; key =0; 
+color = 3; key =0; 
 comm = worldComm.Split(color, key)
 rank = comm.Get_rank() 
 numThreads = comm.Get_size() 
@@ -65,8 +65,7 @@ decompose_fibres = False
 NUM_MERGES = 0 
 LOAD_SIM = False # to enable restart of mpi simulations after O.load('sim')
 fibreList = []
-
-foamCoupling = False 
+FLUID_COUPLING = False
 fluidBodies = [] 
 
 #tags for mpi messages
@@ -316,7 +315,8 @@ def unboundRemoteBodies():
 	Turn bounding boxes on/off depending on rank
 	'''
 	for b in O.bodies:# unbound the bodies assigned to workers (not interacting directly with other bodies in master scene)
-		if (not(b.isSubdomain or isinstance(b.shape, FluidDomainBbox)) and b.subdomain!=rank):
+		if (not (b.isSubdomain or isinstance(b.shape, FluidDomainBbox)) and b.subdomain!=rank):
+		
 			#if b: 
 			#	if (isinstance(b.shape,FluidDomainBbox)):continue 
 			b.bounded=False
