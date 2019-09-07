@@ -39,7 +39,7 @@ this = sys.modules[__name__]
 
 commSplit = False
 worldComm = MPI.COMM_WORLD
-color = 1; key =0; 
+color = 3; key =0; 
 comm = worldComm.Split(color, key)
 rank = comm.Get_rank() 
 numThreads = comm.Get_size() 
@@ -71,7 +71,7 @@ REALLOCATE_FREQUENCY = 0  # if >0 checkAndCollide() will automatically reallocat
 REALLOCATE_FILTER = None # pointer to filtering function, will be set to 'medianFilter' hereafter, could point to other ones if implemented
 AUTO_COLOR = True
 fibreList = []
-foamCoupling = False 
+FLUID_COUPLING = False
 fluidBodies = [] 
 
 
@@ -330,7 +330,8 @@ def unboundRemoteBodies():
 	Turn bounding boxes on/off depending on rank
 	'''
 	for b in O.bodies:# unbound the bodies assigned to workers (not interacting directly with other bodies in master scene)
-		if (not(b.isSubdomain or isinstance(b.shape, FluidDomainBbox)) and b.subdomain!=rank):
+		if (not (b.isSubdomain or isinstance(b.shape, FluidDomainBbox)) and b.subdomain!=rank):
+		
 			#if b: 
 			#	if (isinstance(b.shape,FluidDomainBbox)):continue 
 			b.bounded=False
