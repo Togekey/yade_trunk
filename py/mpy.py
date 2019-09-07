@@ -81,7 +81,7 @@ AUTO_COLOR = True
 MINIMAL_INTERSECTIONS = False # Reduces the size of position/velocity comms (at the end of the colliding phase, we can exclude those bodies with no interactions besides body<->subdomain from intersections). 
 REALLOCATE_MINIMAL = False # if true, intersections are minimized before reallocations, hence minimizing the number of reallocated bodies
 fibreList = []
-foamCoupling = False 
+FLUID_COUPLING = False
 fluidBodies = [] 
 
 
@@ -421,7 +421,8 @@ def unboundRemoteBodies():
 	Turn bounding boxes on/off depending on rank
 	'''
 	for b in O.bodies:# unbound the bodies assigned to workers (not interacting directly with other bodies in master scene)
-		if (not(b.isSubdomain or isinstance(b.shape, FluidDomainBbox)) and b.subdomain!=rank):
+		if (not (b.isSubdomain or isinstance(b.shape, FluidDomainBbox)) and b.subdomain!=rank):
+		
 			#if b: 
 			#	if (isinstance(b.shape,FluidDomainBbox)):continue 
 			b.bounded=False
