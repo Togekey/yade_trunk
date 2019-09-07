@@ -148,10 +148,10 @@ class FoamCoupling : public GlobalEngine {
 		std::vector<double> particleData;
 		std::vector<int>  procList; 
 		std::vector<Body::id_t> fluidDomains; 
-		std::vector<int> sendRecvRanks;
 		std::vector<std::pair<Body::id_t, std::vector<Body::id_t> > > sharedIds; 
 		std::vector<std::pair<int, std::map<int, int> > > sharedIdsMapIndx; 
 		std::vector<std::pair<int, std::vector<double>> > hForce; 
+		std::vector<std::pair<int, int> > inCommunicationProc; 
 		std::vector<Body::id_t> localIds; // 'local', those Ids in the present subdomain  that are in coupling, used in parallel mode. 
 		
 		//std::vector<int> intrFluidRanks; 

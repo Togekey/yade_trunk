@@ -252,8 +252,10 @@ void FoamCoupling::getFluidDomainBbox() {
 	 by the master process (rank=0) in the yade communicator. */ 
 	
 	//get local comm size and local rank. 
-		
-	scene = Omega::instance().getScene().get(); // reset the scene pointer, 
+	
+	//const shared_ptr<Subdomain>&  subD = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
+	
+	scene = Omega::instance().getScene().get(); 
 	
 	MPI_Comm_size(selfComm(), &localCommSize); 
 	MPI_Comm_rank(selfComm(), &localRank); 
@@ -267,20 +269,14 @@ void FoamCoupling::getFluidDomainBbox() {
 	
 	stride = localCommSize; 
 /*
-	todo : allow running as
-	mpiexec -n 4 ./yade script.py : -n 5 ./y2test 
-	and 
-	mpiexec -n 5 ./y2test : -n 5 ./yade (both ways)
 	if (localRank == 0) {
 
 		if (worldRank >  0) {stride = 0 ;}  else {stride = localCommSize; }
 	}	
 
 	MPI_Bcast(&stride, 1, MPI_INT, yadeMaster, selfComm()); */
-	
 
 	//if (worldRank-localCommSize < 0 ) {stride = localCommSize; } else { stride = 0; }
-	
 	// vector to hold the minMax buff 
 	std::vector<std::vector<double> > minMaxBuff; 
 	
@@ -300,7 +296,6 @@ void FoamCoupling::getFluidDomainBbox() {
 		MPI_Recv(&buff.front(), 6, MPI_DOUBLE, rnk+stride , TAG_GRID_BBOX, MPI_COMM_WORLD, &status); 
 		
 	} 
-
 	
 	fluidDomains.resize(commSzdff); 	
 	//create fluidDomainBbox bodies and get their ids. 
@@ -326,6 +321,7 @@ void FoamCoupling::getFluidDomainBbox() {
 void FoamCoupling::buildSharedIdsMap(){
 	/*Builds the list of ids interacting with a fluid subdomain and stores those body ids that has intersections with several fluid domains. 
 	 sharedIdsMapIndx = a vector of std::pair<Body::id_t, std::map<fluidDomainId, indexOfthebodyinthefluidDomain aka index in flbdy-> bIds> > */
+	
 	// const shared_ptr<Subdomain>& subd = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); //not needed as we have localIds list. 
 	for (int bodyId : localIds){
 		std::map<int, int> testMap; 
@@ -347,7 +343,18 @@ void FoamCoupling::buildSharedIdsMap(){
 			sharedIdsMapIndx.push_back(std::make_pair(bodyId, testMap)); 
 		}
 	}
-  
+	
+	//for quickly identifying fluid procs. 
+	for (const auto& fluidId : fluidDomains){
+		const shared_ptr<Body>& flb = (*scene->bodies)[fluidId]; 
+		if (fluidId) {
+			const shared_ptr<FluidDomainBbox>& flBox = YADE_PTR_CAST<FluidDomainBbox>(flb->shape); 
+			if ( flBox->bIds.size() > 0) {
+				inCommunicationProc.push_back(std::make_pair(flBox->domainRank, flBox->bIds.size()));
+			}
+		}
+	}
+
 }
 
 
@@ -465,8 +472,7 @@ void FoamCoupling::sendIntersectionToFluidProcs(){
 	
 	// notify the fluid procs about intersection based on number of intersecting bodies. 
 	// vector of sendRecvRanks, with each vector element containing the number of bodies, if no bodies, send negative val. 
-	
-	sendRecvRanks.resize(fluidDomains.size()); 
+	std::vector<int> sendRecvRanks(fluidDomains.size(), -1); 
 	
 	for (unsigned f=0;  f != fluidDomains.size(); ++f){
 		const shared_ptr<Body>& fdomain = (*scene->bodies)[fluidDomains[f]]; 
@@ -524,6 +530,7 @@ void FoamCoupling::sendBodyData(){
 					const shared_ptr<Sphere>& sph = YADE_PTR_CAST<Sphere>(b->shape); 
 					prtData[10*i+9] = sph->radius; 
 				}
+				
 				int sz = prtData.size(); 
 				MPI_Send(&prtData.front(),sz, MPI_DOUBLE, flbox->domainRank, TAG_PRT_DATA, MPI_COMM_WORLD ); 
 			}
@@ -541,15 +548,13 @@ void FoamCoupling::verifyParticleDetection() {
 	 if fail is found : see if this id is a sharedid. if not this particle has been 'lost'. if shared id :  check the vector of verifyTracking of the intersecting fluid domain till found in 
 	 at least one intersecting fluid box. if not particle has been lost. */ 
 	
-	//std::map<int, std::vector<int> > verifyTracking;  //vector containing domainRank, vector of "found/misses" for each body, miss = -1, found = 1 (we cannot use bool in MPI  ).  
+	//std::map<int, std::vector<int> > verifyTracking;  //vector containing domainRank, vector of "found/misses" for each body, miss = -1, found = 1.  
+	
 	std::vector<std::pair<int, std::vector<int>> > verifyTracking; 
-	for (unsigned int  f=0; f != fluidDomains.size(); ++f) {
-		const shared_ptr<Body>& flbdy  = (*scene->bodies)[fluidDomains[f]]; 
-		if (flbdy){
-			const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>(flbdy->shape);
-			std::vector<int> vt(flbox->bIds.size(), -1); 
-			verifyTracking.push_back(std::make_pair(flbox->domainRank, std::move(vt))); 
-		}
+	
+	for (const auto& proc : inCommunicationProc){
+		std::vector<int> vt(proc.second, -1); 
+		verifyTracking.push_back(std::make_pair(proc.first, std::move(vt))); 
 	}
 	
 	// recv the vec. 
@@ -557,7 +562,7 @@ void FoamCoupling::verifyParticleDetection() {
 		std::vector<int>& vt = it.second; 
 		int rnk = it.first; 
 		MPI_Status status; 
-		int buffSz = vt.size(); 
+		int buffSz = vt.size();
 		MPI_Recv(&vt.front(), buffSz, MPI_INT, rnk , TAG_SEARCH_RES, MPI_COMM_WORLD, &status); 
 		
 	}
@@ -577,8 +582,7 @@ void FoamCoupling::verifyParticleDetection() {
 				int sharedIndx = ifSharedIdMap(testId); 
 				if(sharedIndx < 0) {
 					const Vector3r& pos = (*scene->bodies)[testId]->state->pos; 
-					LOG_ERROR("Particle ID  = " << testId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain");
-					LOG_ERROR("local rank = " << localRank << "fluid Rank = " << vt.first);  
+					LOG_ERROR("Particle ID  = " << testId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain" << "lost Particle in proc = " << localRank);
 				} else {
 					Body::id_t unfoundId = testId; 
 					unFoundSharedIds.push_back(unfoundId); 
@@ -609,8 +613,9 @@ void FoamCoupling::verifyParticleDetection() {
 		}
 	}
 	
+	std::cout << "particle search done, my rank =  " <<  worldRank << std::endl ;
 	
-/*	fail! 
+/*	
 	if (unFoundSharedIds.size() > 0) {
 		for (const auto& idPair : sharedIdsMapIndx){
 			const auto& bodyId = idPair.first; 
@@ -641,20 +646,28 @@ void FoamCoupling::getParticleForce(){
 	//clear previous hForce vec. 
 	hForce.clear(); 
 	
-	for (const auto& fdId : fluidDomains){
-		const shared_ptr<Body>& flbdy  = (*scene->bodies)[fdId]; 
-		if (flbdy){
-			const shared_ptr<FluidDomainBbox>& flbox  = YADE_PTR_CAST<FluidDomainBbox>(flbdy->shape); 
-			std::vector<double> forceVec(6*flbox->bIds.size(), 0.0); 
-			hForce.push_back(std::make_pair(flbox->domainRank, std::move(forceVec))); 
-		}
+// 	for (const auto& fdId : fluidDomains){
+// 		const shared_ptr<Body>& flbdy  = (*scene->bodies)[fdId]; 
+// 		if (flbdy){
+// 			const shared_ptr<FluidDomainBbox>& flbox  = YADE_PTR_CAST<FluidDomainBbox>(flbdy->shape); 
+// 			std::vector<double> forceVec(6*flbox->bIds.size(), 0.0); 
+// 			hForce.push_back(std::make_pair(flbox->domainRank, std::move(forceVec))); 
+// 		}
+// 	}
+	
+	for (const auto& proc : inCommunicationProc){
+		std::vector<double> forceVec(6*proc.second, 0.0); 
+		hForce.push_back(std::make_pair(proc.first, std::move(forceVec))); 
 	}
+	
+	
 	for (auto& recvForce : hForce){
 		 std::vector<double>& tmpForce = recvForce.second; 
 		 int recvRank = recvForce.first; 
 		 int buffSz = tmpForce.size(); 
 		 MPI_Status status; 
 		 /* fluid procs having no particles will send 0 force, torque */
+		 std::cout << "receiving force from = " << recvRank << " my rank = " << worldRank << "  buff size = " << buffSz << std::endl; 
 		 MPI_Recv(&tmpForce.front(),buffSz, MPI_DOUBLE, recvRank, TAG_FORCE, MPI_COMM_WORLD, &status); 
 	}
 }
@@ -669,17 +682,18 @@ void FoamCoupling::resetFluidDomains(){
 			fluidBox->bIds.clear(); 
 		}
 	}
-	sharedIdsMapIndx.clear(); 
-	//hForce.clear(); 
+	sharedIdsMapIndx.clear();
+	localIds.clear(); 
+	inCommunicationProc.clear(); 
 }
 
 
 
 void FoamCoupling::setHydroForceParallel(){
-	// add the force  
-	if (localRank == yadeMaster) {return; }
+ 	// add the force  
+	if (localRank == yadeMaster) {return; } 
 	for (const auto& rf : hForce){
-		int indx = abs(rf.first-stride); 
+		int indx = abs(rf.first-commSzdff); 
 		const std::vector<double>& forceVec = rf.second; 
 		const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fluidDomains[indx]]->shape);
 		for (unsigned int i=0; i != flbox->bIds.size(); ++i){
@@ -770,7 +784,7 @@ void FoamCoupling::action() {
 }
 
 bool FoamCoupling::exchangeData(){
-
+	std::cout << "data ex = " << dataExchangeInterval << std::endl; 
 	return scene->iter%dataExchangeInterval==0;
 
 }
