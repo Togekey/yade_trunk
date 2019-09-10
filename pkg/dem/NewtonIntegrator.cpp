@@ -130,6 +130,8 @@ void NewtonIntegrator::action()
 			if(b->isClumpMember()) continue;
 #ifdef YADE_MPI
 			if(scene->subdomain!=b->subdomain or b->getIsSubdomain()) continue;//this thread will not move bodies from other subdomains
+			if(b->getIsFluidDomainBbox()) continue; 
+			
 #endif
 			State* state=b->state.get(); const Body::id_t& id=b->getId();
 			Vector3r f=Vector3r::Zero(); 
