@@ -255,7 +255,7 @@ void FoamCoupling::getFluidDomainBbox() {
 	
 	//const shared_ptr<Subdomain>&  subD = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
 	
-	//scene = Omega::instance().getScene().get(); 
+	scene = Omega::instance().getScene().get(); 
 	
 	MPI_Comm_size(selfComm(), &localCommSize); 
 	MPI_Comm_rank(selfComm(), &localRank); 
@@ -265,7 +265,6 @@ void FoamCoupling::getFluidDomainBbox() {
 	MPI_Comm_size(MPI_COMM_WORLD, &worldCommSize); 
 	MPI_Comm_rank(MPI_COMM_WORLD, &worldRank); 
 	
-	if (localRank != yadeMaster) {scene = Omega::instance().getScene().get(); }
 	
 	commSzdff = abs(localCommSize-worldCommSize); 
 	
@@ -311,6 +310,7 @@ void FoamCoupling::getFluidDomainBbox() {
 		shared_ptr<Body>  flBody(shared_ptr<Body> (new Body()));
 		flBody->shape = flBodyshape;  
 		flBody->subdomain = 0; 
+		flBody->setIsFluidDomainBbox(true); 
 		fluidDomains[fd] = scene->bodies->insert(flBody); 
 		
 	}
@@ -788,7 +788,6 @@ void FoamCoupling::action() {
 }
 
 bool FoamCoupling::exchangeData(){
-	std::cout << "data ex = " << dataExchangeInterval << std::endl; 
 	return scene->iter%dataExchangeInterval==0;
 
 }
