@@ -32,7 +32,7 @@ class Body: public Serializable{
 		// groupMask type
 
 		// bits for Body::flags
-		enum { FLAG_BOUNDED=1, FLAG_ASPHERICAL=2, FLAG_SUBDOMAIN=4 }; /* add powers of 2 as needed */
+		enum { FLAG_BOUNDED=1, FLAG_ASPHERICAL=2, FLAG_SUBDOMAIN=4, FLAG_FLUIDDOMAINBBOX = 8}; /* add powers of 2 as needed */
 		//! symbolic constant for body that doesn't exist.
 		static const Body::id_t ID_NONE;
 		//! get Body pointer given its id. 
@@ -58,6 +58,8 @@ class Body: public Serializable{
 		void setIsSubdomain(bool d){ if(d) flags|=FLAG_SUBDOMAIN; else flags&=~(FLAG_SUBDOMAIN); }
 		bool isAspherical() const {return flags & FLAG_ASPHERICAL; }
 		void setAspherical(bool d){ if(d) flags|=FLAG_ASPHERICAL; else flags&=~(FLAG_ASPHERICAL); }
+		bool getIsFluidDomainBbox() const {return flags & FLAG_FLUIDDOMAINBBOX;}
+		void setIsFluidDomainBbox(bool d) {if(d) flags|=FLAG_FLUIDDOMAINBBOX; else flags&=~(FLAG_FLUIDDOMAINBBOX);}
 		
 		/*! Hook for clump to update position of members when user-forced reposition and redraw (through GUI) occurs.
 		 * This is useful only in cases when engines that do that in every iteration are not active - i.e. when the simulation is paused.
@@ -107,7 +109,8 @@ class Body: public Serializable{
 		.add_property("bounded",&Body::isBounded,&Body::setBounded,"Whether this body should have :yref:`Body.bound` created. Note that bodies without a :yref:`bound <Body.bound>` do not participate in collision detection. (In c++, use ``Body::isBounded``/``Body::setBounded``) :ydefault:`true`")
 		.add_property("aspherical",&Body::isAspherical,&Body::setAspherical,"Whether this body has different inertia along principal axes; :yref:`NewtonIntegrator` makes use of this flag to call rotation integration routine for aspherical bodies, which is more expensive. :ydefault:`false`")
 #ifdef YADE_MPI
-		.add_property("isSubdomain",&Body::getIsSubdomain,&Body::setIsSubdomain,"Whether this body is a subdomain should have :yref:`Body.bound` created. Subdomains` do not participate to collision detection with their own bodies, they may interact with external bodies and other subdomains through virtual interactions. (In c++, use ``Body::getIsSubdomain``/``Body::setIsSubdomain``) :ydefault:`false`")
+		.add_property("isSubdomain",&Body::getIsSubdomain,&Body::setIsSubdomain,"Whether this body is a subdomain should have :yref:`Body.bound` created. Subdomains` do not participate to collision detection with their own bodies, they may interact with external bodies and other subdomains through virtual interactions. (In c++, use ``Body::getIsSubdomain``/``Body::setIsSubdomain``) :ydefault:`false`")		.add_property("mask",boost::python::make_getter(&Body::groupMask,boost::python::return_value_policy<boost::python::return_by_value>()),boost::python::make_setter(&Body::groupMask,boost::python::return_value_policy<boost::python::return_by_value>()),"Shorthand for :yref:`Body::groupMask`")
+		.add_property("isFluidDomainBox",&Body::setIsFluidDomainBbox,&Body::getIsFluidDomainBbox,"Whether this body is a Fluid grid bounding box should have :yref:`Body.bound` created. FluidDomainBboxes` do not participate to collision detection with their own bodies, they may interact with external bodies and other subdomains through virtual interactions. (In c++, use ``Body::getIsSubdomain``/``Body::setIsSubdomain``) :ydefault:`false`")		.add_property("mask",boost::python::make_getter(&Body::groupMask,boost::python::return_value_policy<boost::python::return_by_value>()),boost::python::make_setter(&Body::groupMask,boost::python::return_value_policy<boost::python::return_by_value>()),"Shorthand for :yref:`Body::groupMask`")
 #endif
 		.add_property("mask",boost::python::make_getter(&Body::groupMask,boost::python::return_value_policy<boost::python::return_by_value>()),boost::python::make_setter(&Body::groupMask,boost::python::return_value_policy<boost::python::return_by_value>()),"Shorthand for :yref:`Body::groupMask`")
 		.add_property("isStandalone",&Body::isStandalone,"True if this body is neither clump, nor clump member; false otherwise.")
