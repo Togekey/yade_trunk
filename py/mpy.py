@@ -316,9 +316,6 @@ def unboundRemoteBodies():
 	'''
 	for b in O.bodies:# unbound the bodies assigned to workers (not interacting directly with other bodies in master scene)
 		if (not (b.isSubdomain or isinstance(b.shape, FluidDomainBbox)) and b.subdomain!=rank):
-		
-			#if b: 
-			#	if (isinstance(b.shape,FluidDomainBbox)):continue 
 			b.bounded=False
 			b.bound=None
 			
@@ -424,7 +421,7 @@ def genLocalIntersections(subdomains):
 			b=O.bodies[otherId]
 			if not b:continue #in case the body was deleted
 			if b.subdomain!=rank: continue
-			if b.isSubdomain: intersections[rank].append(subdIdx) #intersecting subdomain (will need to receive updated positions from there)
+			if b.isSubdomain : intersections[rank].append(subdIdx) #intersecting subdomain (will need to receive updated positions from there)
 			else:
 				if isinstance(b.shape,PFacet):
 						intersections[subdIdx]+= maskedPFacet(b, appended); continue
@@ -698,14 +695,9 @@ def splitScene():
 		
 		if FLUID_COUPLING:
 			fluidCoupling = utils.typedEngine('FoamCoupling') 
-			ids = fluidCoupling.getIdList()
 			fluidCoupling.comm = comm 
-			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes from all yales2 procs. 
-			fluidCoupling.setIdList(fluidBodies) 
-			#if (fluidBodies) :  # incase fluidBodies are not set to the engine directly in the user script. 
-			
-			
-		wprint("LEN OF BODIES AFTER FLUID COUPLING =  ", len(O.bodies))
+			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes from all yales2 procs, creates bodies of shape FluidDomainBbox
+			fluidCoupling.setIdList(fluidBodies)
 		
 		updateMirrorIntersections()
 		
