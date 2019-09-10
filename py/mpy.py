@@ -666,7 +666,6 @@ def splitScene():
 		
 		O.subD.init() 
 		
-		wprint("LEN OF BODIES BEFORE FLUID COUPLING = ", len(O.bodies))
 		
 		if FLUID_COUPLING:
 			fluidCoupling = utils.typedEngine('FoamCoupling') 
@@ -677,7 +676,6 @@ def splitScene():
 			#if (fluidBodies) :  # incase fluidBodies are not set to the engine directly in the user script. 
 			
 			
-		wprint("LEN OF BODIES AFTER FLUID COUPLING =  ", len(O.bodies))
 		
 		updateMirrorIntersections()
 		
