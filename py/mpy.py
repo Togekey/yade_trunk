@@ -689,11 +689,13 @@ def splitScene():
 		
 		O.subD.init() 
 		
-		wprint("LEN OF BODIES BEFORE FLUID COUPLING = ", len(O.bodies))
 		
 		if FLUID_COUPLING:
 			fluidCoupling = utils.typedEngine('FoamCoupling') 
-			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes.
+			fluidCoupling.comm = comm 
+			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes from all yales2 procs. 
+			fluidCoupling.setIdList(fluidBodies) 
+			
 		
 		parallelCollide()
 		
