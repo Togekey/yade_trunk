@@ -10,14 +10,23 @@
 class Body;
 class InteractionContainer;
 
-#if YADE_OPENMP
-	#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b_,bodies) const Body::id_t _sz(bodies->size()); _Pragma("omp parallel for") for(Body::id_t _id=0; _id<_sz; _id++){ if(!(*bodies)[_id])  continue; b_((*bodies)[_id]);
-	#define YADE_PARALLEL_FOREACH_BODY_END() }
+#ifdef YADE_MPI
+	#if YADE_OPENMP
+		#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b_,bodies) const Body::id_t _sz(bodies->subdomainBodies.size()); _Pragma("omp parallel for") for(int k=0; k<_sz; k++){ if(!(*bodies)[bodies->subdomainBodies[k]])  continue; b_((*bodies)[bodies->subdomainBodies[k]]);
+		#define YADE_PARALLEL_FOREACH_BODY_END() }
+	#else
+		#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b,bodies) FOREACH(b,*(bodies)){
+		#define YADE_PARALLEL_FOREACH_BODY_END() }
+	#endif
 #else
-	#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b,bodies) FOREACH(b,*(bodies)){
-	#define YADE_PARALLEL_FOREACH_BODY_END() }
-#endif
-
+	#if YADE_OPENMP
+		#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b_,bodies) const Body::id_t _sz(bodies->size()); _Pragma("omp parallel for") for(Body::id_t _id=0; _id<_sz; _id++){ if(!(*bodies)[_id])  continue; b_((*bodies)[_id]);
+		#define YADE_PARALLEL_FOREACH_BODY_END() }
+	#else
+		#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b,bodies) FOREACH(b,*(bodies)){
+		#define YADE_PARALLEL_FOREACH_BODY_END() }
+	#endif
+#endif //YADE_MPI
 /*
 Container of bodies implemented as flat std::vector. It handles body removal and
 intelligently reallocates free ids for newly added ones.

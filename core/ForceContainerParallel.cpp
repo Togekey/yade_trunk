@@ -208,7 +208,6 @@ void ForceContainer::sync(){
   }
   synced=true; syncCount++;
 }
-
 #ifndef YADE_MPI
 
 #pragma GCC diagnostic push
@@ -288,13 +287,13 @@ void ForceContainer::reset(long iter, bool resetAll) {
 void ForceContainer::resize(size_t newSize, int threadN) {
   if (sizeOfThreads[threadN]>=newSize) return;
   LOG_DEBUG("Resize ForceContainer from the size "<<size<<" to the size "<<newSize);
-  _forceData[threadN].reserve(size_t(newSize*1.3));
-  _torqueData[threadN].reserve(size_t(newSize*1.3));
+  _forceData[threadN].reserve(size_t(newSize*1.5));
+  _torqueData[threadN].reserve(size_t(newSize*1.5));
   _forceData[threadN].resize(newSize,Vector3r::Zero());
   _torqueData[threadN].resize(newSize,Vector3r::Zero());
   if (moveRotUsed) {
-    _moveData[threadN].reserve(size_t(newSize*1.3));
-    _rotData[threadN].reserve(size_t(newSize*1.3));
+    _moveData[threadN].reserve(size_t(newSize*1.5));
+    _rotData[threadN].reserve(size_t(newSize*1.5));
     _moveData[threadN].resize(newSize,Vector3r::Zero());
     _rotData[threadN].resize(newSize,Vector3r::Zero());}
   sizeOfThreads[threadN] = newSize;
