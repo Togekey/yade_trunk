@@ -48,6 +48,7 @@ userScriptInCheckList=""	# the simulation script from which mpy.py is used
 ACCUMULATE_FORCES=True #control force summation on master's body. FIXME: if false master goes out of sync since nothing is blocking rank=0 thread
 VERBOSE_OUTPUT=False
 NO_OUTPUT=False
+MAX_RANK_OUTPUT=5 #larger ranks will be skipped in mprint
 SEND_SHAPES=False #if false only bodies' states are communicated between threads, else shapes as well (to be implemented)
 ERASE_REMOTE = True #erase bodies not interacting wit a given subdomain? else keep dead clones of all bodies in each scene
 OPTIMIZE_COM=True
@@ -90,7 +91,7 @@ bcolors=['\033[95m','\033[94m','\033[93m','\033[92m','\033[91m','\033[90m','\033
 #rank_color = [str(red[rank_color_id]),str(green[rank_color_id]),str(blue[rank_color_id])]
 
 def mprint(*args): #this one will print regardless of VERBOSE_OUTPUT
-	if NO_OUTPUT: return
+	if NO_OUTPUT or rank>MAX_RANK_OUTPUT: return
 	m=bcolors[min(rank,len(bcolors)-2)]
 	if rank==0:
 		m+='1;' #bold for master
@@ -832,13 +833,15 @@ def mpirun(nSteps,np=numThreads):
 			wprint("Command sent to ",w)
 	initStep = O.iter
 	mprint("splitting")
-	if not O.splitted: splitScene()
-	mprint("splitted")
+	if not O.splitted:
+		mprint("splitting")
+		splitScene()
+		mprint("splitted")
 	if YADE_TIMING:
 		O.timingEnabled=True
-	if not (MERGE_SPLIT or COPY_MIRROR_BODIES_WHEN_COLLIDE): #run until collider is activated then stop		
-		O.run(nSteps,True) #a pyrunner will pause
-		mergeScene()
+	if not (MERGE_SPLIT):	
+		O.run(nSteps,True) #a pyrunner will pause, or trigger collider and continue, depending on WITH_BODY_COPY flag
+		#mergeScene()
 	else: #merge/split or body_copy for each collider update
 		if(MERGE_SPLIT): collisionChecker.dead=True
 		while (O.iter-initStep)<nSteps:
@@ -848,9 +851,9 @@ def mpirun(nSteps,np=numThreads):
 				splitScene()
 		mergeScene()
 	timing_comm.print_all()
-	if YADE_TIMING:
+	if YADE_TIMING and rank<=MAX_RANK_OUTPUT:
 		from yade import timing
-		time.sleep((numThreads-rank)*0.1) #avoid mixing the final output, timing.stats() is independent of the sleep
+		time.sleep((numThreads-rank)*0.002) #avoid mixing the final output, timing.stats() is independent of the sleep
 		mprint( "#####  Worker "+str(rank)+"  ######")
 		timing.stats() #specific numbers for -n4 and gabion.py
 
