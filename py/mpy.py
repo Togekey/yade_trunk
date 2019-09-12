@@ -694,14 +694,14 @@ def splitScene():
 
 
 def updateMirrorIntersections():
-  
+	start=time.time()
 	subD=O.subD
 	unboundRemoteBodies()
 	collider.boundDispatcher.__call__()
 	updateDomainBounds(subD.subdomains) #triggers communications
-	start=time.time()
+	
 	collider.__call__() #see [1]
-	wprint("collider time(1)=", time.time()-start)
+	#wprint("collider time(1)=", time.time()-start)
 	subD.intersections=genLocalIntersections(subD.subdomains)
 	
 	#update mirror intersections so we know message sizes in advance
@@ -791,8 +791,12 @@ def updateMirrorIntersections():
 		subD.completeSendBodies();
 	
 	collider.doSort = True
-	start=time.time()
 	collider.__call__()
+	mprint("execTime=",collider.execTime,"(increment: ",start-time.time(),")")
+	collider.execTime+=int((time.time()-start)*1e9)
+	collider.execCount+=1
+	if 'collisionChecker' in locals(): collisionChecker.execTime+=int((start-time.time())*1e9)
+	
 	wprint("collider time (2)",time.time()-start)
 	#maxVelocitySq is normally reset in NewtonIntegrator in the same iteration as bound dispatching, since Newton will not run before next iter in our case we force that value to avoid another collision detection at next step
 	utils.typedEngine("NewtonIntegrator").maxVelocitySq=0.5
