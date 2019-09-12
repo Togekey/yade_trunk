@@ -101,13 +101,19 @@ else: #######  MPI  ######
 	mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
 	mp.MERGE_SPLIT=False
 	mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = True
-
+	mp.MAX_RANK_OUTPUT=4
+	mp.mpirun(1) #this is to eliminate initialization overhead in Cundall number and timings
+	from yade import timing
+	timing.reset()
+	t1=time.time()
 	mp.mpirun(NSTEPS)
-	if rank<5: print("num. bodies:",len([b for b in O.bodies]),len(O.bodies))
+	t2=time.time()
+	mp.mprint("num. bodies:",len([b for b in O.bodies])," ",len(O.bodies))
 	if rank==0:
 		mp.mprint( "Total force on floor="+str(O.forces.f(WALL_ID)[1]))
+		mp.mprint("CPU wall time for ",NSTEPS," iterations:",t2-t1,"; Cundall number = ",len(O.bodies)*NSTEPS/(t2-t1))
 		collectTiming()
-	elif rank<5: mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
+	else: mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
 	#mp.mergeScene()
 	#if rank==0: O.save('mergedScene.yade')
 	mp.MPI.Finalize()
