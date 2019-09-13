@@ -692,25 +692,29 @@ def splitScene():
 		O.splittedOnce = True
 		
 		
-
+T1=T2=T3=T4=T5=T6=T7=0
 
 def updateMirrorIntersections():
+	global T1,T2,T3,T4,T5,T6,T7
 	start=time.time()
 	subD=O.subD
-	unboundRemoteBodies()
+	if (rank>0 or not O.splitted): unboundRemoteBodies()
 	collider.boundDispatcher.__call__()
+	tint0=time.time()
 	updateDomainBounds(subD.subdomains) #triggers communications
-	
+	tint1=time.time()
 	collider.__call__() #see [1]
+
+	t1=time.time()
 	#wprint("collider time(1)=", time.time()-start)
 	subD.intersections=genLocalIntersections(subD.subdomains)
-	
+	t2=time.time()
 	#update mirror intersections so we know message sizes in advance
 	subD.mirrorIntersections=[[] for n in range(numThreads)]
 	if rank==0:#master domain
 		for worker in range(1,numThreads):#FIXME: we actually don't need so much data since at this stage the states are unchanged and the list is used to re-bound intersecting bodies, this is only done in the initialization phase, though
 			wprint("sending mirror intersections to "+str(worker)+" ("+str(len(subD.intersections[worker]))+" bodies), "+str(subD.intersections[worker]))
-			timing_comm.send("splitScene_master_domain",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
+			timing_comm.send("sendIntersections",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
 	else:
 		# from master
 		b_ids=comm.recv(source=0, tag=_MIRROR_INTERSECTIONS_)
@@ -748,10 +752,8 @@ def updateMirrorIntersections():
 			wprint("Received mirrors from: ", req[0], " : ",intrs)
 			subD.mirrorIntersections = subD.mirrorIntersections[0:req[0]]+[intrs]+subD.mirrorIntersections[req[0]+1:]
 			reboundRemoteBodies(intrs)
-			
-			
-		
-		if(ERASE_REMOTE): eraseRemote()
+	if(ERASE_REMOTE): eraseRemote()
+	t3=time.time()
 	"""
 	" NOTE: FK, what to do here:
 	" 1- all threads loop on reqs, i.e the intersecting subdomains of the current subdomain.
@@ -790,21 +792,26 @@ def updateMirrorIntersections():
 		for worker in requestedSomethingFrom:
 			subD.receiveBodies(worker)
 		subD.completeSendBodies();
-	
+	t4=time.time()
 	collider.doSort = True
 	collider.__call__()
-	mprint("execTime=",collider.execTime,"(increment: ",start-time.time(),")")
+	t5=time.time()
+	#mprint("execTime=",collider.execTime,"(increment: ",start-time.time(),")")
 	collider.execTime+=int((time.time()-start)*1e9)
 	collider.execCount+=1
-	if 'collisionChecker' in locals(): collisionChecker.execTime+=int((start-time.time())*1e9)
+	try:
+		collisionChecker.execTime-=int((time.time()-start)*1e9)
+	except:
+		pass
 	
+	T1+=t1-start; T2+=t2-t1; T3+=t3-t2; T4+=t4-t3; T5+=t5-t4; T6+=tint0-start; T7+=tint1-tint0
 	wprint("collider time (2)",time.time()-start)
 	#maxVelocitySq is normally reset in NewtonIntegrator in the same iteration as bound dispatching, since Newton will not run before next iter in our case we force that value to avoid another collision detection at next step
 	utils.typedEngine("NewtonIntegrator").maxVelocitySq=0.5
 
 
 def eraseRemote(): 
-	if rank > 0: #workers suppress external bodies from scene, master will keep all bodies anyway 
+	if rank > -1: #workers suppress external bodies from scene, master will keep all bodies anyway 
 		numBodies = len(O.bodies)
 		for id in range(numBodies):
 			if not O.bodies[id]:continue
@@ -819,6 +826,8 @@ def eraseRemote():
 
 ##### RUN MPI #########
 def mpirun(nSteps,np=numThreads):
+	global T1,T2,T3,T4,T5,T6,T7
+	T1=0; T2=0; T3=0; T4=0; T5=0; T6=0; T7=0
 	stack=inspect.stack()
 	global userScriptInCheckList
 	if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
@@ -832,7 +841,6 @@ def mpirun(nSteps,np=numThreads):
 			comm.send("yade.mpy.mpirun("+str(nSteps)+")",dest=w,tag=_MASTER_COMMAND_)
 			wprint("Command sent to ",w)
 	initStep = O.iter
-	mprint("splitting")
 	if not O.splitted:
 		mprint("splitting")
 		splitScene()
@@ -841,9 +849,10 @@ def mpirun(nSteps,np=numThreads):
 		O.timingEnabled=True
 	if not (MERGE_SPLIT):	
 		O.run(nSteps,True) #a pyrunner will pause, or trigger collider and continue, depending on WITH_BODY_COPY flag
+		mprint("Collider timings:",T1,"(",T6,"/",T7,"/",T1-T6-T7,") ",T2," ",T3," ",T4," ",T5)
 		#mergeScene()
 	else: #merge/split or body_copy for each collider update
-		if(MERGE_SPLIT): collisionChecker.dead=True
+		collisionChecker.dead=True
 		while (O.iter-initStep)<nSteps:
 			O.step()
 			if checkNeedCollide():
