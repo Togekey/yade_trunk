@@ -22,6 +22,7 @@
 #ifdef YADE_MPI 
 	#include<mpi.h>
 #endif
+#include <core/Shape.hpp>
 #ifdef YADE_OPENMP
 	#include<omp.h>
 #endif
@@ -99,9 +100,8 @@ class Scene: public Serializable{
 		((Body::id_t,selectedBody,-1,,"Id of body that is selected by the user"))
 #ifdef YADE_MPI
 		((int,subdomain,0,,"the subdomain this scene is assigned in MPI/domain decomposition."))
-		((std::vector<Body::id_t>,subdomainIds,vector<Body::id_t>(),,"Body ids of subdomains"))
-		((Body::id_t,thisSubdomainId,-1,,"Id of the subdomain handling the current process" ))
-		
+		((Body::id_t,thisSubdomainId,-1,,"Id (in bodycontainer) of the subdomain handling the current process" ))
+		((shared_ptr<Shape>,subD,new Shape,,"subdomain (shape) attached to this proc.")) // Subdomain is not directly used, as it leads to circular dependecy issues. 
 		
 #endif
 		((vector<string>,tags,,,"Arbitrary key=value associations (tags like mp3 tags: author, date, version, description etc.)"))
