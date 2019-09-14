@@ -3,7 +3,6 @@
 #ifdef YADE_MPI
 
 #include "Subdomain.hpp"
-#include <core/Scene.hpp>
 #include <core/BodyContainer.hpp>
 #include <core/State.hpp>
 #include <core/InteractionContainer.hpp>
@@ -80,6 +79,24 @@ boost::python::list Subdomain::mIntrs_get(){
 	}
 	return ret;
 }
+
+void Subdomain::setSubdomainIds(std::vector<Body::id_t> subdIds){
+	subdomains = subdIds; 
+  
+}
+
+std::vector<Body::id_t> Subdomain::getSubdomainIds() {
+	return subdomains; 
+}
+
+void Subdomain::append(Body::id_t bId){ subdomains.push_back(bId);  }
+void Subdomain::appendList(const boost::python::list&  lst) {
+	unsigned sz = boost::python::len(lst); 
+	for (unsigned i = 0; i != sz; ++i) {
+		subdomains.push_back(boost::python::extract<int> (lst[i]));
+	}
+}
+
 
 void Bo1_Subdomain_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& /*se3*/, const Body* /*b*/){
 // 	LOG_WARN("Bo1_Subdomain_Aabb::go()")

@@ -13,7 +13,7 @@
 #include <mpi.h>
 #include <core/MPIBodyContainer.hpp>
 #include <mpi4py/mpi4py.h> // for passing MPI_Comm from python to c++
-
+#include <core/Scene.hpp>
 namespace yade { // Cannot have #include directive inside.
 
 class Subdomain: public Shape {
@@ -231,6 +231,11 @@ class Subdomain: public Shape {
 	 void clearSubdomainIds();  // clears the member ids (std::vector <Body::id_t>
 	 void getRankSize();  
 	 void clearRecvdCharBuff(std::vector<char*>& ); // frees std::vector<char*>
+	 void setSubdomainIds(std::vector<Body::id_t>);
+	 std::vector<Body::id_t> getSubdomainIds(); 
+	 void append(Body::id_t); 
+	 void appendList(const boost::python::list& ); 
+	 
 	 
          
          
@@ -255,6 +260,8 @@ class Subdomain: public Shape {
         std::vector<int> remoteCount; 
 	bool ranksSet=false; 
 	bool bodiesSet = false;  // flag 
+	
+
          
 		
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Subdomain,Shape,"The bounding box of a mpi subdomain",
@@ -266,6 +273,7 @@ class Subdomain: public Shape {
 		((IntersectionMap,mirrorIntersections,IntersectionMap(),Attr::hidden,"[will be overridden below]"))
 		((vector<Body::id_t>,ids,vector<Body::id_t>(),Attr::hidden,"Ids of owned particles.")) //FIXME
 		((vector<vector<Real> >,stateBuffer,vector<vector<Real> >(),(Attr::noSave | Attr::hidden),"container storing data from other subdomains")) 
+		((vector<Body::id_t>, subdomains, vector<Body::id_t> (), (Attr::noSave | Attr::hidden), "subdomain ids (by body id)"))
 		,/*ctor*/ createIndex(); myComm_p=NULL;
 		,/*py*/ /*.add_property("members",&Clump::members_get,"Return clump members as {'id1':(relPos,relOri),...}")*/
 		.def("init",&Subdomain::init,"Initialize subdomain variables as rank and buffer sizes, call this from each thread after scene distribution by master.")
@@ -289,6 +297,7 @@ class Subdomain: public Shape {
 		.def("completeSendBodies", &Subdomain::completeSendBodies, "calls MPI_wait to complete the non blocking sends/recieves.")
 		.add_property("mirrorIntersections",&Subdomain::mIntrs_get,&Subdomain::mIntrs_set,"lists of bodies from other subdomains intersecting this one. WARNING: only assignement and concatenation allowed")
 		.add_property("comm",&Subdomain::getMyComm,&Subdomain::setMyComm,"Communicator to be used for MPI (converts mpi4py comm <-> c++ comm)")
+		.add_property("subdomains", &Subdomain::getSubdomainIds, &Subdomain::setSubdomainIds, "subdomain ids of other bodies, WARNING: only assignement and concatenation allowed ")
 		.def("splitBodiesToWorkers", &Subdomain::splitBodiesToWorkers,(boost::python::arg("eraseWorkerBodies")), "of true bodies in workers are erased and reassigned.")
 	);
 	DECLARE_LOGGER;
