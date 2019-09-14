@@ -748,7 +748,6 @@ def splitScene():
 			O.subD.subdomains = subdomains
 			subD= O.subD #alias
 			subD.comm=comm #make sure the c++ uses the merged intracommunicator
-
 			#tell the collider how to handle this new thing
 			collider.boundDispatcher.functors=collider.boundDispatcher.functors+[Bo1_Subdomain_Aabb()]
 			if FLUID_COUPLING: 
