@@ -628,17 +628,16 @@ def splitScene():
 			O.subD=Subdomain() #for storage only, this one will not be used beyond that 
 			subD= O.subD #alias
 			#insert "meta"-bodies
-			subD.subdomains=[] #list subdomains by body ids
+			subdomains=[] #list subdomains by body ids
 			if mit_mode: subD.comm=comm #make sure the c++ uses the merged intracommunicator
 			
 			for k in range(1,numThreads):
 				domainBody=Body(shape=Subdomain(ids=[b.id for b in O.bodies if b.subdomain==k]),subdomain=k) #note: not clear yet how shape.subDomainIndex and body.subdomain should interact, currently equal values
 				domainBody.isSubdomain=True
-				subD.subdomains.append(O.bodies.append(domainBody))
+				subdomains.append(O.bodies.append(domainBody))
 				
-			O.subdomainIds = subD.subdomains 
-			O.thisSubdomainId = 0 
-
+			subD.subdomains = subdomains
+			
 			#tell the collider how to handle this new thing
 			
 			if not LOAD_SIM:
@@ -685,7 +684,6 @@ def splitScene():
 			if domainBody==None: wprint("SUBDOMAIN NOT FOUND FOR RANK=",rank)
 			O.subD = domainBody.shape
 			O.subD.subdomains = subdomains
-			O.subdomainIds = subdomains
 		
 		if mit_mode or commSplit : O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 		
