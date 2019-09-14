@@ -622,11 +622,10 @@ def splitScene():
 			for k in range(1,numThreads):
 				domainBody=Body(shape=Subdomain(ids=[b.id for b in O.bodies if b.subdomain==k]),subdomain=k) #note: not clear yet how shape.subDomainIndex and body.subdomain should interact, currently equal values
 				domainBody.isSubdomain=True
-				subD.subdomains.append(O.bodies.append(domainBody))
+				subdomains.append(O.bodies.append(domainBody))
 				
-			O.subdomainIds = subD.subdomains 
-			O.thisSubdomainId = 0 
-
+			subD.subdomains = subdomains
+			
 			#tell the collider how to handle this new thing
 			collider.boundDispatcher.functors=collider.boundDispatcher.functors+[Bo1_Subdomain_Aabb()]
 			if FLUID_COUPLING: 
