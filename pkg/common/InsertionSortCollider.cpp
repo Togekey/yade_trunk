@@ -269,7 +269,7 @@ void InsertionSortCollider::action(){
 					else continue;
 				}
 				BBi.resize(idxTarget);
-			}	
+			}
 			for(int i=0; i<3; i++) {
 				for(size_t idx=0; idx<nInsert; idx++){
 					BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/true)); BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/false)); 
@@ -318,7 +318,6 @@ void InsertionSortCollider::action(){
 		boundDispatcher->action();
 		ISC_CHECKPOINT("boundDispatcher");
 
-		
 		// STRIDE
 		if(verletDist>0){
 			// get NewtonIntegrator, to ask for the maximum velocity value
@@ -338,7 +337,6 @@ void InsertionSortCollider::action(){
 			} else boundDispatcher->sweepDist=0;
 
 	ISC_CHECKPOINT("bound");
-
 	// copy bounds along given axis into our arrays 
 	const size_t nBounds = BB[0].size();
 // 	#pragma omp parallel for schedule(guided) num_threads(ompThreads>0 ? min(ompThreads,omp_get_max_threads()) : omp_get_max_threads())
@@ -366,7 +364,6 @@ void InsertionSortCollider::action(){
 		}
 
 	ISC_CHECKPOINT("copy");
-
 	// remove interactions which have disconnected bounds and are not real (will run parallel if YADE_OPENMP)
 	interactions->conditionalyEraseNonReal(*this,scene);
 
@@ -409,13 +406,13 @@ void InsertionSortCollider::action(){
 				for (int kk=0;  kk<ompThreads; kk++) newInts[kk].reserve(unsigned(10*nBodies/ompThreads));
 				#pragma omp parallel for schedule(guided,200) num_threads(ompThreads)
 			#endif
-				for(size_t i=0; i<2*nBodies; i++){
+				for(size_t i=0; i<V.size(); i++){
 					// start from the lower bound (i.e. skipping upper bounds)
 					// skip bodies without bbox, because they don't collide
 					if(!(V[i].flags.isMin && V[i].flags.hasBB)) continue;
 					const Body::id_t& iid=V[i].id;
 					// go up until we meet the upper bound
-					for(size_t j=i+1; /* handle case 2. of swapped min/max */ j<2*nBodies && V[j].id!=iid; j++){
+					for(size_t j=i+1; /* handle case 2. of swapped min/max */ j<V.size() && V[j].id!=iid; j++){
 						const Body::id_t& jid=V[j].id;
 						// take 2 of the same condition (only handle collision [min_i..max_i]+min_j, not [min_i..max_i]+min_i (symmetric)
 						if(!(V[j].flags.isMin && V[j].flags.hasBB)) continue;
