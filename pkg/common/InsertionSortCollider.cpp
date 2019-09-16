@@ -263,7 +263,7 @@ void InsertionSortCollider::action(){
 				size_t idxTarget=0;
 				VecBounds& BBi=BB[i];
 				for(size_t idx=0; idx<BBsize; idx++){
-					if (Body::byId(BBi[idx].id,scene) and Body::byId(BBi[idx].id,scene)->bound) {
+					if (Body::byId(BBi[idx].id,scene) and Body::byId(BBi[idx].id,scene)->isBounded()) {
 						if (idxTarget<idx) BBi[idxTarget]=BBi[idx];
 						idxTarget++;}
 					else continue;
