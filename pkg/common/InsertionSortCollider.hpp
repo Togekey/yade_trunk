@@ -107,6 +107,7 @@ class InsertionSortCollider: public Collider{
 		Real cellDim;
 		// index of the lowest coordinate element, before which the container wraps
 		size_t loIdx;
+		size_t lisLen;
 
 		Bounds& operator[](long idx){ assert(idx<long(size()) && idx>=0); return vec[idx]; }
 		const Bounds& operator[](long idx) const { assert(idx<long(size()) && idx>=0); return vec[idx]; }
@@ -115,10 +116,11 @@ class InsertionSortCollider: public Collider{
 		void updatePeriodicity(Scene* );
 		// normalize given index to the right range (wraps around)
 		size_t norm(long i) const { if(i<0) i+=size(); assert(i>=0); size_t ret=i%size(); assert(ret<size()); return ret;}
-		VecBounds(): axis(-1), loIdx(0){}
+		VecBounds(): axis(-1), loIdx(0), lisLen(0) {}
 		void dump(ostream& os){ string ret; for(size_t i=0; i<vec.size(); i++) os<<(i==loIdx?"@@ ":"")<<vec[i].coord<<"(id="<<vec[i].id<<","<<(vec[i].flags.isMin?"min":"max")<<",p"<<vec[i].period<<") "; os<<endl;}
 
 		size_t size() const { return vec.size(); };
+		size_t listSize() const { return lisLen; };
 
 		void clear()                      { vec.clear();                   }
 		void reserve(size_t n)            { vec.reserve(n);                }
@@ -127,11 +129,19 @@ class InsertionSortCollider: public Collider{
 		// if the line below does not compile on older ubuntu 14.04, then I should add #ifdef guards to check compiler version. This line will make push_back faster when a newer compiler supports it.
 		void push_back(      Bounds&& bb) { vec.push_back(bb);             }
 		void sort()                       { std::sort(vec.begin(),vec.end()); }
+		void listClear()                      { lis.clear(); lisLen=0; }
 		std::vector<Bounds>::const_iterator cbegin() const { return vec.cbegin();}
 		std::vector<Bounds>::const_iterator cend  () const { return vec.cend  ();}
+		std::list<Bounds>::iterator insert(std::list<Bounds>::iterator pos, const Bounds& val) {lisLen++; return lis.insert(pos, val);} //NOTE: not a thread-safe insert since lisLen is touched
+		void insert_back( const Bounds& val) { lis.push_back(val); lisLen++;}
+		std::list<Bounds>::iterator insert_move(std::list<Bounds>::iterator pos, const Bounds& val) {return lis.insert(pos, val);} //NOTE: a thread-safe insert, assuming size is constant overall
+		void erase_move(std::list<Bounds>::iterator pos) {lis.erase(pos);} //NOTE: a thread-safe erase
+		std::list<Bounds>::iterator begin() { return lis.begin();}
+		std::list<Bounds>::iterator end  () { return lis.end  ();}
 
 		private:
 			std::vector<Bounds> vec;
+			std::list<Bounds> lis;
 	};
 	private:
 	//! storage for bounds

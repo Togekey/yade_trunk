@@ -55,11 +55,12 @@ void InsertionSortCollider::insertionSort(VecBounds& v, InteractionContainer* in
 	}
 }
 
+#include <ctime>
 
-//Periodic version, only for non-periodic case at the moment (feel free to implement for the periodic case...)
+//Parallel version, only for non-periodic case at the moment (feel free to implement for the periodic case...)
 void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionContainer* interactions, Scene*, bool doCollide){
 #ifdef YADE_OPENMP
-	assert(!periodic);	
+	assert(!periodic);
 	//assert(v.size()==v.vec.size());
 	if (ompThreads<=1) return insertionSort(v,interactions, scene, doCollide);
 	
@@ -122,6 +123,83 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 			v[j+1]=viInit;
 		}
 	}
+	
+#ifdef TEST_LIST
+	std::clock_t sort1 = std::clock();
+	std::cout<< newInteractions[0].size()<<std::endl;
+	sort1 = std::clock();
+
+	/// First sort, independant in each chunk
+	vector<std::list<Bounds>::iterator> itChunksBegin, itChunksEnd;
+	std::list<Bounds>::iterator it = v.begin();
+	itChunksBegin.push_back(it);
+	for (unsigned k=1; k<nChunks;k++) {
+		std::advance(it,int(v.listSize()/nChunks));
+		itChunksEnd.push_back(std::prev(it,1));
+		itChunksBegin.push_back(it);}
+	itChunksEnd.push_back(--v.end());
+	
+	std::clock_t sort2 = std::clock();
+	
+	#pragma omp parallel for schedule(dynamic,1) num_threads(ompThreads>0 ? min(ompThreads,omp_get_max_threads()) : omp_get_max_threads())
+	for (unsigned k=0; k<nChunks;k++) {
+		int threadNum = omp_get_thread_num();
+		std::list<Bounds>::iterator  startIt = itChunksBegin[k]; startIt++;
+		for(std::list<Bounds>::iterator i=itChunksBegin[k]; i!=itChunksEnd[k];){
+			i++;
+			std::list<Bounds>::iterator j=i; //std::prev(i,1);
+			const Bounds viInit=*i; const bool viInitBB=viInit.flags.hasBB; const bool isMin=viInit.flags.isMin;
+// 			const std::list<Bounds>::iterator wall = itChunksBegin[k]
+// 			if ((*j)<=viInit) continue;
+			while(j!=itChunksBegin[k] /*&& (*j)>viInit*/){
+				j--;
+				if ((*j)>viInit) {
+// 				v[j+1]=v[j];
+					if(isMin && !j->flags.isMin && doCollide && viInitBB && j->flags.hasBB && (viInit.id!=j->id)) {
+						const Body::id_t& id1 = j->id; const Body::id_t& id2 = viInit.id; 
+						//(see #0 if compilation fails)
+						#ifdef YADE_MPI
+						if (spatialOverlap(id1,id2) && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get(),scene->subdomain) && !interactions->found(id1,id2))
+						#else
+						if (spatialOverlap(id1,id2) && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get()) && !interactions->found(id1,id2))
+						#endif 
+								
+							newInteractions[threadNum].push_back(std::pair<Body::id_t,Body::id_t>(j->id,viInit.id));
+					}
+				} else {
+					j++; break;//go to where last inversion happens
+				}
+// 				if (j==itChunksBegin[k]) break;
+// 				j--;
+			}
+// 			v[j+1]=viInit;
+			
+// 			auto temp=i++; //increment i now since it may be deleted below
+			if (j!=i) {
+				if (j!=itChunksBegin[k]) v.insert_move(j,*i); 
+				else {//thread safety: we don't insert/erase the iterators right next to the splits, copy data instead
+					auto temp = v.insert_move(std::next(j,1),*i);
+					std::swap(*itChunksBegin[k],*temp);}
+					
+				if (i!=itChunksEnd[k]) {
+					auto temp=i--; //step back before erase
+					v.erase_move(temp);
+				} else {//thread safety
+					*i = *std::prev(i,1);
+					v.erase_move(std::prev(i,1));
+				}
+			}
+			
+		}
+	}
+	std::clock_t sort3 = std::clock();
+	std::cout<< newInteractions[0].size()<<std::endl;
+	std::cout << "timings: "<< double(init - begin) / CLOCKS_PER_SEC <<" "
+				<< double(sort1 - init) / CLOCKS_PER_SEC <<" "
+				<< double(sort2 - sort1) / CLOCKS_PER_SEC <<" "
+				<< double(sort3 - sort2) / CLOCKS_PER_SEC <<std::endl;
+#endif  //TEST_LIST
+	
 	///In the second sort, the chunks are connected consistently.
 	///If sorting requires to move a bound past half-chunk, the algorithm is not thread safe,
 	/// if it happens we run the 1-thread sort at the end
@@ -254,8 +332,8 @@ void InsertionSortCollider::action(){
 			}
 			scene->bodies->insertedBodies.clear();
 			scene->bodies->dirty=false;
-		// ### Second approach: Bounds sizes match the number of bounded bodies in the scene
-		} else if (scene->bodies->dirty or scene->bodies->boundedSubDBodies.size()!=(BB[0].size()/2) or scene->bodies->insertedBodies.size()>0)  {
+		// ### Second approach: Bounds sizes match the real number of bodies in the scene
+		} else if (scene->bodies->dirty or scene->bodies->insertedBodies.size()>0)  {
 			const vector<Body::id_t>& insrts = scene->bodies->insertedBodies;
 			size_t nInsert = insrts.size();
 			size_t BBsize = BB[0].size();
@@ -263,7 +341,7 @@ void InsertionSortCollider::action(){
 				size_t idxTarget=0;
 				VecBounds& BBi=BB[i];
 				for(size_t idx=0; idx<BBsize; idx++){
-					if (Body::byId(BBi[idx].id,scene) and Body::byId(BBi[idx].id,scene)->isBounded()) {
+					if (Body::byId(BBi[idx].id,scene) /*and Body::byId(BBi[idx].id,scene)->isBounded()*/) {
 						if (idxTarget<idx) BBi[idxTarget]=BBi[idx];
 						idxTarget++;}
 					else continue;
@@ -272,7 +350,8 @@ void InsertionSortCollider::action(){
 			}
 			for(int i=0; i<3; i++) {
 				for(size_t idx=0; idx<nInsert; idx++){
-					BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/true)); BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/false)); 
+					if (Body::byId(insrts[idx],scene)) { //could have been inserted then erased
+						BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/true)); BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/false));}
 				}
 			}
 			scene->bodies->insertedBodies.clear();
@@ -339,6 +418,7 @@ void InsertionSortCollider::action(){
 	ISC_CHECKPOINT("bound");
 	// copy bounds along given axis into our arrays 
 	const size_t nBounds = BB[0].size();
+	const Vector3r maxVect (Mathr::MAX_REAL,Mathr::MAX_REAL,Mathr::MAX_REAL);
 // 	#pragma omp parallel for schedule(guided) num_threads(ompThreads>0 ? min(ompThreads,omp_get_max_threads()) : omp_get_max_threads())
 	for(int j=0; j<3; j++){
 // 		const long cacheIter = scene->iter;
@@ -351,30 +431,31 @@ void InsertionSortCollider::action(){
 					const shared_ptr<Bound>& bv=b->bound;
 					// coordinate is min/max if has bounding volume, otherwise both are the position. Add periodic shift so that we are inside the cell
 					// watch out for the parentheses around ?: within ?: (there was unwanted conversion of the Reals to bools!)
-					BBji.coord=((BBji.flags.hasBB=((bool)bv)) ? (BBji.flags.isMin ? bv->min[j] : bv->max[j]) : (b->state->pos[j])) - (periodic ? BBj.cellDim*BBji.period : 0.);
+					BBji.coord=((BBji.flags.hasBB=((bool)bv)) ? (BBji.flags.isMin ? bv->min[j] : bv->max[j]) : (keepListsShort ? Mathr::MAX_REAL : b->state->pos[j])) - (periodic ? BBj.cellDim*BBji.period : 0.);
 					// if initializing periodic, shift coords & record the period into BBj[i].period
 					if(doInitSort && periodic) BBji.coord=cellWrap(BBji.coord,0,BBj.cellDim,BBji.period);
 					// for each body, copy its minima and maxima, for quick checks of overlaps later
 					//bounds have been all updated when j==0, we can safely copy them here when j==1
-					if (BBji.flags.isMin && j==1 &&bv) {
-						 memcpy(&minima[3*id],&bv->min,3*sizeof(Real)); memcpy(&maxima[3*id],&bv->max,3*sizeof(Real)); 
-					}					
-				} else { BBj[i].flags.hasBB=false; /* for vanished body, keep the coordinate as-is, to minimize inversions. */ }
+					if (bv) {
+						if (BBji.flags.isMin && j==1 ) 
+							memcpy(&minima[3*id],&bv->min,3*sizeof(Real)); memcpy(&maxima[3*id],&bv->max,3*sizeof(Real)); 
+					} else if (keepListsShort) { memcpy(&minima[3*id],&maxVect,3*sizeof(Real)); memcpy(&maxima[3*id],&maxVect,3*sizeof(Real)); }			
+				} else { BBj[i].flags.hasBB=false; /* for vanished body, keep the coordinate as-is, to minimize inversions. */ 
+					if (keepListsShort)	LOG_WARN("WHY SO?");	}
 			}
 		}
-
 	ISC_CHECKPOINT("copy");
 	// remove interactions which have disconnected bounds and are not real (will run parallel if YADE_OPENMP)
 	interactions->conditionalyEraseNonReal(*this,scene);
 
 	ISC_CHECKPOINT("erase");
-
 	// sort
 		// the regular case
 		if(!doInitSort && !sortThenCollide){
 			/* each inversion in insertionSort calls may add interaction */
 			//1000 bodies is heuristic minimum above which parallel sort is called
 			if(!periodic) for(int i=0; i<3; i++) {
+				if (i==0) LOG_WARN("sorting "<<BB[0].size()/2);
 			#ifdef YADE_OPENMP
 				if (ompThreads<=1 || nBodies<1000) insertionSort(BB[i],interactions,scene);
 				else insertionSortParallel(BB[i],interactions,scene);} 
