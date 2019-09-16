@@ -3,9 +3,13 @@
 #include<core/Scene.hpp>
 #include<core/Omega.hpp>
 #include<core/InteractionContainer.hpp>
+#include<pkg/common/InsertionSortCollider.hpp>
+
+CREATE_LOGGER(Body);
 
 //! This could be -1 if id_t is re-typedef'ed as `int'
 const Body::id_t Body::ID_NONE=Body::id_t(-1);
+bool Body::shortListCheckedOnce=false;
 
 const shared_ptr<Body>& Body::byId(Body::id_t _id, Scene* rb){return (*((rb?rb:Omega::instance().getScene().get())->bodies))[_id];}
 const shared_ptr<Body>& Body::byId(Body::id_t _id, shared_ptr<Scene> rb){return (*(rb->bodies))[_id];}
@@ -30,6 +34,15 @@ unsigned int Body::coordNumber() const {
 	return intrSize;
 }
 
+void Body::setBounded(bool d) {
+	if(d) flags|=FLAG_BOUNDED; else flags&=~(FLAG_BOUNDED);
+	if (id!=Body::ID_NONE and not shortListCheckedOnce) {
+		shared_ptr<InsertionSortCollider> isc;
+		FOREACH(shared_ptr<Engine>& e, Omega::instance().getScene()->engines){ isc=YADE_PTR_DYN_CAST<InsertionSortCollider>(e); if(isc) break; }
+		if(isc and isc->keepListsShort) LOG_ERROR("changing body::bounded after insertion is not supported if collider::keepListsShort=True, turn keepListsShort off (suboptimal)");
+		shortListCheckedOnce=true;
+	}
+}
 
 bool Body::maskOk(int mask) const { return (mask==0 || ((groupMask & mask) != 0)); }
 bool Body::maskCompatible(int mask) const { return (groupMask & mask) != 0; }

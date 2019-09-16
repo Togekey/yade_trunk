@@ -12,6 +12,7 @@ CREATE_LOGGER(BodyContainer);
 
 void BodyContainer::clear(){
 	body.clear();
+	dirty=true;
 #ifdef YADE_MPI
 	subdomainListsNeedUpdate=true;
 #endif
@@ -23,6 +24,8 @@ Body::id_t BodyContainer::insert(shared_ptr<Body> b){
 	b->timeBorn=scene->time;
 	b->id=body.size();
 	scene->doSort = true;
+	dirty=true;
+	insertedBodies.push_back(b->id);
 #ifdef YADE_MPI
 	subdomainListsNeedUpdate=true;
 #endif
@@ -38,6 +41,8 @@ Body::id_t BodyContainer::insertAtId(shared_ptr<Body> b, Body::id_t candidate){
 #ifdef YADE_MPI
 	subdomainListsNeedUpdate=true;
 #endif
+	insertedBodies.push_back(b->id);
+	dirty=true;
 	const shared_ptr<Scene>& scene=Omega::instance().getScene(); 
 	b->iterBorn=scene->iter;
 	b->timeBorn=scene->time;
@@ -52,6 +57,7 @@ bool BodyContainer::erase(Body::id_t id, bool eraseClumpMembers){//default is fa
 #ifdef YADE_MPI
 	subdomainListsNeedUpdate=true;
 #endif
+	dirty=true;
 	const shared_ptr<Body>& b=Body::byId(id);
 	if ((b) and (b->isClumpMember())) {
 		const shared_ptr<Body> clumpBody=Body::byId(b->clumpId);

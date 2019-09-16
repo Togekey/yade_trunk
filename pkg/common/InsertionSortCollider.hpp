@@ -122,6 +122,7 @@ class InsertionSortCollider: public Collider{
 
 		void clear()                      { vec.clear();                   }
 		void reserve(size_t n)            { vec.reserve(n);                }
+		void resize(size_t n)             { if (n>vec.size()) LOG_ERROR("not supposed to increase size - shrink only"); vec.resize(n,Bounds(0,0,true));                 }
 		void push_back(const Bounds&  bb) { vec.push_back(bb);             }
 		// if the line below does not compile on older ubuntu 14.04, then I should add #ifdef guards to check compiler version. This line will make push_back faster when a newer compiler supports it.
 		void push_back(      Bounds&& bb) { vec.push_back(bb);             }
@@ -216,6 +217,7 @@ class InsertionSortCollider: public Collider{
 		((int,numAction,0,,"Cummulative number of collision detection."))
 		((Real,useless,,,"for compatibility of scripts defining the old collider's attributes - see deprecated attributes")) 
 		((bool,doSort,false,,"Do forced resorting of interactions."))
+		((bool,keepListsShort,true,,"remove bounds of non-existent or unbounded bodies from the lists (True is recommended and default)"))
 		((shared_ptr<NewtonIntegrator>, newton,,,"reference to active :yref:`Newton integrator<NewtonIntegrator>`. |yupdate|"))
 		, /* ctor */
 			#ifdef ISC_TIMING

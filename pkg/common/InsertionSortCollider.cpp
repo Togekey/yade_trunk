@@ -78,22 +78,33 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 		nChunks--; chunkSize = unsigned(v.size()/nChunks)+1; chunks.clear();
 		for(unsigned n=0; n<nChunks;n++) chunks.push_back(n*chunkSize); chunks.push_back(v.size());
 	}
-	static unsigned warnOnce=0;
-	if (nChunks<unsigned(ompThreads) && !warnOnce++) LOG_WARN("Parallel insertion: only "<<nChunks <<" thread(s) used. The number of bodies is probably too small for allowing more threads, or the geometry is flat. The contact detection should succeed but not all available threads are used.");
+// 	static unsigned warnOnce=0;
+// 	if (nChunks<unsigned(ompThreads) && !warnOnce++) LOG_WARN("Parallel insertion: only "<<nChunks <<" thread(s) used. The number of bodies is probably too small for allowing more threads, or the geometry is flat. The contact detection should succeed but not all available threads are used.");
 
 	///Define per-thread containers bufferizing the actual insertion of new interactions, since inserting is not thread-safe
 	std::vector<std::vector<std::pair<Body::id_t,Body::id_t> > > newInteractions;
 	newInteractions.resize(ompThreads,std::vector<std::pair<Body::id_t,Body::id_t> >());
 	for (int kk=0;  kk<ompThreads; kk++) newInteractions[kk].reserve(long(chunkSize*0.3));
 	
+// #define TEST_LIST // compare perf of list vs vector
+#ifdef TEST_LIST	
+	std::clock_t begin = std::clock();
+	v.listClear();
+	for (unsigned i=0; i<v.size(); i++) if (v[i].flags.hasBB) {v.insert_back(v[i]);}
+	std::clock_t init = std::clock();
+#endif //TEST_LIST
+	
 	/// First sort, independant in each chunk
 	#pragma omp parallel for schedule(dynamic,1) num_threads(ompThreads>0 ? min(ompThreads,omp_get_max_threads()) : omp_get_max_threads())
 	for (unsigned k=0; k<nChunks;k++) {
 		int threadNum = omp_get_thread_num();
 		for(long i=chunks[k]+1; i<chunks[k+1]; i++){
-			const Bounds viInit=v[i]; long j=i-1; const bool viInitBB=viInit.flags.hasBB;
-			const bool isMin=viInit.flags.isMin; 
+			const Bounds viInit=v[i]; long j=i-1;
+			if (not (j>=chunks[k] && v[j]>viInit)) continue; //else we need to assign v[j+1] after the 'while'
+			const bool viInitBB=viInit.flags.hasBB;
+			const bool isMin=viInit.flags.isMin;
 			while(j>=chunks[k] && v[j]>viInit){
+				if ( std::isnan(v[j].coord)) std::cerr<<"found nan"<<std::endl;
 				v[j+1]=v[j];
 				if(isMin && !v[j].flags.isMin && doCollide && viInitBB && v[j].flags.hasBB && (viInit.id!=v[j].id)) {
 					const Body::id_t& id1 = v[j].id; const Body::id_t& id2 = viInit.id; 
@@ -189,7 +200,7 @@ vector<Body::id_t> InsertionSortCollider::probeBoundingVolume(const Bound& bv){
 		if(!newton) { return true; }
 		fastestBodyMaxDist=newton->maxVelocitySq;
 		if(fastestBodyMaxDist>=1 || fastestBodyMaxDist==0) {  return true; }
-		if(BB[0].size() != 2*scene->bodies->size()) { return true; }
+		if(BB[0].size() != 2*scene->bodies->size() and not keepListsShort) { return true; }
 		if(scene->interactions->dirty) {  return true; }
 		if(scene->doSort) { return true; }
 		return false;
@@ -221,23 +232,53 @@ void InsertionSortCollider::action(){
 			doInitSort=true;
 			doSort=false;
 		}
-		if(BB[0].size() != 2*nBodies){
-			// store previous size
-			size_t BBsize = BB[0].size();
-			LOG_DEBUG("Resize bounds containers from "<<BBsize<<" to "<<nBodies*2<<", will std::sort.");
-			// bodies deleted; clear the container completely, and do as if all bodies were added (rather slow…)
-			// future possibility: insertion sort with such operator that deleted bodies would all go to the end, then just trim bounds
-			if(2*nBodies<BBsize){ for(int i=0; i<3; i++) BB[i].clear(); }
-			// more than 100 bodies was added, do initial sort again
-			// maybe: should rather depend on ratio of added bodies to those already present...?
-			if(2*nBodies-BBsize>200 || BBsize==0) doInitSort=true;
-			assert((BBsize%2)==0);
-			for(int i=0; i<3; i++){
-				BB[i].reserve(2*nBodies);
-				// add lower and upper bounds; coord is not important, will be updated from bb shortly
-				for(size_t id=BBsize/2; id<nBodies; id++){ BB[i].push_back(Bounds(0,id,/*isMin=*/true)); BB[i].push_back(Bounds(0,id,/*isMin=*/false)); }
+		// ### Prepare lists of bounds. First approach: Bounds are from id=0 to id=nBodies, possibly with many null bodies after body erase (in mpi, namely)
+		if (not keepListsShort) {
+			if(BB[0].size() != 2*nBodies){
+				// store previous size
+				size_t BBsize = BB[0].size();
+				LOG_DEBUG("Resize bounds containers from "<<BBsize<<" to "<<nBodies*2<<", will std::sort.");
+				// bodies deleted; clear the container completely, and do as if all bodies were added (rather slow…)
+				// future possibility: insertion sort with such operator that deleted bodies would all go to the end, then just trim bounds
+				if(2*nBodies<BBsize){ for(int i=0; i<3; i++) BB[i].clear(); }
+				// more than 100 bodies was added, do initial sort again
+				// maybe: should rather depend on ratio of added bodies to those already present...?
+				if(2*nBodies-BBsize>200 || BBsize==0) doInitSort=true;
+				assert((BBsize%2)==0);
+				for(int i=0; i<3; i++){
+					BB[i].reserve(2*nBodies);
+					// add lower and upper bounds; coord is not important, will be updated from bb shortly
+					for(size_t id=BBsize/2; id<nBodies; id++){ 
+						BB[i].push_back(Bounds(0,id,/*isMin=*/true)); BB[i].push_back(Bounds(0,id,/*isMin=*/false)); }
+				}
 			}
+			scene->bodies->insertedBodies.clear();
+			scene->bodies->dirty=false;
+		// ### Second approach: Bounds sizes match the number of bounded bodies in the scene
+		} else if (scene->bodies->dirty or scene->bodies->boundedSubDBodies.size()!=(BB[0].size()/2) or scene->bodies->insertedBodies.size()>0)  {
+			const vector<Body::id_t>& insrts = scene->bodies->insertedBodies;
+			size_t nInsert = insrts.size();
+			size_t BBsize = BB[0].size();
+			for(int i=0; i<3; i++) {
+				size_t idxTarget=0;
+				VecBounds& BBi=BB[i];
+				for(size_t idx=0; idx<BBsize; idx++){
+					if (Body::byId(BBi[idx].id,scene) and Body::byId(BBi[idx].id,scene)->bound) {
+						if (idxTarget<idx) BBi[idxTarget]=BBi[idx];
+						idxTarget++;}
+					else continue;
+				}
+				BBi.resize(idxTarget);
+			}	
+			for(int i=0; i<3; i++) {
+				for(size_t idx=0; idx<nInsert; idx++){
+					BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/true)); BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/false)); 
+				}
+			}
+			scene->bodies->insertedBodies.clear();
+			scene->bodies->dirty=false;
 		}
+		
 		if(minima.size()!=(size_t)3*nBodies){ minima.resize(3*nBodies); maxima.resize(3*nBodies); }
 		assert( BB[0].size() == 2*scene->bodies->size());
 		
@@ -299,11 +340,12 @@ void InsertionSortCollider::action(){
 	ISC_CHECKPOINT("bound");
 
 	// copy bounds along given axis into our arrays 
-	#pragma omp parallel for schedule(guided) num_threads(ompThreads>0 ? min(ompThreads,omp_get_max_threads()) : omp_get_max_threads())
-	for(size_t i=0; i<2*nBodies; i++){
+	const size_t nBounds = BB[0].size();
+// 	#pragma omp parallel for schedule(guided) num_threads(ompThreads>0 ? min(ompThreads,omp_get_max_threads()) : omp_get_max_threads())
+	for(int j=0; j<3; j++){
 // 		const long cacheIter = scene->iter;
-		for(int j=0; j<3; j++){
-				VecBounds& BBj=BB[j];
+		VecBounds& BBj=BB[j];
+		for(size_t i=0; i<nBounds; i++){
 				Bounds& BBji = BBj[i];
 				const Body::id_t id=BBji.id;
 				const shared_ptr<Body>& b=Body::byId(id,scene);

@@ -289,7 +289,6 @@ void Subdomain::recvBodyContainersFromWorkers() {
 void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MPIBodyContainer> >& containers, bool ifMerge, bool /*resetInteractions*/) {
 	// to be used when deserializing a recieved container.
 	shared_ptr<BodyContainer>& bodyContainer = scene->bodies;
-	shared_ptr<InteractionContainer>& interactionContainer = scene->interactions; 
 	for (unsigned int i=0; i != containers.size(); ++i){
 		shared_ptr<MPIBodyContainer>& mpiContainer = containers[i];
 		std::vector<shared_ptr<Body> >& bContainer = mpiContainer->bContainer;
@@ -322,7 +321,6 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 			}
 		}
 	}
-	interactionContainer->dirty = true;  //notify the collider about the new interactions/new body. 
 	containers.clear();
 	bodiesSet = true;
 }

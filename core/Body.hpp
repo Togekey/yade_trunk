@@ -33,6 +33,7 @@ class Body: public Serializable{
 		enum { FLAG_BOUNDED=1, FLAG_ASPHERICAL=2, FLAG_SUBDOMAIN=4 }; /* add powers of 2 as needed */
 		//! symbolic constant for body that doesn't exist.
 		static const Body::id_t ID_NONE;
+		static bool shortListCheckedOnce;
 		//! get Body pointer given its id. 
 		static const shared_ptr<Body>& byId(Body::id_t _id,Scene* rb=NULL);
 		static const shared_ptr<Body>& byId(Body::id_t _id,shared_ptr<Scene> rb);
@@ -51,7 +52,7 @@ class Body: public Serializable{
 		bool isDynamic() const { assert(state); return state->blockedDOFs!=State::DOF_ALL; }
 		void setDynamic(bool d){ assert(state); if(d){ state->blockedDOFs=State::DOF_NONE; } else { state->blockedDOFs=State::DOF_ALL; state->vel=state->angVel=Vector3r::Zero(); } }
 		bool isBounded() const {return flags & FLAG_BOUNDED; }
-		void setBounded(bool d){ if(d) flags|=FLAG_BOUNDED; else flags&=~(FLAG_BOUNDED); }
+		void setBounded(bool d);
 		bool getIsSubdomain() const {return flags & FLAG_SUBDOMAIN; }
 		void setIsSubdomain(bool d){ if(d) flags|=FLAG_SUBDOMAIN; else flags&=~(FLAG_SUBDOMAIN); }
 		bool isAspherical() const {return flags & FLAG_ASPHERICAL; }
@@ -114,5 +115,6 @@ class Body: public Serializable{
 		.def_readwrite("chain",&Body::chain,"Returns Id of chain to which the body belongs.")
 		.def("intrs",&Body::py_intrs,"Return list of all real interactions in which this body participates.")
 	);
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(Body);
