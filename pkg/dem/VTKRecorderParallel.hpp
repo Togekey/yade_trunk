@@ -20,7 +20,7 @@ class VTKRecorderParallel: public PeriodicEngine {
 		virtual void action();
 		int procRank, commSize; 
 		bool sceneRefreshed = false; 
-		shared_ptr<Subdomain> subD; 
+		
 		void addWallVTK (vtkSmartPointer<vtkQuad>& boxes, vtkSmartPointer<vtkPoints>& boxesPos, Vector3r& W1, Vector3r& W2, Vector3r& W3, Vector3r& W4);
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(VTKRecorderParallel,PeriodicEngine,"Engine recording snapshots of simulation into series of \\*.vtu files, readable by VTK-based postprocessing programs such as Paraview. Both bodies (spheres and facets) and interactions can be recorded, with various vector/scalar quantities that are defined on them.\n\n:yref:`PeriodicEngine.initRun` is initialized to ``True`` automatically.",
 		((bool,compress,false,,"Compress output XML files [experimental]."))
