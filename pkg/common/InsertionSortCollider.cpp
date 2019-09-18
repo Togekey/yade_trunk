@@ -79,8 +79,6 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 		nChunks--; chunkSize = unsigned(v.size()/nChunks)+1; chunks.clear();
 		for(unsigned n=0; n<nChunks;n++) chunks.push_back(n*chunkSize); chunks.push_back(v.size());
 	}
-// 	static unsigned warnOnce=0;
-// 	if (nChunks<unsigned(ompThreads) && !warnOnce++) LOG_WARN("Parallel insertion: only "<<nChunks <<" thread(s) used. The number of bodies is probably too small for allowing more threads, or the geometry is flat. The contact detection should succeed but not all available threads are used.");
 
 	///Define per-thread containers bufferizing the actual insertion of new interactions, since inserting is not thread-safe
 	std::vector<std::vector<std::pair<Body::id_t,Body::id_t> > > newInteractions;
@@ -441,7 +439,7 @@ void InsertionSortCollider::action(){
 							memcpy(&minima[3*id],&bv->min,3*sizeof(Real)); memcpy(&maxima[3*id],&bv->max,3*sizeof(Real)); 
 					} else if (keepListsShort) { memcpy(&minima[3*id],&maxVect,3*sizeof(Real)); memcpy(&maxima[3*id],&maxVect,3*sizeof(Real)); }			
 				} else { BBj[i].flags.hasBB=false; /* for vanished body, keep the coordinate as-is, to minimize inversions. */ 
-					if (keepListsShort)	LOG_WARN("WHY SO?");	}
+					if (keepListsShort) LOG_ERROR("Shouldn't happen");	}
 			}
 		}
 	ISC_CHECKPOINT("copy");
@@ -455,7 +453,6 @@ void InsertionSortCollider::action(){
 			/* each inversion in insertionSort calls may add interaction */
 			//1000 bodies is heuristic minimum above which parallel sort is called
 			if(!periodic) for(int i=0; i<3; i++) {
-				if (i==0) LOG_WARN("sorting "<<BB[0].size()/2);
 			#ifdef YADE_OPENMP
 				if (ompThreads<=1 || nBodies<1000) insertionSort(BB[i],interactions,scene);
 				else insertionSortParallel(BB[i],interactions,scene);} 

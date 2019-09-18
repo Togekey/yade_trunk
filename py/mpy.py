@@ -329,7 +329,6 @@ def updateDomainBounds(subdomains): #subdomains is the list of subdomains by bod
 		send_buff=np.zeros(6)*np.nan
 	else:
 		subD=O.bodies[subdomains[rank-1]].shape #shorthand to shape of current subdomain
-		subD.setMinMax()
 		send_buff=np.append(subD.boundsMin,subD.boundsMax)
 	recv_buff = np.empty(6*numThreads)
 	timing_comm.Allgather("updateDomainBounds",send_buff,recv_buff)
@@ -698,7 +697,7 @@ def updateMirrorIntersections():
 	global T1,T2,T3,T4,T5,T6,T7
 	start=time.time()
 	subD=O.subD
-	if (rank>0 or not O.splitted): unboundRemoteBodies()
+	if (not O.splitted or (rank>0 and not collider.keepListsShort)): unboundRemoteBodies()
 	collider.boundDispatcher.__call__()
 	tint0=time.time()
 	updateDomainBounds(subD.subdomains) #triggers communications
@@ -793,7 +792,7 @@ def updateMirrorIntersections():
 			subD.receiveBodies(worker)
 		subD.completeSendBodies();
 	t4=time.time()
-	collider.doSort = True
+	if not collider.keepListsShort: collider.doSort = True
 	collider.__call__()
 	t5=time.time()
 	#mprint("execTime=",collider.execTime,"(increment: ",start-time.time(),")")
@@ -825,7 +824,7 @@ def eraseRemote():
 				if not connected: O.bodies.erase(id)  
 
 ##### RUN MPI #########
-def mpirun(nSteps,np=numThreads):
+def mpirun(nSteps,np=numThreads,withMerge=False):
 	global T1,T2,T3,T4,T5,T6,T7
 	T1=0; T2=0; T3=0; T4=0; T5=0; T6=0; T7=0
 	stack=inspect.stack()
@@ -850,7 +849,7 @@ def mpirun(nSteps,np=numThreads):
 	if not (MERGE_SPLIT):	
 		O.run(nSteps,True) #a pyrunner will pause, or trigger collider and continue, depending on WITH_BODY_COPY flag
 		mprint("Collider timings:",T1,"(",T6,"/",T7,"/",T1-T6-T7,") ",T2," ",T3," ",T4," ",T5)
-		#mergeScene()
+		if withMerge: mergeScene() #will be useful to see evolution in QGLViewer, for instance
 	else: #merge/split or body_copy for each collider update
 		collisionChecker.dead=True
 		while (O.iter-initStep)<nSteps:
