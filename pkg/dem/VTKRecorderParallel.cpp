@@ -466,7 +466,7 @@ void VTKRecorderParallel::action(){
 
 	
 	recActive[REC_INTR] = false; 
-	if(recActive[REC_INTR]){
+	if(recActive[REC_INTR] && procRank != 0){
 		
 		// holds information about cell distance between spatial and displayed position of each particle
 		vector<Vector3i> wrapCellDist; if (scene->isPeriodic){ wrapCellDist.resize(scene->bodies->size()); }
@@ -489,8 +489,7 @@ void VTKRecorderParallel::action(){
 			}
 		}
 		FOREACH(const shared_ptr<Interaction>& I, *scene->interactions){
-			if (!I) continue; 
-			if(!I->isReal()) continue;
+			if (!I || !I->isReal()) continue; 
 			if(skipFacetIntr){
 				if(!(Body::byId(I->getId1()))) continue;
 				if(!(Body::byId(I->getId2()))) continue;
@@ -970,7 +969,7 @@ void VTKRecorderParallel::action(){
 			vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
 			if(compress) writer->SetCompressor(compressor);
 			if(ascii) writer->SetDataModeToAscii();
-			string fn=fileName+"spheres."+boost::lexical_cast<string>(scene->iter)+"_"+boost::lexical_cast<string>(procRank-1)+".vtu";
+			string fn=fileName+"spheres_"+boost::lexical_cast<string>(scene->iter)+"_"+boost::lexical_cast<string>(procRank-1)+".vtu";
 			writer->SetFileName(fn.c_str());
 			#ifdef YADE_VTK6
 				writer->SetInputData(spheresUg);
@@ -979,24 +978,24 @@ void VTKRecorderParallel::action(){
 			#endif
 			writer->Write();
 		}
-/*		
+		
 		if (procRank == 1) {
 			
 			vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriter = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New(); 
-			string pfn = fileName+"spheres."+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
-			pwriter->SetFileName(pfn.c_str());
+			string fn = fileName+"spheres_"+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
+			pwriter->EncodeAppendedDataOff(); 
+			pwriter->SetFileName(fn.c_str());
 			pwriter->SetNumberOfPieces(commSize-1);
+			pwriter->SetStartPiece(0); 
+			
 			#ifdef YADE_VTK6 
 				pwriter->SetInputData(spheresUg); 
 			#else 
 				pwriter->SetInput(spheresUg);  
 			#endif  
-			
-// 			pwriter->SetStartPiece(0); 
-// 			pwriter->SetEndPiece(commSize-1); 
 			pwriter->Update(); 
 			pwriter->Write(); 
-		}*/
+		}
 		
 	} 
 	
