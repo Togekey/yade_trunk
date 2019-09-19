@@ -16,7 +16,7 @@
 
 class VTKRecorderParallel: public PeriodicEngine {
 	public:
-  enum {REC_SPHERES=0,REC_FACETS,REC_BOXES,REC_COLORS,REC_MASS,REC_TEMP,REC_CPM,REC_INTR,REC_VELOCITY,REC_ID,REC_CLUMPID,REC_SENTINEL,REC_MATERIALID,REC_STRESS,REC_MASK,REC_RPM,REC_JCFPM,REC_CRACKS,REC_MOMENTS,REC_WPM,REC_PERICELL,REC_LIQ,REC_BSTRESS,REC_FORCE,REC_COORDNUMBER, REC_SUBDOMAIN};
+  enum {REC_SPHERES=0,REC_FACETS,REC_BOXES,REC_COLORS,REC_MASS,REC_TEMP,REC_CPM,REC_INTR,REC_VELOCITY,REC_ID,REC_CLUMPID,REC_SENTINEL,REC_MATERIALID,REC_STRESS,REC_MASK,REC_RPM,REC_JCFPM,REC_CRACKS,REC_MOMENTS,REC_WPM,REC_PERICELL,REC_LIQ,REC_BSTRESS,REC_FORCE,REC_COORDNUMBER, REC_SUBDOMAIN, REC_SPH, REC_DEFORM};
 		virtual void action();
 		int procRank, commSize; 
 		bool sceneRefreshed = false; 
@@ -25,7 +25,7 @@ class VTKRecorderParallel: public PeriodicEngine {
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(VTKRecorderParallel,PeriodicEngine,"Engine recording snapshots of simulation into series of \\*.vtu files, readable by VTK-based postprocessing programs such as Paraview. Both bodies (spheres and facets) and interactions can be recorded, with various vector/scalar quantities that are defined on them.\n\n:yref:`PeriodicEngine.initRun` is initialized to ``True`` automatically.",
 		((bool,compress,false,,"Compress output XML files [experimental]."))
 		((bool,ascii,false,,"Store data as readable text in the XML file (sets `vtkXMLWriter <http://www.vtk.org/doc/nightly/html/classvtkXMLWriter.html>`__ data mode to ``vtkXMLWriter::Ascii``, while the default is ``Appended``)"))
-		((bool,skipFacetIntr,true,,"Skip interactions that are not of sphere-sphere type (e.g. sphere-facet, sphere-box...), when saving interactions"))
+		((bool,skipFacetIntr,false,,"Skip interactions that are not of sphere-sphere type (e.g. sphere-facet, sphere-box...), when saving interactions")) //FIXME : turning this true leads to segfaults (seg fault 11, possibly accessing some null ptr
 		((bool,skipNondynamic,false,,"Skip non-dynamic spheres (but not facets)."))
 		#ifdef YADE_VTK_MULTIBLOCK
 			((bool,multiblock,false,,"Use multi-block (``.vtm``) files to store data, rather than separate ``.vtu`` files."))
