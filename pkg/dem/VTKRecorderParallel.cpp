@@ -33,6 +33,7 @@
   #include<vtkMultiBlockDataSet.h>
 #endif
 
+#include<iostream>
 #include<core/Scene.hpp>
 #include<pkg/pfv/Thermal.hpp>
 #include<pkg/common/Sphere.hpp>
@@ -118,6 +119,8 @@ void VTKRecorderParallel::action(){
 		else if(rec=="liquidcontrol") recActive[REC_LIQ]=true;
 		else if(rec=="bstresses") recActive[REC_BSTRESS]=true;
 		else if(rec=="coordNumber") recActive[REC_COORDNUMBER]=true;
+		else if(rec=="sph") recActive[REC_SPH] = true; 
+		else if(rec=="deformable") recActive[REC_DEFORM] = true; 
 		else LOG_ERROR("Unknown recorder named `"<<rec<<"' (supported are: all, spheres, velocity, facets, boxes, color, stress, cpm, wpm, intr, id, clumpId, materialId, jcfpm, cracks, moments, pericell, liquidcontrol, bstresses). Ignored.");
 	}
 	
@@ -465,8 +468,8 @@ void VTKRecorderParallel::action(){
 	wpmLimitFactor->SetName("wpmLimitFactor");
 
 	
-	recActive[REC_INTR] = false; 
-	if(recActive[REC_INTR] && procRank != 0){
+	// all procs record interactions. 
+	if(recActive[REC_INTR] ){
 		
 		// holds information about cell distance between spatial and displayed position of each particle
 		vector<Vector3i> wrapCellDist; if (scene->isPeriodic){ wrapCellDist.resize(scene->bodies->size()); }
@@ -475,8 +478,8 @@ void VTKRecorderParallel::action(){
 		// map to keep real body ids and their number in a vector (intrBodyPos)
 		boost::unordered_map<Body::id_t,Body::id_t> bIdVector;
 		Body::id_t curId = 0;
-		for (const auto& bId : subD->ids) {
-			const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
+		for (const auto& bid : subD->ids) {
+			const shared_ptr<Body>& b = (*scene->bodies)[bid]; 
 			if (b) {
 				if(!scene->isPeriodic) {
 					intrBodyPos->InsertNextPoint(b->state->pos[0],b->state->pos[1],b->state->pos[2]);
@@ -485,11 +488,13 @@ void VTKRecorderParallel::action(){
 					intrBodyPos->InsertNextPoint(pos[0],pos[1],pos[2]);
 				}
 				bIdVector.insert (std::pair<Body::id_t,Body::id_t>(b->id,curId));
-				curId++;
+				++curId; 
 			}
 		}
+		
 		FOREACH(const shared_ptr<Interaction>& I, *scene->interactions){
-			if (!I || !I->isReal()) continue; 
+			if (!I) continue; 
+			if (!I->isReal())  continue; 
 			if(skipFacetIntr){
 				if(!(Body::byId(I->getId1()))) continue;
 				if(!(Body::byId(I->getId2()))) continue;
@@ -500,8 +505,8 @@ void VTKRecorderParallel::action(){
 			const auto iterId1 = bIdVector.find (I->getId1());
 			const auto iterId2 = bIdVector.find (I->getId2());
 			
-			if (iterId2 == bIdVector.end() || iterId2 == bIdVector.end()) continue;
-			
+			if (iterId1 == bIdVector.end() || iterId2 == bIdVector.end()) continue;
+
 			const auto setId1Line = iterId1->second;
 			const auto setId2Line = iterId2->second;
 			
@@ -517,6 +522,7 @@ void VTKRecorderParallel::action(){
 			// how many times to add values defined on interactions, depending on how many times the interaction is saved
 			int numAddValues=1;
 			// aperiodic boundary, or interaction is inside the cell
+			
 			if(!scene->isPeriodic || (scene->isPeriodic && (I->cellDist==wrapCellDist[I->getId2()]-wrapCellDist[I->getId1()]))){
 				vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
 				line->GetPointIds()->SetId(0,setId1Line);
@@ -526,6 +532,7 @@ void VTKRecorderParallel::action(){
 				assert(scene->isPeriodic);
 				// spatial positions of particles
 				const Vector3r& p01(Body::byId(I->getId1())->state->pos); const Vector3r& p02(Body::byId(I->getId2())->state->pos);
+				
 				// create two line objects; each of them has one endpoint inside the cell and the other one sticks outside
 				// A,B are the "fake" bodies outside the cell for id1 and id2 respectively, p1,p2 are the displayed points
 				// distance in cell units for shifting A away from p1; negated value is shift of B away from p2
@@ -533,6 +540,7 @@ void VTKRecorderParallel::action(){
 				const vtkIdType idPtA=intrBodyPos->InsertNextPoint(ptA[0],ptA[1],ptA[2]); 
 				
 				Vector3r ptB(p02+scene->cell->hSize*(wrapCellDist[I->getId1()]-I->cellDist).cast<Real>());
+				
 				const vtkIdType idPtB=intrBodyPos->InsertNextPoint(ptB[0],ptB[1],ptB[2]);
 				
 				vtkSmartPointer<vtkLine> line1B(vtkSmartPointer<vtkLine>::New());
@@ -543,12 +551,14 @@ void VTKRecorderParallel::action(){
 				lineA2->GetPointIds()->SetId(0,idPtA);
 				lineA2->GetPointIds()->SetId(1,setId2Line);
 				numAddValues=2;
+				
 			}
 			const NormShearPhys* phys = YADE_CAST<NormShearPhys*>(I->phys.get());
 			const GenericSpheresContact* geom = YADE_CAST<GenericSpheresContact*>(I->geom.get());
 			// gives _signed_ scalar of normal force, following the convention used in the respective constitutive law
 			Real fn=phys->normalForce.dot(geom->normal); 
 			Real fs[3]={ (Real) std::abs(phys->shearForce[0]), (Real) std::abs(phys->shearForce[1]), (Real) std::abs(phys->shearForce[2])};
+			
 			// add the value once for each interaction object that we created (might be 2 for the periodic boundary)
 			for(int i=0; i<numAddValues; i++){
 				intrAbsForceT->INSERT_NEXT_TUPLE(fs);
@@ -586,18 +596,15 @@ void VTKRecorderParallel::action(){
 		}
 	}
 
-	recActive[REC_STRESS] = true; 
+	
 	vector<Shop::bodyState> bodyStates;
 	if(recActive[REC_STRESS]) Shop::getStressForEachBody(bodyStates);
-// 	
-// 	
-	recActive[REC_BSTRESS] = true; 
+	
 	vector<Matrix3r> bStresses;
 	if (recActive[REC_BSTRESS])
 	{
 	  Shop::getStressLWForEachBody(bStresses);
 	}
-// 	
 	if (procRank != 0) {
 		for (const auto& bId : subD->ids){
 			  const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
@@ -610,9 +617,7 @@ void VTKRecorderParallel::action(){
 				pid[0] = spheresPos->InsertNextPoint(pos[0], pos[1], pos[2]);
 				spheresCells->InsertNextCell(1,pid);
 				radii->InsertNextValue(sphere->radius);
-				
-				
-				
+			
 				if (recActive[REC_BSTRESS]) {
 					 const Matrix3r& bStress = bStresses[b->getId()];
 					  Eigen::SelfAdjointEigenSolver<Matrix3r> solver(bStress); // bStress is probably not symmetric (= self-adjoint for real matrices), but the solver still works, considering only one half of bStress. Which is good since existence of (real) eigenvalues is not sure for not symmetric bStress..
@@ -701,15 +706,19 @@ void VTKRecorderParallel::action(){
 				if (recActive[REC_COORDNUMBER]){
 					spheresCoordNumb->InsertNextValue(b->coordNumber());
 				}
-#ifdef YADE_SPH
-// 				spheresRhoSPH->InsertNextValue(b->state->rho); 
-// 				spheresPressSPH->InsertNextValue(b->state->press); 
-// 				spheresCoordNumbSPH->InsertNextValue(b->coordNumber()); 
+#ifdef YADE_SPH			
+				if (recActive[REC_SPH]){
+					spheresRhoSPH->InsertNextValue(b->state->rho); 
+					spheresPressSPH->InsertNextValue(b->state->press); 
+					spheresCoordNumbSPH->InsertNextValue(b->coordNumber()); 
+				}
 #endif
 
-#ifdef YADE_DEFORM
-// 				const Sphere* sphere = dynamic_cast<Sphere*>(b->shape.get());
-// 				spheresRealRad->InsertNextValue(b->state->dR + sphere->radius);
+#ifdef YADE_DEFORM	
+				if (recActive[REC_DEFORM]) {
+					const Sphere* sphere = dynamic_cast<Sphere*>(b->shape.get());
+					spheresRealRad->InsertNextValue(b->state->dR + sphere->radius);
+				}
 #endif
 
 #ifdef YADE_LIQMIGRATION
@@ -776,7 +785,8 @@ void VTKRecorderParallel::action(){
 		    } // subD loop  (workers)
 
 	} //  if workers condition
-		
+	
+	// assuming only master proc holds box bodies. 
 	if (procRank == 0 && recActive[REC_BOXES]) {
 		for (const auto & bId : subD->ids) {
 			const shared_ptr<Body>&  b = (*scene->bodies)[bId]; 
@@ -913,13 +923,17 @@ void VTKRecorderParallel::action(){
 			spheresUg->GetPointData()->AddArray(spheresAngVelLen);
 		}
 #ifdef YADE_SPH
-// 		spheresUg->GetPointData()->AddArray(spheresRhoSPH);
-// 		spheresUg->GetPointData()->AddArray(spheresPressSPH);
-// 		spheresUg->GetPointData()->AddArray(spheresCoordNumbSPH);
+		if (recActive[REC_SPH]){
+			spheresUg->GetPointData()->AddArray(spheresRhoSPH);
+			spheresUg->GetPointData()->AddArray(spheresPressSPH);
+			spheresUg->GetPointData()->AddArray(spheresCoordNumbSPH);
+		}
 #endif
 
 #ifdef YADE_DEFORM
-// 		spheresUg->GetPointData()->AddArray(spheresRealRad);
+		if (recActive[REC_DEFORM]) {
+			spheresUg->GetPointData()->AddArray(spheresRealRad);
+		}
 #endif
 
 #ifdef YADE_LIQMIGRATION
