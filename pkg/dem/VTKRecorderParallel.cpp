@@ -687,7 +687,6 @@ void VTKRecorderParallel::action(){
 				spheresTorqueVec->INSERT_NEXT_TUPLE(tt);
 
 				}
-				
 				if (recActive[REC_SUBDOMAIN]){
 					spheresSubdomain->InsertNextValue(b->subdomain); 
 				}
@@ -795,7 +794,7 @@ void VTKRecorderParallel::action(){
 	if (procRank == 0 && recActive[REC_BOXES]) {
 		for (const auto & bId : subD->ids) {
 			const shared_ptr<Body>&  b = (*scene->bodies)[bId]; 
-			if (b){
+			if (b){ //maybe this check is redundant? 
 				if (b->isBounded()){
 					const Box* box = dynamic_cast<Box*>(b->shape.get()); 
 					if (box) {
@@ -906,7 +905,7 @@ void VTKRecorderParallel::action(){
 			#else
 				writer->SetInput(boxesUg);
 			#endif
-			writer->Write();	
+			writer->Write();
 		}
 	} // end master (if REC_BOXES) 
 	
@@ -1251,7 +1250,186 @@ void VTKRecorderParallel::action(){
 		}
 	}
 
-} //function end 
+	if (recActive[REC_PERICELL] && procRank == 0){
+		vtkSmartPointer<vtkUnstructuredGrid> pericellUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
+		pericellUg->SetPoints(pericellPoints);
+		pericellUg->SetCells(12,pericellHexa);
+		#ifdef YADE_VTK_MULTIBLOCK
+		if(!multiblock)
+		#endif
+			{
+			vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+			if(compress) writer->SetCompressor(compressor);
+			if(ascii) writer->SetDataModeToAscii();
+			string fn=fileName+"pericell_"+boost::lexical_cast<string>(scene->iter)+".vtu";
+			writer->SetFileName(fn.c_str());
+			#ifdef YADE_VTK6
+				writer->SetInputData(pericellUg);
+			#else
+				writer->SetInput(pericellUg);
+			#endif
+			writer->Write();
+		}
+	}
+	
+		if (recActive[REC_CRACKS] && procRank != 0) {
+		vtkSmartPointer<vtkUnstructuredGrid> crackUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
+		string fileCracks = "cracks_"+Key+boost::lexical_cast<string>(procRank)+".txt";
+		std::ifstream file (fileCracks.c_str(),std::ios::in);
+// 		vtkSmartPointer<vtkUnstructuredGrid> crackUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
+		
+		if(file){
+			 while ( !file.eof() ){
+				std::string line;
+				Real iter,time,p0,p1,p2,type,size,n0,n1,n2,nrg,onJnt;
+				while ( std::getline(file, line)) {/* writes into string "line", a line of file "file". To go along diff. lines*/
+					file >> iter >> time >> p0 >> p1 >> p2 >> type >> size >> n0 >> n1 >> n2 >> nrg >> onJnt;
+					vtkIdType pid[1];
+					pid[0] = crackPos->InsertNextPoint(p0, p1, p2);
+					crackCells->InsertNextCell(1,pid);
+                                        crackIter->InsertNextValue(iter);
+                                        crackTime->InsertNextValue(time);
+					crackType->InsertNextValue(type);
+					crackSize->InsertNextValue(size);					
+					Real n[3] = { n0, n1, n2 };
+					crackNorm->INSERT_NEXT_TUPLE(n);
+                                        crackNrg->InsertNextValue(nrg);
+                                        crackOnJnt->InsertNextValue(onJnt);
+				}
+			}
+			 file.close();
+		}
+// 
+		crackUg->SetPoints(crackPos);
+		crackUg->SetCells(VTK_VERTEX, crackCells);
+		crackUg->GetPointData()->AddArray(crackIter);
+                crackUg->GetPointData()->AddArray(crackTime);
+		crackUg->GetPointData()->AddArray(crackType);
+		crackUg->GetPointData()->AddArray(crackSize);
+		crackUg->GetPointData()->AddArray(crackNorm); //see https://www.mail-archive.com/paraview@paraview.org/msg08166.html to obtain Paraview 2D glyphs conforming to this normal 
+                crackUg->GetPointData()->AddArray(crackNrg);
+                crackUg->GetPointData()->AddArray(crackOnJnt);
+
+		vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+		if(compress) writer->SetCompressor(compressor);
+		if(ascii) writer->SetDataModeToAscii();
+		string fn=fileName+"cracks_"+boost::lexical_cast<string>(scene->iter)+boost::lexical_cast<string>(procRank-1)+".vtu";
+		writer->SetFileName(fn.c_str());
+		#ifdef YADE_VTK6
+			writer->SetInputData(crackUg);
+		#else
+			writer->SetInput(crackUg);
+		#endif
+		writer->Write(); 
+		
+		if (procRank == 1) {
+			vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriter = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New(); 
+			string fn = fileName+"cracks_"+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
+			pwriter->EncodeAppendedDataOff(); 
+			pwriter->SetFileName(fn.c_str());
+			pwriter->SetNumberOfPieces(commSize-1);
+			pwriter->SetStartPiece(0); 
+			
+			#ifdef YADE_VTK6 
+				pwriter->SetInputData(crackUg); 
+			#else 
+				pwriter->SetInput(crackUg);  
+			#endif  
+			pwriter->Update(); 
+			pwriter->Write(); 
+		  
+		}
+		
+	}
+// doing same thing for moments that we did for cracks:
+	if (recActive[REC_MOMENTS] && procRank != 0) {
+		string fileMoments = "moments_"+Key+boost::lexical_cast<string>(procRank)+".txt";
+		std::ifstream file (fileMoments.c_str(),std::ios::in);
+		vtkSmartPointer<vtkUnstructuredGrid> momentUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
+		
+		if(file){
+			 while ( !file.eof() ){
+				std::string line;
+				Real i, p0, p1, p2, moment, numInts, eventNum, time;
+				while ( std::getline(file, line)) {/* writes into string "line", a line of file "file". To go along diff. lines*/
+					file >> i >> p0 >> p1 >> p2 >> moment >> numInts >> eventNum >> time;
+					vtkIdType pid[1];
+					pid[0] = momentPos->InsertNextPoint(p0, p1, p2);
+					momentCells->InsertNextCell(1,pid);
+					momentSize->InsertNextValue(moment);
+					momentiter->InsertNextValue(i);
+					momenttime->InsertNextValue(time);
+					momentNumInts->InsertNextValue(numInts);
+					momentEventNum->InsertNextValue(eventNum);
+				}
+			}
+			 file.close();
+		}
+// 
+		momentUg->SetPoints(momentPos);
+		momentUg->SetCells(VTK_VERTEX, momentCells);
+		momentUg->GetPointData()->AddArray(momentiter);
+		momentUg->GetPointData()->AddArray(momenttime);
+		momentUg->GetPointData()->AddArray(momentSize);
+		momentUg->GetPointData()->AddArray(momentNumInts);
+		momentUg->GetPointData()->AddArray(momentEventNum);
+
+		vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+		if(compress) writer->SetCompressor(compressor);
+		if(ascii) writer->SetDataModeToAscii();
+		string fn=fileName+"moments_"+boost::lexical_cast<string>(scene->iter)+boost::lexical_cast<string>(procRank-1)+".vtu";
+		writer->SetFileName(fn.c_str());
+		#ifdef YADE_VTK6
+			writer->SetInputData(momentUg);
+		#else
+			writer->SetInput(momentUg);
+		#endif
+		writer->Write();
+		
+		if (procRank == 1) {
+			vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriter = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New(); 
+			string fn = fileName+"moments_"+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
+			pwriter->EncodeAppendedDataOff(); 
+			pwriter->SetFileName(fn.c_str());
+			pwriter->SetNumberOfPieces(commSize-1);
+			pwriter->SetStartPiece(0); 
+			
+			#ifdef YADE_VTK6 
+				pwriter->SetInputData(momentUg); 
+			#else 
+				pwriter->SetInput(momentUg);  
+			#endif  
+			pwriter->Update(); 
+			pwriter->Write(); 
+		  
+		}
+
+	}
+/*
+	#ifdef YADE_VTK_MULTIBLOCK
+		if(multiblock){
+			vtkSmartPointer<vtkMultiBlockDataSet> multiblockDataset = vtkSmartPointer<vtkMultiBlockDataSet>::New();
+			int i=0;
+			if(recActive[REC_SPHERES]) multiblockDataset->SetBlock(i++,spheresUg);
+			if(recActive[REC_FACETS]) multiblockDataset->SetBlock(i++,facetsUg);
+			if(recActive[REC_INTR]) multiblockDataset->SetBlock(i++,intrPd);
+			if(recActive[REC_PERICELL]) multiblockDataset->SetBlock(i++,pericellUg);
+			vtkSmartPointer<vtkXMLMultiBlockDataWriter> writer = vtkSmartPointer<vtkXMLMultiBlockDataWriter>::New();
+			if(ascii) writer->SetDataModeToAscii();
+			string fn=fileName+boost::lexical_cast<string>(scene->iter)+".vtm";
+			writer->SetFileName(fn.c_str());
+			#ifdef YADE_VTK6
+				writer->SetInputData(multiblockDataset);
+			#else
+				writer->SetInput(multiblockDataset);
+			#endif
+			writer->Write();	
+		}
+	#endif*/
+	
+
+} 
+//function end 
 
 
 

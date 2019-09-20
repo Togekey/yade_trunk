@@ -1,4 +1,8 @@
 #if defined (YADE_MPI) & defined (YADE_VTK)
+/* This class works exactly like the VTKRecorder class, main difference being each worker loops through the bodies it owns i.e. based on the ids owned by the subdomain. 
+ Spheres, clumps and other 'worker' bodies are written by each worker. Each worker writes it's own 'vtu' & 'vtp' files. One worker wirtes the '.pvtu' file, this file contains meta information
+ of the other vtu files and stitches the other files together when opened in Paraview. 'Boundary' bodies such as facets. walls, boxes are written by the master (proc with rank = 0) in the usual way.  
+ Interactions are wirttien by all procs, and the master writes a '.pvtp' file similar to the .pvtu file. The multiblock feature has not been implemented yet.  */ 
 #pragma once
 #include<lib/compatibility/VTKCompatibility.hpp> // fix InsertNextTupleValue → InsertNextTuple name change (and others in the future)
 #include<pkg/common/PeriodicEngines.hpp>
