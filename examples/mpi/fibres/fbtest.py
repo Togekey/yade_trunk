@@ -17,7 +17,7 @@ class Fibre :
     
 # The usual engines, without the timestepper.  (NOTE: will be fixed soon.)   
 O.engines = [ForceResetter(), 
-             InsertionSortCollider([Bo1_GridConnection_Aabb(),Bo1_PFacet_Aabb()]), 
+             InsertionSortCollider([Bo1_GridConnection_Aabb(),Bo1_PFacet_Aabb(), Bo1_Subdomain_Aabb()]), 
              InteractionLoop(
                  [Ig2_GridNode_GridNode_GridNodeGeom6D(),
                   Ig2_GridConnection_GridConnection_GridCoGridCoGeom(),
@@ -40,7 +40,7 @@ O.materials.append(CohFrictMat(young=young,poisson=0.3,density=5000,frictionAngl
 
 
 r = 2e-04       #fibre radius
-ntot = 1500     # total number of fibers 
+ntot = 150     # total number of fibers 
 nNodes = 21     # number of nodes per fiber
 numseg = nNodes-1 #number of segments per fiber. 
 l = 2e-02         # fiber length. 
