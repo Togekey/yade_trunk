@@ -638,6 +638,9 @@ def splitScene():
 				
 			subD.subdomains = subdomains
 			
+			masterBodies = [b.id for b in O.bodies if b.subdomain==0] 
+			subD.setIDstoSubdomain(masterBodies)
+			
 			#tell the collider how to handle this new thing
 			
 			if not LOAD_SIM:
