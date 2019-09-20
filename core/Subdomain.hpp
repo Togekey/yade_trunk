@@ -349,6 +349,7 @@ class Subdomain: public Shape {
 		.def("countIntsWith", &Subdomain::countIntsWith, (boost::python::arg("body"),boost::python::arg("someSubDomain"),boost::python::arg("someSubDomain")=Omega::instance().getScene()), "returns for a body the count of interactions (real or virtual) with bodies from a certain subdomain, interactions with subdomains excluded. Third parameter (scene pointer) can be left to default (equivalent to O._sceneObj).")
 		.def("filteredInts", &Subdomain::filteredInts, (boost::python::arg("someSubDomain"),boost::python::arg("mirror")), "return a copy of intersections or mirrorIntersections from which non-interacting bodies have been removed.")
 		.def("filterIntersections", &Subdomain::filterIntersections,(boost::python::arg("someSubDomain")=Omega::instance().getScene()),"clear intersections and mirror intersections of all non-interacting bodies.")
+		.def("setIDstoSubdomain", &Subdomain::setIDstoSubdomain, (boost::python::arg("idList")), "set list of ids to the subdomain." )
 	);
 	// clang-format on
 	DECLARE_LOGGER;
