@@ -60,7 +60,7 @@ COPY_MIRROR_BODIES_WHEN_COLLIDE = True
 RESET_SUBDOMAINS_WHEN_COLLIDE = False
 DOMAIN_DECOMPOSITION = False
 NUM_MERGES = 0
-SEND_BYTEARRAYS = False
+SEND_BYTEARRAYS = True
 
 
 #tags for mpi messages
@@ -310,7 +310,7 @@ def unboundRemoteBodies():
 	for b in O.bodies:# unbound the bodies assigned to workers (not interacting directly with other bodies in master scene)
 		if not b.isSubdomain and b.subdomain!=rank:
 			b.bounded=False
-			b.bound=None
+			if not collider.keepListsShort: b.bound=None
 			
 def reboundRemoteBodies(ids):
 	'''
@@ -318,8 +318,8 @@ def reboundRemoteBodies(ids):
 	'''
 	if isinstance(ids,list):
 		for id in ids:
-			b = O.bodies[id] 
-			if b and not isinstance(b.shape,GridNode): b.bounded=True 
+			b = O.bodies[id]
+			if b and not isinstance(b.shape,GridNode): b.bounded=True
 	else: #when passing numpy array we need to convert 'np.int32' to 'int'
 		for id in ids:
 			b = O.bodies[id.item()] 
@@ -653,7 +653,7 @@ def splitScene():
 		
 		if rank > 0: 
 			O.stringToScene(sceneAsString) #receive a scene pre-processed by master (i.e. with appropriate body.subdomain's)  
-			wprint("received ",len(O.bodies)," bodies (verletDist=",collider.verletDist,")")
+			#wprint("received ",len(O.bodies)," bodies (verletDist=",collider.verletDist,")")
 			O._sceneObj.subdomain = rank
 			domainBody=None
 			subdomains=[] #list of subdomains by body id
@@ -697,10 +697,10 @@ def splitScene():
 		O.splittedOnce = True
 		
 		
-T1=T2=T3=T4=T5=T6=T7=0
+T1=T2=T3=T3B=T4=T5=T6=T7=0
 
 def updateMirrorIntersections():
-	global T1,T2,T3,T4,T5,T6,T7
+	global T1,T2,T3,T3B,T4,T5,T6,T7
 	start=time.time()
 	subD=O.subD
 	if (not O.splitted or (rank>0 and not collider.keepListsShort)): unboundRemoteBodies()
@@ -709,6 +709,7 @@ def updateMirrorIntersections():
 	updateDomainBounds(subD.subdomains) #triggers communications
 	tint1=time.time()
 	collider.__call__() #see [1]
+	if (collider.keepListsShort): unboundRemoteBodies()
 
 	t1=time.time()
 	#wprint("collider time(1)=", time.time()-start)
@@ -764,12 +765,22 @@ def updateMirrorIntersections():
 			wprint("Received mirrors from: ", req[0], " : ",intrs)
 			if SEND_BYTEARRAYS:
 				O.bufferFromIntrsct(subD,req[0],int(len(intrs)/4),True)[:]=intrs
-				intrs=np.frombuffer(b_ids,dtype=np.int32)
+				intrs=np.frombuffer(intrs,dtype=np.int32)
 			else:
 				subD.mirrorIntersections = subD.mirrorIntersections[0:req[0]]+[intrs]+subD.mirrorIntersections[req[0]+1:]
-			reboundRemoteBodies(intrs)
+			#reboundRemoteBodies(intrs)
+			
+			
+	if rank!=0:
+		for l in subD.mirrorIntersections:
+			if len(l)>0:
+				reboundRemoteBodies(l)
+	t3b=time.time()
+				
 	if(ERASE_REMOTE): eraseRemote()
 	t3=time.time()
+	
+		
 	"""
 	" NOTE: FK, what to do here:
 	" 1- all threads loop on reqs, i.e the intersecting subdomains of the current subdomain.
@@ -820,30 +831,49 @@ def updateMirrorIntersections():
 	except:
 		pass
 	
-	T1+=t1-start; T2+=t2-t1; T3+=t3-t2; T4+=t4-t3; T5+=t5-t4; T6+=tint0-start; T7+=tint1-tint0
+	T1+=t1-start; T2+=t2-t1; T3B+=t3-t3b; T3+=t3-t2; T4+=t4-t3; T5+=t5-t4; T6+=tint0-start; T7+=tint1-tint0
 	wprint("collider time (2)",time.time()-start)
 	#maxVelocitySq is normally reset in NewtonIntegrator in the same iteration as bound dispatching, since Newton will not run before next iter in our case we force that value to avoid another collision detection at next step
 	utils.typedEngine("NewtonIntegrator").maxVelocitySq=0.5
 
 
 def eraseRemote(): 
-	if rank > -1: #workers suppress external bodies from scene, master will keep all bodies anyway 
-		numBodies = len(O.bodies)
-		for id in range(numBodies):
-			if not O.bodies[id]:continue
-			if not O.bodies[id].bounded and O.bodies[id].subdomain!=rank:
+	if rank > -1: # suppress external bodies from scene
+		#numBodies = len(O.bodies)
+		#for id in range(numBodies):
+		for b in O.bodies:
+			if not b.bounded and b.subdomain!=rank:
 				connected = False #a gridNode could be needed as part of interacting facet/connection even if not overlaping a specific subdomain. Assume connections are always bounded for now, we thus only check nodes.
-				if isinstance(O.bodies[id].shape,GridNode):
-					for f in O.bodies[id].shape.getPFacets():
+				if isinstance(b.shape,GridNode):
+					for f in b.shape.getPFacets():
 						if f.bounded: connected = True
-					for c in O.bodies[id].shape.getConnections():
+					for c in b.shape.getConnections():
 						if c.bounded: connected = True
-				if not connected: O.bodies.erase(id)  
+				if not connected:
+					O.bodies.erase(b.id)
+		#cc=0 ###################___________________#############################
+		##numBodies = len(O.bodies)
+		#localBodies=O.bodies.boundedSubDBodies()
+		#for id in localBodies:
+			#b=O.bodies[id]
+			#if not b.bounded and b.subdomain!=rank:
+				#connected = False #a gridNode could be needed as part of interacting facet/connection even if not overlaping a specific subdomain. Assume connections are always bounded for now, we thus only check nodes.
+				#if isinstance(b.shape,GridNode):
+					#for f in b.shape.getPFacets():
+						#if f.bounded: connected = True
+					#for c in b.shape.getConnections():
+						#if c.bounded: connected = True
+				#if not connected:
+					#O.bodies.erase(b.id)
+					#cc+=1
+		#print("ERASED: ",cc)
+		
+		
 
 ##### RUN MPI #########
 def mpirun(nSteps,np=numThreads,withMerge=False):
-	global T1,T2,T3,T4,T5,T6,T7
-	T1=0; T2=0; T3=0; T4=0; T5=0; T6=0; T7=0
+	global T1,T2,T3,T3B,T4,T5,T6,T7
+	T1=0; T2=0; T3=0; T4=0; T5=0; T6=0; T7=0; T3B=0
 	stack=inspect.stack()
 	global userScriptInCheckList
 	if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
@@ -865,7 +895,7 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 		O.timingEnabled=True
 	if not (MERGE_SPLIT):	
 		O.run(nSteps,True) #a pyrunner will pause, or trigger collider and continue, depending on WITH_BODY_COPY flag
-		mprint("Collider timings:",T1,"(",T6,"/",T7,"/",T1-T6-T7,") ",T2," ",T3," ",T4," ",T5)
+		mprint("Collider timings:",T1,"(",T6,"/",T7,"/",T1-T6-T7,") ",T2," ",T3,"(",T3B,") ",T4," ",T5)
 		if withMerge: mergeScene() #will be useful to see evolution in QGLViewer, for instance
 	else: #merge/split or body_copy for each collider update
 		collisionChecker.dead=True
