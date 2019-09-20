@@ -49,46 +49,7 @@ class FoamCoupling : public GlobalEngine {
 		const int TAG_FLUID_DT = 1050;  
 		const int TAG_YADE_DT = 1060; 
 
-  private:
-    // some variables for MPI_Send/Recv 
-    const int sendTag=500;  
-    MPI_Status status; 
-    int rank, commSize; 
-
-
-  public: 
-    
-    void getRank(); 
-    void setNumParticles(int); 
-    void setIdList(const std::vector<int>& );  
-    void killMPI(); 
-    void updateProcList();
-    void castParticle();
-    void castNumParticle(int); 
-    void castTerminate();  
-    void resetProcList(); 
-    void recvHydroForce(); 
-    void setHydroForce();
-    void sumHydroForce(); 
-    void exchangeDeltaT();  
-    void runCoupling(); 
-    bool exchangeData();
-    Real getViscousTimeScale();  // not fully implemented, piece of code left in foam.
-    virtual void action(); 
-    virtual ~FoamCoupling(){}; 
-    std::vector<int> bodyList; 
-    std::vector<double> hydroForce; 
-    std::vector<double> particleData;
-    std::vector<int>  procList; 
-    Real foamDeltaT; 
-    long int  dataExchangeInterval=1; 
-    bool recvdFoamDeltaT; 
-    bool isGaussianInterp;
-    bool initDone = false; 
-    void insertBodyId(int); 
-    bool eraseId(int);
-    int getNumBodies(); 
-    std::vector<int> getIdList(); 
+	public: 
     
 		void getRank(); 
 		void setNumParticles(int); 
@@ -196,6 +157,8 @@ class FoamCoupling : public GlobalEngine {
     .def("eraseId", &FoamCoupling::eraseId,boost::python::arg("idToErase"), "remove a body from hydrodynamic force coupling")
     .def("getNumBodies", &FoamCoupling::getNumBodies, "get the number of bodies in the coupling") 
     .def("getIdList", &FoamCoupling::getIdList, "get the ids of bodies in coupling")
+    .def("getFluidDomainBbox", &FoamCoupling::getFluidDomainBbox, "get the fluid domain bounding boxes, called once during simulation initialization. ")
+   
     .def_readonly("foamDeltaT", &FoamCoupling::foamDeltaT, "timestep in openfoam solver from  :yref:`exchangeDeltaT <FoamCoupling::exchangeDeltaT>` ") 
     .def_readonly("dataExchangeInterval", &FoamCoupling::dataExchangeInterval, "Number of iterations/substepping : for stability and to be in sync with fluid solver calculated in :yref:`exchangeDeltaT <FoamCoupling::exchangeDeltaT>`")
     .def_readwrite("isGaussianInterp", &FoamCoupling::isGaussianInterp, "switch for Gaussian interpolation of field varibles in openfoam. Uses  :yref:`sumHydroForce<FoamCoupling::sumHydroForce>` to obtain hydrodynamic force ")
