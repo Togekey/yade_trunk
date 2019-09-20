@@ -298,7 +298,8 @@ class Subdomain: public Shape {
 		.add_property("mirrorIntersections",&Subdomain::mIntrs_get,&Subdomain::mIntrs_set,"lists of bodies from other subdomains intersecting this one. WARNING: only assignement and concatenation allowed")
 		.add_property("comm",&Subdomain::getMyComm,&Subdomain::setMyComm,"Communicator to be used for MPI (converts mpi4py comm <-> c++ comm)")
 		.add_property("subdomains", &Subdomain::getSubdomainIds, &Subdomain::setSubdomainIds, "subdomain ids of other bodies, WARNING: only assignement and concatenation allowed ")
-		.def("splitBodiesToWorkers", &Subdomain::splitBodiesToWorkers,(boost::python::arg("eraseWorkerBodies")), "of true bodies in workers are erased and reassigned.")
+		.def("splitBodiesToWorkers", &Subdomain::splitBodiesToWorkers,(boost::python::arg("eraseWorkerBodies")), "if true bodies in workers are erased and reassigned.")
+		.def("setIDstoSubdomain", &Subdomain::setIDstoSubdomain, (boost::python::arg("idList")), "set list of ids to the subdomain." )
 	);
 	DECLARE_LOGGER;
 	REGISTER_CLASS_INDEX(Subdomain,Shape);
