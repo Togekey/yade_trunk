@@ -50,26 +50,24 @@ void FoamCoupling::getRank() {
 }
 
 void FoamCoupling::setNumParticles(int np){
-
-      getRank(); 
-      numParticles = np;
-      castNumParticle(numParticles); 
-      initDone = true; 
-  
+	getRank(); 
+	numParticles = np;
+	castNumParticle(numParticles); 
+	initDone = true; 
 }
 
 void FoamCoupling::setIdList(const std::vector<int>& alist) {
-  bodyList.clear(); bodyList.resize(alist.size()); 
-  for (unsigned int i=0; i != bodyList.size(); ++i){
-    bodyList[i] = alist[i];
-  }
-
+	bodyList.clear(); bodyList.resize(alist.size()); 
+	for (unsigned int i=0; i != bodyList.size(); ++i){
+		bodyList[i] = alist[i];
+	}
 }
 
 
 void FoamCoupling::insertBodyId(int bId){
-	bodyList.push_back(bId);
-  
+	const auto& iter = std::find(bodyList.begin(), bodyList.end(), bId); 
+	if ( iter != bodyList.end()) {LOG_WARN("Body Id " << bId << "  already exists in coupling. ")} else{
+	bodyList.push_back(bId); } 
 }
 
 bool FoamCoupling::eraseId(int bId){
@@ -99,36 +97,35 @@ void FoamCoupling::castParticle() {
 	std::fill(procList.begin(), procList.end(), -1); 
 	std::fill(hydroForce.begin(), hydroForce.end(), 1e-50); 
 
-#ifdef YADE_OPENMP
-#pragma omp parallel  for collapse (1)
-#endif
+	#ifdef YADE_OPENMP
+	#pragma omp parallel  for collapse (1)
+	#endif
 
-for (unsigned int i=0; i <  bodyList.size(); ++i)
-  {
-    const Body* b = (*scene -> bodies)[bodyList[i]].get();
-    if ( scene-> isPeriodic){
-      Vector3r pos = scene->cell->wrapPt( b->state->pos);
-      particleData[i*10] = pos[0];
-      particleData[i*10+1] = pos[1];
-      particleData[i*10+2] = pos[2];
-    } else {
+	for (unsigned int i=0; i <  bodyList.size(); ++i){
+		const Body* b = (*scene -> bodies)[bodyList[i]].get();
+		if ( scene-> isPeriodic){
+			const Vector3r& pos = scene->cell->wrapPt( b->state->pos);
+			particleData[i*10] = pos[0];
+			particleData[i*10+1] = pos[1];
+			particleData[i*10+2] = pos[2];
+		} else {
 
-    particleData[i*10] = b->state->pos[0];
-    particleData[i*10+1] = b->state->pos[1];
-    particleData[i*10+2] = b->state->pos[2];
-  }
-    particleData[i*10+3] = b->state->vel[0];
-    particleData[i*10+4] = b->state->vel[1];
-    particleData[i*10+5] = b->state->vel[2];
-    particleData[i*10+6] = b->state->angVel[0];
-    particleData[i*10+7] = b->state->angVel[1];
-    particleData[i*10+8] = b->state->angVel[2];
-    shared_ptr<Sphere> s = YADE_PTR_DYN_CAST<Sphere>(b->shape);
-    particleData[i*10+9] = s->radius;
-  }
-  MPI_Bcast(&particleData.front(), particleData.size(), MPI_DOUBLE, rank, MPI_COMM_WORLD);
-  // clear array after bcast
-  particleData.clear(); 
+			particleData[i*10] = b->state->pos[0];
+			particleData[i*10+1] = b->state->pos[1];
+			particleData[i*10+2] = b->state->pos[2];
+		}
+		particleData[i*10+3] = b->state->vel[0];
+		particleData[i*10+4] = b->state->vel[1];
+		particleData[i*10+5] = b->state->vel[2];
+		particleData[i*10+6] = b->state->angVel[0];
+		particleData[i*10+7] = b->state->angVel[1];
+		particleData[i*10+8] = b->state->angVel[2];
+		shared_ptr<Sphere> s = YADE_PTR_DYN_CAST<Sphere>(b->shape);
+		particleData[i*10+9] = s->radius;
+	}
+	MPI_Bcast(&particleData.front(), particleData.size(), MPI_DOUBLE, rank, MPI_COMM_WORLD);
+	// clear array after bcast
+	particleData.clear(); 
 
 }
 
@@ -144,75 +141,53 @@ void FoamCoupling::castTerminate() {
 
 }
 
-void FoamCoupling::updateProcList()
-{
-  for (unsigned int i=0; i != bodyList.size(); ++i)
-  {
-     int dummy_val = -5;
-     MPI_Allreduce(&dummy_val,&procList[i],1,MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-     if (procList[i] < 0 )  std::cout << "Particle not found in FOAM " << std::endl;
-   }
-   
-   
+void FoamCoupling::updateProcList(){
+	for (unsigned int i=0; i != bodyList.size(); ++i){
+		int dummy_val = -5;
+		MPI_Allreduce(&dummy_val,&procList[i],1,MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+		if (procList[i] < 0 )  std::cout << "Particle not found in FOAM " << std::endl;
+	}
 }
 
 void FoamCoupling::recvHydroForce() {
-  for (unsigned int i=0; i!= procList.size(); ++i) {
-    int recvFrom = procList[i];
-    for (unsigned int j=0; j != 6; ++j) {
-     MPI_Recv(&hydroForce[6*i+j],1,MPI_DOUBLE,recvFrom,sendTag,MPI_COMM_WORLD,&status); 
-    }
-     
-}}
+	 for (unsigned int i=0; i!= procList.size(); ++i) {
+		int recvFrom = procList[i];
+		for (unsigned int j=0; j != 6; ++j) {
+			MPI_Recv(&hydroForce[6*i+j],1,MPI_DOUBLE,recvFrom,sendTag,MPI_COMM_WORLD,&status); 
+		}
+	} 
+}
 
 void FoamCoupling::setHydroForce() {
 
   // clear hydroforce before summation
   
- #ifdef YADE_OPENMP
- #pragma omp parallel for collapse(1)
- #endif
-    for (unsigned int i=0; i < bodyList.size(); ++i) {
-       const Vector3r& fx=Vector3r(hydroForce[6*i], hydroForce[6*i+1], hydroForce[6*i+2]);
-       const Vector3r& tx=Vector3r(hydroForce[6*i+3], hydroForce[6*i+4], hydroForce[6*i+5]);
-       scene->forces.addForce(bodyList[i], fx);
-       scene->forces.addTorque(bodyList[i], tx);
-  }
+	#ifdef YADE_OPENMP
+	#pragma omp parallel for collapse(1)
+	#endif
+	for (unsigned int i=0; i < bodyList.size(); ++i) {
+		const Vector3r& fx=Vector3r(hydroForce[6*i], hydroForce[6*i+1], hydroForce[6*i+2]);
+		const Vector3r& tx=Vector3r(hydroForce[6*i+3], hydroForce[6*i+4], hydroForce[6*i+5]);
+		scene->forces.addForce(bodyList[i], fx);
+		scene->forces.addTorque(bodyList[i], tx);
+	}
 
 }
 
 void FoamCoupling::sumHydroForce() {
-  // clear the vector
-  std::fill(hydroForce.begin(), hydroForce.end(), 0.0);
-  Real dummy_val = 0.0;
-  for (unsigned int i=0; i != bodyList.size(); ++i) {
-   for (unsigned int j=0; j != 6; ++j){
-     MPI_Allreduce(&dummy_val ,&hydroForce[6*i+j],1,MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-   }
-  }
+	// clear the vector
+	std::fill(hydroForce.begin(), hydroForce.end(), 0.0);
+	Real dummy_val = 0.0;
+	for (unsigned int i=0; i != bodyList.size(); ++i) {
+		for (unsigned int j=0; j != 6; ++j){
+			MPI_Allreduce(&dummy_val ,&hydroForce[6*i+j],1,MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		}
+	}
 }
 
 
 void FoamCoupling::resetProcList() {
-     procList.clear(); 
-}
-
-
-void FoamCoupling::action() {
-
-	if (!couplingModeParallel) {
-		if ( exchangeData()) {
-			runCoupling();
-			exchangeDeltaT();
-		}
-		setHydroForce();  
-	} else {
-		if (exchangeData()) {
-			runCouplingParallel(); 
-			exchangeDeltaTParallel(); 
-		}
-		
-	}
+	  procList.clear(); 
 }
 
 
@@ -617,6 +592,8 @@ void FoamCoupling::verifyParticleDetection() {
 			}
 		}
 	}
+	
+	std::cout << "particle search done, my rank =  " <<  worldRank << std::endl ;
 	
 /*	
 	if (unFoundSharedIds.size() > 0) {
