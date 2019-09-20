@@ -43,6 +43,10 @@
 
 #include <pkg/common/KinematicEngines.hpp>
 
+#ifdef YADE_MPI
+#include <core/Subdomain.hpp>
+#endif
+
 CREATE_CPP_LOCAL_LOGGER("yadeWrapper.cpp");
 
 namespace py = boost::python;
@@ -709,6 +713,27 @@ class pyOmega{
 		#endif
 	}
 	
+#ifdef YADE_MPI
+	//return vector<int> as contiguous bytes, skipping conversion to python list
+	PyObject* intrsctToBytes(const shared_ptr<Subdomain>& subD, unsigned rank, bool mirror){
+		if (subD->intersections.size()<=rank) LOG_ERROR("rank too large");
+		if (not mirror) return PyBytes_FromStringAndSize((char*) &(subD->intersections[rank][0]), subD->intersections[rank].size()*sizeof(Body::id_t));
+		else return PyBytes_FromStringAndSize((char*) &(subD->mirrorIntersections[rank][0]), subD->mirrorIntersections[rank].size()*sizeof(Body::id_t));
+	}
+	//return vector<int> as a writable contiguous array. Python syntax: bufferFromIntrsct(...)[:]=intrsctToBytes(...)
+	PyObject* bufferFromIntrsct(const shared_ptr<Subdomain>& subD, unsigned rank, unsigned size, bool mirror){
+		//FIXME: if returning a memoryview, do we need to release it at some point? (https://docs.python.org/3/library/stdtypes.html#memoryview.release)
+		if (subD->intersections.size()<=rank) LOG_ERROR("rank too large");
+		if (not mirror) {
+			if (subD->intersections[rank].size()!=size) subD->intersections[rank].resize(size);
+			return PyMemoryView_FromMemory((char*) (subD->intersections[rank].data()), subD->intersections[rank].size()*sizeof(Body::id_t),PyBUF_WRITE);}
+		else {
+			if (subD->mirrorIntersections[rank].size()!=size) subD->mirrorIntersections[rank].resize(size);
+			return PyMemoryView_FromMemory((char*) &(subD->mirrorIntersections[rank][0]), subD->mirrorIntersections[rank].size()*sizeof(Body::id_t),PyBUF_WRITE);}
+	}
+	
+#endif //YADE_MPI
+	
 	void stringToScene(const string &sstring, string mark=""){
 		Py_BEGIN_ALLOW_THREADS; OMEGA.stop(); Py_END_ALLOW_THREADS;
 		assertScene();
@@ -904,6 +929,10 @@ BOOST_PYTHON_MODULE(wrapper)
 		.def("disableGdb",&pyOmega::disableGdb,"Revert SEGV and ABRT handlers to system defaults.")
 		.def("runEngine",&pyOmega::runEngine,"Run given engine exactly once; simulation time, step number etc. will not be incremented (use only if you know what you do).")
 		.def("tmpFilename",&pyOmega::tmpFilename,"Return unique name of file in temporary directory which will be deleted when yade exits.")
+#ifdef YADE_MPI
+		.def("intrsctToBytes",&pyOmega::intrsctToBytes,(py::arg("subdomain"),py::arg("rank"),py::arg("mirror")),"returns a copy of intersections[rank] (a vector<int>) from a subdomain in the form of bytes. Returns a copy mirrorIntersections[rank] if mirror=True.")
+		.def("bufferFromIntrsct",&pyOmega::bufferFromIntrsct,(py::arg("subdomain"),py::arg("rank"),py::arg("size"),py::arg("mirror")),"returns a (char*) pointer to the underying buffer of intersections[rank], so that it can be overwritten. Size must be passed in advance. Pointer to mirrorIntersections[rank] is returned if mirror=True. Python syntax: bufferFromIntrsct(...)[:]=bytes(something)")
+#endif
 		;
 	py::class_<pyTags>("TagsWrapper","Container emulating dictionary semantics for accessing tags associated with simulation. Tags are accesed by strings.",py::init<pyTags&>())
 		.def("__getitem__",&pyTags::getItem)

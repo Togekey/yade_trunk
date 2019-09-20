@@ -59,7 +59,8 @@ MERGE_W_INTERACTIONS = True
 COPY_MIRROR_BODIES_WHEN_COLLIDE = True 
 RESET_SUBDOMAINS_WHEN_COLLIDE = False
 DOMAIN_DECOMPOSITION = False
-NUM_MERGES = 0 
+NUM_MERGES = 0
+SEND_BYTEARRAYS = False
 
 
 #tags for mpi messages
@@ -315,9 +316,14 @@ def reboundRemoteBodies(ids):
 	'''
 	update states of bodies handled by other workers, argument 'states' is a list of [id,state] (or [id,state,shape] conditionnaly)
 	'''
-	for id in ids:
-		b = O.bodies[id]
-		if b and not isinstance(b.shape,GridNode): b.bounded=True 
+	if isinstance(ids,list):
+		for id in ids:
+			b = O.bodies[id] 
+			if b and not isinstance(b.shape,GridNode): b.bounded=True 
+	else: #when passing numpy array we need to convert 'np.int32' to 'int'
+		for id in ids:
+			b = O.bodies[id.item()] 
+			if b and not isinstance(b.shape,GridNode): b.bounded=True 
 
 def updateDomainBounds(subdomains): #subdomains is the list of subdomains by body ids
 	'''
@@ -712,15 +718,24 @@ def updateMirrorIntersections():
 	subD.mirrorIntersections=[[] for n in range(numThreads)]
 	if rank==0:#master domain
 		for worker in range(1,numThreads):#FIXME: we actually don't need so much data since at this stage the states are unchanged and the list is used to re-bound intersecting bodies, this is only done in the initialization phase, though
-			wprint("sending mirror intersections to "+str(worker)+" ("+str(len(subD.intersections[worker]))+" bodies), "+str(subD.intersections[worker]))
-			timing_comm.send("sendIntersections",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
+			#wprint("sending mirror intersections to "+str(worker)+" ("+str(len(subD.intersections[worker]))+" bodies), "+str(subD.intersections[worker]))
+			m = O.intrsctToBytes(subD,worker,False) if SEND_BYTEARRAYS else  subD.intersections[worker];
+			timing_comm.send("sendIntersections",m, dest=worker, tag=_MIRROR_INTERSECTIONS_)
 	else:
 		# from master
 		b_ids=comm.recv(source=0, tag=_MIRROR_INTERSECTIONS_)
 		wprint("Received mirrors from master: ",b_ids)
-		if len(b_ids)>0:
+		#FIXME: we are assuming that Body::id_t is 4 bytes here, not that portable...
+		numInts0= int(len(b_ids)/4) if SEND_BYTEARRAYS else len(b_ids)  #ints = 4 bytes
+		
+		if numInts0>0:
+			if SEND_BYTEARRAYS:
+				O.bufferFromIntrsct(subD,0,numInts0,True)[:]=b_ids
+				b_ids=np.frombuffer(b_ids,dtype=np.int32)
+			else:
+				subD.mirrorIntersections= [b_ids]+subD.mirrorIntersections[1:]
+
 			reboundRemoteBodies(b_ids)
-			subD.mirrorIntersections= [b_ids]+subD.mirrorIntersections[1:]
 			# since interaction with 0-bodies couldn't be detected before, mirror intersections from master will
 			# tell if we need to wait messages from master (and this is declared via intersections) 
 			if not 0 in subD.intersections[rank]:
@@ -734,22 +749,24 @@ def updateMirrorIntersections():
 		#from workers
 		for worker in subD.intersections[rank]:
 			if worker==0: continue #already received above
-			wprint("subD.intersections["+str(rank)+"]: "+str(subD.intersections[rank]))
-			buf = bytearray(1<<22) #CRITICAL
-			reqs.append([worker,comm.irecv(buf, worker, tag=_MIRROR_INTERSECTIONS_)])
+			#wprint("subD.intersections["+str(rank)+"]: "+str(subD.intersections[rank]))
+			#buf = bytearray(1<<22) #CRITICAL
+			reqs.append([worker,comm.irecv(None, worker, tag=_MIRROR_INTERSECTIONS_)])
 
 		for worker in subD.intersections[rank]:
 			if worker==0: continue #we do not send positions to master, only forces
 			#wprint("sending "+str(len(subD.intersections[worker]))+" states to "+str(worker))
 			wprint("Send mirrors to: ", worker)
-			timing_comm.send("splitScene_intersections",subD.intersections[worker], dest=worker, tag=_MIRROR_INTERSECTIONS_)
-		nn=0
+			m = O.intrsctToBytes(subD,worker,False) if SEND_BYTEARRAYS else  subD.intersections[worker];
+			timing_comm.send("splitScene_intersections", m, dest=worker, tag=_MIRROR_INTERSECTIONS_)
 		for req in reqs:
-			if subD.intersections[rank][nn]==0: nn+=1
-			nn+=1
 			intrs=req[1].wait()
 			wprint("Received mirrors from: ", req[0], " : ",intrs)
-			subD.mirrorIntersections = subD.mirrorIntersections[0:req[0]]+[intrs]+subD.mirrorIntersections[req[0]+1:]
+			if SEND_BYTEARRAYS:
+				O.bufferFromIntrsct(subD,req[0],int(len(intrs)/4),True)[:]=intrs
+				intrs=np.frombuffer(b_ids,dtype=np.int32)
+			else:
+				subD.mirrorIntersections = subD.mirrorIntersections[0:req[0]]+[intrs]+subD.mirrorIntersections[req[0]+1:]
 			reboundRemoteBodies(intrs)
 	if(ERASE_REMOTE): eraseRemote()
 	t3=time.time()
