@@ -48,7 +48,7 @@ implicit none
  !------------start----------- 
   
   
-  nofib = 1502			! always add 2 to to the total number required
+  nofib = 152			! always add 2 to to the total number required
   nseg  = 21 			! no. of nodes per fibre
   lfib = 0.02			! length of the fibre
   box_len(1) = 0.20             ! box dimensions
