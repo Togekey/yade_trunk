@@ -41,13 +41,13 @@ O.materials.append(CohFrictMat(young=young,poisson=0.3,density=5000,frictionAngl
 
 r = 2e-04       #fibre radius
 ntot = 150     # total number of fibers 
-nNodes = 21     # number of nodes per fiber
+nNodes = 11     # number of nodes per fiber
 numseg = nNodes-1 #number of segments per fiber. 
 l = 2e-02         # fiber length. 
 nodes = []        #ids of nodes. 
 
 #the file fibnodes.dat consists of the coordinates of the nodes, generated from fibgen.f90 (python version soon!)
-nlist = open('fibnodes.dat', 'r')
+nlist = open('fibreNodes.dat', 'r')
 #insert the gridNodes to the bodyContainer.
 for l in nlist:
     for i in range(0, nNodes):
