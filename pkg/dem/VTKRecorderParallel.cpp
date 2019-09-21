@@ -1388,9 +1388,9 @@ void VTKRecorderParallel::action(){
 		
 		if (procRank == 1) {
 			vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriter = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New(); 
-			string fn = fileName+"moments_"+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
+			string pfn = fileName+"moments_"+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
 			pwriter->EncodeAppendedDataOff(); 
-			pwriter->SetFileName(fn.c_str());
+			pwriter->SetFileName(pfn.c_str());
 			pwriter->SetNumberOfPieces(commSize-1);
 			pwriter->SetStartPiece(0); 
 			
