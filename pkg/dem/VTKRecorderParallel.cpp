@@ -1030,9 +1030,9 @@ void VTKRecorderParallel::action(){
 		if (procRank == 1) {
 			
 			vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriter = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New(); 
-			string fn = fileName+"spheres_"+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
+			string pfn = fileName+"spheres_"+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
 			pwriter->EncodeAppendedDataOff(); 
-			pwriter->SetFileName(fn.c_str());
+			pwriter->SetFileName(pfn.c_str());
 			pwriter->SetNumberOfPieces(commSize-1);
 			pwriter->SetStartPiece(0); 
 			
@@ -1087,9 +1087,9 @@ void VTKRecorderParallel::action(){
 		if (procRank == 1) {
 			
 			vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriter = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New(); 
-			string fn = fileName+"facets_"+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
+			string pfn = fileName+"facets_"+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
 			pwriter->EncodeAppendedDataOff(); 
-			pwriter->SetFileName(fn.c_str());
+			pwriter->SetFileName(pfn.c_str());
 			pwriter->SetNumberOfPieces(commSize-1);
 			pwriter->SetStartPiece(0); 
 			
@@ -1233,9 +1233,9 @@ void VTKRecorderParallel::action(){
 		// here master writes the 'pvtp'  file. 
 		if (procRank == 0) {
 			vtkSmartPointer<vtkXMLPPolyDataWriter> pwriter = vtkSmartPointer<vtkXMLPPolyDataWriter>::New(); 
-			string fn = fileName+"intrs_"+boost::lexical_cast<string>(scene->iter)+".pvtp"; 
+			string pfn = fileName+"intrs_"+boost::lexical_cast<string>(scene->iter)+".pvtp"; 
 			pwriter->EncodeAppendedDataOff(); 
-			pwriter->SetFileName(fn.c_str());
+			pwriter->SetFileName(pfn.c_str());
 			pwriter->SetNumberOfPieces(commSize);
 			pwriter->SetStartPiece(0); 
 			
@@ -1324,9 +1324,9 @@ void VTKRecorderParallel::action(){
 		
 		if (procRank == 1) {
 			vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriter = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New(); 
-			string fn = fileName+"cracks_"+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
+			string pfn = fileName+"cracks_"+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
 			pwriter->EncodeAppendedDataOff(); 
-			pwriter->SetFileName(fn.c_str());
+			pwriter->SetFileName(pfn.c_str());
 			pwriter->SetNumberOfPieces(commSize-1);
 			pwriter->SetStartPiece(0); 
 			
