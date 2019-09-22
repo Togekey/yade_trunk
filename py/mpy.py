@@ -61,6 +61,7 @@ RESET_SUBDOMAINS_WHEN_COLLIDE = False
 DOMAIN_DECOMPOSITION = False
 NUM_MERGES = 0
 SEND_BYTEARRAYS = True
+ENABLE_PFACETS = False
 
 
 #tags for mpi messages
@@ -394,7 +395,9 @@ def genLocalIntersections(subdomains):
 	for sdId in subdomains:
 		#grid nodes or grid connections could be appended twice or more, as they can participate in multiple pfacets and connexions
 		#this bool list is used to append only once
-		appended = np.repeat([False],len(O.bodies))
+		if (ENABLE_PFACETS):
+			if rank==0: print("this one makes mpi inneficient when ENABLE_PFACETS, contact yade devs if you are interested in developping MPI for PFacets")
+			appended = np.repeat([False],len(O.bodies))
 		subdIdx=O.bodies[sdId].subdomain
 		intrs=O.interactions.withBodyAll(sdId)
 		#special case when we get interactions with current domain, only used to define interactions with master, otherwise some intersections would appear twice
@@ -601,16 +604,13 @@ def splitScene():
 	Split a monolithic scene into distributed scenes on threads
 	precondition: the bodies have subdomain no. set in user script
 	'''
-	
-	
-	
-	
+	start=time.time()
 	if not O.splittedOnce:
 		if DOMAIN_DECOMPOSITION: 
 			if rank == 0:
 				decomposition = dd.decompBodiesSerial(comm) 
 				decomposition.partitionDomain() 
-
+		t1=time.time()
 		if rank == 0: 
 			O._sceneObj.subdomain=0
 			O.subD=Subdomain() #for storage only, this one will not be used beyond that 
@@ -634,11 +634,12 @@ def splitScene():
 			collider.boundDispatcher.targetInterv=collider.targetInterv;
 			collider.boundDispatcher.updatingDispFactor=collider.updatingDispFactor;
 			#END Garbage
-		
+			t2=time.time()
 			#distribute work
 		
 			sceneAsString=O.sceneToString()
 			wprint("will send scene")
+			t3=time.time()
 			#NOTE: that loop with blocking send will hang on ubuntu 16.04 with -mit 4, for unknown reason, fortunately bcast works (and it should be faster)
 			#for worker in range(1,numThreads):
 			#wprint("sending bodies to ",worker)
@@ -648,8 +649,11 @@ def splitScene():
 		  
 			sceneAsString = None
 			wprint("receiving scene")
+			t2=time.time()
+			t3=time.time()
 		
 		sceneAsString=timing_comm.bcast("splitScene_distribute_work",sceneAsString,root=0)
+		t4=time.time()
 		
 		if rank > 0: 
 			O.stringToScene(sceneAsString) #receive a scene pre-processed by master (i.e. with appropriate body.subdomain's)  
@@ -664,13 +668,15 @@ def splitScene():
 			if domainBody==None: wprint("SUBDOMAIN NOT FOUND FOR RANK=",rank)
 			O.subD = domainBody.shape
 			O.subD.subdomains = subdomains
+			
+		t5=time.time()
 		
 		if mit_mode: O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 		
 		O.subD.init()
 		
 		updateMirrorIntersections()
-		
+		t6=time.time()
 		idx = O.engines.index(utils.typedEngine("NewtonIntegrator"))
 		O.engines=O.engines[:idx+1]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].sendRecvStates()",label="sendRecvStatesRunner")]+O.engines[idx+1:]
 		
@@ -682,7 +688,10 @@ def splitScene():
 		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkNeedCollide(): O.pause()",label="collisionChecker")]
 		
 		O.splitted=True
-		O.splittedOnce = True 
+		O.splittedOnce = True
+		
+		t7=time.time()
+		mprint("splitting times:",t1-start," ",t2-t1," ",t3-t2," ",t4-t3," ",t5-t4," ",t6-t5," ",t7-t6)
 		
 	else: 
 		if (DOMAIN_DECOMPOSITION and RESET_SUBDOMAINS_WHEN_COLLIDE):
