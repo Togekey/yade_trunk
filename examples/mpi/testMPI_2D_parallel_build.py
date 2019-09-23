@@ -22,7 +22,7 @@ The number of subdomains depends on argument 'n' of mpiexec. Since rank=0 is not
 '''
 from yade import mpy as mp
 
-NSTEPS=10 #turn it >0 to see time iterations, else only initilization TODO!HACK
+NSTEPS=1000 #turn it >0 to see time iterations, else only initilization TODO!HACK
 #NSTEPS=50 #turn it >0 to see time iterations, else only initilization
 N=50; M=50; #(columns, rows) per thread
 
@@ -103,7 +103,7 @@ else: #######  MPI  ######
 	mp.MERGE_SPLIT=False
 	mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = True
 	mp.MAX_RANK_OUTPUT=4
-	mp.YADE_TIMING=False
+	mp.YADE_TIMING=True
 	mp.DISTRIBUTED_INSERT=True
 	mp.mpirun(1) #this is to eliminate initialization overhead in Cundall number and timings
 	from yade import timing
@@ -114,7 +114,7 @@ else: #######  MPI  ######
 	mp.mprint("num. bodies:",len([b for b in O.bodies])," ",len(O.bodies))
 	if rank==0:
 		mp.mprint( "Total force on floor="+str(O.forces.f(WALL_ID)[1]))
-		mp.mprint("CPU wall time for ",NSTEPS," iterations:",t2-t1,"; Cundall number = ",len(O.bodies)*NSTEPS/(t2-t1))
+		mp.mprint("CPU wall time for ",NSTEPS," iterations:",t2-t1,"; Cundall number = ",N*M*(numThreads-1)*NSTEPS/(t2-t1))
 		collectTiming()
 	else: mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
 	#mp.mergeScene()

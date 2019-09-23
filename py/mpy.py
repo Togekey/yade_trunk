@@ -683,9 +683,11 @@ def splitScene():
 		
 		
 T1=T2=T3=T3B=T4=T5=T6=T7=0
+bodiesToImport=[]
 
 def updateMirrorIntersections():
 	global T1,T2,T3,T3B,T4,T5,T6,T7
+	global bodiesToImport
 	start=time.time()
 	subD=O.subD
 	if (not O.splitted or (rank>0 and not collider.keepListsShort)): unboundRemoteBodies()
@@ -779,19 +781,20 @@ def updateMirrorIntersections():
 	"""
 	if((COPY_MIRROR_BODIES_WHEN_COLLIDE or MERGE_W_INTERACTIONS) and (O.splittedOnce or DISTRIBUTED_INSERT)):
 		requestedSomethingFrom=[]
+		bodiesToImport=[[] for worker in range(numThreads)]
+		sent=[]
 		if rank>0: #master doesn't need bodies
 			#reqs=subD.intersections[rank]
 			for worker in subD.intersections[rank]:
-				bodiesToImport=[]
 				#worker=req[0]
 				#if(worker==0):continue
 				for mirrorBodyId in subD.mirrorIntersections[worker]:
 					if O.bodies[mirrorBodyId]==None:
-						bodiesToImport+=[mirrorBodyId]
-				if(len(bodiesToImport)>0):
+						bodiesToImport[worker]+=[mirrorBodyId]
+				if(len(bodiesToImport[worker])>0):
 					requestedSomethingFrom.append(worker)
 				wprint("I request ids ",bodiesToImport, " from ",worker)
-				comm.isend(bodiesToImport, worker, tag=_MIRROR_INTERSECTIONS_)
+				sent.append(comm.isend(bodiesToImport[worker], worker, tag=_MIRROR_INTERSECTIONS_))
 		wprint("will wait requests from ",subD.intersections[rank])
 		for worker in subD.intersections[rank]:
 			if worker!=0:
@@ -803,6 +806,7 @@ def updateMirrorIntersections():
 		
 		for worker in requestedSomethingFrom:
 			subD.receiveBodies(worker)
+		for s in sent: s.wait()
 		subD.completeSendBodies();
 	t4=time.time()
 	if not collider.keepListsShort: collider.doSort = True
