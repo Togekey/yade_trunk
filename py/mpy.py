@@ -777,7 +777,7 @@ def updateMirrorIntersections():
 	" 6- loop on "requestedSomethingFrom" ranks and recv the bodies (blocking, c++, using MPI_Probe to know the message size)
 	" 7- comm.barrier(), just in case
 	"""
-	if((COPY_MIRROR_BODIES_WHEN_COLLIDE and O.splittedOnce) or (MERGE_W_INTERACTIONS and O.splittedOnce)):
+	if((COPY_MIRROR_BODIES_WHEN_COLLIDE or MERGE_W_INTERACTIONS) and (O.splittedOnce or DISTRIBUTED_INSERT)):
 		requestedSomethingFrom=[]
 		if rank>0: #master doesn't need bodies
 			#reqs=subD.intersections[rank]

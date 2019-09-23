@@ -36,12 +36,12 @@ Body::id_t BodyContainer::insert(shared_ptr<Body> b){
 }
 
 Body::id_t BodyContainer::insertAtId(shared_ptr<Body> b, Body::id_t candidate){
-	if(body[candidate]) {LOG_ERROR("invalid candidate id"); return -1;}
 	const shared_ptr<Scene>& scene=Omega::instance().getScene(); 
 	if(unsigned(candidate)>=size()) {
 		body.resize(candidate+1,nullptr);
 		scene->forces.addMaxId(candidate);
 	}
+	if(body[candidate]) {LOG_ERROR("invalid candidate id"); return -1;}	
 	b->iterBorn=scene->iter;
 	b->timeBorn=scene->time;
 	b->id=candidate; 
