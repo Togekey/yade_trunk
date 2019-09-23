@@ -61,7 +61,8 @@ RESET_SUBDOMAINS_WHEN_COLLIDE = False
 DOMAIN_DECOMPOSITION = False
 NUM_MERGES = 0
 SEND_BYTEARRAYS = True
-ENABLE_PFACETS = False
+ENABLE_PFACETS = False    #PFacets need special (and expensive) tricks, if PFacets are not used skip the tricks
+DISTRIBUTED_INSERT = False  #if True each worker is supposed to O.bodies.insertAtId its own bodies 
 
 
 #tags for mpi messages
@@ -604,15 +605,12 @@ def splitScene():
 	Split a monolithic scene into distributed scenes on threads
 	precondition: the bodies have subdomain no. set in user script
 	'''
-	start=time.time()
 	if not O.splittedOnce:
-		if DOMAIN_DECOMPOSITION: 
+		if DOMAIN_DECOMPOSITION: #if not already partitionned by the user we partition here
 			if rank == 0:
 				decomposition = dd.decompBodiesSerial(comm) 
 				decomposition.partitionDomain() 
-		t1=time.time()
-		if rank == 0: 
-			O._sceneObj.subdomain=0
+		if rank == 0 or DISTRIBUTED_INSERT: 
 			O.subD=Subdomain() #for storage only, this one will not be used beyond that 
 			subD= O.subD #alias
 			#insert "meta"-bodies
@@ -634,49 +632,30 @@ def splitScene():
 			collider.boundDispatcher.targetInterv=collider.targetInterv;
 			collider.boundDispatcher.updatingDispFactor=collider.updatingDispFactor;
 			#END Garbage
-			t2=time.time()
-			#distribute work
 		
-			sceneAsString=O.sceneToString()
-			wprint("will send scene")
-			t3=time.time()
-			#NOTE: that loop with blocking send will hang on ubuntu 16.04 with -mit 4, for unknown reason, fortunately bcast works (and it should be faster)
-			#for worker in range(1,numThreads):
-			#wprint("sending bodies to ",worker)
-			#timing_comm.send("splitScene_distribute_work",sceneAsString, dest=worker, tag=_SCENE_) #sent with scene.subdomain=1, better make subdomain index a passed value so we could pass the sae string to every worker (less serialization+deserialization)
-			O.interactions.clear() # clear the interactions in the master proc.
-		if rank > 0:# worker procs.
-		  
-			sceneAsString = None
-			wprint("receiving scene")
-			t2=time.time()
-			t3=time.time()
+		if not DISTRIBUTED_INSERT: #we send scene from master to all workers
+			sceneAsString= O.sceneToString() if rank==0 else None
+			sceneAsString=timing_comm.bcast("splitScene_distribute_work",sceneAsString,root=0)
+			if rank > 0: 
+				O.stringToScene(sceneAsString) #receive a scene pre-processed by master (i.e. with appropriate body.subdomain's)  
+				# as long as subD.subdomains isn't serialized we need to rebuild it here since it's lost
+				domainBody=None
+				subdomains=[] #list of subdomains by body id
+				for b in O.bodies:
+					if b.isSubdomain:
+						subdomains.append(b.id)
+						if b.subdomain==rank: domainBody=b
+				if domainBody==None: wprint("SUBDOMAIN NOT FOUND FOR RANK=",rank)
+				O.subD = domainBody.shape
+				O.subD.subdomains = subdomains
 		
-		sceneAsString=timing_comm.bcast("splitScene_distribute_work",sceneAsString,root=0)
-		t4=time.time()
-		
-		if rank > 0: 
-			O.stringToScene(sceneAsString) #receive a scene pre-processed by master (i.e. with appropriate body.subdomain's)  
-			#wprint("received ",len(O.bodies)," bodies (verletDist=",collider.verletDist,")")
-			O._sceneObj.subdomain = rank
-			domainBody=None
-			subdomains=[] #list of subdomains by body id
-			for b in O.bodies:
-				if b.isSubdomain:
-					subdomains.append(b.id)
-					if b.subdomain==rank: domainBody=b
-			if domainBody==None: wprint("SUBDOMAIN NOT FOUND FOR RANK=",rank)
-			O.subD = domainBody.shape
-			O.subD.subdomains = subdomains
-			
-		t5=time.time()
-		
+		O._sceneObj.subdomain = rank
+
 		if mit_mode: O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 		
 		O.subD.init()
 		
 		updateMirrorIntersections()
-		t6=time.time()
 		idx = O.engines.index(utils.typedEngine("NewtonIntegrator"))
 		O.engines=O.engines[:idx+1]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].sendRecvStates()",label="sendRecvStatesRunner")]+O.engines[idx+1:]
 		
@@ -689,9 +668,6 @@ def splitScene():
 		
 		O.splitted=True
 		O.splittedOnce = True
-		
-		t7=time.time()
-		mprint("splitting times:",t1-start," ",t2-t1," ",t3-t2," ",t4-t3," ",t5-t4," ",t6-t5," ",t7-t6)
 		
 	else: 
 		if (DOMAIN_DECOMPOSITION and RESET_SUBDOMAINS_WHEN_COLLIDE):
