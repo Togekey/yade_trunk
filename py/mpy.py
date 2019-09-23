@@ -216,7 +216,7 @@ class Timing_comm():
 	
 	def print_all(self):
 		comm.barrier()
-		time.sleep((numThreads-rank)*0.1)
+		time.sleep((numThreads-rank)*0.001)
 		message = "COMMUNICATION TIMINGS:\n" 
 		max_string_len = len(max(self.timings.keys(),key=len))
 		for k,v in sorted(self.timings.items(), key=lambda x: x[1][1], reverse=True):
@@ -900,5 +900,4 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 		time.sleep((numThreads-rank)*0.002) #avoid mixing the final output, timing.stats() is independent of the sleep
 		mprint( "#####  Worker "+str(rank)+"  ######")
 		timing.stats() #specific numbers for -n4 and gabion.py
-
 
