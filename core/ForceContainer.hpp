@@ -108,10 +108,6 @@ class ForceContainer {
 		const Vector3r getMoveSingle  (Body::id_t id);
 		const Vector3r getRotSingle   (Body::id_t id);
 		
-#ifdef YADE_MPI
-		void updateSubdomainLists();
-#endif
-
 #ifdef YADE_OPENMP
 		void syncSizesOfContainers();
 		void resize(size_t newSize, int threadN);

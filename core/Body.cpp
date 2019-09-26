@@ -34,16 +34,6 @@ unsigned int Body::coordNumber() const {
 	return intrSize;
 }
 
-void Body::setBounded(bool d) {
-	if(d) flags|=FLAG_BOUNDED; else flags&=~(FLAG_BOUNDED);
-// 	if (id!=Body::ID_NONE and not shortListCheckedOnce) {
-// 		shared_ptr<InsertionSortCollider> isc;
-// 		FOREACH(shared_ptr<Engine>& e, Omega::instance().getScene()->engines){ isc=YADE_PTR_DYN_CAST<InsertionSortCollider>(e); if(isc) break; }
-// 		if(isc and isc->keepListsShort) LOG_ERROR("changing body::bounded after insertion is not supported if collider::keepListsShort=True, turn keepListsShort off (suboptimal)");
-// 		shortListCheckedOnce=true;
-// 	}
-}
-
 bool Body::maskOk(int mask) const { return (mask==0 || ((groupMask & mask) != 0)); }
 bool Body::maskCompatible(int mask) const { return (groupMask & mask) != 0; }
 #ifdef YADE_MASK_ARBITRARY

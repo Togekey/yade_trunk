@@ -18,7 +18,9 @@ void BoundDispatcher::action()
 {
 	updateScenePtr();
 	shared_ptr<BodyContainer>& bodies = scene->bodies;
-	const long numBodies=(long)bodies->size();
+	const bool redirect = bodies->useRedirection;
+	if (redirect) bodies->updateSubdomainLists();
+	const long numBodies= redirect ? (long)bodies->realBodies.size() : (long)bodies->size();
 	#ifdef YADE_MPI
 	Body::id_t subdomainId=0;
 	#endif
@@ -26,12 +28,12 @@ void BoundDispatcher::action()
 	#pragma omp parallel for num_threads(ompThreads>0 ? min(ompThreads,omp_get_max_threads()) : omp_get_max_threads())
 	#endif
 	for(int id=0; id<numBodies; id++){
-		if(!bodies->exists(id)) continue; // don't delete this check  - Janek
-		const shared_ptr<Body>& b=(*bodies)[id];
+		if(not redirect and not bodies->exists(id)) continue; // don't delete this check  - Janek
+		const shared_ptr<Body>& b=(*bodies)[redirect? bodies->realBodies[id] : id];
 		processBody(b);
 	#ifndef YADE_MPI
 	}
-	#else
+	#else //when all ordinary bodies have been processed, we will evaluate subdomain's min and max
 		if(b->getIsSubdomain() and b->subdomain==scene->subdomain) subdomainId=b->getId();//subdomain bounds need all other bodies to have updated bounds, hence we keep it for after this loop
 	}
 	if (subdomainId!=0) {

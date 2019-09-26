@@ -276,7 +276,7 @@ vector<Body::id_t> InsertionSortCollider::probeBoundingVolume(const Bound& bv){
 		if(!newton) { return true; }
 		fastestBodyMaxDist=newton->maxVelocitySq;
 		if(fastestBodyMaxDist>=1 || fastestBodyMaxDist==0) {  return true; }
-		if(BB[0].size() != 2*scene->bodies->size() and not keepListsShort) { return true; }
+		if(BB[0].size() != 2*scene->bodies->size() and not scene->bodies->useRedirection) { return true; }
 		if(scene->interactions->dirty) {  return true; }
 		if(scene->doSort) { return true; }
 		return false;
@@ -288,6 +288,7 @@ void InsertionSortCollider::action(){
 	#endif
 	numAction++;
 	const size_t nBodies = scene->bodies->size();
+	keepListsShort = scene->bodies->useRedirection;
 	InteractionContainer* interactions=scene->interactions.get();
 	scene->interactions->iterColliderLastRun=-1;
 	scene->doSort = false;
@@ -317,9 +318,8 @@ void InsertionSortCollider::action(){
 				// bodies deleted; clear the container completely, and do as if all bodies were added (rather slow…)
 				// future possibility: insertion sort with such operator that deleted bodies would all go to the end, then just trim bounds
 				if(2*nBodies<BBsize){ for(int i=0; i<3; i++) BB[i].clear(); }
-				// more than 100 bodies was added, do initial sort again
-				// maybe: should rather depend on ratio of added bodies to those already present...?
-				if(2*nBodies-BBsize>200 || BBsize==0) doInitSort=true;
+				// more than 20% new bodies, do initial sort again
+				if(BBsize==0  || ((2*nBodies-BBsize)/double(BBsize))>0.2) doInitSort=true;
 				assert((BBsize%2)==0);
 				for(int i=0; i<3; i++){
 					BB[i].reserve(2*nBodies);
@@ -328,10 +328,9 @@ void InsertionSortCollider::action(){
 						BB[i].push_back(Bounds(0,id,/*isMin=*/true)); BB[i].push_back(Bounds(0,id,/*isMin=*/false)); }
 				}
 			}
-			scene->bodies->insertedBodies.clear();
-			scene->bodies->dirty=false;
+		
 		// ### Second approach: Bounds sizes match the real number of bodies in the scene
-		} else if (scene->bodies->dirty or scene->bodies->insertedBodies.size()>0)  {
+		} else if (scene->bodies->insertedBodies.size()>0)  {
 			const vector<Body::id_t>& insrts = scene->bodies->insertedBodies;
 			size_t nInsert = insrts.size();
 			size_t BBsize = BB[0].size();
@@ -352,9 +351,8 @@ void InsertionSortCollider::action(){
 						BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/true)); BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/false));}
 				}
 			}
-			scene->bodies->insertedBodies.clear();
-			scene->bodies->dirty=false;
 		}
+		scene->bodies->insertedBodies.clear(); //Better place to do this?
 		
 		if(minima.size()!=(size_t)3*nBodies){ minima.resize(3*nBodies); maxima.resize(3*nBodies); }
 		assert( BB[0].size() == 2*scene->bodies->size());
@@ -439,7 +437,7 @@ void InsertionSortCollider::action(){
 							memcpy(&minima[3*id],&bv->min,3*sizeof(Real)); memcpy(&maxima[3*id],&bv->max,3*sizeof(Real)); 
 					} else if (keepListsShort) { memcpy(&minima[3*id],&maxVect,3*sizeof(Real)); memcpy(&maxima[3*id],&maxVect,3*sizeof(Real)); }			
 				} else { BBj[i].flags.hasBB=false; /* for vanished body, keep the coordinate as-is, to minimize inversions. */ 
-					if (keepListsShort) LOG_ERROR("Shouldn't happen");	}
+					if (keepListsShort) LOG_ERROR("Shouldn't happen "<<id<<" in "<<scene->subdomain);	}
 			}
 		}
 	ISC_CHECKPOINT("copy");

@@ -52,7 +52,7 @@ class Body: public Serializable{
 		bool isDynamic() const { assert(state); return state->blockedDOFs!=State::DOF_ALL; }
 		void setDynamic(bool d){ assert(state); if(d){ state->blockedDOFs=State::DOF_NONE; } else { state->blockedDOFs=State::DOF_ALL; state->vel=state->angVel=Vector3r::Zero(); } }
 		bool isBounded() const {return flags & FLAG_BOUNDED; }
-		void setBounded(bool d);
+		void setBounded(bool d) { if(d) flags|=FLAG_BOUNDED; else flags&=~(FLAG_BOUNDED);}
 		bool getIsSubdomain() const {return flags & FLAG_SUBDOMAIN; }
 		void setIsSubdomain(bool d){ if(d) flags|=FLAG_SUBDOMAIN; else flags&=~(FLAG_SUBDOMAIN); }
 		bool isAspherical() const {return flags & FLAG_ASPHERICAL; }

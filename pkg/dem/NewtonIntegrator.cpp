@@ -128,9 +128,9 @@ void NewtonIntegrator::action()
 	YADE_PARALLEL_FOREACH_BODY_BEGIN(const shared_ptr<Body>& b, scene->bodies){
 			// clump members are handled inside clumps
 			if(b->isClumpMember()) continue;
-#ifdef YADE_MPI
+	#ifdef YADE_MPI
 			if(scene->subdomain!=b->subdomain or b->getIsSubdomain()) continue;//this thread will not move bodies from other subdomains
-#endif
+	#endif
 			State* state=b->state.get(); const Body::id_t& id=b->getId();
 			Vector3r f=Vector3r::Zero(); 
 			Vector3r m=Vector3r::Zero();
@@ -158,7 +158,6 @@ void NewtonIntegrator::action()
 			// fluctuation velocity does not contain meanfield velocity in periodic boundaries
 			// in aperiodic boundaries, it is equal to absolute velocity
 			Vector3r fluctVel=isPeriodic?scene->cell->bodyFluctuationVel(b->state->pos,b->state->vel,prevVelGrad):state->vel;
-
 			// numerical damping & kinetic energy
 			if(trackEnergy) updateEnergy(b,state,fluctVel,f,m);
 
@@ -188,7 +187,6 @@ void NewtonIntegrator::action()
 				}
 			// reflect macro-deformation even for non-dynamic bodies
 			} else if (isPeriodic && homoDeform>1) state->vel+=dt*prevVelGrad*state->vel;
-
 			// update positions from velocities (or torque, for the aspherical integrator)
 			leapfrogTranslate(state,id,dt);
 			if(!useAspherical) leapfrogSphericalRotate(state,id,dt);
@@ -209,7 +207,7 @@ void NewtonIntegrator::action()
 	timingDeltas->checkpoint("motion integration");
 	#ifdef YADE_OPENMP
 		FOREACH(const Real& thrMaxVSq, threadMaxVelocitySq) { maxVelocitySq=max(maxVelocitySq,thrMaxVSq); }
-	#endif
+	#endif	
 	timingDeltas->checkpoint("sync max vel");
 	if(scene->isPeriodic) { prevCellSize=scene->cell->getSize(); prevVelGrad=scene->cell->prevVelGrad=scene->cell->velGrad; }
 	timingDeltas->checkpoint("terminate");

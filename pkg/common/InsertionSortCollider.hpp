@@ -227,7 +227,7 @@ class InsertionSortCollider: public Collider{
 		((int,numAction,0,,"Cummulative number of collision detection."))
 		((Real,useless,,,"for compatibility of scripts defining the old collider's attributes - see deprecated attributes")) 
 		((bool,doSort,false,,"Do forced resorting of interactions."))
-		((bool,keepListsShort,true,,"remove bounds of non-existent or unbounded bodies from the lists (True is recommended and default)"))
+		((bool,keepListsShort,false,,"if true remove bounds of non-existent or unbounded bodies from the lists |yupdate|; turned true automatically in MPI mode and if bodies are erased with :yref:`BodyContainer.enableRedirection`=True."))
 		((shared_ptr<NewtonIntegrator>, newton,,,"reference to active :yref:`Newton integrator<NewtonIntegrator>`. |yupdate|"))
 		, /* ctor */
 			#ifdef ISC_TIMING

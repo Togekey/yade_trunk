@@ -64,7 +64,6 @@ for sd in range(0,numThreads-1):
 WALL_ID=O.bodies.insertAtId(box(center=(numThreads*N*0.5,-0.5,0),extents=(2*numThreads*N,0,2),fixed=True),1+(N*M*(numThreads-1)))
 
 collider.verletDist = 0.25
-collider.keepListsShort=True
 newton.gravity=(0,-10,0) #else nothing would move
 tsIdx=O.engines.index(timeStepper) #remove the automatic timestepper. Very important: we don't want subdomains to use many different timesteps...
 O.engines=O.engines[0:tsIdx]+O.engines[tsIdx+1:]

@@ -312,7 +312,6 @@ def unboundRemoteBodies():
 	for b in O.bodies:# unbound the bodies assigned to workers (not interacting directly with other bodies in master scene)
 		if not b.isSubdomain and b.subdomain!=rank:
 			b.bounded=False
-			if not collider.keepListsShort: b.bound=None
 			
 def reboundRemoteBodies(ids):
 	'''
@@ -625,6 +624,8 @@ def splitScene():
 			#tell the collider how to handle this new thing
 			collider.boundDispatcher.functors=collider.boundDispatcher.functors+[Bo1_Subdomain_Aabb()]
 			collider.targetInterv=0
+			collider.keepListsShort=True # probably not needed, O.bodies.insertAtId should turn it on automaticaly 
+			O.bodies.useRedirection=True # idem
 			
 			#BEGIN Garbage (should go to some init(), usually done in collider.__call__() but in the mpi case we want to collider.boundDispatcher.__call__() before collider.__call__()
 			collider.boundDispatcher.sweepDist=collider.verletDist;
@@ -682,26 +683,19 @@ def splitScene():
 		O.splittedOnce = True
 		
 		
-T1=T2=T3=T3B=T4=T5=T6=T7=0
 bodiesToImport=[]
 
 def updateMirrorIntersections():
-	global T1,T2,T3,T3B,T4,T5,T6,T7
 	global bodiesToImport
 	start=time.time()
 	subD=O.subD
-	if (not O.splitted or (rank>0 and not collider.keepListsShort)): unboundRemoteBodies()
+	if (not O.splitted): unboundRemoteBodies()
 	collider.boundDispatcher.__call__()
-	tint0=time.time()
 	updateDomainBounds(subD.subdomains) #triggers communications
-	tint1=time.time()
 	collider.__call__() #see [1]
-	if (collider.keepListsShort): unboundRemoteBodies()
+	unboundRemoteBodies() #in splitted stage we exploit bounds to detect bodies which are no longer part of intersections (they will be left with no bounds after what follows)
 
-	t1=time.time()
-	#wprint("collider time(1)=", time.time()-start)
 	subD.intersections=genLocalIntersections(subD.subdomains)
-	t2=time.time()
 	#update mirror intersections so we know message sizes in advance
 	subD.mirrorIntersections=[[] for n in range(numThreads)]
 	if rank==0:#master domain
@@ -762,11 +756,7 @@ def updateMirrorIntersections():
 		for l in subD.mirrorIntersections:
 			if len(l)>0:
 				reboundRemoteBodies(l)
-	t3b=time.time()
-				
-	if(ERASE_REMOTE): eraseRemote()
-	t3=time.time()
-	
+	if(ERASE_REMOTE): eraseRemote() # erase the bodies which still have no bounds
 		
 	"""
 	" NOTE: FK, what to do here:
@@ -808,20 +798,15 @@ def updateMirrorIntersections():
 			subD.receiveBodies(worker)
 		for s in sent: s.wait()
 		subD.completeSendBodies();
-	t4=time.time()
 	if not collider.keepListsShort: collider.doSort = True
 	collider.__call__()
-	t5=time.time()
-	#mprint("execTime=",collider.execTime,"(increment: ",start-time.time(),")")
 	collider.execTime+=int((time.time()-start)*1e9)
 	collider.execCount+=1
 	try:
 		collisionChecker.execTime-=int((time.time()-start)*1e9)
 	except:
 		pass
-	
-	T1+=t1-start; T2+=t2-t1; T3B+=t3-t3b; T3+=t3-t2; T4+=t4-t3; T5+=t5-t4; T6+=tint0-start; T7+=tint1-tint0
-	wprint("collider time (2)",time.time()-start)
+
 	#maxVelocitySq is normally reset in NewtonIntegrator in the same iteration as bound dispatching, since Newton will not run before next iter in our case we force that value to avoid another collision detection at next step
 	utils.typedEngine("NewtonIntegrator").maxVelocitySq=0.5
 
@@ -842,7 +827,7 @@ def eraseRemote():
 					O.bodies.erase(b.id)
 		#cc=0 ###################___________________#############################
 		##numBodies = len(O.bodies)
-		#localBodies=O.bodies.boundedSubDBodies()
+		#localBodies=O.bodies.subdomainBodies()
 		#for id in localBodies:
 			#b=O.bodies[id]
 			#if not b.bounded and b.subdomain!=rank:
@@ -861,8 +846,6 @@ def eraseRemote():
 
 ##### RUN MPI #########
 def mpirun(nSteps,np=numThreads,withMerge=False):
-	global T1,T2,T3,T3B,T4,T5,T6,T7
-	T1=0; T2=0; T3=0; T4=0; T5=0; T6=0; T7=0; T3B=0
 	stack=inspect.stack()
 	global userScriptInCheckList
 	if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
@@ -884,7 +867,6 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 		O.timingEnabled=True
 	if not (MERGE_SPLIT):	
 		O.run(nSteps,True) #a pyrunner will pause, or trigger collider and continue, depending on WITH_BODY_COPY flag
-		mprint("Collider timings:",T1,"(",T6,"/",T7,"/",T1-T6-T7,") ",T2," ",T3,"(",T3B,") ",T4," ",T5)
 		if withMerge: mergeScene() #will be useful to see evolution in QGLViewer, for instance
 	else: #merge/split or body_copy for each collider update
 		collisionChecker.dead=True

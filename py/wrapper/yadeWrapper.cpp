@@ -81,9 +81,10 @@ class pyBodyContainer{
 	pyBodyIterator pyIter(){return pyBodyIterator(proxee);}
 	pyBodyContainer(const shared_ptr<BodyContainer>& _proxee): proxee(_proxee){}
 	// raw access to the underlying 
-	const shared_ptr<BodyContainer> raw_bodies_get(void) {return proxee;}
-	void raw_bodies_set(const shared_ptr<BodyContainer>& source) {proxee->body = source->body;}
-	
+	bool getUseRedirection(void) {return proxee->useRedirection;}
+	bool getEnableRedirection(void) {return proxee->enableRedirection;}
+	void setUseRedirection(bool val) {proxee->useRedirection=val;}
+	void setEnableRedirection(bool val) {proxee->enableRedirection=val;}
 	
 	shared_ptr<Body> pyGetitem(Body::id_t _id){
 		int id=(_id>=0 ? _id : proxee->size()+_id);
@@ -410,7 +411,7 @@ class pyBodyContainer{
 	void clear(){proxee->clear();}
 	bool erase(Body::id_t id, bool eraseClumpMembers){ return proxee->erase(id,eraseClumpMembers); }
 	#ifdef YADE_MPI
-	vector<Body::id_t> boundedSubDBodies() {return proxee->boundedSubDBodies;}
+	vector<Body::id_t> subdomainBodies() {return proxee->subdomainBodies;}
 	#endif
 };
 
@@ -962,9 +963,10 @@ BOOST_PYTHON_MODULE(wrapper)
 		.def("replace",&pyBodyContainer::replace) 
 		.def("insertAtId",&pyBodyContainer::insertAtId,(py::arg("insertatid")),"Insert a body at theid, (no body should exist in this id)")
 		#ifdef YADE_MPI
-		.def("boundedSubDBodies",&pyBodyContainer::boundedSubDBodies,"id's of bodies with bounds in MPI subdomain")
+		.def("subdomainBodies",&pyBodyContainer::subdomainBodies,"id's of bodies with bounds in MPI subdomain")
 		#endif //YADE_MPI
-		.add_property("rawBodies",&pyBodyContainer::raw_bodies_get,&pyBodyContainer::raw_bodies_set,"Bodies in the current simulation in the form of pickle-friendly raw container. In typical situations it is better to access bodies as 'O.bodies', which offers better python support. This one may be used for debugging or advanced manipulations.");
+		.add_property("useRedirection",&pyBodyContainer::getUseRedirection,&pyBodyContainer::setUseRedirection,"true if the scene uses up-to-date lists for boundedBodies and realBodies; turned true automatically 1/ after removal of bodies if :yref:`enableRedirection`=True, and 2/ in MPI execution.")
+		.add_property("enableRedirection",&pyBodyContainer::getEnableRedirection,&pyBodyContainer::setEnableRedirection,"let collider switch to optimized algorithm with body redirection when bodies are erased - true by default");
 	py::class_<pyBodyIterator>("BodyIterator",py::init<pyBodyIterator&>())
 		.def("__iter__",&pyBodyIterator::pyIter)
 		.def("__next__",&pyBodyIterator::pyNext);

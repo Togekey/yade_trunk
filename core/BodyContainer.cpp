@@ -13,9 +13,6 @@ CREATE_LOGGER(BodyContainer);
 void BodyContainer::clear(){
 	body.clear();
 	dirty=true;
-#ifdef YADE_MPI
-	subdomainListsNeedUpdate=true;
-#endif
 }
 
 Body::id_t BodyContainer::insert(shared_ptr<Body> b){
@@ -26,9 +23,13 @@ Body::id_t BodyContainer::insert(shared_ptr<Body> b){
 	scene->doSort = true;
 	dirty=true;
 	insertedBodies.push_back(b->id);
-#ifdef YADE_MPI
-	subdomainListsNeedUpdate=true;
-#endif
+	if (useRedirection){
+		if (b->subdomain == scene->subdomain and not b->getIsSubdomain()) realBodies.push_back(b->getId());
+		
+		#ifdef YADE_MPI
+		if (b->isBounded()) subdomainBodies.push_back(b->id);
+		#endif
+	}
 	body.push_back(b);
 	// Notify ForceContainer about new id
 	scene->forces.addMaxId(b->id);
@@ -36,7 +37,9 @@ Body::id_t BodyContainer::insert(shared_ptr<Body> b){
 }
 
 Body::id_t BodyContainer::insertAtId(shared_ptr<Body> b, Body::id_t candidate){
+	if (not b) LOG_ERROR("Inserting null body");
 	const shared_ptr<Scene>& scene=Omega::instance().getScene(); 
+	if (enableRedirection) { dirty=true; useRedirection=true; insertedBodies.push_back(b->id);}// if that special insertion is used, switch to algorithm optimized for non-full body container
 	if(unsigned(candidate)>=size()) {
 		body.resize(candidate+1,nullptr);
 		scene->forces.addMaxId(candidate);
@@ -47,20 +50,12 @@ Body::id_t BodyContainer::insertAtId(shared_ptr<Body> b, Body::id_t candidate){
 	b->id=candidate; 
 	body[b->id] = b; 
 	scene->doSort = true;
-	insertedBodies.push_back(b->id);
-	dirty=true;
-#ifdef YADE_MPI
-	subdomainListsNeedUpdate=true;
-#endif
 	return b->id;
 }
 
 bool BodyContainer::erase(Body::id_t id, bool eraseClumpMembers){//default is false (as before)
 	if(!body[id]) return false;
-#ifdef YADE_MPI
-	subdomainListsNeedUpdate=true;
-#endif
-	dirty=true;
+	if (enableRedirection) {useRedirection=true; dirty=true;}// as soon as a body is erased we switch to algorithm optimized for non-full body container
 	const shared_ptr<Body>& b=Body::byId(id);
 	if ((b) and (b->isClumpMember())) {
 		const shared_ptr<Body> clumpBody=Body::byId(b->clumpId);
@@ -96,22 +91,29 @@ bool BodyContainer::erase(Body::id_t id, bool eraseClumpMembers){//default is fa
 	return true;
 }
 
-#ifdef YADE_MPI
 void BodyContainer::updateSubdomainLists(){
-	if (not subdomainListsNeedUpdate) return;
-	unsigned long size1=subdomainBodies.size();
-	unsigned long size2=boundedSubDBodies.size();
+	if (not useRedirection) {
+		#ifdef YADE_MPI
+		subdomainBodies.clear();
+		#endif
+		realBodies.clear();
+		return;}
+	if (not dirty) return; //already ok
+	unsigned long size1=realBodies.size();
+	unsigned long size2=subdomainBodies.size();
+	realBodies.clear();
 	subdomainBodies.clear();
-	boundedSubDBodies.clear();
-	subdomainBodies.reserve((long unsigned)(size1*1.1));
-	boundedSubDBodies.reserve((long unsigned)(size2*1.1));
+	realBodies.reserve((long unsigned)(size1*1.3));
+	subdomainBodies.reserve((long unsigned)(size2*1.3));
 	const int& subdomain = Omega::instance().getScene()->subdomain;
 	FOREACH(const shared_ptr<Body>& b, *(Omega::instance().getScene()->bodies)){
 		if (not b) continue;
-		if (b->subdomain == subdomain and not b->getIsSubdomain()) subdomainBodies.push_back(b->id);
+		realBodies.push_back(b->getId());
 // 		if (b->subdomain == 0) zeroBodies.push_back(b->id);
-		if (b->isBounded()) boundedSubDBodies.push_back(b->id);
+	#ifdef YADE_MPI
+		// clumps are taken as bounded bodies since their member are bounded, otherwise things would fail with clumps as they would be ignored
+		if (b->subdomain == subdomain and not b->getIsSubdomain()) subdomainBodies.push_back(b->id);
+	#endif
 	}
-	subdomainListsNeedUpdate=false;
+	dirty=false;
 }
-#endif

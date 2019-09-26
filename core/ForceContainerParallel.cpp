@@ -105,6 +105,7 @@ void ForceContainer::addRot(Body::id_t id, const Vector3r& r) {
 }
 
 void ForceContainer::addMaxId(Body::id_t id) {
+	if (_maxId[omp_get_thread_num()]<id) synced=false;
 	_maxId[omp_get_thread_num()]=std::max(id,_maxId[omp_get_thread_num()]);
 }
 
@@ -182,17 +183,14 @@ void ForceContainer::sync(){
   if(synced) return; // if synced meanwhile
 
   syncSizesOfContainers();
-  
-#ifdef YADE_MPI
-  Omega::instance().getScene()->bodies->updateSubdomainLists();
-  const vector<Body::id_t>& boundedSubDBodies = Omega::instance().getScene()->bodies->boundedSubDBodies;
-  const unsigned long len=(long)boundedSubDBodies.size();  
+  const bool redirect=Omega::instance().getScene()->bodies->useRedirection;
+  const auto& realBodies = Omega::instance().getScene()->bodies->realBodies;
+  const unsigned long len=redirect ? (unsigned long)realBodies.size() : (unsigned long) size;  
+  if (redirect) Omega::instance().getScene()->bodies->updateSubdomainLists();
+   
   #pragma omp parallel for schedule(static)
   for(unsigned long k=0; k<len; k++){
-	  const Body::id_t& id=boundedSubDBodies[k];
-#else
-  for(long id=0; id<(long)size; id++){
-#endif
+    const Body::id_t& id = redirect ? realBodies[k] : k;
     Vector3r sumF(Vector3r::Zero()), sumT(Vector3r::Zero());
     for(int thread=0; thread<nThreads; thread++){ sumF+=_forceData[thread][id]; sumT+=_torqueData[thread][id];
 	    _forceData[thread][id]=Vector3r::Zero(); _torqueData[thread][id]=Vector3r::Zero(); }  //reset here so we don't have to do it later
@@ -208,80 +206,56 @@ void ForceContainer::sync(){
   }
   synced=true; syncCount++;
 }
-#ifndef YADE_MPI
+
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpragmas"
 // this is to remove warning about manipulating raw memory
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
 void ForceContainer::reset(long iter, bool resetAll) {
-  syncSizesOfContainers();
-  for(int thread=0; thread<nThreads; thread++){
-    memset(&_forceData [thread][0],0,sizeof(Vector3r)*sizeOfThreads[0]);
-    memset(&_torqueData[thread][0],0,sizeof(Vector3r)*sizeOfThreads[0]);
-    if(moveRotUsed){
-      memset(&_moveData  [thread][0],0,sizeof(Vector3r)*sizeOfThreads[0]);
-      memset(&_rotData   [thread][0],0,sizeof(Vector3r)*sizeOfThreads[0]);
-    }
-  }
-  memset(&_force [0], 0,sizeof(Vector3r)*size);
-  memset(&_torque[0], 0,sizeof(Vector3r)*size);
-  if(moveRotUsed){
-    memset(&_move  [0], 0,sizeof(Vector3r)*size);
-    memset(&_rot   [0], 0,sizeof(Vector3r)*size);
-  }
-  if (resetAll and permForceUsed){
-    memset(&_permForce [0], 0,sizeof(Vector3r)*size);
-    memset(&_permTorque[0], 0,sizeof(Vector3r)*size);
-    permForceUsed = false;
-  }
-  if (!permForceUsed) synced=true; else synced=false;
-  moveRotUsed=false;
-  lastReset=iter;
-}
-
-#else
-
-int w=0;
-void ForceContainer::reset(long iter, bool resetAll) {
 	syncSizesOfContainers();
 	const shared_ptr<Scene>& scene=Omega::instance().getScene();
-	scene->bodies->updateSubdomainLists();
-	const vector<Body::id_t>& sdIds = scene->bodies->boundedSubDBodies;
-	
-	size_t currSize=sdIds.size();
-	
-	#pragma omp parallel for schedule(static)
-	for(int thread=0; thread<nThreads; thread++){
-		// no need to reset threads since they are set to zero in sync() already
-// 		for (unsigned long k=0;k<currSize;k++) _forceData[thread][sdIds[k]]= Vector3r::Zero();
-// 		if (scene->subdomain==w) std::cerr<<"("<<scene->subdomain<<")AB: "<<thread<<"  "<<sizeOfThreads[thread]<<" "<<sdIds.size()<<std::endl;
-// 		for (unsigned long k=0;k<currSize;k++) _torqueData[thread][sdIds[k]]=Vector3r::Zero();
-// 		if (scene->subdomain==w) std::cerr<<"("<<scene->subdomain<<")B: "<<thread<<" "<<sizeOfThreads[thread]<<" "<<sdIds.size()<<std::endl;
-		if(moveRotUsed){
+	size_t currSize;
+	if (scene->bodies->useRedirection) { //if using short lists we only reset forces for bodies not-vanished
+		scene->bodies->updateSubdomainLists();
+		const auto& sdIds = scene->bodies->realBodies;
+		currSize=sdIds.size();
+		// no need to reset force-torque per thread since they are set to zero in sync() already
+		#pragma omp parallel for schedule(static)
+		for (unsigned long k=0;k<currSize;k++) /*_force[sdIds[k]]=Vector3r::Zero(); */memset(&_force [sdIds[k]], 0,sizeof(Vector3r));
+		#pragma omp parallel for schedule(static)
+		for (unsigned long k=0;k<currSize;k++) /*_torque[sdIds[k]]=Vector3r::Zero();*/memset(&_torque [sdIds[k]], 0,sizeof(Vector3r));
+		// those need a reset per-thread OTOH
+		if(moveRotUsed) for(int thread=0; thread<nThreads; thread++){
 			for (unsigned long k=0;k<currSize;k++) _moveData[thread][sdIds[k]]=Vector3r::Zero();
-			for (unsigned long k=0;k<currSize;k++) _rotData[thread][sdIds[k]]=Vector3r::Zero();
-		}
+			for (unsigned long k=0;k<currSize;k++) _rotData[thread][sdIds[k]]=Vector3r::Zero();}
+		if (resetAll){
+			for (unsigned long k=0;k<currSize;k++) _permForce[sdIds[k]]=Vector3r::Zero();
+			for (unsigned long k=0;k<currSize;k++) _permTorque[sdIds[k]]=Vector3r::Zero();
+			permForceUsed = false;}
+			
+	} else { // else reset everything		
+		memset(&_force [0], 0,sizeof(Vector3r)*size);
+		memset(&_torque[0], 0,sizeof(Vector3r)*size);
+		if(moveRotUsed) for(int thread=0; thread<nThreads; thread++){
+			memset(&_moveData  [thread][0],0,sizeof(Vector3r)*sizeOfThreads[thread]);
+			memset(&_rotData   [thread][0],0,sizeof(Vector3r)*sizeOfThreads[thread]);}
 	}
-	#pragma omp parallel for schedule(static)
-	for (unsigned long k=0;k<currSize;k++) _force[sdIds[k]]=Vector3r::Zero();
-	#pragma omp parallel for schedule(static)
-	for (unsigned long k=0;k<currSize;k++) _torque[sdIds[k]]=Vector3r::Zero();
+  
 	if(moveRotUsed){
-		for (unsigned long k=0;k<size;k++) _move[k]=Vector3r::Zero();
-		for (unsigned long k=0;k<size;k++) _force[k]=Vector3r::Zero();
-	}
-	if (resetAll){
-		for (unsigned long k=0;k<currSize;k++) _permForce[sdIds[k]]=Vector3r::Zero();
-		for (unsigned long k=0;k<currSize;k++) _permTorque[sdIds[k]]=Vector3r::Zero();
-		permForceUsed = false;
-	}
+		memset(&_move  [0], 0,sizeof(Vector3r)*size);
+		memset(&_rot   [0], 0,sizeof(Vector3r)*size);}
+		
+	if (resetAll and permForceUsed){
+		memset(&_permForce [0], 0,sizeof(Vector3r)*size);
+		memset(&_permTorque[0], 0,sizeof(Vector3r)*size);
+		permForceUsed = false;}
+		
 	if (!permForceUsed) synced=true; else synced=false;
 	moveRotUsed=false;
 	lastReset=iter;
 }
 
-#endif
 #pragma GCC diagnostic pop
 
 void ForceContainer::resize(size_t newSize, int threadN) {
@@ -306,10 +280,11 @@ bool ForceContainer::getMoveRotUsed() const {return moveRotUsed;}
 bool ForceContainer::getPermForceUsed() const {return permForceUsed;}
 
 void ForceContainer::syncSizesOfContainers() {
+	
   //check whether all containers have equal length, and if not resize it  
   size_t maxThreadSize = 0;
   for(int i=0; i<nThreads; i++) maxThreadSize = std::max(maxThreadSize,size_t(_maxId[i]+1));
-  if (maxThreadSize>size) syncedSizes=false;
+  if (maxThreadSize>size) syncedSizes=false;  
   if (syncedSizes) return;
   size_t newSize = std::max(size,maxThreadSize);  
   for(int i=0; i<nThreads; i++) resize(newSize,i);

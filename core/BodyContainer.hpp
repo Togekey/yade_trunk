@@ -10,26 +10,11 @@
 class Body;
 class InteractionContainer;
 
-#ifdef YADE_MPI
-	#if YADE_OPENMP
-		#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b_,bodies) const Body::id_t _sz(bodies->subdomainBodies.size()); _Pragma("omp parallel for") for(int k=0; k<_sz; k++){ if(!(*bodies)[bodies->subdomainBodies[k]])  continue; b_((*bodies)[bodies->subdomainBodies[k]]);
-		#define YADE_PARALLEL_FOREACH_BODY_END() }
-	#else
-		#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b,bodies) FOREACH(b,*(bodies)){
-		#define YADE_PARALLEL_FOREACH_BODY_END() }
-	#endif
-#else
-	#if YADE_OPENMP
-		#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b_,bodies) const Body::id_t _sz(bodies->size()); _Pragma("omp parallel for") for(Body::id_t _id=0; _id<_sz; _id++){ if(!(*bodies)[_id])  continue; b_((*bodies)[_id]);
-		#define YADE_PARALLEL_FOREACH_BODY_END() }
-	#else
-		#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b,bodies) FOREACH(b,*(bodies)){
-		#define YADE_PARALLEL_FOREACH_BODY_END() }
-	#endif
-#endif //YADE_MPI
+#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b_,bodies) bodies->updateSubdomainLists(); const vector<Body::id_t>& realBodies= bodies->realBodies; const bool redirect=bodies->useRedirection; const Body::id_t _sz(redirect ? realBodies.size() : bodies->size()); _Pragma("omp parallel for") for(int k=0; k<_sz; k++){  if(not redirect and not (*bodies)[k]) continue; b_((*bodies)[redirect? realBodies[k]: k]);
+#define YADE_PARALLEL_FOREACH_BODY_END() }
+
 /*
-Container of bodies implemented as flat std::vector. It handles body removal and
-intelligently reallocates free ids for newly added ones.
+Container of bodies implemented as flat std::vector.
 The nested iterators and the specialized FOREACH_BODY macros above will silently skip null body pointers which may exist after removal. The null pointers can still be accessed via the [] operator. 
 
 Any alternative implementation should use the same API.
@@ -85,23 +70,20 @@ class BodyContainer: public Serializable{
 		}
 		bool erase(Body::id_t id, bool eraseClumpMembers);
 		
-		#ifdef YADE_MPI
 		void updateSubdomainLists();
-		#endif
 		
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(BodyContainer,Serializable,"Standard body container for a scene",
 		((ContainerT,body,,,"The underlying vector<shared_ptr<Body> >"))
 		((bool,dirty,true,,"true if after insertion/removal of bodies, used only if collider::keepListsShort=true"))
 		((vector<Body::id_t>,insertedBodies,vector<Body::id_t>(),,"The list of newly bodies inserted, to be used and purged by collider"))
+		((vector<Body::id_t>,realBodies,,,"Redirection vector to non-null bodies, used to optimize loops after numerous insertion/erase. In MPI runs the list is restricted to bodies and neighbors present in current subdomain."))
+		((bool,useRedirection,false,,"true if the scene uses up-to-date lists for boundedBodies and realBodies; turned true automatically 1/ after removal of bodies if :yref:`enableRedirection`=True, and 2/ in MPI execution."))
+		((bool,enableRedirection,true,,"let collider switch to optimized algorithm with body redirection when bodies are erased - true by default"))
 		#ifdef YADE_MPI
-		((vector<Body::id_t>,boundedSubDBodies,vector<Body::id_t>(),,"The list of bounded bodies in the subdomain"))
-		((vector<Body::id_t>,subdomainBodies,vector<Body::id_t>(),,"The list of bodies owned by the subdomain (scene.subdomain == body.subdomain)"))		
-		((bool,subdomainListsNeedUpdate,true,,"true if the scene has up-to-date lists for boundedBodies and subdomainBodies, turned false after insertion/removal of bodies"))
+		((vector<Body::id_t>,subdomainBodies,vector<Body::id_t>(),,"The list of bounded bodies in the subdomain"))
 		#endif
 		,/*ctor*/,
-		#ifdef YADE_MPI
-		.def("updateSubdomainLists",&BodyContainer::updateSubdomainLists,"update lists boundedSubDBodies and subdomainBodies. This function is called automatically by e.g. ForceContainer::reset(), it is safe to call multiple times from many places since if the lists are up-to-date he function will just return.")
-		#endif
+		.def("updateSubdomainLists",&BodyContainer::updateSubdomainLists,"update lists realBodies and subdomainBodies. This function is called automatically by e.g. ForceContainer::reset(), it is safe to call multiple times from many places since if the lists are up-to-date he function will just return.")
 		)
 
 	DECLARE_LOGGER;
