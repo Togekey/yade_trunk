@@ -83,8 +83,8 @@ class pyBodyContainer{
 	// raw access to the underlying 
 	bool getUseRedirection(void) {return proxee->useRedirection;}
 	bool getEnableRedirection(void) {return proxee->enableRedirection;}
-	void setUseRedirection(bool val) {proxee->useRedirection=val;}
-	void setEnableRedirection(bool val) {proxee->enableRedirection=val;}
+	void setUseRedirection(bool val) {if (val and not proxee->useRedirection==val) proxee->useRedirection=val; proxee->dirty=true; if (val) proxee->enableRedirection=true; }
+	void setEnableRedirection(bool val) {proxee->enableRedirection=val; if (not val) proxee->useRedirection=false;}
 	
 	shared_ptr<Body> pyGetitem(Body::id_t _id){
 		int id=(_id>=0 ? _id : proxee->size()+_id);

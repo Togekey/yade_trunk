@@ -10,7 +10,7 @@
 class Body;
 class InteractionContainer;
 
-#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b_,bodies) bodies->updateSubdomainLists(); const vector<Body::id_t>& realBodies= bodies->realBodies; const bool redirect=bodies->useRedirection; const Body::id_t _sz(redirect ? realBodies.size() : bodies->size()); _Pragma("omp parallel for") for(int k=0; k<_sz; k++){  if(not redirect and not (*bodies)[k]) continue; b_((*bodies)[redirect? realBodies[k]: k]);
+#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b_,bodies) bodies->updateShortLists(); const vector<Body::id_t>& realBodies= bodies->realBodies; const bool redirect=bodies->useRedirection; const Body::id_t _sz(redirect ? realBodies.size() : bodies->size()); _Pragma("omp parallel for") for(int k=0; k<_sz; k++){  if(not redirect and not (*bodies)[k]) continue; b_((*bodies)[redirect? realBodies[k]: k]);
 #define YADE_PARALLEL_FOREACH_BODY_END() }
 
 /*
@@ -70,20 +70,21 @@ class BodyContainer: public Serializable{
 		}
 		bool erase(Body::id_t id, bool eraseClumpMembers);
 		
-		void updateSubdomainLists();
+		void updateShortLists();
 		
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(BodyContainer,Serializable,"Standard body container for a scene",
 		((ContainerT,body,,,"The underlying vector<shared_ptr<Body> >"))
-		((bool,dirty,true,,"true if after insertion/removal of bodies, used only if collider::keepListsShort=true"))
-		((vector<Body::id_t>,insertedBodies,vector<Body::id_t>(),,"The list of newly bodies inserted, to be used and purged by collider"))
-		((vector<Body::id_t>,realBodies,,,"Redirection vector to non-null bodies, used to optimize loops after numerous insertion/erase. In MPI runs the list is restricted to bodies and neighbors present in current subdomain."))
+		((bool,dirty,true,(Attr::noSave|Attr::readonly|Attr::hidden),"true if after insertion/removal of bodies, used only if collider::keepListsShort=true"))
+		((bool,checkedByCollider,false,(Attr::noSave|Attr::readonly|Attr::hidden),""))
+		((vector<Body::id_t>,insertedBodies,vector<Body::id_t>(),Attr::readonly,"The list of newly bodies inserted, to be used and purged by collider"))
+		((vector<Body::id_t>,realBodies,vector<Body::id_t>(),Attr::readonly,"Redirection vector to non-null bodies, used to optimize loops after numerous insertion/erase. In MPI runs the list is restricted to bodies and neighbors present in current subdomain."))
 		((bool,useRedirection,false,,"true if the scene uses up-to-date lists for boundedBodies and realBodies; turned true automatically 1/ after removal of bodies if :yref:`enableRedirection`=True, and 2/ in MPI execution."))
 		((bool,enableRedirection,true,,"let collider switch to optimized algorithm with body redirection when bodies are erased - true by default"))
 		#ifdef YADE_MPI
 		((vector<Body::id_t>,subdomainBodies,vector<Body::id_t>(),,"The list of bounded bodies in the subdomain"))
 		#endif
 		,/*ctor*/,
-		.def("updateSubdomainLists",&BodyContainer::updateSubdomainLists,"update lists realBodies and subdomainBodies. This function is called automatically by e.g. ForceContainer::reset(), it is safe to call multiple times from many places since if the lists are up-to-date he function will just return.")
+		.def("updateShortLists",&BodyContainer::updateShortLists,"update lists realBodies and subdomainBodies. This function is called automatically by e.g. ForceContainer::reset(), it is safe to call multiple times from many places since if the lists are up-to-date he function will just return.")
 		)
 
 	DECLARE_LOGGER;

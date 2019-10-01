@@ -19,7 +19,7 @@ void BoundDispatcher::action()
 	updateScenePtr();
 	shared_ptr<BodyContainer>& bodies = scene->bodies;
 	const bool redirect = bodies->useRedirection;
-	if (redirect) bodies->updateSubdomainLists();
+	if (redirect) bodies->updateShortLists();
 	const long numBodies= redirect ? (long)bodies->realBodies.size() : (long)bodies->size();
 	#ifdef YADE_MPI
 	Body::id_t subdomainId=0;

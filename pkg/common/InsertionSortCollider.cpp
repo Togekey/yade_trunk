@@ -330,15 +330,18 @@ void InsertionSortCollider::action(){
 			}
 		
 		// ### Second approach: Bounds sizes match the real number of bodies in the scene
-		} else if (scene->bodies->insertedBodies.size()>0)  {
-			const vector<Body::id_t>& insrts = scene->bodies->insertedBodies;
+		} else if (not scene->bodies->checkedByCollider)  {
+			if (not shortListsInitialized) scene->bodies->updateShortLists();// not needed if we use inserted bodies
+			const vector<Body::id_t>& insrts = shortListsInitialized? scene->bodies->insertedBodies : scene->bodies->realBodies;
 			size_t nInsert = insrts.size();
 			size_t BBsize = BB[0].size();
 			for(int i=0; i<3; i++) {
 				size_t idxTarget=0;
 				VecBounds& BBi=BB[i];
+				// move all bounds to the beginning of the vector
+				// improvement: skip i=1,2 if nothing to do
 				for(size_t idx=0; idx<BBsize; idx++){
-					if (Body::byId(BBi[idx].id,scene) /*and Body::byId(BBi[idx].id,scene)->isBounded()*/) {
+					if (Body::byId(BBi[idx].id,scene) and Body::byId(BBi[idx].id,scene)->isBounded()) {
 						if (idxTarget<idx) BBi[idxTarget]=BBi[idx];
 						idxTarget++;}
 					else continue;
@@ -351,6 +354,8 @@ void InsertionSortCollider::action(){
 						BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/true)); BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/false));}
 				}
 			}
+			scene->bodies->checkedByCollider = true;
+			shortListsInitialized=true;
 		}
 		scene->bodies->insertedBodies.clear(); //Better place to do this?
 		

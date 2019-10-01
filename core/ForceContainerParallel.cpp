@@ -186,7 +186,7 @@ void ForceContainer::sync(){
   const bool redirect=Omega::instance().getScene()->bodies->useRedirection;
   const auto& realBodies = Omega::instance().getScene()->bodies->realBodies;
   const unsigned long len=redirect ? (unsigned long)realBodies.size() : (unsigned long) size;  
-  if (redirect) Omega::instance().getScene()->bodies->updateSubdomainLists();
+  if (redirect) Omega::instance().getScene()->bodies->updateShortLists();
    
   #pragma omp parallel for schedule(static)
   for(unsigned long k=0; k<len; k++){
@@ -217,7 +217,7 @@ void ForceContainer::reset(long iter, bool resetAll) {
 	const shared_ptr<Scene>& scene=Omega::instance().getScene();
 	size_t currSize;
 	if (scene->bodies->useRedirection) { //if using short lists we only reset forces for bodies not-vanished
-		scene->bodies->updateSubdomainLists();
+		scene->bodies->updateShortLists();
 		const auto& sdIds = scene->bodies->realBodies;
 		currSize=sdIds.size();
 		// no need to reset force-torque per thread since they are set to zero in sync() already
