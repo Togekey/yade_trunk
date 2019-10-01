@@ -55,7 +55,7 @@ mp.VERBOSE_OUTPUT=False
 mp.YADE_TIMING=False
 mp.NO_OUTPUT=True
 
-mp.mpirun(NSTEPS,numThreads)
+mp.mpirun(NSTEPS,numThreads,True)
 mp.mprint( "num. bodies:",len([b for b in O.bodies]))
 mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
 
@@ -63,7 +63,7 @@ Ek=0
 if mp.rank==0:
 	Ek=sum(mp.sendCommand([1,2,3],"kineticEnergy()",True))
 	mp.mprint("got Ek=",Ek)
-	refEk=1203790.66007
+	refEk=1191670.5749322283
 	if (abs(Ek-refEk)/refEk)>1e-10:
 		raise YadeCheckError("kinetic energy changed by"+str((Ek-refEk)/refEk))
 
