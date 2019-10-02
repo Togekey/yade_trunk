@@ -33,7 +33,6 @@ class Body: public Serializable{
 		enum { FLAG_BOUNDED=1, FLAG_ASPHERICAL=2, FLAG_SUBDOMAIN=4 }; /* add powers of 2 as needed */
 		//! symbolic constant for body that doesn't exist.
 		static const Body::id_t ID_NONE;
-		static bool shortListCheckedOnce;
 		//! get Body pointer given its id. 
 		static const shared_ptr<Body>& byId(Body::id_t _id,Scene* rb=NULL);
 		static const shared_ptr<Body>& byId(Body::id_t _id,shared_ptr<Scene> rb);

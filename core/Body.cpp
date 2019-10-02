@@ -9,7 +9,6 @@ CREATE_LOGGER(Body);
 
 //! This could be -1 if id_t is re-typedef'ed as `int'
 const Body::id_t Body::ID_NONE=Body::id_t(-1);
-bool Body::shortListCheckedOnce=false;
 
 const shared_ptr<Body>& Body::byId(Body::id_t _id, Scene* rb){return (*((rb?rb:Omega::instance().getScene().get())->bodies))[_id];}
 const shared_ptr<Body>& Body::byId(Body::id_t _id, shared_ptr<Scene> rb){return (*(rb->bodies))[_id];}
