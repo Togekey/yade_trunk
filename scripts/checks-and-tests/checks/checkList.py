@@ -15,7 +15,7 @@ failedScripts=list()
 skipScripts = ['checkList.py','checkSpawn.py','checkBlockGen.py','checkPolyhedraCrush.py','checkMPI.py']
 if not yade.libVersions.getLinuxVersion()[:9]=='Ubuntu 16' and not yade.libVersions.getLinuxVersion()[-8:]=='(buster)':
 	skipScripts.append('checkMPI.py')
-onlyOneScript = [] # use this if you want to test only one script, it takes precedence over skipScripts.
+onlyOneScript = ["checkWeight.py"] # use this if you want to test only one script, it takes precedence over skipScripts.
 
 def mustCheck(sc):
 	if(len(onlyOneScript)==1): return sc in onlyOneScript
@@ -23,9 +23,9 @@ def mustCheck(sc):
 
 for script in scriptsToRun:
 	if (script[len(script)-3:]==".py" and mustCheck(script)):
+	    print("###################################")
+		print("running: ",script)
 		try:
-			print("###################################")
-			print("running: ",script)
 			execfile(checksPath+"/"+script)
 			print("Status: success")
 			print("___________________________________")
