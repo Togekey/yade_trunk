@@ -60,7 +60,6 @@ class TestPBC(unittest.TestCase):
 		O.dt=1e-5
 		O.step()
 		s1=O.bodies[1].state
-		print("s1.vel",s1.vel[2],self.initVel[2],O.cell.velGrad[2,2],self.initPos[2])
 		self.assertAlmostEqual(s1.vel[2],self.initVel[2]+self.initPos[2]*O.cell.velGrad[2,2])
 	def testScGeomIncidentVelocity(self):
 		"PBC: ScGeom computes incident velocity correctly"

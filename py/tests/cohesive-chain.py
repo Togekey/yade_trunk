@@ -55,7 +55,6 @@ class TestCohesiveChain(unittest.TestCase):
 		#print v1,p1
 		O.run(10000,True)
 		v2=O.bodies[0].state.vel[1];p2=O.bodies[0].state.pos[1]
-		print("______________________",tv1,v1,tp1,p1)
 		self.assertTrue(abs(tv1-v1)<abs(tolerance*tv1) and abs(tp1-p1)<abs(tolerance*tp1))
 		self.assertTrue(abs(tp2-p2)<abs(tolerance*tp2))
 		#self.assertTrue(abs(tv2-v2)<abs(tolerance*tv2) and abs(tp2-p2)<abs(tolerance*tp2)) #velocity comparison disabled, see comment above
