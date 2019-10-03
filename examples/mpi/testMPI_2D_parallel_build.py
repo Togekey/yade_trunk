@@ -1,24 +1,9 @@
 
-
+'''
 # Possible executions of this script
 ### Parallel:
 # mpiexec -n 4 yade-mpi -n -x testMPIxNxM.py
 # mpiexec -n 4 yade-mpi  -n -x testMPIxN.py N M # (n-1) subdomains with NxM spheres each
-### Monolithic:
-# yade-mpi -n -x testMPIxN.py 
-# yade-mpi -n -x testMPIxN.py N M
-# yade-mpi -n -x testMPIxN.py N M n
-# in last line the optional argument 'n' has the same meaning as with mpiexec, i.e. total number of bodies will be (n-1)*N*M but on single core
-### Openmp:
-# yade-mpi -j4 -n -x testMPIxN.py N M n
-### Nexted MPI * OpenMP
-# needs testing...
-'''
-This script simulates spheres falling on a plate using a distributed memory approach based on mpy module
-The number of spheres assigned to one particular process (aka 'worker') is N*M, they form a regular patern.
-The master process (rank=0) has no spheres assigned; it is in charge of getting the total force on the plate
-The number of subdomains depends on argument 'n' of mpiexec. Since rank=0 is not assigned a regular subdomain the total number of spheres is (n-1)*N*M
-
 '''
 
 
@@ -42,6 +27,7 @@ if len(sys.argv)>1: #we then assume N,M are provided as 1st and 2nd cmd line arg
 	N=int(sys.argv[1]); M=int(sys.argv[2])
 
 ############  Build a scene (we use Yade's pre-filled scene)  ############
+
 
 # sequential grain colors
 import colorsys
@@ -92,15 +78,8 @@ if rank is None: #######  Single-core  ######
 	print ("Total force on floor=",O.forces.f(WALL_ID)[1])
 else: #######  MPI  ######
 	#import yade's mpi module
-	from yade import mpy as mp	
+	from yade import mpy as mp
 	# customize
-	mp.ACCUMULATE_FORCES=True #trigger force summation on master's body (here WALL_ID)
-	mp.VERBOSE_OUTPUT=False
-	mp.ERASE_REMOTE=True #erase bodies not interacting wit a given subdomain?
-	mp.OPTIMIZE_COM=True #L1-optimization: pass a list of double instead of a list of states
-	mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
-	mp.MERGE_SPLIT=False
-	mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = True
 	mp.MAX_RANK_OUTPUT=4
 	mp.YADE_TIMING=True
 	mp.DISTRIBUTED_INSERT=True

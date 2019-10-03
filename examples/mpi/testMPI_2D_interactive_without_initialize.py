@@ -8,17 +8,6 @@ NSTEPS=1000 #turn it >0 to see time iterations, else only initilization TODO!HAC
 #NSTEPS=50 #turn it >0 to see time iterations, else only initilization
 N=50; M=50; #(columns, rows) per thread
 
-if("-ms" in sys.argv):
-	sys.argv.remove("-ms")
-	mergeSplit=True
-else: mergeSplit=False
-
-if("-bc" in sys.argv):
-	sys.argv.remove("-bc")
-	bodyCopy=True
-else: bodyCopy=False
-
-
 import os
 from yade import mpy as mp
 numThreads = 4
@@ -40,6 +29,7 @@ for sd in range(0,numThreads-1):
 WALL_ID=O.bodies.append(box(center=(numThreads*N*0.5,-0.5,0),extents=(2*numThreads*N,0,2),fixed=True))
 
 collider.verletDist = 0.5
+collider.targetInterv=0
 newton.gravity=(0,-10,0) #else nothing would move
 tsIdx=O.engines.index(timeStepper) #remove the automatic timestepper. Very important: we don't want subdomains to use many different timesteps...
 O.engines=O.engines[0:tsIdx]+O.engines[tsIdx+1:]
@@ -57,16 +47,10 @@ def collectTiming():
 	f.close()
 
 # customize mpy
-mp.ACCUMULATE_FORCES=True #trigger force summation on master's body (here WALL_ID)
-mp.VERBOSE_OUTPUT=False
-mp.ERASE_REMOTE=False #erase bodies not interacting wit a given subdomain?
-mp.OPTIMIZE_COM=True #L1-optimization: pass a list of double instead of a list of states
-mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
 mp.MERGE_W_INTERACTIONS=False
-mp.MERGE_SPLIT=mergeSplit
-mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = bodyCopy and not mergeSplit
+mp.ERASE_REMOTE_MASTER=False
 
-mp.mpirun(NSTEPS,4)
+mp.mpirun(NSTEPS+1,4,True) #+1 in order to be consistent with other example scripts
 mp.mprint( "num. bodies:",len([b for b in O.bodies]),len(O.bodies))
 mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
 

@@ -21,10 +21,6 @@ The number of subdomains depends on argument 'n' of mpiexec. Since rank=0 is not
 
 '''
 
-
-
-
-
 NSTEPS=1000 #turn it >0 to see time iterations, else only initilization TODO!HACK
 #NSTEPS=50 #turn it >0 to see time iterations, else only initilization
 N=50; M=50; #(columns, rows) per thread
@@ -64,6 +60,7 @@ for sd in range(0,numThreads-1):
 WALL_ID=O.bodies.append(box(center=(numThreads*N*0.5,-0.5,0),extents=(2*numThreads*N,0,2),fixed=True))
 
 collider.verletDist = 0.5
+collider.targetInterv = 0
 newton.gravity=(0,-10,0) #else nothing would move
 tsIdx=O.engines.index(timeStepper) #remove the automatic timestepper. Very important: we don't want subdomains to use many different timesteps...
 O.engines=O.engines[0:tsIdx]+O.engines[tsIdx+1:]
@@ -96,11 +93,6 @@ else: #######  MPI  ######
 	# customize
 	mp.ACCUMULATE_FORCES=True #trigger force summation on master's body (here WALL_ID)
 	mp.VERBOSE_OUTPUT=False
-	mp.ERASE_REMOTE=True #erase bodies not interacting wit a given subdomain?
-	mp.OPTIMIZE_COM=True #L1-optimization: pass a list of double instead of a list of states
-	mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
-	mp.MERGE_SPLIT=False
-	mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = True
 	mp.MAX_RANK_OUTPUT=4
 	mp.mpirun(1) #this is to eliminate initialization overhead in Cundall number and timings
 	from yade import timing
