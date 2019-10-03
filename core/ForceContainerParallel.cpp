@@ -22,8 +22,8 @@ void ForceContainer::addTorqueUnsynced(Body::id_t id, const Vector3r& m) {
 void ForceContainer::resizePerm(size_t newSize) {
   if (newSize<_permForce.size()) LOG_WARN("permForce may have been assigned to an id larger than maxId, and will be ignored in that case");
   if (newSize>_permForce.size()){
-    _permForce.reserve(size_t(1.3*newSize));
-    _permTorque.reserve(size_t(1.3*newSize));
+    _permForce.reserve(size_t(1.5*newSize));
+    _permTorque.reserve(size_t(1.5*newSize));
     _permForce.resize(newSize,Vector3r::Zero());
     _permTorque.resize(newSize,Vector3r::Zero());
     syncedSizes=false;}
@@ -32,17 +32,13 @@ void ForceContainer::resizePerm(size_t newSize) {
 #ifdef YADE_OPENMP
 #include <omp.h>
 void ForceContainer::ensureSize(Body::id_t id, int threadN) {
-// 	assert(id < size);
-// 	if (not (id < Body::id_t(size))) LOG_ERROR("ensureSize failed "<<threadN);
-// 	std::cerr<<"ensureZie(1)"<< Omega::instance().getScene()->subdomain<<" "<<Omega::instance().getScene()->iter <<" "<< id<<" "<<threadN<<std::endl;
-//   assert(nThreads>omp_get_thread_num());
-//   const Body::id_t idMaxTmp = max(id, _maxId[threadN]);
-	_maxId[threadN] = std::max( _maxId[threadN],id);
-// //   std::cerr<<"ensureZie(2) "<< Omega::instance().getScene()->subdomain<<" "<<Omega::instance().getScene()->iter <<" "<< threadN<<std::endl;
-  if (threadN<0) resizePerm(id+1);
-  else if (not (sizeOfThreads[threadN]>unsigned(_maxId[threadN]))) resize(_maxId[threadN]+1,threadN);
-  
-//   std::cerr<<"ensureZie(3) "<< Omega::instance().getScene()->subdomain<<" "<<Omega::instance().getScene()->iter <<" "<< threadN<<std::endl;
+	if (threadN<0) {
+		if (id>=Body::id_t(_permForce.size())) resizePerm(id+1);
+		
+	} else {
+		_maxId[threadN] = std::max( _maxId[threadN],id);
+		if (not (sizeOfThreads[threadN]>unsigned(_maxId[threadN]))) resize(_maxId[threadN]+1,threadN);
+  }
 }
 
 ForceContainer::ForceContainer() {
@@ -124,12 +120,10 @@ void ForceContainer::setPermTorque(Body::id_t id, const Vector3r& t) {
 }
 
 const Vector3r& ForceContainer::getPermForce(Body::id_t id) {
-  ensureSynced();
   return ((size_t)id<size)?_permForce[id]:_zero;
 }
 
 const Vector3r& ForceContainer::getPermTorque(Body::id_t id) {
-  ensureSynced();
   return ((size_t)id<size)?_permTorque[id]:_zero;
 }
 
@@ -284,6 +278,7 @@ void ForceContainer::syncSizesOfContainers() {
   //check whether all containers have equal length, and if not resize it  
   size_t maxThreadSize = 0;
   for(int i=0; i<nThreads; i++) maxThreadSize = std::max(maxThreadSize,size_t(_maxId[i]+1));
+  if (permForceUsed) maxThreadSize = std::max(maxThreadSize,size_t(_permForce.size()));
   if (maxThreadSize>size) syncedSizes=false;  
   if (syncedSizes) return;
   size_t newSize = std::max(size,maxThreadSize);  
