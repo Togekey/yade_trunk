@@ -60,7 +60,7 @@ const Vector3r& ForceContainer::getForce(Body::id_t id) {
 }
 
 void ForceContainer::addForce(Body::id_t id, const Vector3r& f){
-//   ensureSize(id,omp_get_thread_num());
+  ensureSize(id,omp_get_thread_num());
    synced=false;
   _forceData[omp_get_thread_num()][id]+=f;
 }
@@ -71,7 +71,7 @@ const Vector3r& ForceContainer::getTorque(Body::id_t id) {
 }
 
 void ForceContainer::addTorque(Body::id_t id, const Vector3r& t) {
-//   ensureSize(id,omp_get_thread_num());
+  ensureSize(id,omp_get_thread_num());
    synced=false;
   _torqueData[omp_get_thread_num()][id]+=t;
 }
