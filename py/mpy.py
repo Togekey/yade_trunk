@@ -50,13 +50,14 @@ VERBOSE_OUTPUT=False
 NO_OUTPUT=False
 MAX_RANK_OUTPUT=5 #larger ranks will be skipped in mprint
 SEND_SHAPES=False #if false only bodies' states are communicated between threads, else shapes as well (to be implemented)
-ERASE_REMOTE = True #erase bodies not interacting wit a given subdomain? else keep dead clones of all bodies in each scene
+ERASE_REMOTE = True # True is MANDATORY. Erase bodies not interacting wit a given subdomain? else keep dead clones of all bodies in each scene
+ERASE_REMOTE_MASTER = True # erase remotes on master or keep them for fast merge (updating just b.state)
 OPTIMIZE_COM=True
 USE_CPP_MPI=True and OPTIMIZE_COM
 YADE_TIMING=True #report timing.stats()?
 MERGE_SPLIT = False
 MERGE_W_INTERACTIONS = True
-COPY_MIRROR_BODIES_WHEN_COLLIDE = True 
+COPY_MIRROR_BODIES_WHEN_COLLIDE = True  # True is MANDATORY 
 RESET_SUBDOMAINS_WHEN_COLLIDE = False
 DOMAIN_DECOMPOSITION = False
 NUM_MERGES = 0
@@ -162,7 +163,7 @@ def spawnedProcessWaitCommand():
 	mprint("I'm now waiting")
 	while 1:
 		while not comm.Iprobe(source=0, tag=_MASTER_COMMAND_):
-			time.sleep(0.0001)
+			time.sleep(0.001)
 		command = comm.recv(source=0,tag=_MASTER_COMMAND_)
 		mprint("I will now execute ",command)
 		try:
@@ -170,7 +171,7 @@ def spawnedProcessWaitCommand():
 		except:
 			mprint(sys.exc_info())
 		
-def sendCommand(executors,command,wait=False):
+def sendCommand(executors,command,wait=True):
 	'''
 	Send a command to a worker (or list of) from master or from another worker
 	'''
@@ -191,7 +192,6 @@ def sendCommand(executors,command,wait=False):
 		return (resCommand if argIsList else res[0])
 	else:
 		return None
-	      
 
 
 def probeRecvMessage(source, tag):
@@ -201,11 +201,7 @@ def probeRecvMessage(source, tag):
 	data = bytearray(msgStat.Get_count(MPI.BYTE))  
 	O.subD.comm.Recv([data, MPI.BYTE], source=source, tag=tag)
 	return data
-      
-	
-      
-      
-	
+
 
 class Timing_comm():
 	def __init__(self):
@@ -545,9 +541,9 @@ O.splittedOnce=False #after the first split we have additional bodies (Subdomain
 
 def mergeScene():
 	if O.splitted:
-		if MERGE_W_INTERACTIONS: 
+		if MERGE_W_INTERACTIONS or ERASE_REMOTE_MASTER or DISTRIBUTED_INSERT:
 			O.subD.mergeOp()
-			sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkNeedCollide.dead = True
+			sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = collisionChecker.dead = True
 			O.splitted=False
 			collider.doSort = True
 			global NUM_MERGES; NUM_MERGES +=1; 
@@ -594,7 +590,7 @@ def mergeScene():
 					O.subD.setStateBoundsValuesFromIds(ids,dat[shift: shift_plus_one]);
 					reboundRemoteBodies(ids)
 			# turn mpi engines off
-			sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkNeedCollide.dead = True
+			sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = collisionChecker.dead = True
 			O.splitted=False
 			collider.doSort = True
 
@@ -604,6 +600,8 @@ def splitScene():
 	Split a monolithic scene into distributed scenes on threads
 	precondition: the bodies have subdomain no. set in user script
 	'''
+	if not COPY_MIRROR_BODIES_WHEN_COLLIDE: mprint("COPY_MIRROR_BODIES_WHEN_COLLIDE=False is not supported")
+	if not ERASE_REMOTE: mprint("ERASE_REMOTE=False is not supported")
 	if not O.splittedOnce:
 		if DOMAIN_DECOMPOSITION: #if not already partitionned by the user we partition here
 			if rank == 0:
@@ -674,11 +672,13 @@ def splitScene():
 				decomposition = dd.decompBodiesSerial(comm) 
 				decomposition.partitionDomain() 
 			O.subD.splitBodiesToWorkers(RESET_SUBDOMAINS_WHEN_COLLIDE)
-		if rank == 0 : O.interactions.clear()
-		updateMirrorIntersections()
-		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = checkNeedCollide.dead = False
-		O.splitted = True 
-		O.splittedOnce = True
+			updateMirrorIntersections()
+		if rank == 0 :
+			O.interactions.clear()
+			unboundRemoteBodies()
+			if (ERASE_REMOTE and ERASE_REMOTE_MASTER): eraseRemote()
+		sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = collisionChecker.dead = False
+		O.splitted = True
 		
 		
 bodiesToImport=[]
@@ -689,7 +689,7 @@ def updateMirrorIntersections():
 	start = time.time()
 	if (not O.splitted):
 		unboundRemoteBodies()
-		#eraseRemote()
+		eraseRemote()
 	collider.boundDispatcher.__call__()
 	updateDomainBounds(subD.subdomains) #triggers communications
 	collider.__call__() #see [1]
@@ -768,7 +768,7 @@ def updateMirrorIntersections():
 	" 6- loop on "requestedSomethingFrom" ranks and recv the bodies (blocking, c++, using MPI_Probe to know the message size)
 	" 7- comm.barrier(), just in case
 	"""
-	if((COPY_MIRROR_BODIES_WHEN_COLLIDE or MERGE_W_INTERACTIONS) and (O.splittedOnce or DISTRIBUTED_INSERT)):
+	if(COPY_MIRROR_BODIES_WHEN_COLLIDE or MERGE_W_INTERACTIONS):
 		requestedSomethingFrom=[]
 		bodiesToImport=[[] for worker in range(numThreads)]
 		sent=[]
@@ -811,12 +811,12 @@ def updateMirrorIntersections():
 
 
 def eraseRemote(): 
-	if rank > -1: # suppress external bodies from scene
+	if rank>0 or ERASE_REMOTE_MASTER: # suppress external bodies from scene
 		#numBodies = len(O.bodies)
 		#for id in range(numBodies):
 		#mprint("will erase ",[b.id for b in O.bodies if (not b.bounded and b.subdomain!=rank)])
 		for b in O.bodies:
-			if not b.bounded and b.subdomain!=rank:
+			if not b.bounded and b.subdomain != rank:
 				connected = False #a gridNode could be needed as part of interacting facet/connection even if not overlaping a specific subdomain. Assume connections are always bounded for now, we thus only check nodes.
 				if isinstance(b.shape,GridNode):
 					for f in b.shape.getPFacets():
@@ -829,17 +829,29 @@ def eraseRemote():
 
 ##### RUN MPI #########
 def mpirun(nSteps,np=numThreads,withMerge=False):
+	'''
+	Parallel version of O.run() using MPI domain decomposition.
+	
+	Parameters
+        ----------
+        nSteps : int
+            The numer of steps to compute
+        np : int
+            number of iterations
+        withMerge : bool
+            wether subdomains should be merged into master at the end of the run (default False). If True the scene in the master process is exactly in the same state as after O.run(nSteps,True). The merge can be time consumming, it is recommended to activate only if post-processing or other similar tasks require it.
+	'''
 	stack=inspect.stack()
 	global userScriptInCheckList
 	if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
 		userScriptInCheckList=stack[1][1]
 	caller_name = stack[2][3]
 	if (np>numThreads):  
-		if not mit_mode: autoInitialize(np)
+		if not mit_mode: autoInitialize(np) #this will set numThreads
 		else: mprint("number of cores can't be increased after first call to mpirun")
 	if(mit_mode and rank==0 and not caller_name=='execfile'): #if the caller is the user's script, everyone already calls mpirun and the workers are not waiting for a command.
 		for w in range(1,numThreads):
-			comm.send("yade.mpy.mpirun("+str(nSteps)+")",dest=w,tag=_MASTER_COMMAND_)
+			comm.send("yade.mpy.mpirun(nSteps="+str(nSteps)+",withMerge="+str(withMerge)+")",dest=w,tag=_MASTER_COMMAND_)
 			wprint("Command sent to ",w)
 	initStep = O.iter
 	if not O.splitted:
@@ -848,7 +860,7 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 		wprint("splitted")
 	if YADE_TIMING:
 		O.timingEnabled=True
-	if not (MERGE_SPLIT):	
+	if not (MERGE_SPLIT):
 		O.run(nSteps,True) #a pyrunner will pause, or trigger collider and continue, depending on WITH_BODY_COPY flag
 		if withMerge: mergeScene() #will be useful to see evolution in QGLViewer, for instance
 	else: #merge/split or body_copy for each collider update
