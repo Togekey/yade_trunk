@@ -31,13 +31,13 @@ Body::id_t BodyContainer::insert(shared_ptr<Body> b){
 
 Body::id_t BodyContainer::insertAtId(shared_ptr<Body> b, Body::id_t candidate){
 	if (not b) LOG_ERROR("Inserting null body");
-	if(body[candidate]) {LOG_ERROR("invalid candidate id"); return -1;}
 	const shared_ptr<Scene>& scene=Omega::instance().getScene(); 
 	if (enableRedirection) { dirty=true; checkedByCollider=false; useRedirection=true; insertedBodies.push_back(candidate); /*realBodies.push_back(candidate); */}// if that special insertion is used, switch to algorithm optimized for non-full body container
 	if(unsigned(candidate)>=size()) {
 		body.resize(candidate+1,nullptr);
 		scene->forces.addMaxId(candidate);
-	}
+	} else if(body[candidate]) {LOG_ERROR("invalid candidate id in "<<Omega::instance().getScene()->subdomain); return -1;}
+	
 	b->iterBorn=scene->iter;
 	b->timeBorn=scene->time;
 	b->id=candidate; 

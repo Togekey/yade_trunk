@@ -114,6 +114,5 @@ class Body: public Serializable{
 		.def_readwrite("chain",&Body::chain,"Returns Id of chain to which the body belongs.")
 		.def("intrs",&Body::py_intrs,"Return list of all real interactions in which this body participates.")
 	);
-	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(Body);

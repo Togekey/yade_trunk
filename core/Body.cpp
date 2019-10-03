@@ -3,9 +3,6 @@
 #include<core/Scene.hpp>
 #include<core/Omega.hpp>
 #include<core/InteractionContainer.hpp>
-#include<pkg/common/InsertionSortCollider.hpp>
-
-CREATE_LOGGER(Body);
 
 //! This could be -1 if id_t is re-typedef'ed as `int'
 const Body::id_t Body::ID_NONE=Body::id_t(-1);

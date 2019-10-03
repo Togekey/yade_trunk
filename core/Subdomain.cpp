@@ -298,19 +298,23 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 			const Body::id_t& idx = newBody->id;
 			std::map<Body::id_t, shared_ptr<Interaction> > intrsToSet = newBody->intrs;
 			shared_ptr<Body>& b = (*bodyContainer)[idx];
-			if (ifMerge){
+			if (!b) newBody->intrs.clear();//we can clear here, interactions are stored in intrsToSet and will be reinserted
+			else newBody->intrs=b->intrs;
+			if (ifMerge) newBody->material=scene->materials[newBody->material->id];
 				/* FIXME: this switcheroo of material for existing bodies is done to avoid "RuntimeError: Scene::postLoad: Internal inconsistency,*/ 
 				/*shared materials not preserved when loaded; please report bug." during global merge, splits.*/
-				shared_ptr<Material> tmpMat = b->material; 
-				b = newBody; //NOTE: this breaks new collider logic if insertAtId is not used, the merged scene can be ran further in non-mpi after that (if it is of any interest... Bruno). 
-				b->material = tmpMat; 
-				b->intrs.clear();
-			}else{
-				if (!b) newBody->intrs.clear(); //we can clear here, interactions are stored in intrsToSet
-				else newBody->intrs=b->intrs;
+// 				newBody->material=materials[newBody->material->id];
+				
+// 				b = newBody; //NOTE: this breaks new collider logic if insertAtId is not used, the merged scene can be ran further in non-mpi after that (if it is of any interest... Bruno). 
+// 				b->material = tmpMat; 
+// 				b->intrs.clear();
+// 			}else{
+				 //we can clear here, interactions are stored in intrsToSet
+// 				else newBody->intrs=b->intrs;
 				//b = newBody; 
-				bodyContainer->insertAtId(newBody, newBody->id);  
-			}
+// 				bodyContainer->insertAtId(newBody, newBody->id);  
+// 			}
+			bodyContainer->insertAtId(newBody, newBody->id);
 	//if(!resetInteractions)
 			for (auto mapIter = intrsToSet.begin(); mapIter != intrsToSet.end(); ++mapIter){
 				const Body::id_t& id1 = mapIter->second->id1; const Body::id_t& id2 = mapIter->second->id2;

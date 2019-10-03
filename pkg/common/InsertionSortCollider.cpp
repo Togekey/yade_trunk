@@ -350,7 +350,7 @@ void InsertionSortCollider::action(){
 			}
 			for(int i=0; i<3; i++) {
 				for(size_t idx=0; idx<nInsert; idx++){
-					if (Body::byId(insrts[idx],scene)) { //could have been inserted then erased
+					if (Body::byId(insrts[idx],scene) and Body::byId(insrts[idx],scene)->isBounded()) { //could have been inserted then erased
 						BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/true)); BB[i].push_back(Bounds(0,insrts[idx],/*isMin=*/false));}
 				}
 			}
@@ -360,8 +360,7 @@ void InsertionSortCollider::action(){
 		scene->bodies->insertedBodies.clear(); //Better place to do this?
 		
 		if(minima.size()!=(size_t)3*nBodies){ minima.resize(3*nBodies); maxima.resize(3*nBodies); }
-		assert( BB[0].size() == 2*scene->bodies->size());
-		
+				
 		//Increase the size of force container.
 		scene->forces.addMaxId(scene->bodies->size());
 
@@ -432,6 +431,7 @@ void InsertionSortCollider::action(){
 					const shared_ptr<Bound>& bv=b->bound;
 					// coordinate is min/max if has bounding volume, otherwise both are the position. Add periodic shift so that we are inside the cell
 					// watch out for the parentheses around ?: within ?: (there was unwanted conversion of the Reals to bools!)
+					// FIXME: the Mathr::MAX_REAL trick will not work very well for periodic BCs.
 					BBji.coord=((BBji.flags.hasBB=((bool)bv)) ? (BBji.flags.isMin ? bv->min[j] : bv->max[j]) : (keepListsShort ? Mathr::MAX_REAL : b->state->pos[j])) - (periodic ? BBj.cellDim*BBji.period : 0.);
 					// if initializing periodic, shift coords & record the period into BBj[i].period
 					if(doInitSort && periodic) BBji.coord=cellWrap(BBji.coord,0,BBj.cellDim,BBji.period);
