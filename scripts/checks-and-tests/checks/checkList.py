@@ -23,7 +23,7 @@ def mustCheck(sc):
 
 for script in scriptsToRun:
 	if (script[len(script)-3:]==".py" and mustCheck(script)):
-	    print("###################################")
+		print("###################################")
 		print("running: ",script)
 		try:
 			execfile(checksPath+"/"+script)
