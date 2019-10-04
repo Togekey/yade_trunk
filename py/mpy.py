@@ -211,15 +211,13 @@ class Timing_comm():
 		self.timings={}
 	
 	def print_all(self):
-		comm.barrier()
 		time.sleep((numThreads-rank)*0.001)
 		message = "COMMUNICATION TIMINGS:\n" 
 		max_string_len = len(max(self.timings.keys(),key=len))
 		for k,v in sorted(self.timings.items(), key=lambda x: x[1][1], reverse=True):
 			message += ("{:<"+str(max_string_len)+"}").format(k) + " " + str(v) + "\n"
 		mprint(message)
-		comm.barrier()
-		
+	
 	def enable_timing(comm_function):
 		def wrapper(self,timing_name, *args, **kwargs):
 			#pre-exec
