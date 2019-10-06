@@ -119,7 +119,7 @@ void Law2_ScGeom_CapillaryPhys_Capillarity::action()
 			/// intergranular distance
 			Real D = - alpha * currentContactGeometry->penetrationDepth;
 			if ( D<0 || createDistantMeniscii) { //||(scene->iter < 1) ) // a simplified way to define meniscii everywhere
-				D=max(0.,D); // defines fCap when spheres interpenetrate. D<0 leads to wrong interpolation as D<0 has no solution in the interpolation : this is not physically interpretable!! even if, interpenetration << grain radius.
+				D=Max(0.,D); // defines fCap when spheres interpenetrate. D<0 leads to wrong interpolation as D<0 has no solution in the interpolation : this is not physically interpretable!! even if, interpenetration << grain radius.
 				if (!hertzOn) {
 					if (fusionDetection && !cundallContactPhysics->meniscus) bodiesMenisciiList.insert(interaction);
 					cundallContactPhysics->meniscus=true;
@@ -170,10 +170,10 @@ void Law2_ScGeom_CapillaryPhys_Capillarity::action()
 				
 				/// wetting angles
 				if (!hertzOn) {
-					cundallContactPhysics->Delta1 = min(max(solution.delta1,solution.delta2),90.0); // undesired values greater than 90 degrees (by few degrees) may be present in the capillary files for high r (~ 10) and very low suction and distance
+					cundallContactPhysics->Delta1 = Min(Max(solution.delta1,solution.delta2),90.0); // undesired values greater than 90 degrees (by few degrees) may be present in the capillary files for high r (~ 10) and very low suction and distance
 					cundallContactPhysics->Delta2 = min(solution.delta1,solution.delta2);
 				} else {
-					mindlinContactPhysics->Delta1 = min(max(solution.delta1,solution.delta2),90.0);
+					mindlinContactPhysics->Delta1 = Min(max(solution.delta1,solution.delta2),90.0);
 					mindlinContactPhysics->Delta2 = min(solution.delta1,solution.delta2);
 				}
 				// nn11 and nn33
