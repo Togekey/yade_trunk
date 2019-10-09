@@ -155,9 +155,8 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 	if (parallelFailed) return insertionSort(v,interactions, scene, doCollide);
 #else
 	LOG_ERROR("insertionSortParallel does not work without YADE_OPENMP, you need to compile yade with cmake option -DENABLE_OPENMP=ON");
-}
 #endif
-
+}
 
 vector<Body::id_t> InsertionSortCollider::probeBoundingVolume(const Bound& bv){
 	if(periodic){ throw invalid_argument("InsertionSortCollider::probeBoundingVolume: handling periodic boundary not implemented."); }
