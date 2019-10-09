@@ -44,6 +44,10 @@
 #include <pkg/common/KinematicEngines.hpp>
 #include <lib/base/AliasNamespaces.hpp>
 
+#ifdef YADE_MPI
+#include <core/Subdomain.hpp>
+#endif
+
 namespace yade { // Cannot have #include directive inside.
 
 CREATE_CPP_LOCAL_LOGGER("yadeWrapper.cpp");
@@ -78,9 +82,10 @@ class pyBodyContainer{
 	pyBodyIterator pyIter(){return pyBodyIterator(proxee);}
 	pyBodyContainer(const shared_ptr<BodyContainer>& _proxee): proxee(_proxee){}
 	// raw access to the underlying 
-	const shared_ptr<BodyContainer> raw_bodies_get(void) {return proxee;}
-	void raw_bodies_set(const shared_ptr<BodyContainer>& source) {proxee->body = source->body;}
-	
+	bool getUseRedirection(void) {return proxee->useRedirection;}
+	bool getEnableRedirection(void) {return proxee->enableRedirection;}
+	void setUseRedirection(bool val) {if (val and not proxee->useRedirection==val) proxee->useRedirection=val; proxee->dirty=true; if (val) proxee->enableRedirection=true; }
+	void setEnableRedirection(bool val) {proxee->enableRedirection=val; if (not val) proxee->useRedirection=false;}
 	
 	shared_ptr<Body> pyGetitem(Body::id_t _id){
 		int id=(_id>=0 ? _id : proxee->size()+_id);
@@ -406,6 +411,9 @@ class pyBodyContainer{
 	long length(){return proxee->size();}
 	void clear(){proxee->clear();}
 	bool erase(Body::id_t id, bool eraseClumpMembers){ return proxee->erase(id,eraseClumpMembers); }
+	#ifdef YADE_MPI
+	vector<Body::id_t> subdomainBodies() {return proxee->subdomainBodies;}
+	#endif
 };
 
 
@@ -498,8 +506,8 @@ class pyForceContainer{
 	public:
 		pyForceContainer(shared_ptr<Scene> _scene): scene(_scene) { }
 		void checkId(long id){ if(id<0 || (size_t)id>=scene->bodies->size()){ PyErr_SetString(PyExc_IndexError, "Body id out of range."); py::throw_error_already_set(); /* never reached */ throw; } }
-		Vector3r force_get(long id, bool sync){  checkId(id); if (!sync) return scene->forces.getForceSingle(id); scene->forces.sync(); return scene->forces.getForce(id);}
-		Vector3r torque_get(long id, bool sync){ checkId(id); if (!sync) return scene->forces.getTorqueSingle(id); scene->forces.sync(); return scene->forces.getTorque(id);}
+		Vector3r force_get(long id, bool sync){  checkId(id); if (!sync and !scene->forces.synced) return scene->forces.getForceSingle(id); scene->forces.sync(); return scene->forces.getForce(id);}
+		Vector3r torque_get(long id, bool sync){ checkId(id); if (!sync and !scene->forces.synced) return scene->forces.getTorqueSingle(id); scene->forces.sync(); return scene->forces.getTorque(id);}
 		Vector3r move_get(long id){ checkId(id); return scene->forces.getMoveSingle(id); }
 		Vector3r rot_get(long id){ checkId(id); return scene->forces.getRotSingle(id); }
 		void force_add(long id, const Vector3r& f, bool permanent){  checkId(id); if (!permanent) scene->forces.addForce (id,f); else { LOG_WARN("O.forces.addF(...,permanent=True) is deprecated, use O.forces.setPermF(...) instead"); scene->forces.setPermForce (id,f); } }
@@ -710,6 +718,27 @@ class pyOmega{
 		#endif
 	}
 	
+#ifdef YADE_MPI
+	//return vector<int> as contiguous bytes, skipping conversion to python list
+	PyObject* intrsctToBytes(const shared_ptr<Subdomain>& subD, unsigned rank, bool mirror){
+		if (subD->intersections.size()<=rank) LOG_ERROR("rank too large");
+		if (not mirror) return PyBytes_FromStringAndSize((char*) &(subD->intersections[rank][0]), subD->intersections[rank].size()*sizeof(Body::id_t));
+		else return PyBytes_FromStringAndSize((char*) &(subD->mirrorIntersections[rank][0]), subD->mirrorIntersections[rank].size()*sizeof(Body::id_t));
+	}
+	//return vector<int> as a writable contiguous array. Python syntax: bufferFromIntrsct(...)[:]=intrsctToBytes(...)
+	PyObject* bufferFromIntrsct(const shared_ptr<Subdomain>& subD, unsigned rank, unsigned size, bool mirror){
+		//FIXME: if returning a memoryview, do we need to release it at some point? (https://docs.python.org/3/library/stdtypes.html#memoryview.release)
+		if (subD->intersections.size()<=rank) LOG_ERROR("rank too large");
+		if (not mirror) {
+			if (subD->intersections[rank].size()!=size) subD->intersections[rank].resize(size);
+			return PyMemoryView_FromMemory((char*) (subD->intersections[rank].data()), subD->intersections[rank].size()*sizeof(Body::id_t),PyBUF_WRITE);}
+		else {
+			if (subD->mirrorIntersections[rank].size()!=size) subD->mirrorIntersections[rank].resize(size);
+			return PyMemoryView_FromMemory((char*) &(subD->mirrorIntersections[rank][0]), subD->mirrorIntersections[rank].size()*sizeof(Body::id_t),PyBUF_WRITE);}
+	}
+	
+#endif //YADE_MPI
+	
 	void stringToScene(const string &sstring, string mark=""){
 		Py_BEGIN_ALLOW_THREADS; OMEGA.stop(); Py_END_ALLOW_THREADS;
 		assertScene();
@@ -911,6 +940,10 @@ BOOST_PYTHON_MODULE(wrapper)
 		.def("disableGdb",&pyOmega::disableGdb,"Revert SEGV and ABRT handlers to system defaults.")
 		.def("runEngine",&pyOmega::runEngine,"Run given engine exactly once; simulation time, step number etc. will not be incremented (use only if you know what you do).")
 		.def("tmpFilename",&pyOmega::tmpFilename,"Return unique name of file in temporary directory which will be deleted when yade exits.")
+#ifdef YADE_MPI
+		.def("intrsctToBytes",&pyOmega::intrsctToBytes,(py::arg("subdomain"),py::arg("rank"),py::arg("mirror")),"returns a copy of intersections[rank] (a vector<int>) from a subdomain in the form of bytes. Returns a copy mirrorIntersections[rank] if mirror=True.")
+		.def("bufferFromIntrsct",&pyOmega::bufferFromIntrsct,(py::arg("subdomain"),py::arg("rank"),py::arg("size"),py::arg("mirror")),"returns a (char*) pointer to the underying buffer of intersections[rank], so that it can be overwritten. Size must be passed in advance. Pointer to mirrorIntersections[rank] is returned if mirror=True. Python syntax: bufferFromIntrsct(...)[:]=bytes(something)")
+#endif
 		;
 	py::class_<pyTags>("TagsWrapper","Container emulating dictionary semantics for accessing tags associated with simulation. Tags are accesed by strings.",py::init<pyTags&>())
 		.def("__getitem__",&pyTags::getItem)
@@ -936,7 +969,11 @@ BOOST_PYTHON_MODULE(wrapper)
 		.def("erase", &pyBodyContainer::erase,(py::arg("eraseClumpMembers")=0),"Erase body with the given id; all interaction will be deleted by InteractionLoop in the next step. If a clump is erased use *O.bodies.erase(clumpId,True)* to erase the clump AND its members.")
 		.def("replace",&pyBodyContainer::replace) 
 		.def("insertAtId",&pyBodyContainer::insertAtId,(py::arg("insertatid")),"Insert a body at theid, (no body should exist in this id)")
-		.add_property("rawBodies",&pyBodyContainer::raw_bodies_get,&pyBodyContainer::raw_bodies_set,"Bodies in the current simulation in the form of pickle-friendly raw container. In typical situations it is better to access bodies as 'O.bodies', which offers better python support. This one may be used for debugging or advanced manipulations.");
+		#ifdef YADE_MPI
+		.def("subdomainBodies",&pyBodyContainer::subdomainBodies,"id's of bodies with bounds in MPI subdomain")
+		#endif //YADE_MPI
+		.add_property("useRedirection",&pyBodyContainer::getUseRedirection,&pyBodyContainer::setUseRedirection,"true if the scene uses up-to-date lists for boundedBodies and realBodies; turned true automatically 1/ after removal of bodies if :yref:`enableRedirection`=True, and 2/ in MPI execution.")
+		.add_property("enableRedirection",&pyBodyContainer::getEnableRedirection,&pyBodyContainer::setEnableRedirection,"let collider switch to optimized algorithm with body redirection when bodies are erased - true by default");
 	py::class_<pyBodyIterator>("BodyIterator",py::init<pyBodyIterator&>())
 		.def("__iter__",&pyBodyIterator::pyIter)
 		.def("__next__",&pyBodyIterator::pyNext);

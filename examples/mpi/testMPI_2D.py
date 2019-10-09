@@ -21,23 +21,9 @@ The number of subdomains depends on argument 'n' of mpiexec. Since rank=0 is not
 
 '''
 
-
-
-
-
 NSTEPS=1000 #turn it >0 to see time iterations, else only initilization TODO!HACK
 #NSTEPS=50 #turn it >0 to see time iterations, else only initilization
 N=50; M=50; #(columns, rows) per thread
-
-if("-ms" in sys.argv):
-	sys.argv.remove("-ms")
-	mergeSplit=True
-else: mergeSplit=False
-
-if("-bc" in sys.argv):
-	sys.argv.remove("-bc")
-	bodyCopy=True
-else: bodyCopy=False
 
 #################
 # Check MPI world
@@ -74,6 +60,7 @@ for sd in range(0,numThreads-1):
 WALL_ID=O.bodies.append(box(center=(numThreads*N*0.5,-0.5,0),extents=(2*numThreads*N,0,2),fixed=True))
 
 collider.verletDist = 0.5
+collider.targetInterv = 0
 newton.gravity=(0,-10,0) #else nothing would move
 tsIdx=O.engines.index(timeStepper) #remove the automatic timestepper. Very important: we don't want subdomains to use many different timesteps...
 O.engines=O.engines[0:tsIdx]+O.engines[tsIdx+1:]
@@ -93,7 +80,7 @@ def collectTiming():
 
 if rank is None: #######  Single-core  ######
 	O.timingEnabled=True
-	O.run(NSTEPS,True)
+	O.run(NSTEPS+1,True)
 	#print "num bodies:",len(O.bodies)
 	from yade import timing
 	timing.stats()
@@ -106,19 +93,20 @@ else: #######  MPI  ######
 	# customize
 	mp.ACCUMULATE_FORCES=True #trigger force summation on master's body (here WALL_ID)
 	mp.VERBOSE_OUTPUT=False
-	mp.ERASE_REMOTE=True #erase bodies not interacting wit a given subdomain?
-	mp.OPTIMIZE_COM=True #L1-optimization: pass a list of double instead of a list of states
-	mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
-	mp.MERGE_SPLIT=mergeSplit
-	mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = bodyCopy and not mergeSplit
-
+	mp.MAX_RANK_OUTPUT=4
+	mp.mpirun(1) #this is to eliminate initialization overhead in Cundall number and timings
+	from yade import timing
+	timing.reset()
+	t1=time.time()
 	mp.mpirun(NSTEPS)
-	print("num. bodies:",len([b for b in O.bodies]),len(O.bodies))
+	t2=time.time()
+	mp.mprint("num. bodies:",len([b for b in O.bodies])," ",len(O.bodies))
 	if rank==0:
 		mp.mprint( "Total force on floor="+str(O.forces.f(WALL_ID)[1]))
+		mp.mprint("CPU wall time for ",NSTEPS," iterations:",t2-t1,"; Cundall number = ",len(O.bodies)*NSTEPS/(t2-t1))
 		collectTiming()
 	else: mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
-	mp.mergeScene()
-	if rank==0: O.save('mergedScene.yade')
+	#mp.mergeScene()
+	#if rank==0: O.save('mergedScene.yade')
 	mp.MPI.Finalize()
 exit()

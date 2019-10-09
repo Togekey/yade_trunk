@@ -88,7 +88,9 @@ void NewtonIntegrator::saveMaximaDisplacement(const shared_ptr<Body>& b){
 
 void NewtonIntegrator::action()
 {
+	timingDeltas->start();
 	scene->forces.sync();
+	timingDeltas->checkpoint("forces sync");
 	bodySelected=(scene->selectedBody>=0);
 	if(warnNoForceReset && scene->forces.lastReset<scene->iter) LOG_WARN("O.forces last reset in step "<<scene->forces.lastReset<<", while the current step is "<<scene->iter<<". Did you forget to include ForceResetter in O.engines?");
 	const Real& dt=scene->dt;
@@ -128,9 +130,9 @@ void NewtonIntegrator::action()
 	YADE_PARALLEL_FOREACH_BODY_BEGIN(const shared_ptr<Body>& b, scene->bodies){
 			// clump members are handled inside clumps
 			if(b->isClumpMember()) continue;
-#ifdef YADE_MPI
+	#ifdef YADE_MPI
 			if(scene->subdomain!=b->subdomain or b->getIsSubdomain()) continue;//this thread will not move bodies from other subdomains
-#endif
+	#endif
 			State* state=b->state.get(); const Body::id_t& id=b->getId();
 			Vector3r f=Vector3r::Zero(); 
 			Vector3r m=Vector3r::Zero();
@@ -206,10 +208,13 @@ void NewtonIntegrator::action()
 				}
 			#endif
 	} YADE_PARALLEL_FOREACH_BODY_END();
+	timingDeltas->checkpoint("motion integration");
 	#ifdef YADE_OPENMP
 		FOREACH(const Real& thrMaxVSq, threadMaxVelocitySq) { maxVelocitySq=max(maxVelocitySq,thrMaxVSq); }
-	#endif
+	#endif	
+	timingDeltas->checkpoint("sync max vel");
 	if(scene->isPeriodic) { prevCellSize=scene->cell->getSize(); prevVelGrad=scene->cell->prevVelGrad=scene->cell->velGrad; }
+	timingDeltas->checkpoint("terminate");
 }
 
 void NewtonIntegrator::leapfrogTranslate(State* state, const Body::id_t& id, const Real& dt){

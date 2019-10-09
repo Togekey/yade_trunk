@@ -50,20 +50,20 @@ mp.ERASE_REMOTE=False #erase bodies not interacting wit a given subdomain?
 mp.OPTIMIZE_COM=True #L1-optimization: pass a list of double instead of a list of states
 mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
 mp.MERGE_W_INTERACTIONS=False
-mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = False
+mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = True
 mp.VERBOSE_OUTPUT=False
 mp.YADE_TIMING=False
 mp.NO_OUTPUT=True
 
-mp.mpirun(NSTEPS,numThreads)
+mp.mpirun(NSTEPS,numThreads,True)
 mp.mprint( "num. bodies:",len([b for b in O.bodies]))
 mp.mprint( "Partial force on floor="+str(O.forces.f(WALL_ID)[1]))
 
 Ek=0
 if mp.rank==0:
-	Ek=sum(mp.sendCommand([1,2,3],"kineticEnergy()",True))
+	Ek=kineticEnergy()
 	mp.mprint("got Ek=",Ek)
-	refEk=1203790.66007
+	refEk=1120803.9955506378
 	if (abs(Ek-refEk)/refEk)>1e-10:
 		raise YadeCheckError("kinetic energy changed by"+str((Ek-refEk)/refEk))
 

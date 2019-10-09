@@ -1,4 +1,7 @@
 #include<pkg/common/Dispatching.hpp>
+#ifdef YADE_MPI
+#include<core/Subdomain.hpp>
+#endif
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -18,15 +21,28 @@ void BoundDispatcher::action()
 {
 	updateScenePtr();
 	shared_ptr<BodyContainer>& bodies = scene->bodies;
-	const long numBodies=(long)bodies->size();
+	const bool redirect = bodies->useRedirection;
+	if (redirect) bodies->updateShortLists();
+	const long numBodies= redirect ? (long)bodies->realBodies.size() : (long)bodies->size();
+	#ifdef YADE_MPI
+	Body::id_t subdomainId=0;
+	#endif
 	#ifdef YADE_OPENMP
 	#pragma omp parallel for num_threads(ompThreads>0 ? min(ompThreads,omp_get_max_threads()) : omp_get_max_threads())
 	#endif
 	for(int id=0; id<numBodies; id++){
-		if(!bodies->exists(id)) continue; // don't delete this check  - Janek
-		const shared_ptr<Body>& b=(*bodies)[id];
+		if(not redirect and not bodies->exists(id)) continue; // don't delete this check  - Janek
+		const shared_ptr<Body>& b=(*bodies)[redirect? bodies->realBodies[id] : id];
 		processBody(b);
+	#ifndef YADE_MPI
 	}
+	#else //when all ordinary bodies have been processed, we will evaluate subdomain's min and max
+		if(b->getIsSubdomain() and b->subdomain==scene->subdomain) subdomainId=b->getId();//subdomain bounds need all other bodies to have updated bounds, hence we keep it for after this loop
+	}
+	if (subdomainId!=0) {
+		YADE_PTR_CAST<Subdomain>((*bodies)[subdomainId]->shape)->setMinMax();
+		processBody((*bodies)[subdomainId]);}
+	#endif
 }
 
 void BoundDispatcher::processBody(const shared_ptr<Body>& b)
@@ -49,7 +65,10 @@ void BoundDispatcher::processBody(const shared_ptr<Body>& b)
 				newLength = max(0.9*sweepLength,newLength);//don't decrease size too fast to prevent time consuming oscillations
 				sweepLength=max(minSweepDistFactor*sweepDist,min(newLength,sweepDist));}
 			else sweepLength=0;
-		} else sweepLength=sweepDist; 
+		} else sweepLength=sweepDist;
+		#ifdef YADE_MPI
+		if (b->getIsSubdomain()) sweepLength=0;
+		#endif
 		b->bound->refPos=b->state->pos;
 		b->bound->lastUpdateIter=scene->iter;
 		if(sweepLength>0){			

@@ -238,7 +238,7 @@ class Subdomain: public Shape {
          
 	vector<MPI_Status>  mpiStatus; 
 	std::vector<std::pair<std::string, int> > sendContainer;  // list containing the serialized data (string) to be sent with the destination rank.
-	int subdomainRank, commSize; 
+	int subdomainRank, commSize;  //NOTE: subdomainRank is redundant with scene->subdomain, would be better to avoid to be sure they don't diverge
 	int TAG_STRING = 420, TAG_COUNT = 20, TAG_WALL_INTR=100, TAG_FORCE=200, TAG_BODY=111; 
 	bool commContainer=false; 
 	bool containersRecvd = false; 

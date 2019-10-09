@@ -64,7 +64,6 @@ class ForceContainer {
 		size_t size = 0;
 		bool syncedSizes = true;
 		int nThreads;
-		bool synced = true;
 		bool moveRotUsed = false;
 		bool permForceUsed = false;
 		boost::mutex globalMutex;
@@ -77,6 +76,7 @@ class ForceContainer {
 		friend class boost::serialization::access;
 		template<class ArchiveT> void serialize(ArchiveT & ar, unsigned int version){}
 	public:
+		bool synced = true;
 		unsigned long syncCount = 0;
 		long lastReset = 0;
 		ForceContainer();

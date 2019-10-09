@@ -16,7 +16,9 @@ from __future__ import print_function
 from future import standard_library
 standard_library.install_aliases()
 import ctypes,sys,os
-print("Using python version:",sys.version)
+
+if os.getenv('OMPI_COMM_WORLD_RANK')==None: #else decrease verbosity
+	print("Using python version:",sys.version)
 
 if(sys.version_info[0]<3):
 	try:

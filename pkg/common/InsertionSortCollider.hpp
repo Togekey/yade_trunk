@@ -117,13 +117,14 @@ class InsertionSortCollider: public Collider{
 		void updatePeriodicity(Scene* );
 		// normalize given index to the right range (wraps around)
 		size_t norm(long i) const { if(i<0) i+=size(); assert(i>=0); size_t ret=i%size(); assert(ret<size()); return ret;}
-		VecBounds(): axis(-1), loIdx(0){}
+		VecBounds(): axis(-1), loIdx(0) {}
 		void dump(ostream& os){ string ret; for(size_t i=0; i<vec.size(); i++) os<<(i==loIdx?"@@ ":"")<<vec[i].coord<<"(id="<<vec[i].id<<","<<(vec[i].flags.isMin?"min":"max")<<",p"<<vec[i].period<<") "; os<<endl;}
 
 		size_t size() const { return vec.size(); };
-
+		
 		void clear()                      { vec.clear();                   }
 		void reserve(size_t n)            { vec.reserve(n);                }
+		void resize(size_t n)             { if (n>vec.size()) LOG_ERROR("not supposed to increase size - shrink only"); vec.resize(n,Bounds(0,0,true));                 }
 		void push_back(const Bounds&  bb) { vec.push_back(bb);             }
 		// if the line below does not compile on older ubuntu 14.04, then I should add #ifdef guards to check compiler version. This line will make push_back faster when a newer compiler supports it.
 		void push_back(      Bounds&& bb) { vec.push_back(bb);             }
@@ -208,7 +209,7 @@ class InsertionSortCollider: public Collider{
 		((int,sortAxis,0,,"Axis for the initial contact detection."))
 		((bool,allowBiggerThanPeriod,false,,"If true, tests on bodies sizes will be disabled, and the simulation will run normaly even if bodies larger than period are found. It can be useful when the periodic problem include e.g. a floor modelized with wall/box/facet.\nBe sure you know what you are doing if you touch this flag. The result is undefined if one large body moves out of the (0,0,0) period."))
 		((bool,sortThenCollide,false,,"Separate sorting and colliding phase; it is MUCH slower, but all interactions are processed at every step; this effectively makes the collider non-persistent, not remembering last state. (The default behavior relies on the fact that inversions during insertion sort are overlaps of bounding boxes that just started/ceased to exist, and only processes those; this makes the collider much more efficient.)"))
-		((int,targetInterv,50,,"(experimental) Target number of iterations between bound update, used to define a smaller sweep distance for slower grains if >0, else always use 1*verletDist. Useful in simulations with strong velocity contrasts between slow bodies and fast bodies."))
+		((int,targetInterv,100,,"(experimental) Target number of iterations between bound update, used to define a smaller sweep distance for slower grains if >0, else always use 1*verletDist. Useful in simulations with strong velocity contrasts between slow bodies and fast bodies."))
 		((Real,overlapTolerance,1e-7,,"Tolerance on determining overlap. In rare cases different parts of the code can inconsistently lead to different results in terms of overlap, with false negative by spatialOverlapPeri possibly leading to nasty bugs in contact detection (false positive are harmless). This tolerance is to avoid false negative, the value can be understood as relative to 1 (i.e. independent of particle size or any other reference length). The default should be ok."))
 		((Real,updatingDispFactor,-1,,"(experimental) Displacement factor used to trigger bound update: the bound is updated only if updatingDispFactor*disp>sweepDist when >0, else all bounds are updated."))
 		((Real,verletDist,((void)"Automatically initialized",-.5),,"Length by which to enlarge particle bounds, to avoid running collider at every step. Stride disabled if zero. Negative value will trigger automatic computation, so that the real value will be *verletDist* × minimum spherical particle radius; if there are no spherical particles, it will be disabled. The actual length added to one bound can be only a fraction of verletDist when :yref:`InsertionSortCollider::targetInterv` is > 0."))
@@ -216,9 +217,10 @@ class InsertionSortCollider: public Collider{
 		((Real,fastestBodyMaxDist,0,,"Normalized maximum displacement of the fastest body since last run; if >= 1, we could get out of bboxes and will trigger full run. |yupdate|"))
 		((int,numReinit,0,Attr::readonly,"Cummulative number of bound array re-initialization."))
 		((int,numAction,0,,"Cummulative number of collision detection."))
-		((Real,useless,,,"for compatibility of scripts defining the old collider's attributes - see deprecated attributes")) 
 		((bool,doSort,false,,"Do forced resorting of interactions."))
-		((shared_ptr<NewtonIntegrator>, newton,,,"reference to active :yref:`Newton integrator<NewtonIntegrator>`. |yupdate|"))
+		((bool,shortListsInitialized,false,Attr::noSave,"wether or not shortList algorithm is initialized, when true bodies are inserted incrementaly."))
+		((bool,keepListsShort,false,,"if true remove bounds of non-existent or unbounded bodies from the lists |yupdate|; turned true automatically in MPI mode and if bodies are erased with :yref:`BodyContainer.enableRedirection`=True."))
+		((shared_ptr<NewtonIntegrator>, newton,shared_ptr<NewtonIntegrator>(),,"reference to active :yref:`Newton integrator<NewtonIntegrator>`. |yupdate|"))
 		, /* ctor */
 			#ifdef ISC_TIMING
 				timingDeltas=shared_ptr<TimingDeltas>(new TimingDeltas);

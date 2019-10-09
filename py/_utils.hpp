@@ -34,9 +34,9 @@ namespace yade { // Cannot have #include directive inside.
   MPI_Comm yadeComm; // dummy communicator; 
   MPI_Comm_split(MPI_COMM_WORLD,color,rank,&yadeComm); }
 
-  #else
+#else
 
-  	void initMPI() { return; }
+  void initMPI() { return; }
 
 #endif 
 

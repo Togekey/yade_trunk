@@ -332,7 +332,7 @@ def userSession(gui='none',qapp=None):
 			sys.stderr.write("Running simulation "+arg0+'\n')
 		if arg0.endswith('.py'):
 			def runScript(script):
-				sys.stderr.write("Running script "+arg0+'\n')
+				if not opts.mpi_mode: sys.stderr.write("Running script "+arg0+'\n')
 				try:
 					execfile(script,globals())
 					if (opts.mpi_mode):
