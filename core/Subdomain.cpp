@@ -156,14 +156,12 @@ void Subdomain::setIDstoSubdomain(boost::python::list& idList ){//Remark: probab
 	}
 }
 
-void Subdomain::getRankSize() {
+void Subdomain::setRankSize() {
 	  if (!ranksSet){
 	    MPI_Comm_rank(selfComm(), &subdomainRank);
 	    MPI_Comm_size(selfComm(), &commSize); 
-	    ranksSet = true; 
-	    shared_ptr<Scene> scene = Omega::instance().getScene(); 
-	    scene->mpiComm = myComm_p; 
-	  } else {return; }
+	    ranksSet = true;
+	  } else return;
 }
 
 // driver function for merge operation // workers send bodies, master recieves, sets the bodies into bodycontainer, sets interactions in interactionContainer.
@@ -171,7 +169,7 @@ void Subdomain::getRankSize() {
 void Subdomain::mergeOp() {
 
         //if (subdomainRank == master) {std::cout << "In merge operation " << std::endl; }
-	getRankSize(); 
+	setRankSize(); 
 	sendAllBodiesToMaster();
 	recvBodyContainersFromWorkers();
 	if (subdomainRank==master){
