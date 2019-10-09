@@ -684,6 +684,7 @@ def splitScene():
 				O.subD.subdomains = subdomains
 				
 		O._sceneObj.subdomain = rank
+
 		if mit_mode or commSplit : O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 		
 		O.subD.init() 

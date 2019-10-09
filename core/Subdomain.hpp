@@ -13,13 +13,13 @@
 #include <mpi.h>
 #include <core/MPIBodyContainer.hpp>
 #include <mpi4py/mpi4py.h> // for passing MPI_Comm from python to c++
-#include <core/Scene.hpp>
+
 namespace yade { // Cannot have #include directive inside.
 
 class Subdomain: public Shape {
 	public:
 	void init(){
-		getRankSize();
+		setRankSize();
 		stringBuff.resize(commSize);
 		initMasterContainer(); 
 	}
@@ -229,7 +229,7 @@ class Subdomain: public Shape {
 	 std::string idsToSerializedMPIBodyContainer(const std::vector<Body::id_t>& ids);
 	 void setIDstoSubdomain(boost::python::list& );  // exposed to yadempi.py, function to change/reset the ids in a subdomain
 	 void clearSubdomainIds();  // clears the member ids (std::vector <Body::id_t>
-	 void getRankSize();  
+	 void setRankSize();
 	 void clearRecvdCharBuff(std::vector<char*>& ); // frees std::vector<char*>
 	 void setSubdomainIds(std::vector<Body::id_t>);
 	 std::vector<Body::id_t> getSubdomainIds(); 
@@ -305,7 +305,7 @@ class Subdomain: public Shape {
 		.def("sendBodies",&Subdomain::sendBodies,(boost::python::arg("sender"),boost::python::arg("receiver"),boost::python::arg("idsToSend")), "Copy the bodies from MPI sender rank to MPI receiver rank")
 		.def("receiveBodies",&Subdomain::receiveBodies,(boost::python::arg("sender")), "Receive the bodies from MPI sender rank to MPI receiver rank")
                 .add_property("intersections",&Subdomain::intrs_get,&Subdomain::intrs_set,"lists of bodies from this subdomain intersecting other subdomains. WARNING: only assignement and concatenation allowed")
-                .def("getRankSize", &Subdomain::getRankSize, "set subdomain ranks, used for communications -> merging, sending bodies etc.")
+                .def("setRankSize", &Subdomain::setRankSize, "set subdomain ranks, used for communications -> merging, sending bodies etc.")
 		.def("completeSendBodies", &Subdomain::completeSendBodies, "calls MPI_wait to complete the non blocking sends/recieves.")
 		.add_property("mirrorIntersections",&Subdomain::mIntrs_get,&Subdomain::mIntrs_set,"lists of bodies from other subdomains intersecting this one. WARNING: only assignement and concatenation allowed")
 		.add_property("comm",&Subdomain::getMyComm,&Subdomain::setMyComm,"Communicator to be used for MPI (converts mpi4py comm <-> c++ comm)")

@@ -30,6 +30,11 @@ CREATE_LOGGER(Scene);
 // should be elsewhere, probably
 bool TimingInfo::enabled=false;
 
+#ifdef YADE_MPI
+#include <core/Subdomain.hpp>
+MPI_Comm Scene::getComm() {return YADE_PTR_CAST<Subdomain>(subD)->selfComm();}
+#endif
+
 void Scene::fillDefaultTags(){
 	// fill default tags
 	struct passwd* pw;
