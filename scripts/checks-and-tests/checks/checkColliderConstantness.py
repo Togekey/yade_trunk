@@ -50,7 +50,7 @@ for usePeriod in [True,False]:
 	O.engines=[
 		ForceResetter(),
 		#(1) This is where we allow big bodies, else it would crash due to the very large bottom box:
-		InsertionSortCollider([Bo1_Box_Aabb(),Bo1_Sphere_Aabb()],allowBiggerThanPeriod=True),
+		InsertionSortCollider([Bo1_Box_Aabb(),Bo1_Sphere_Aabb()],allowBiggerThanPeriod=True,targetInterv=50),
 		InteractionLoop(
 			[Ig2_Sphere_Sphere_ScGeom(),Ig2_Box_Sphere_ScGeom()],
 			[Ip2_FrictMat_FrictMat_FrictPhys()],
