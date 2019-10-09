@@ -76,8 +76,7 @@ class Scene: public Serializable{
 		#endif
 			
 		#ifdef YADE_MPI
-			MPI_Comm* mpiComm; 
-			MPI_Comm getComm(){if (mpiComm) {return *mpiComm; } else  {return MPI_COMM_WORLD; }} 
+			MPI_Comm getComm();
 		#endif 
 		
 		void postLoad(Scene&);
@@ -99,9 +98,8 @@ class Scene: public Serializable{
 		((bool,runInternalConsistencyChecks,true,Attr::hidden,"Run internal consistency check, right before the very first simulation step."))
 		((Body::id_t,selectedBody,-1,,"Id of body that is selected by the user"))
 #ifdef YADE_MPI
-		((int,subdomain,0,,"the subdomain this scene is assigned in MPI/domain decomposition."))
-		((Body::id_t,thisSubdomainId,-1,,"Id (in bodycontainer) of the subdomain handling the current process" ))
-		((shared_ptr<Shape>,subD,new Shape,,"subdomain (shape) attached to this proc.")) // Subdomain is not directly used, as it leads to circular dependecy issues. 
+		((int,subdomain,0,,"the subdomain this scene is assigned in MPI/domain decomposition (between 0 and ncores-1)."))
+		((shared_ptr<Shape>,subD,shared_ptr<Shape>(),,"subdomain (shape) attached to this proc.")) // Subdomain is not directly used, as it leads to circular dependecy issues. 
 		
 #endif
 		((vector<string>,tags,,,"Arbitrary key=value associations (tags like mp3 tags: author, date, version, description etc.)"))

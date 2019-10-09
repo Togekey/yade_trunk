@@ -161,7 +161,6 @@ void FoamCoupling::recvHydroForce() {
 void FoamCoupling::setHydroForce() {
 
   // clear hydroforce before summation
-  
 	#ifdef YADE_OPENMP
 	#pragma omp parallel for collapse(1)
 	#endif
@@ -171,7 +170,6 @@ void FoamCoupling::setHydroForce() {
 		scene->forces.addForce(bodyList[i], fx);
 		scene->forces.addTorque(bodyList[i], tx);
 	}
-
 }
 
 void FoamCoupling::sumHydroForce() {
@@ -343,9 +341,7 @@ void FoamCoupling::buildSharedIds() {
 	/*It is possible to have one yade body to have interactions with several  fluid subdomains, (we just have the bounding box of the fluid domain, the fluid domain is a regular polygon with several faces). 
 	 Building a list of those ids which are have several interactions helps to identify those fliud procs from whom to receive the hydrodynamic force and tracking. This is used in the function 
 	verifyParticleDetection. */
-	
-	const shared_ptr<Body>& subdBody = (*scene->bodies)[scene->thisSubdomainId]; 
-	const shared_ptr<Subdomain>& subD = YADE_PTR_CAST<Subdomain>(subdBody->shape); 
+	const shared_ptr<Subdomain>& subD =  YADE_PTR_CAST<Subdomain>(scene->subD);
 	for (int bodyId = 0; bodyId != static_cast<int>(subD->ids.size()); ++bodyId){
 		std::vector<Body::id_t> fluidIds; 
 		const shared_ptr<Body>& testBody = (*scene->bodies)[subD->ids[bodyId]]; 
@@ -395,7 +391,7 @@ bool FoamCoupling::ifFluidDomain(const Body::id_t&  testId ){
 void FoamCoupling::buildLocalIds(){
 	if (localRank == yadeMaster) { return; }  // master has no bodies. 
 	if (bodyList.size() == 0) { LOG_ERROR("Ids for coupling has no been set, FAIL!"); return;   } 
-	const shared_ptr<Subdomain> subD =  YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
+	const shared_ptr<Subdomain>& subD =  YADE_PTR_CAST<Subdomain>(scene->subD);
 	if (! subD) {LOG_ERROR("subdomain not found for local rank/ world rank  = "  << localRank << "   " << worldRank); return; }  
 	for (const auto& testId : bodyList) {
 		std::vector<Body::id_t>::iterator iter = std::find(subD->ids.begin(), subD->ids.end(), testId); 

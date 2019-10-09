@@ -61,9 +61,8 @@ MERGE_W_INTERACTIONS = True
 COPY_MIRROR_BODIES_WHEN_COLLIDE = True 
 RESET_SUBDOMAINS_WHEN_COLLIDE = False
 DOMAIN_DECOMPOSITION = False
-decompose_fibres = False
 NUM_MERGES = 0 
-LOAD_SIM = False # to enable restart of mpi simulations after O.load('sim')
+LOAD_SIM = False # to enable restart of mpi simulations after O.load('sim') / NOTE: would be better to remove extra stuff as part of the merge() before O.save()
 fibreList = []
 FLUID_COUPLING = False
 fluidBodies = [] 
@@ -613,10 +612,7 @@ def splitScene():
 			
 			if rank == 0:
 				decomposition = dd.decompBodiesSerial(comm) 
-				decomposition.partitionDomain(fibreList) 
-				
-				
-
+				decomposition.partitionDomain(fibreList)
 		if rank == 0:
 			
 			if LOAD_SIM: # maybe an easier way to get to subdomain ids?
@@ -625,8 +621,8 @@ def splitScene():
 						O.bodies.erase(b.id)
 
 			O._sceneObj.subdomain=0
-			O.subD=Subdomain() #for storage only, this one will not be used beyond that 
-			subD= O.subD #alias
+			O._sceneObj.subD=Subdomain() #for storage only, this one will not be used beyond that 
+			subD= O._sceneObj.subD #alias
 			#insert "meta"-bodies
 			subdomains=[] #list subdomains by body ids
 			if mit_mode: subD.comm=comm #make sure the c++ uses the merged intracommunicator
@@ -683,7 +679,7 @@ def splitScene():
 					subdomains.append(b.id)
 					if b.subdomain==rank: 
 						domainBody=b
-						O.thisSubdomainId = b.id
+						O._sceneObj.subD = b.shape
 			if domainBody==None: wprint("SUBDOMAIN NOT FOUND FOR RANK=",rank)
 			O.subD = domainBody.shape
 			O.subD.subdomains = subdomains
