@@ -151,7 +151,9 @@ class InsertionSortCollider: public Collider{
   	    http://en.wikipedia.org/wiki/Insertion_sort has the algorithm and other details
 	*/
 	void insertionSort(VecBounds& v,InteractionContainer*,Scene*,bool doCollide=true);
+	#ifdef YADE_OPENMP
 	void insertionSortParallel(VecBounds& v,InteractionContainer*,Scene*,bool doCollide=true);
+	#endif
 	void handleBoundInversion(Body::id_t,Body::id_t,InteractionContainer*,Scene*);
 
 	// periodic variants
