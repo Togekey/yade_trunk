@@ -153,9 +153,7 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 			else interactions->insert(shared_ptr<Interaction>(new Interaction(newInteractions[n][k].second,newInteractions[n][k].first)));
 	/// If some bounds traversed more than a half-chunk, we complete colliding with the sequential sort
 	if (parallelFailed) return insertionSort(v,interactions, scene, doCollide);
-}
 #else
-void InsertionSortCollider::insertionSortParallel(VecBounds&  , InteractionContainer* , Scene*, bool ){
 	LOG_ERROR("insertionSortParallel does not work without YADE_OPENMP, you need to compile yade with cmake option -DENABLE_OPENMP=ON");
 }
 #endif
