@@ -38,7 +38,7 @@ Body::id_t BodyContainer::insertAtId(shared_ptr<Body> b, Body::id_t candidate){
 	if(unsigned(candidate)>=size()) {
 		body.resize(candidate+1,nullptr);
 		scene->forces.addMaxId(candidate);
-	} else if(body[candidate]) {LOG_ERROR("invalid candidate id in "<<Omega::instance().getScene()->subdomain); return -1;}
+	} else if(body[candidate]) {LOG_ERROR("invalid candidate id: "<<candidate); return -1;}
 	
 	b->iterBorn=scene->iter;
 	b->timeBorn=scene->time;
@@ -96,17 +96,18 @@ void BodyContainer::updateShortLists(){
 		return;}
 	if (not dirty) return; //already ok
 	unsigned long size1=realBodies.size();
-	unsigned long size2=subdomainBodies.size();
-	realBodies.clear();
+	realBodies.clear();	
+	realBodies.reserve((long unsigned)(size1*1.3));	
+	#ifdef YADE_MPI
 	subdomainBodies.clear();
-	realBodies.reserve((long unsigned)(size1*1.3));
+	unsigned long size2=subdomainBodies.size();
 	subdomainBodies.reserve((long unsigned)(size2*1.3));
 	const int& subdomain = Omega::instance().getScene()->subdomain;
+	#endif
 	FOREACH(const shared_ptr<Body>& b, *(Omega::instance().getScene()->bodies)){
 		if (not b) continue;
 		realBodies.push_back(b->getId());
 	#ifdef YADE_MPI
-		// clumps are taken as bounded bodies since their member are bounded, otherwise things would fail with clumps as they would be ignored
 		if (b->subdomain == subdomain and not b->getIsSubdomain()) subdomainBodies.push_back(b->id);
 	#endif
 	}

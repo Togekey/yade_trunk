@@ -360,7 +360,10 @@ void InsertionSortCollider::action(){
 							memcpy(&minima[3*id],&bv->min,3*sizeof(Real)); memcpy(&maxima[3*id],&bv->max,3*sizeof(Real)); 
 					} else if (keepListsShort) { memcpy(&minima[3*id],&maxVect,3*sizeof(Real)); memcpy(&maxima[3*id],&maxVect,3*sizeof(Real)); }			
 				} else { BBj[i].flags.hasBB=false; /* for vanished body, keep the coordinate as-is, to minimize inversions. */ 
-					if (keepListsShort) LOG_ERROR("Shouldn't happen "<<id<<" in "<<scene->subdomain);	}
+					#ifdef YADE_MPI
+					if (keepListsShort) LOG_ERROR("Shouldn't happen "<<id<<" in "<<scene->subdomain);
+					#endif
+				}
 			}
 		}
 	ISC_CHECKPOINT("copy");
