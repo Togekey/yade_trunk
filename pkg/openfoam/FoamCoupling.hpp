@@ -18,7 +18,6 @@
 #include <core/Subdomain.hpp>
 
 
-
 namespace yade { // Cannot have #include directive inside.
 
 class Scene; 
@@ -214,9 +213,6 @@ class Bo1_FluidDomainBbox_Aabb : public BoundFunctor{
 	FUNCTOR1D(FluidDomainBbox);  
 	YADE_CLASS_BASE_DOC(Bo1_FluidDomainBbox_Aabb,BoundFunctor, "creates/updates an :yref:`Aabb` of a :yref:`FluidDomainBbox`."); 
 }; 
-REGISTER_SERIALIZABLE(Bo1_FluidDomainBbox_Aabb); 
-
-
-  
-}
+REGISTER_SERIALIZABLE(Bo1_FluidDomainBbox_Aabb);   
+} // namespace yade
 #endif
