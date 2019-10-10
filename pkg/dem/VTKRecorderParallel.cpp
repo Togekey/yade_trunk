@@ -1,3 +1,4 @@
+
 #if defined (YADE_MPI) & defined (YADE_VTK)
 
 #include "VTKRecorderParallel.hpp"
@@ -48,18 +49,21 @@
 	#include<pkg/dem/ViscoelasticCapillarPM.hpp>
 #endif
 
+
+
+#include <boost/unordered_map.hpp>
+#include <boost/fusion/support/pair.hpp>
+#include <boost/fusion/include/pair.hpp>
+
+namespace yade {
 YADE_PLUGIN((VTKRecorderParallel));
 CREATE_LOGGER(VTKRecorderParallel);
-
 #ifdef YADE_MASK_ARBITRARY
 #define GET_MASK(b) b->groupMask.to_ulong()
 #else
 #define GET_MASK(b) b->groupMask
 #endif
 
-#include <boost/unordered_map.hpp>
-#include <boost/fusion/support/pair.hpp>
-#include <boost/fusion/include/pair.hpp>
 
 void VTKRecorderParallel::action(){
   
@@ -1449,6 +1453,6 @@ void VTKRecorderParallel::addWallVTK (vtkSmartPointer<vtkQuad>& boxes, vtkSmartP
 	boxesPos->InsertNextPoint(W4[0], W4[1], W4[2]);
 	boxes->GetPointIds()->SetId(3,nbPoints+3);
 };
-
-#endif /* YADE_VTK */
 #undef GET_MASK
+} // namespace yade
+#endif /* YADE_VTK */

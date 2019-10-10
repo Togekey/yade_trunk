@@ -11,7 +11,7 @@
 #include <core/Subdomain.hpp> 
 #include<vtkXMLPUnstructuredGridWriter.h>
 #include<mpi.h>
-
+namespace yade {
 // multiblock features don't seem to exist prioor to 5.2 
 #if (VTK_MAJOR_VERSION==5 && VTK_MINOR_VERSION>=2) || (VTK_MAJOR_VERSION > 5)
 	#define YADE_VTK_MULTIBLOCK
@@ -47,4 +47,5 @@ t``cracks``\n\t\tSaves other data pertaining to the :yref:`rock model<Law2_ScGeo
 
 
 REGISTER_SERIALIZABLE(VTKRecorderParallel);
+} // namespace yade
 #endif 
