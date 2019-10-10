@@ -23,6 +23,10 @@
 #include <unistd.h>
 #include <time.h>
 
+#ifdef YADE_MPI
+#include <core/Subdomain.hpp>
+#endif
+
 namespace yade { // Cannot have #include directive inside.
 
 YADE_PLUGIN((Scene));
@@ -30,6 +34,13 @@ CREATE_LOGGER(Scene);
 // should be elsewhere, probably
 bool TimingInfo::enabled=false;
 
+<<<<<<< 00090676bc181e104bae4185645e00cc0ed8b244
+=======
+#ifdef YADE_MPI
+MPI_Comm Scene::getComm() {return YADE_PTR_CAST<Subdomain>(subD)->selfComm();}
+#endif
+
+>>>>>>> no #include in yade namespace
 void Scene::fillDefaultTags(){
 	// fill default tags
 	struct passwd* pw;
