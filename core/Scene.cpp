@@ -23,6 +23,10 @@
 #include <unistd.h>
 #include <time.h>
 
+#ifdef YADE_MPI
+#include <core/Subdomain.hpp>
+#endif
+
 namespace yade { // Cannot have #include directive inside.
 
 YADE_PLUGIN((Scene));
@@ -31,7 +35,6 @@ CREATE_LOGGER(Scene);
 bool TimingInfo::enabled=false;
 
 #ifdef YADE_MPI
-#include <core/Subdomain.hpp>
 MPI_Comm Scene::getComm() {return YADE_PTR_CAST<Subdomain>(subD)->selfComm();}
 #endif
 
