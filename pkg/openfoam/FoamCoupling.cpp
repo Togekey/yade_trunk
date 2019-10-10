@@ -593,8 +593,6 @@ void FoamCoupling::verifyParticleDetection() {
 		}
 	}
 	
-	std::cout << "particle search done, my rank =  " <<  worldRank << std::endl ;
-	
 /*	
 	if (unFoundSharedIds.size() > 0) {
 		for (const auto& idPair : sharedIdsMapIndx){
@@ -772,7 +770,6 @@ void FoamCoupling::killMPI() {
 	MPI_Finalize();
 
 }
+} // namespace yade
 
-
-}
 #endif
