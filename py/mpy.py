@@ -639,7 +639,7 @@ def splitScene():
 			O.subD=Subdomain() #for storage only, this one will not be used beyond that 
 			subD= O.subD #alias
 			#insert "meta"-bodies
-			subD.subdomains=[] #list subdomains by body ids
+			subdomains=[] #list subdomains by body ids
 			if mit_mode or commSplit : O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 			
 			for k in range(1,numThreads):
