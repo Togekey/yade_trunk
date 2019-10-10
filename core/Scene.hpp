@@ -76,7 +76,7 @@ class Scene: public Serializable{
 		#endif
 			
 		#ifdef YADE_MPI
-			MPI_Comm getComm();
+			MPI_Comm getComm(); 
 		#endif 
 		
 		void postLoad(Scene&);
