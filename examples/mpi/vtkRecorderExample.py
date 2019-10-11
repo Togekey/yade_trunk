@@ -51,10 +51,10 @@ collider.verletDist = 1.5
 
 #########  RUN  ##########
 # customize mpy
-
+mp.DISTRIBUTED_INSERT = False
 mp.VERBOSE_OUTPUT=False
 mp.DOMAIN_DECOMPOSITION= True
-mp.mpirun(NSTEPS, numThreads)
+mp.mpirun(NSTEPS)
 mp.mergeScene() 
 if mp.rank == 0: O.save('mergedScene.yade')
 
