@@ -636,7 +636,8 @@ def splitScene():
 				decomposition = dd.decompBodiesSerial(comm) 
 				decomposition.partitionDomain(fibreList) 
 		if rank == 0 or DISTRIBUTED_INSERT: 
-			O.subD=Subdomain() #for storage only, this one will not be used beyond that 
+			O._sceneObj.subD=Subdomain() #for storage only, this one will not be used beyond that 
+			O.subD = O._sceneObj.subD
 			subD= O.subD #alias
 			#insert "meta"-bodies
 			subdomains=[] #list subdomains by body ids
@@ -680,7 +681,8 @@ def splitScene():
 						subdomains.append(b.id)
 						if b.subdomain==rank: domainBody=b
 				if domainBody==None: wprint("SUBDOMAIN NOT FOUND FOR RANK=",rank)
-				O.subD = domainBody.shape
+				O._sceneObj.subD = domainBody.shape
+				O.subD = O._sceneObj.subD
 				O.subD.subdomains = subdomains
 				
 		O._sceneObj.subdomain = rank
