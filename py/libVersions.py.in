@@ -168,6 +168,8 @@ def getAllVersionsCmake():
 	# 23. MPFR
 	addVer("mpfr",'${MPFR_MAJOR_VERSION}','${MPFR_MINOR_VERSION}','${MPFR_PATCHLEVEL_VERSION}','${MPFR_VERSION}')
 	# 24. mpmath
+	# a simple check of mpmath is a following python command:
+	# import mpmath ; mpmath.mp.dps=50 ; mpmath.acos(0)
 	try:
 		addVer("mpmath",'${MPMATH_VERSION}'.split('.')[0],'${MPMATH_VERSION}'.split('.')[1],'${MPMATH_VERSION}'.split('.')[2],'${MPMATH_VERSION}')
 	except:
