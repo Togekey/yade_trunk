@@ -165,6 +165,13 @@ def getAllVersionsCmake():
 		addVer("mpi4py", mpi4vertab[0] , mpi4vertab[1] , mpi4vertab[2] , mpi4ver )
 	except:
 		pass
+	# 23. MPFR
+	addVer("mpfr",'${MPFR_MAJOR_VERSION}','${MPFR_MINOR_VERSION}','${MPFR_PATCHLEVEL_VERSION}','${MPFR_VERSION}')
+	# 24. mpmath
+	try:
+		addVer("mpmath",'${MPMATH_VERSION}'.split('.')[0],'${MPMATH_VERSION}'.split('.')[1],'${MPMATH_VERSION}'.split('.')[2],'${MPMATH_VERSION}')
+	except:
+		pass
 
 	return ret
 
