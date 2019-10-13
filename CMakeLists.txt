@@ -30,6 +30,8 @@
 #  ENABLE_FEMLIKE: enable meshed solids (FEM-like)
 #  ENABLE_OAR: generate a script for oar-based task scheduler (OFF by default)
 #  ENABLE_ASAN: AddressSanitizer build, please see documentation (OFF by default)
+#  ENABLE_MPFR: use https://www.mpfr.org/ library, can be used for higher precision calculations or for CGAL exact predicates (OFF by default)
+#  REAL_PRECISION_BITS , REAL_DECIMAL_PLACES: specify either of them to use a custom calculation precision. By default double (64 bits, 15 decimal places) precision is used.
 #  runtimePREFIX: used for packaging, when install directory is not the same is runtime directory (/usr/local by default)
 #  CHUNKSIZE: set >1, if you want several sources to be compiled at once. Increases compilation speed and RAM-consumption during it (1 by default)
 #  VECTORIZE: enables vectorization and alignment in Eigen3 library, experimental (OFF by default)
@@ -82,6 +84,7 @@ OPTION(ENABLE_MASK_ARBITRARY "Enable arbitrary precision of bitmask variables (o
 OPTION(ENABLE_PROFILING "Enable profiling, e.g. shows some more metrics, which can define bottlenecks of the code (OFF by default)" OFF)
 OPTION(ENABLE_POTENTIAL_PARTICLES "Enable potential particles" ON)
 OPTION(ENABLE_OAR "Generate script for oar-based task scheduler" OFF)
+OPTION(ENABLE_MPFR "Use mpfr library (higher precision calculations or CGAL exact predicates)" OFF)
 OPTION(USE_QT5 "USE Qt5 for GUI" ON)
 OPTION(ENABLE_POTENTIAL_BLOCKS "Enable PotentialBlocks" ON)
 OPTION(ENABLE_DEFORM "Enable Deformation Engine" OFF)
@@ -327,6 +330,163 @@ ENDIF(ENABLE_USEFUL_ERRORS)
 MESSAGE(STATUS   "${Esc}[36mChosen compiler flags are: CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS} ${Esc}[0m")
 #======================================
 #====== ** END Compiler flags ** ======
+#======================================
+
+#======================================
+#====== **** Real precision **** ======
+#======================================
+#
+# This section accepts either one of these two input parameters:
+#  * REAL_PRECISION_BITS
+#  * REAL_DECIMAL_PLACES
+# Additionally:
+#  * ENABLE_MPFR - optional: if more precision than float128 is required then either MPFR or boost::multiprecision::cpp_bin_float type is used.
+#
+# A hardware-accelerated numerical type is used when available, otherwise mpfr library (or boost cpp_bin_float.hpp) is used for arbitrary precision. The supported types are following:
+#     type                   bits     decimal places
+#     float,float32_t        32       6                      hardware accelerated
+#     double,float64_t       64       15                     hardware accelerated
+#     long double,float80_t  80       18                     hardware accelerated
+#     float128_t             128      33                     depending on processor type it can be hardware accelerated
+#     mpfr                   Nbit     Nbit/(log(2)/log(10))
+#     boost::cpp_bin_float   Nbit     Nbit/(log(2)/log(10))
+#
+# This section does following things:
+#  * set REAL_PRECISION_BITS as one of: 32,64,80,128 or higher
+#  * set REAL_DECIMAL_PLACES as one of:  6,15,18, 33 or higher
+#  * set REAL_USE_ARBITRARY  as one of: --- "OFF" -- or "MPFR" or "BOOST_BIN_FLOAT"
+#  * set REAL_PREC_NAME      as one of: "Float{bit}" or "Mpfr{decimal}" or "BoostBinFloat{decimal}"
+#  * set CONFIGURED_FEATS    ${REAL_PREC_NAME} mpmath${REAL_DECIMAL_PLACES}
+#  * #define YADE_REAL_BIT  REAL_PRECISION_BITS
+#  * #define YADE_REAL_DEC  REAL_DECIMAL_PLACES
+#  * #define YADE_REAL_MPFR    // defined when Real is expressed using mpfr (requires mpfr)
+#  * #define YADE_REAL_BBFLOAT // defined when Real is expressed using boost::multiprecision::cpp_bin_float
+#  * #define YADE_MPFR         // defined when yade links with optional mpfr library, for example to use with CGAL exact predicates. Unrelated about whether Real uses arbitrary precision.
+#
+# Some useful links:
+# https://www.boost.org/doc/libs/1_71_0/libs/multiprecision/doc/html/boost_multiprecision/tut/floats/float128.html
+# https://www.boost.org/doc/libs/1_71_0/libs/multiprecision/doc/html/boost_multiprecision/intro.html
+# https://www.boost.org/doc/libs/1_71_0/libs/multiprecision/doc/html/boost_multiprecision/tut/floats/mpfr_float.html
+# http://charette.no-ip.com:81/programming/doxygen/boost/classstd_1_1numeric__limits_3_01boost_1_1multiprecision_1_1number_3_01boost_1_1multiprecision_1_1aef0fd61e32c5f58e49aeed0766e135.html
+# http://christian-seiler.de/projekte/fpmath/
+
+MESSAGE(STATUS "Determining preferred precision of Real numbers")
+
+SET(REAL_USE_ARBITRARY "OFF") # this line later might need some extra IF() if someone will want to use CGAL exact predicates, see lib/base/AliasCGAL.hpp 'CGAL definitions - does not work with another kernel'
+
+IF( (    REAL_DECIMAL_PLACES) AND (    REAL_PRECISION_BITS))
+  MESSAGE(FATAL_ERROR "Cannot specify both REAL_DECIMAL_PLACES and REAL_PRECISION_BITS")
+ENDIF()
+
+IF( (NOT REAL_DECIMAL_PLACES) AND (NOT REAL_PRECISION_BITS))
+  SET(REAL_PRECISION_BITS "64")
+  SET(REAL_DECIMAL_PLACES "15")
+  MESSAGE(STATUS "Note: Using default double precision as Real type for all calculations.")
+ENDIF()
+
+function(floatexprToInt expr output)
+    # If "%f" was instead of "%i" in this place  ↓↓ then it would return a floating point value
+    execute_process(COMMAND awk "BEGIN {printf \"%i\",${expr}}" OUTPUT_VARIABLE __output)
+    set(${output} ${__output} PARENT_SCOPE)
+endfunction()
+
+IF( (    REAL_DECIMAL_PLACES) AND (NOT REAL_PRECISION_BITS))
+  IF(${REAL_DECIMAL_PLACES} LESS 7)
+    SET(REAL_PRECISION_BITS "32")
+    SET(REAL_DECIMAL_PLACES "6")
+  ELSEIF(${REAL_DECIMAL_PLACES} LESS 16)
+    SET(REAL_PRECISION_BITS "64")
+    SET(REAL_DECIMAL_PLACES "15")
+  ELSEIF(${REAL_DECIMAL_PLACES} LESS 19)
+    SET(REAL_PRECISION_BITS "80")
+    SET(REAL_DECIMAL_PLACES "18")
+  ELSEIF(${REAL_DECIMAL_PLACES} LESS 34)
+    SET(REAL_PRECISION_BITS "128")
+    SET(REAL_DECIMAL_PLACES "33")
+  ELSEIF(${REAL_DECIMAL_PLACES} LESS 39)
+    MESSAGE(STATUS "${Esc}[36mNote: decimal places between 34 and 39 make it unclear if you want mpfr or float128, defaulting to float128. It is because some bits are used by the exponent.${Esc}[0m")
+    SET(REAL_PRECISION_BITS "128")
+    SET(REAL_DECIMAL_PLACES "33")
+  ELSE()
+    # calculate Nbits as Ndecimal/((log(2)/log(10)))
+    floatexprToInt("(${REAL_DECIMAL_PLACES}/0.30102999566398119521)" REAL_PRECISION_BITS)
+    #MATH(EXPR REAL_PRECISION_BITS "(${REAL_DECIMAL_PLACES}/0.30102999566398119521)") # ← doesn't work with floats
+    SET(REAL_USE_ARBITRARY "ON") # we know it has to be arbitrary, but we don't know yet if mpfr is available
+  ENDIF()
+ENDIF()
+
+IF( (NOT REAL_DECIMAL_PLACES) AND (    REAL_PRECISION_BITS))
+  IF(${REAL_PRECISION_BITS} LESS 33)
+    SET(REAL_PRECISION_BITS "32")
+    SET(REAL_DECIMAL_PLACES "6")
+  ELSEIF(${REAL_PRECISION_BITS} LESS 65)
+    SET(REAL_PRECISION_BITS "64")
+    SET(REAL_DECIMAL_PLACES "15")
+  ELSEIF(${REAL_PRECISION_BITS} LESS 81)
+    SET(REAL_PRECISION_BITS "80")
+    SET(REAL_DECIMAL_PLACES "18")
+  ELSEIF(${REAL_PRECISION_BITS} LESS 129)
+    SET(REAL_PRECISION_BITS "128")
+    SET(REAL_DECIMAL_PLACES "33")
+  ELSE()
+    # calculate Ndecimal as Nbits*((log(2)/log(10)))
+    floatexprToInt("(${REAL_PRECISION_BITS}*0.30102999566398119521)" REAL_DECIMAL_PLACES)
+    SET(REAL_USE_ARBITRARY "ON") # we know it has to be arbitrary, but we don't know yet if mpfr is available
+  ENDIF()
+ENDIF()
+
+# Now we have properly set following: REAL_PRECISION_BITS==Nbits, REAL_DECIMAL_PLACES==Ndecimal, REAL_USE_ARBITRARY==ON/OFF
+MESSAGE(STATUS "${Esc}[36mReal type will have ${REAL_DECIMAL_PLACES} decimal places precision and use ${REAL_PRECISION_BITS} bits of storage.${Esc}[0m")
+
+IF(REAL_USE_ARBITRARY)
+  IF(NOT ENABLE_MPFR)
+    SET(REAL_PREC_NAME "BoostBinFloat${REAL_DECIMAL_PLACES}")
+    SET(REAL_USE_ARBITRARY "BOOST_BIN_FLOAT")
+    ADD_DEFINITIONS("-DYADE_REAL_BBFLOAT")
+    MESSAGE(STATUS "To use faster higher precision use -DENABLE_MPFR=ON cmake option. Currently a simple type boost::multiprecision::cpp_bin_float will be used.")
+  ELSE()
+    SET(REAL_PREC_NAME "Mpfr${REAL_DECIMAL_PLACES}")
+    SET(REAL_USE_ARBITRARY "MPFR")
+    ADD_DEFINITIONS("-DYADE_REAL_MPFR")
+    MESSAGE(STATUS "Real type will use mpfr precision.")
+  ENDIF()
+  FIND_PACKAGE(Mpmath REQUIRED)
+  IF(MPMATH_FOUND)
+    MESSAGE(STATUS "python-mpmath found, version: ${MPMATH_VERSION}")
+    SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} mpmath${REAL_DECIMAL_PLACES}")
+  ELSE()
+    MESSAGE(FATAL_ERROR "Cannot find python-mpmath or python3-mpmath package http://mpmath.org to use MPFR in python, but it is necessary for selected Real precision.")
+  ENDIF()
+ELSE()
+  SET(REAL_PREC_NAME "Float${REAL_PRECISION_BITS}")
+  SET(DISABLED_FEATS "${DISABLED_FEATS} mpmath")
+ENDIF()
+
+ADD_DEFINITIONS("-DYADE_REAL_BIT=${REAL_PRECISION_BITS}")
+ADD_DEFINITIONS("-DYADE_REAL_DEC=${REAL_DECIMAL_PLACES}")
+
+SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} ${REAL_PREC_NAME}")
+
+IF(ENABLE_MPFR)
+  FIND_PACKAGE(MPFR REQUIRED)
+  IF(MPFR_FOUND)
+    SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} MPFR")
+    MESSAGE(STATUS "MPFR enabled, version: ${MPFR_VERSION}, linking with ${MPFR_LIBRARIES}")
+    ADD_DEFINITIONS("-DYADE_MPFR")
+  ELSE()
+    MESSAGE(FATAL_ERROR "Cannot find MPFR library https://www.mpfr.org, debian package libmpfr-dev")
+  ENDIF()
+ELSE()
+  SET(DISABLED_FEATS "${DISABLED_FEATS} MPFR")
+  MESSAGE(STATUS "mpfr disabled")
+ENDIF()
+
+IF(REAL_USE_ARBITRARY EQUAL "ON")
+  MESSAGE(FATAL_ERROR " there's an error in CMakeLists.txt, REAL_USE_ARBITRARY == ${REAL_USE_ARBITRARY}, but should be ON,MPFR,BOOST_BIN_FLOAT")
+ENDIF()
+
+#======================================
+#====== ** END Real precision ** ======
 #======================================
 
 #===========================================================
@@ -845,6 +1005,15 @@ SET_TARGET_PROPERTIES(boot PROPERTIES PREFIX "" LINK_FLAGS "-Wl,--as-needed" )
 TARGET_LINK_LIBRARIES(yade ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${LINKLIBS} -lrt)
 SET_TARGET_PROPERTIES(yade  PROPERTIES LINK_FLAGS "-Wl,--as-needed" )
 TARGET_LINK_LIBRARIES(boot yade)
+
+IF(ENABLE_MPFR)
+  TARGET_LINK_LIBRARIES(yade ${MPFR_LIBRARIES})
+ENDIF()
+
+IF(REAL_PRECISION_BITS EQUAL 128)
+  # the quadmath library is a part of g++ package, no need to check if it is installed.
+  TARGET_LINK_LIBRARIES(yade -lquadmath)
+ENDIF()
 
 IF(ENABLE_VTK)
   IF(${VTK_MAJOR_VERSION} GREATER 5)
