@@ -2,10 +2,10 @@
 Installation
 ###############
 
-* Linux systems
+* Linux systems:
   Yade can be installed from packages (pre-compiled binaries) or source code. The choice depends on what you need: if you don't plan to modify Yade itself, package installation is easier. In the contrary case, you must download and   install the source code.
 
-* Other Operating Systems
+* Other Operating Systems:
   Jump to the `last section <https://yade-dem.org/doc/installation.html#yubuntu>`_ of this page.
 
 Packages
@@ -160,6 +160,7 @@ Some of them are only optional. The last ones are only relevant for using the fl
 * `OpenMPI <https://www.open-mpi.org/software/>`_ library for parallel distributed computing (For MPI and OpenFOAM coupling, optional)
 * `python3-mpi4py <https://bitbucket.org/mpi4py/>`_ MPI for Python (For MPI, optional)
 * `coin-or <https://github.com/coin-or/Clp>`_ COIN-OR Linear Programming Solver (For :yref:`PotentialBlock`, optional)
+* `mpfr <https://www.mpfr.org/>`_ in ``C++`` and `mpmath <http://mpmath.org/>`_ in ``python`` for high precision ``Real`` or for CGAL exact predicates (optional)
 
 Most of the list above is very likely already packaged for your distribution. In case you are confronted
 with some errors concerning not available packages (e.g., package libmetis-dev is not available) it may be necessary
@@ -181,7 +182,8 @@ need root privileges.
 		python3-pyqt5.qtwebkit gtk2-engines-pixbuf python3-pyqt5.qtsvg libqglviewer-dev-qt5 \
 		python3-pil libjs-jquery python3-sphinx python3-git libxmu-dev libxi-dev libcgal-dev \
 		help2man libbz2-dev zlib1g-dev python3-minieigen libopenblas-dev libsuitesparse-dev \
-		libmetis-dev python3-bibtexparser python3-future coinor-clp coinor-libclp-dev
+		libmetis-dev python3-bibtexparser python3-future coinor-clp coinor-libclp-dev \
+		python3-mpmath libmpfr-dev
 
 * For **Ubuntu 16.04** ``libqglviewer-dev-qt5`` is to be replaced by ``libqglviewer-dev`` and ``python3-ipython`` by ``ipython3``.
 
@@ -282,6 +284,8 @@ As of Yade version git-2315bd8 (or 2018.02b release), the following options are 
 	* ENABLE_POTENTIAL_PARTICLES: enable potential particles option (ON by default)
 	* ENABLE_DEFORM: enable constant volume deformation engine (OFF by default)
 	* ENABLE_OAR: generate a script for oar-based task scheduler (OFF by default)
+	* ENABLE_MPFR: use `mpfr <https://www.mpfr.org/>`_ in ``C++`` and `mpmath <http://mpmath.org/>`_ in ``python``. It can be used for higher precision ``Real`` or for CGAL exact predicates (OFF by default)
+	* REAL_PRECISION_BITS, REAL_DECIMAL_PLACES: specify either of them to use a custom calculation precision. By default double (64 bits, 15 decimal places) precision is used as ``Real`` type.
 	* runtimePREFIX: used for packaging, when install directory is not the same as runtime directory (/usr/local by default)
 	* CHUNKSIZE: specifiy the chunk size if you want several sources to be compiled at once. Increases compilation speed but RAM-consumption during compilation as well (1 by default)
 	* VECTORIZE: enables vectorization and alignment in Eigen3 library, experimental (OFF by default)
@@ -398,7 +402,8 @@ Python 2 support ends at the beginning of 2020. However, Yade can be compiled an
 		libxmu-dev libxi-dev libcgal-dev help2man libbz2-dev zlib1g-dev python-minieigen \
 		libopenblas-dev libsuitesparse-dev libmetis-dev libopenmpi-dev openmpi-bin \
 		openmpi-common python-bibtexparser python3-future python-future python-gts \
-		coinor-clp coinor-libclp-dev
+		coinor-clp coinor-libclp-dev \
+		python-mpmath libmpfr-dev
 
 * For **Ubuntu 16.04** ``libqglviewer-dev-qt5`` is to be replaced by ``libqglviewer-dev``, ``python-pil`` is to be replaced by ``python-imaging``.
 

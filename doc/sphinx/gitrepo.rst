@@ -193,6 +193,8 @@ The ``ORIG_HEAD`` backs up the position of HEAD before a potentially dangerous o
 
 A tutorial on `fixing the conflicts <https://medium.com/@porteneuve/fix-conflicts-only-once-with-git-rerere-7d116b2cec67>`_ is a recommended read.
 
+.. note:: If you are lost about how to fix your git problems try `a git choose your own adventure <https://sethrobertson.github.io/GitFixUm/fixup.html>`_.
+
 ********************************************
 General guidelines for pushing to yade/trunk
 ********************************************
