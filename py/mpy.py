@@ -66,10 +66,13 @@ DOMAIN_DECOMPOSITION = False
 NUM_MERGES = 0
 SEND_BYTEARRAYS = True
 ENABLE_PFACETS = False    #PFacets need special (and expensive) tricks, if PFacets are not used skip the tricks
+
 DISTRIBUTED_INSERT = False  #if True each worker is supposed to "O.bodies.insertAtId" its own bodies
 REALLOCATE_FREQUENCY = 0  # if >0 checkAndCollide() will automatically reallocate bodies to subdomains, if =1 realloc. happens each time collider is triggered, if >1 it happens every N trigger
 REALLOCATE_FILTER = None # pointer to filtering function, will be set to 'medianFilter' hereafter, could point to other ones if implemented
 AUTO_COLOR = True
+DISTRIBUTED_INSERT = False  #if True each worker is supposed to "O.bodies.insertAtId" its own bodies 
+
 fibreList = []
 FLUID_COUPLING = False
 fluidBodies = [] 
@@ -88,6 +91,9 @@ _MASTER_COMMAND_ = 19
 _RETURN_VALUE_ = 20
 _ASSIGNED_IDS_ = 21
 _GET_CONNEXION_= 22
+#local vars
+_REALLOC_COUNT=0
+
 #local vars
 _REALLOC_COUNT=0
 
@@ -712,6 +718,7 @@ def splitScene():
 		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="pass",label="waitForcesRunner")]
 		O.engines=O.engines+[PyRunner(iterPeriod=1,initRun=True,command="if sys.modules['yade.mpy'].checkNeedCollide(): O.pause()",label="collisionChecker")]
 
+
 		O.splitted=True
 		O.splittedOnce = True
 	
@@ -1172,7 +1179,6 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 		#if rank>0: req.wait()
 	
 
-
 def sendTerminateMessage(): 
 	'''Used for coupled mpi simulations to notify non yade-mpi processes of termination, (they call mpi.finalize after this broadcast) , e.g: yade-openfoam, yade-yales2 etc'''  
 	data = numpy.arange(3, dtype = 'i') 
@@ -1183,7 +1189,8 @@ def sendTerminateMessage():
 def killMPI(): 
 	MPI.Finalize()
 
-#######  Bodis re-allocation
+
+####### Bodies re-allocation
 
 def migrateBodies(ids,origin,destination):
 	'''
@@ -1199,33 +1206,10 @@ def migrateBodies(ids,origin,destination):
 		O.subD.sendBodies(destination,ids)
 	elif rank==destination:
 		O.subD.receiveBodies(origin)
-	
-	
-def reallocateBodiesToSubdomains(_filter):
-	if rank>0:
-		for worker in O.subD.intersections[rank]:
-			if worker==0: continue
-			candidates = _filter(rank,worker)
-			mprint("sending to ",worker,": ",candidates)
-			migrateBodies(candidates,rank,worker) #send
-			migrateBodies(None,worker,rank)       #recv
-	O.subD.completeSendBodies()
-	O.subD.ids = [b.id for b in O.bodies if (b.subdomain==rank and not b.isSubdomain)] #update local ids
-	
-	reqs=[]
-	# update remote ids in master
-	if rank>0: req = comm.isend(O.subD.ids,dest=0,tag=_ASSIGNED_IDS_)
-	else: #master will update subdomains for correct display (besides, keeping 'ids' updated for remote subdomains may not be a strict requirement)
-		for k in range(1,numThreads):
-			ids=comm.recv(source=k,tag=_ASSIGNED_IDS_)
-			O.bodies[O.subD.subdomains[k-1]].shape.ids=ids
-			for i in ids: O.bodies[i].subdomain=k
-	# update intersections and mirror
-	updateAllIntersections() #triggers communication
-	
+
 def medianFilter(i,j):
 	'''
-	Returns bodies in "i" to be assigned to "j" based on median split between the center points of subdomain's AABBs
+	Rsys.modules['yade.mpy'].eturns bodies in "i" to be assigned to "j" based on median split between the center points of subdomain's AABBs
 	'''
 	bodiesToSend=[]
 	pos = projectedBounds(i,j)
@@ -1240,6 +1224,37 @@ def medianFilter(i,j):
 			pos[xplus][1]=j
 	return bodiesToSend
 
+REALLOCATE_FILTER=medianFilter #that's currently default and only option
+
+def reallocateBodiesToSubdomains(_filter=medianFilter):
+	'''
+	Re-assign bodies to subdomains based on '_filter' argument.
+	Requirement: '_filter' is a function taking ranks of origin and destination and returning the list of bodies (by index) to be moved. That's where the decomposition strategy is defined. See example medianFilter (used by default).
+	This function must be called in parallel, hence if ran interactively the command needs to be sent explicitely:
+	mp.sendCommand("all","reallocateBodiesToSubdomains(medianFilter)",True)
+	'''
+	if rank>0:
+		for worker in O.subD.intersections[rank]:
+			if worker==0: continue
+			candidates = _filter(rank,worker)
+			wprint("sending to ",worker,": ",candidates)
+			migrateBodies(candidates,rank,worker) #send
+			migrateBodies(None,worker,rank)       #recv
+	O.subD.completeSendBodies()
+	O.subD.ids = [b.id for b in O.bodies if (b.subdomain==rank and not b.isSubdomain)] #update local ids
+	
+	if not ERASE_REMOTE_MASTER:
+		# update remote ids in master
+		if rank>0: req = comm.isend(O.subD.ids,dest=0,tag=_ASSIGNED_IDS_)
+		else: #master will update subdomains for correct display (besides, keeping 'ids' updated for remote subdomains may not be a strict requirement)
+			for k in range(1,numThreads):
+				ids=comm.recv(source=k,tag=_ASSIGNED_IDS_)
+				O.bodies[O.subD.subdomains[k-1]].shape.ids=ids
+				for i in ids: O.bodies[i].subdomain=k
+		# update intersections and mirror
+		updateAllIntersections() #triggers communication
+		if rank>0: req.wait()
+	
 def projectedBounds(i,j):
 	'''
 	Returns sorted list of projections of bounds on a given axis, with bounds taken in i->j and j->i intersections
