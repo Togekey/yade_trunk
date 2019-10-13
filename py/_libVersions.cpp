@@ -329,6 +329,20 @@ py::list coinutilsVer() { return {}; }
 // 19. mpi4py
 // It turns out that getting PyMPI version in C++ is not possible. Because it's a python library ;)
 
+// 20. mpfr
+#ifdef YADE_MPFR
+#include <mpfr.h>
+py::list mpfrVer()
+{
+	py::list ret;
+	ret.append(py::make_tuple(MPFR_VERSION_MAJOR, MPFR_VERSION_MINOR, MPFR_VERSION_PATCHLEVEL));
+	ret.append(boost::lexical_cast<std::string>(MPFR_VERSION_STRING));
+	return ret;
+}
+#else
+py::list mpfrVer() { return {}; }
+#endif
+
 py::dict getAllVersionsCpp()
 {
 	py::dict ret;
@@ -348,9 +362,9 @@ py::dict getAllVersionsCpp()
 	ret["openblas"]    = openblasVer();
 	ret["metis"]       = metisVer();
 	ret["mpi"]         = mpiVer();
-	//	ret["mpi4py"       ] = mpi4PyVer();
-	ret["clp"] = clpVer();
-	ret["coinutils"] = coinutilsVer();
+	ret["clp"]         = clpVer();
+	ret["coinutils"]   = coinutilsVer();
+	ret["mpfr"]        = mpfrVer();
 	return ret;
 }
 
