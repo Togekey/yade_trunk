@@ -27,7 +27,9 @@
 
 namespace yade {
 
-// CGAL definitions - does not work with another kernel!! Why??? / Answer: because to use exact kernal yade must link with mpfr / Janek.
+// CGAL definitions - does not work with another kernel!! Why???
+//   / Answer: because to use exact kernal yade must link with mpfr / Janek.
+//   / to do this have a look at CMakeLists 'Real precision' section
 
 	// These are taken from files pkg/dem/Polyhedra.hpp and /pkg/dem/Gl1_PotentialBlock.hpp
 	// let's call this CGP for CGal Polyhedrons namespace. It uses inexact kernel. Later when mpfr support is added we can have similar
