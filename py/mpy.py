@@ -632,7 +632,7 @@ def splitScene():
 			
 			
 			#tell the collider how to handle this new thing
-			collider = utils.typedEngine('InsertionSortCollider')
+			collider = utils.typedEngine("InsertionSortCollider")
 			collider.boundDispatcher.functors=collider.boundDispatcher.functors+[Bo1_Subdomain_Aabb()]
 			if FLUID_COUPLING: 
 				collider.boundDispatcher.functors = collider.boundDispatcher.functors+[Bo1_FluidDomainBbox_Aabb()]
@@ -672,11 +672,11 @@ def splitScene():
 		
 		
 		if FLUID_COUPLING:
-			fluidCoupling = utils.typedEngine('FoamCoupling') 
+			fluidCoupling = utils.typedEngine("FoamCoupling") 
 			fluidCoupling.comm = comm 
 			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes from all yales2 procs. 
 			fluidCoupling.setIdList(fluidBodies) 
-			#if (fluidBodies) :  # incase fluidBodies are not set to the engine directly in the user script. 
+
 			
 		updateMirrorIntersections()
 		
