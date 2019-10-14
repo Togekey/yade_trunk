@@ -35,15 +35,16 @@ O.engines=[
 		Bo1_Sphere_Aabb(),
 		Bo1_Box_Aabb(), 
 		Bo1_Subdomain_Aabb()
-	]),
+	], label = 'collider'),
 	InteractionLoop(
 		[Ig2_Sphere_Sphere_ScGeom(),Ig2_Box_Sphere_ScGeom()],
 		[Ip2_FrictMat_FrictMat_FrictPhys()],
-		[Law2_ScGeom_FrictPhys_CundallStrack()]
+		[Law2_ScGeom_FrictPhys_CundallStrack()], 
+		label="interactionLoop"
 	),
-	GlobalStiffnessTimeStepper(timestepSafetyCoefficient=0.3,  timeStepUpdateInterval=100, parallelMode=True, label = 'ts'), 
+	GlobalStiffnessTimeStepper(timestepSafetyCoefficient=0.3,  timeStepUpdateInterval=100, parallelMode=True, label = 'timeStepper'), 
 	NewtonIntegrator(damping=0.1,gravity = (0, -0.1, 0), label='newton'), 
-	VTKRecorderParallel(fileName='spheres/3d-vtk-', recorders=['spheres', 'intr', 'boxes'], iterPeriod=100), 
+	VTKRecorderParallel(fileName='spheres/3d-vtk-', recorders=['spheres', 'intr', 'boxes'], iterPeriod=100), #use .pvtu to open spheres, .pvtp for ints, and .vtu for boxes.
 ]
 
 
@@ -51,8 +52,6 @@ collider.verletDist = 1.5
 
 #########  RUN  ##########
 # customize mpy
-mp.DISTRIBUTED_INSERT = False
-mp.VERBOSE_OUTPUT=False
 mp.DOMAIN_DECOMPOSITION= True
 mp.mpirun(NSTEPS)
 mp.mergeScene() 
