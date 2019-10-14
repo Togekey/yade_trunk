@@ -18,6 +18,19 @@
 
 CREATE_CPP_LOCAL_LOGGER("customConverters.cpp");
 
+// FIXME - move these headers into single place. Current duplicates: customConverters, _testCppPy
+#if YADE_REAL_BIT >= 128
+#include <boost/cstdfloat.hpp>
+#include <boost/math/cstdfloat/cstdfloat_types.hpp>
+#include <boost/multiprecision/float128.hpp>
+#endif
+
+#ifdef YADE_MPFR
+#include <boost/multiprecision/mpfr.hpp>
+#endif
+
+#include <type_traits>
+
 namespace yade { // Cannot have #include directive inside.
 
 // move this to the miniEigen wrapper later
@@ -263,11 +276,19 @@ try {
 	//custom_StrArrayMap_to_dict();
 	// register from-python converter and to-python converter
 
+	//std::is_same< Traits::RT , Real >::value
 	boost::python::to_python_converter<std::vector<std::vector<std::string>>, y::custom_vvector_to_list<std::string>>();
 	boost::python::to_python_converter<std::vector<std::vector<y::Matrix3r>>, y::custom_vvector_to_list<y::Matrix3r>>();
 	boost::python::to_python_converter<std::vector<std::vector<int>>, y::custom_vvector_to_list<int>>();
 	boost::python::to_python_converter<std::vector<std::vector<double>>, y::custom_vvector_to_list<double>>();
-	boost::python::to_python_converter<std::vector<std::vector<long double> >, y::custom_vvector_to_list<long double> >();
+	boost::python::to_python_converter<std::vector<std::vector<long double>>, y::custom_vvector_to_list<long double>>();
+	boost::python::to_python_converter<std::vector<std::vector<boost::float128_t>>, y::custom_vvector_to_list<boost::float128_t>>();
+	boost::python::to_python_converter<
+	        std::vector<std::vector<yade::bmp::number<yade::bmp::mpfr_float_backend<YADE_REAL_DEC>>>>,
+	        y::custom_vvector_to_list<yade::bmp::number<yade::bmp::mpfr_float_backend<YADE_REAL_DEC>>>>();
+	boost::python::to_python_converter<
+	        std::vector<std::vector<yade::bmp::number<yade::bmp::mpfr_float_backend<500>>>>,
+	        y::custom_vvector_to_list<yade::bmp::number<yade::bmp::mpfr_float_backend<500>>>>();
 	//boost::python::to_python_converter<std::list<shared_ptr<Functor     > >, y::custom_list_to_list<shared_ptr<Functor> > >();
 	//boost::python::to_python_converter<std::list<shared_ptr<Functor     > >, y::custom_list_to_list<shared_ptr<Functor> > >();
 
@@ -284,7 +305,12 @@ try {
 		using namespace yade; // but only inside this { … } block. Keep pollution under control. Make it convenient.
 		VECTOR_SEQ_CONV(int);
 		VECTOR_SEQ_CONV(bool);
-		VECTOR_SEQ_CONV(Real);
+		//		VECTOR_SEQ_CONV(Real);
+		VECTOR_SEQ_CONV(double);
+		VECTOR_SEQ_CONV(long double);
+		VECTOR_SEQ_CONV(boost::float128_t);
+		VECTOR_SEQ_CONV(yade::bmp::number<yade::bmp::mpfr_float_backend<YADE_REAL_DEC>>);
+		VECTOR_SEQ_CONV(yade::bmp::number<yade::bmp::mpfr_float_backend<500>>);
 		VECTOR_SEQ_CONV(Se3r);
 		VECTOR_SEQ_CONV(Vector2r);
 		VECTOR_SEQ_CONV(Vector2i);
