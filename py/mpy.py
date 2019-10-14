@@ -630,7 +630,9 @@ def splitScene():
 			masterBodies = [b.id for b in O.bodies if b.subdomain==0] 
 			subD.setIDstoSubdomain(masterBodies)
 			
+			
 			#tell the collider how to handle this new thing
+			collider = utils.typedEngine('InsertionSortCollider')
 			collider.boundDispatcher.functors=collider.boundDispatcher.functors+[Bo1_Subdomain_Aabb()]
 			if FLUID_COUPLING: 
 				collider.boundDispatcher.functors = collider.boundDispatcher.functors+[Bo1_FluidDomainBbox_Aabb()]
