@@ -35,7 +35,7 @@ O.engines=[
 		Bo1_Sphere_Aabb(),
 		Bo1_Box_Aabb(), 
 		Bo1_Subdomain_Aabb()
-	], label = 'collider'),
+	], label = 'collider'), # always add labels. 
 	InteractionLoop(
 		[Ig2_Sphere_Sphere_ScGeom(),Ig2_Box_Sphere_ScGeom()],
 		[Ip2_FrictMat_FrictMat_FrictPhys()],
