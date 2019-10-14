@@ -751,8 +751,8 @@ def splitScene():
 			if rank == 0:
 				masterBodies = [b.id for b in O.bodies if b.subdomain==0] 
 				subD.setIDstoSubdomain(masterBodies)
-
 			#tell the collider how to handle this new thing
+			collider = utils.typedEngine('InsertionSortCollider')
 			collider.boundDispatcher.functors=collider.boundDispatcher.functors+[Bo1_Subdomain_Aabb()]
 			if FLUID_COUPLING: 
 				collider.boundDispatcher.functors = collider.boundDispatcher.functors+[Bo1_FluidDomainBbox_Aabb()]
@@ -795,8 +795,8 @@ def splitScene():
 			fluidCoupling.comm = comm 
 			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes from all yales2 procs. 
 			fluidCoupling.setIdList(fluidBodies) 
-		parallelCollide()
 		
+		parallelCollide()
 		# insert states communicator after newton 
 		idx = O.engines.index(utils.typedEngine("NewtonIntegrator"))
 		O.engines=O.engines[:idx+1]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].sendRecvStates();  ",label="sendRecvStatesRunner")]+O.engines[idx+1:]
