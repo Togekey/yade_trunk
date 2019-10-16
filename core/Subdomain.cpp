@@ -81,8 +81,7 @@ boost::python::list Subdomain::mIntrs_get(){
 }
 
 void Subdomain::setSubdomainIds(std::vector<Body::id_t> subdIds){
-	subdomains = subdIds; 
-  
+	subdomains = subdIds;  
 }
 
 std::vector<Body::id_t> Subdomain::getSubdomainIds() {
