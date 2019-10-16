@@ -77,7 +77,6 @@ fibreList = []
 FLUID_COUPLING = False
 fluidBodies = [] 
 
-
 #tags for mpi messages
 _SCENE_=11
 _SUBDOMAINSIZE_=12
@@ -94,8 +93,6 @@ _GET_CONNEXION_= 22
 #local vars
 _REALLOC_COUNT=0
 
-#local vars
-_REALLOC_COUNT=0
 
 #for coloring processes outputs differently
 bcolors=['\033[95m','\033[94m','\033[93m','\033[92m','\033[91m','\033[90m','\033[95m','\033[93m','\033[91m','\033[1m','\033[4m','\033[0m']
@@ -808,6 +805,7 @@ def parallelCollide():
 	collider.__call__() #see [1]
 	unboundRemoteBodies() #in splitted stage we exploit bounds to detect bodies which are no longer part of intersections (they will be left with no bounds after what follows)
 	updateAllIntersections()  #triggers communications
+
 	if rank!=0:
 		for l in subD.mirrorIntersections:
 			if len(l)>0:
@@ -937,7 +935,6 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 		mergeScene()
 	
 	# report performance
-
 	if YADE_TIMING and rank<=MAX_RANK_OUTPUT:
 		timing_comm.print_all()
 		from yade import timing
@@ -948,7 +945,6 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 #######################################
 #######  Bodies re-allocation  ########
 #######################################
-
 def runOnSynchronouslPairs(workers,command):
 	'''
 	Locally (from one worker POV), this function runs mpi tasks defined by 'command' on the list of other workers (typically the list of interacting subdomains)
@@ -1178,92 +1174,3 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 		#updateAllIntersections() #triggers communication
 		#if rank>0: req.wait()
 	
-
-def sendTerminateMessage(): 
-	'''Used for coupled mpi simulations to notify non yade-mpi processes of termination, (they call mpi.finalize after this broadcast) , e.g: yade-openfoam, yade-yales2 etc'''  
-	data = numpy.arange(3, dtype = 'i') 
-	worldRank = worldComm.Get_rank()
-	worldComm.Bcast([data,MPI.INT], root=0)
-
-
-def killMPI(): 
-	MPI.Finalize()
-
-
-####### Bodies re-allocation
-
-def migrateBodies(ids,origin,destination):
-	'''
-	Reassign bodies from origin to destination. The function has to be called by both origin (send) and destination (recv).
-	Note: subD.completeSendBodies() will have to be called after a series of reassignement since subD.sendBodies() is non-blocking
-	'''
-	if rank==origin:
-		thisSubD = O.subD.subdomains[rank-1]
-		for id in ids:
-			if not O.bodies[id]: mprint("reassignBodies failed,",id," is not in subdomain ",rank)
-			O.bodies[id].subdomain = destination
-			createInteraction(thisSubD,id,virtualI=True) # link translated body to subdomain, since there is initially no interaction with local bodies
-		O.subD.sendBodies(destination,ids)
-	elif rank==destination:
-		O.subD.receiveBodies(origin)
-
-def medianFilter(i,j):
-	'''
-	Rsys.modules['yade.mpy'].eturns bodies in "i" to be assigned to "j" based on median split between the center points of subdomain's AABBs
-	'''
-	bodiesToSend=[]
-	pos = projectedBounds(i,j)
-	#mprint(pos)
-	xminus=0; xplus=len(pos)-1
-	while (xminus<xplus):
-		while (pos[xminus][1]==i and xminus<xplus): xminus+=1
-		while (pos[xplus][1]==j and xminus<xplus): xplus-=1
-		if xminus<xplus:
-			bodiesToSend.append(pos[xplus][2])
-			pos[xminus][1]=i
-			pos[xplus][1]=j
-	return bodiesToSend
-
-REALLOCATE_FILTER=medianFilter #that's currently default and only option
-
-def reallocateBodiesToSubdomains(_filter=medianFilter):
-	'''
-	Re-assign bodies to subdomains based on '_filter' argument.
-	Requirement: '_filter' is a function taking ranks of origin and destination and returning the list of bodies (by index) to be moved. That's where the decomposition strategy is defined. See example medianFilter (used by default).
-	This function must be called in parallel, hence if ran interactively the command needs to be sent explicitely:
-	mp.sendCommand("all","reallocateBodiesToSubdomains(medianFilter)",True)
-	'''
-	if rank>0:
-		for worker in O.subD.intersections[rank]:
-			if worker==0: continue
-			candidates = _filter(rank,worker)
-			wprint("sending to ",worker,": ",candidates)
-			migrateBodies(candidates,rank,worker) #send
-			migrateBodies(None,worker,rank)       #recv
-	O.subD.completeSendBodies()
-	O.subD.ids = [b.id for b in O.bodies if (b.subdomain==rank and not b.isSubdomain)] #update local ids
-	
-	if not ERASE_REMOTE_MASTER:
-		# update remote ids in master
-		if rank>0: req = comm.isend(O.subD.ids,dest=0,tag=_ASSIGNED_IDS_)
-		else: #master will update subdomains for correct display (besides, keeping 'ids' updated for remote subdomains may not be a strict requirement)
-			for k in range(1,numThreads):
-				ids=comm.recv(source=k,tag=_ASSIGNED_IDS_)
-				O.bodies[O.subD.subdomains[k-1]].shape.ids=ids
-				for i in ids: O.bodies[i].subdomain=k
-		# update intersections and mirror
-		updateAllIntersections() #triggers communication
-		if rank>0: req.wait()
-	
-def projectedBounds(i,j):
-	'''
-	Returns sorted list of projections of bounds on a given axis, with bounds taken in i->j and j->i intersections
-	'''
-	pt1 = 0.5*(O.bodies[O.subD.subdomains[i-1]].bound.min+O.bodies[O.subD.subdomains[i-1]].bound.max)
-	pt2 = 0.5*(O.bodies[O.subD.subdomains[j-1]].bound.min+O.bodies[O.subD.subdomains[j-1]].bound.max)
-	axis=pt2-pt1
-	axis.normalize()
-	pos = [[O.subD.boundOnAxis(O.bodies[k].bound,axis,True),O.bodies[k].subdomain,k] for k in O.subD.intersections[j]] + [[O.subD.boundOnAxis(O.bodies[k].bound,axis,False),O.bodies[k].subdomain,k] for k in O.subD.mirrorIntersections[j]]
-	pos.sort(key= lambda x: x[0])
-	return pos
-

@@ -62,4 +62,3 @@ mp.mpirun(NSTEPS,4,True)
 	#mp.mpirun(30,4,True)
 	#if mp.rank == 0:
 		#v.exportSpheres(what=dict(subdomain='b.subdomain'))
-
