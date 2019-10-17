@@ -1,4 +1,4 @@
-""""these are color vectors converted from hex color codes, used for coloring bodies in subdomains. This removes the dependecy from the colorsys module as, we had issues with the same when running MPI tests in the pipeline """"
+""""these are color vectors converted from hex color codes, used for coloring bodies in subdomains. This removes the dependecy from the colorsys module as, we had issues with the same when running MPI tests in the pipeline """
 from minieigen import Vector3 
 
 
