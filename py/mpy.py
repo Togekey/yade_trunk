@@ -67,15 +67,14 @@ NUM_MERGES = 0
 SEND_BYTEARRAYS = True
 ENABLE_PFACETS = False    #PFacets need special (and expensive) tricks, if PFacets are not used skip the tricks
 
-DISTRIBUTED_INSERT = False  #if True each worker is supposed to "O.bodies.insertAtId" its own bodies
-REALLOCATE_FREQUENCY = 0  # if >0 checkAndCollide() will automatically reallocate bodies to subdomains, if =1 realloc. happens each time collider is triggered, if >1 it happens every N trigger
-REALLOCATE_FILTER = None # pointer to filtering function, will be set to 'medianFilter' hereafter, could point to other ones if implemented
-AUTO_COLOR = True
 DISTRIBUTED_INSERT = False  #if True each worker is supposed to "O.bodies.insertAtId" its own bodies 
-
 fibreList = []
 FLUID_COUPLING = False
 fluidBodies = [] 
+
+REALLOCATE_FREQUENCY = 0  # if >0 checkAndCollide() will automatically reallocate bodies to subdomains, if =1 realloc. happens each time collider is triggered, if >1 it happens every N trigger
+REALLOCATE_FILTER = None # pointer to filtering function, will be set to 'medianFilter' hereafter, could point to other ones if implemented
+AUTO_COLOR = True
 
 #tags for mpi messages
 _SCENE_=11
@@ -933,7 +932,6 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 				mergeScene()
 				splitScene()
 		mergeScene()
-	
 	# report performance
 	if YADE_TIMING and rank<=MAX_RANK_OUTPUT:
 		timing_comm.print_all()
@@ -941,9 +939,8 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 		time.sleep((numThreads-rank)*0.002) #avoid mixing the final output, timing.stats() is independent of the sleep
 		mprint( "#####  Worker "+str(rank)+"  ######")
 		timing.stats() #specific numbers for -n4 and gabion.py
-
 #######################################
-####### Bodies re-allocation  ########
+#######  Bodies re-allocation  ########
 #######################################
 def runOnSynchronouslPairs(workers,command):
 	'''
@@ -1047,6 +1044,7 @@ def projectedBounds(i,j):
 	axis.normalize()
 	pos = [[O.subD.boundOnAxis(O.bodies[k].bound,axis,True),i,k] for k in O.subD.intersections[j]]+[[O.subD.boundOnAxis(O.bodies[k].bound,axis,False),j,k] for k in O.subD.mirrorIntersections[j]]
 	pos.sort(key= lambda x: x[0])
+	
 	return pos
 
 def medianFilter(i,j):
