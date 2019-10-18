@@ -943,7 +943,7 @@ def mpirun(nSteps,np=numThreads,withMerge=False):
 		timing.stats() #specific numbers for -n4 and gabion.py
 
 #######################################
-#######  Bodies re-allocation  ########
+####### Bodies re-allocation  ########
 #######################################
 def runOnSynchronouslPairs(workers,command):
 	'''
