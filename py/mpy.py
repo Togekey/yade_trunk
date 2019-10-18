@@ -1063,7 +1063,6 @@ def mpirun(nSteps,np=None,withMerge=False):
 				mergeScene()
 				splitScene()
 		mergeScene()
-	
 	# report performance
 
 	if YADE_TIMING and rank<=MAX_RANK_OUTPUT:
@@ -1072,9 +1071,8 @@ def mpirun(nSteps,np=None,withMerge=False):
 		time.sleep((numThreads-rank)*0.002) #avoid mixing the final output, timing.stats() is independent of the sleep
 		mprint( "#####  Worker "+str(rank)+"  ######")
 		timing.stats() #specific numbers for -n4 and gabion.py
-
 #######################################
-#######  Bodies re-allocation  ########
+#######  Bodies re-allocation  ########
 #######################################
 
 def runOnSynchronouslPairs(workers,command):
@@ -1179,6 +1177,7 @@ def projectedBounds(i,j):
 	axis.normalize()
 	pos = [[O.subD.boundOnAxis(O.bodies[k].bound,axis,True),i,k] for k in O.subD.intersections[j]]+[[O.subD.boundOnAxis(O.bodies[k].bound,axis,False),j,k] for k in O.subD.mirrorIntersections[j]]
 	pos.sort(key= lambda x: x[0])
+	
 	return pos
 
 def medianFilter(i,j):
