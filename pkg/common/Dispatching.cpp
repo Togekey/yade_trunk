@@ -188,8 +188,8 @@ void IPhysDispatcher::action()
 		FOREACH(const shared_ptr<Interaction>& interaction, *scene->interactions){
 	#endif
 			if(interaction->geom){
-				shared_ptr<Body>& b1 = (*bodies)[interaction->getId1()];
-				shared_ptr<Body>& b2 = (*bodies)[interaction->getId2()];
+				const auto & b1 = (*bodies)[interaction->getId1()];
+				const auto & b2 = (*bodies)[interaction->getId2()];
 				bool hadPhys=(interaction->phys.get() != 0);
 				operator()(b1->material, b2->material, interaction);
 				assert(interaction->phys);

@@ -299,7 +299,7 @@ void Subdomain::setBodiesToBodyContainer(Scene* scene ,std::vector<shared_ptr<MP
 			// check if the body already exists in the existing bodycontainer
 			const Body::id_t& idx = newBody->id;
 			std::map<Body::id_t, shared_ptr<Interaction> > intrsToSet = newBody->intrs;
-			shared_ptr<Body>& b = (*bodyContainer)[idx];
+			const auto b = (*bodyContainer)[idx];
 			if (!b) newBody->intrs.clear();//we can clear here, interactions are stored in intrsToSet and will be reinserted
 			else newBody->intrs=b->intrs;
 			if (ifMerge) {

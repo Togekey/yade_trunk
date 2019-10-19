@@ -55,14 +55,27 @@ Python normally iterates over object it is has __getitem__ and __len__, which Bo
 However, it will not skip removed bodies automatically, hence this iterator which does just that.
 */
 class pyBodyIterator{
-	BodyContainer::iterator I, Iend;
+	Body::id_t I = -1;
+	const shared_ptr<BodyContainer>& BC;
 	public:
-	pyBodyIterator(const shared_ptr<BodyContainer>& bc){ I=bc->begin(); Iend=bc->end(); }
+	pyBodyIterator(const shared_ptr<BodyContainer>& bc) : BC(bc){
+	  for (const auto &i : *BC) {
+		if (i && i != *BC->end()) {
+		  I = i->id;
+		  return;
+		}
+	  }
+	}
 	pyBodyIterator pyIter(){return *this;}
 	shared_ptr<Body> pyNext(){
-		BodyContainer::iterator ret;
-		while(I!=Iend){ ret=I; ++I; if(*ret) return *ret; }
-		PyErr_SetNone(PyExc_StopIteration); py::throw_error_already_set(); /* never reached, but makes the compiler happier */ throw;
+		for ( ; static_cast<size_t>(I) < (*BC).size(); ++I) {
+			if ((*BC)[I]) {
+				I++;
+				return (*BC)[I-1];
+			}
+		}
+		PyErr_SetNone(PyExc_StopIteration); py::throw_error_already_set();
+		return nullptr;
 	}
 };
 

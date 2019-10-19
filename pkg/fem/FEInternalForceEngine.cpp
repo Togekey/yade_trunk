@@ -67,7 +67,7 @@ void FEInternalForceEngine::action(){
 	const long size=scene->bodies->size();
 	#pragma omp parallel for schedule(guided) num_threads(ompThreads>0 ? ompThreads : omp_get_max_threads())
 	for(long i=0; i<size; i++){
-		shared_ptr<Body>& bdy=(*scene->bodies)[i];
+		const auto & bdy=(*scene->bodies)[i];
 	#else
 	FOREACH(const shared_ptr<Body>& bdy, *scene->bodies){
 	#endif
