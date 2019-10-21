@@ -78,6 +78,8 @@ DISTRIBUTED_INSERT = False  #if True each worker is supposed to "O.bodies.insert
 REALLOCATE_FREQUENCY = 0  # if >0 checkAndCollide() will automatically reallocate bodies to subdomains, if =1 realloc. happens each time collider is triggered, if >1 it happens every N trigger
 REALLOCATE_FILTER = None # pointer to filtering function, will be set to 'medianFilter' hereafter, could point to other ones if implemented
 AUTO_COLOR = True
+
+USE_CPP_MEDIAN = True
 MINIMAL_INTERSECTIONS = False # Reduces the size of position/velocity comms (at the end of the colliding phase, we can exclude those bodies with no interactions besides body<->subdomain from intersections). 
 REALLOCATE_MINIMAL = False # if true, intersections are minimized before reallocations, hence minimizing the number of reallocated bodies
 fibreList = []
@@ -1175,7 +1177,9 @@ def projectedBounds(i,j):
 	axis=pt2-pt1
 	axis.normalize()
 	pos = [[O.subD.boundOnAxis(O.bodies[k].bound,axis,True),i,k] for k in O.subD.intersections[j]]+[[O.subD.boundOnAxis(O.bodies[k].bound,axis,False),j,k] for k in O.subD.mirrorIntersections[j]]
+	mprint("pos shape = ", pos[0])
 	pos.sort(key= lambda x: x[0])
+	
 	
 	return pos
 
@@ -1185,19 +1189,27 @@ def medianFilter(i,j):
 	'''
 	bodiesToSend=[]
 	bodiesToRecv=[]
-	pos = projectedBounds(i,j)
-	# we will start from first and last elements and converge to middle, to check possible inversions of bboxes along the axis
-	xminus=0; xplus=len(pos)-1
-	while (xminus<xplus):
-		while (pos[xminus][1]==i and xminus<xplus): xminus+=1
-		while (pos[xplus][1]==j and xminus<xplus): xplus-=1
-		if xminus<xplus:
-			bodiesToSend.append(pos[xplus][2])
-			bodiesToRecv.append(pos[xminus][2])
-			pos[xminus][1]=i
-			pos[xplus][1]=j
-			xminus+=1; xplus-=1
+	
+	if USE_CPP_MEDIAN: 
+		useAABB = False; 
+		otherSubDCM = O.subD._centers_of_mass[j]
+		bodiesToSend= O.subD.medianFilterCPP(bodiesToRecv,j, otherSubDCM, useAABB)
+		
+	else:
+		pos = projectedBounds(i,j)
+		# we will start from first and last elements and converge to middle, to check possible inversions of bboxes along the axis
+		xminus=0; xplus=len(pos)-1
+		while (xminus<xplus):
+			while (pos[xminus][1]==i and xminus<xplus): xminus+=1
+			while (pos[xplus][1]==j and xminus<xplus): xplus-=1
+			if xminus<xplus:
+				bodiesToSend.append(pos[xplus][2])
+				bodiesToRecv.append(pos[xminus][2])
+				pos[xminus][1]=i
+				pos[xplus][1]=j
+				xminus+=1; xplus-=1
 	#if len(bodiesToSend)>0: mprint("will send ",len(bodiesToSend)," to ",j," (and recv ",len(bodiesToRecv),")")
+	
 	return bodiesToSend,bodiesToRecv
 
 REALLOCATE_FILTER=medianFilter #that's currently default and only option
