@@ -327,6 +327,8 @@ class Subdomain: public Shape {
 	 std::vector<yade::projectedBoundElem> projectedBoundsCPP(int , const Vector3r&, bool  ); 
 	 std::vector<Body::id_t> medianFilterCPP(boost::python::list& , int otherSD, const Vector3r& , bool ); 
 	 
+	 void migrateBodiesSend(const std::vector<Body::id_t>&  , int );
+	 void updateLocalIds(); 
 
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Subdomain,Shape,"The bounding box of a mpi subdomain. Stores internals and provides optimized functions for communications between workers. This class may not be used directly. Instead, Subdomains are appended automatically to the scene bodies when using :yref:`mpy.mpirun`",
 // 		((testType, testArray,testType({0,0}),,""))
@@ -372,6 +374,7 @@ class Subdomain: public Shape {
 		.def("boundOnAxis", &Subdomain::boundOnAxis,(boost::python::arg("bound"),boost::python::arg("axis"),boost::python::arg("min")), "computes projected position of a bound in a certain direction")
 		.def("centerOfMass", &Subdomain::centerOfMass, "returns center of mass of assigned bodies")
 		.def("medianFilterCPP", &Subdomain::medianFilterCPP, (boost::python::arg("bodiesToRecv"), boost::python::arg("otherSubdomain"), boost::python::arg("oterSubdomainCenterofMass"), boost::python::arg("useAABB")), "cpp version of median filter, used for body reallocation operations. ")
+		.def("migrateBodiesSend", &Subdomain::migrateBodiesSend, (boost::python::arg("bodiesToSend"), boost::python::arg("destination")), "ids of body to be sent have their subdomain parameter reassigned, followed by sendBodies")
 	);
 	// clang-format on
 	DECLARE_LOGGER;
