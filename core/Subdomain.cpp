@@ -14,6 +14,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream_buffer.hpp>
+#include <pkg/dem/Shop.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -579,25 +580,39 @@ std::vector<Body::id_t> Subdomain::medianFilterCPP(boost::python::list& idsToRec
 		}
 	  
 	} while (xminus < xplus); 
-	
-// 	const shared_ptr<Scene> scene = Omega::instance().getScene(); 
-	
-	// change the subdomain param of idsToSend to destination  subdomain
-// 	for (const auto& bId : idsToSend){
-// 		shared_ptr<Body>& b = (*scene->bodies)[bId]; 
-// 		b->subdomain = otherSD; 
-// 	}
-	
 	return idsToSend; 
 }
 
 
-// void Subdomain::reallocateBodiesPairWiseBlocking(int otherSubD) {
-// 	if (otherSubD == master) {LOG_WARN("ignoring reallocating bodies with master"); }
-// 	
-// 	
-// 	
-// }
+void Subdomain::migrateBodiesSend(const std::vector<Body::id_t>& sendIds,  int destination){
+	const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
+	Body::id_t thisSubd = subdomains[subdomainRank-1]; 
+	for (auto bId : sendIds){
+		shared_ptr<Body>& bdy = (*scene->bodies)[bId]; 
+		if (!bdy) {LOG_ERROR("reassignBodies failed " << bId << "  is not in subdomain " << subdomainRank << std::endl); }
+		bdy->subdomain = destination; 
+		yade::Shop::createExplicitInteraction(thisSubd, bId, true); 
+	}
+	sendBodies(sendIds, destination); 
+}
+
+void Subdomain::updateLocalIds(bool eraseRemoteMaster){
+	/* in case of the master proc and not eraseRemoteMaster  the worker ids are updated */ 
+	if (subdomainRank != master){
+		ids.clear(); 
+		const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
+		for (cont auto&  b : (*scene->bodies)){
+			if (b->subdomain == subdomainRank){ids.push_back(b->id); }
+			  
+		}
+	}
+	
+	if (subdomainRank != master &&  !eraseRemoteMaster) {
+		MPI_Send(&ids.front(), (int)ids.size(), MPI_INT, master, )
+	} 
+	
+}
+
 
 
 } // namespace yade
