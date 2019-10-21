@@ -524,12 +524,12 @@ std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const
 	const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
 	const shared_ptr<Body>& otherSubdomainBody = (*scene->bodies)[subdomains[otherSD-1]]; 
 	if (! otherSubdomainBody) {LOG_ERROR("invalid subdomain id, perhaps not in intersection?, other subd =  " << otherSD); return pos; }
-	const shared_ptr<Subdomain>& otherSubD = YADE_PTR_CAST<Subdomain>(otherSubdomainBody->shape);  
-	const shared_ptr<Bound>& otherSubDBound = otherSubdomainBody->bound; 
-	const shared_ptr<Bound>& thisSubDBound = (*scene->bodies)[subdomains[subdomainRank-1]]->bound; 
+	//const shared_ptr<Subdomain>& otherSubD = YADE_PTR_CAST<Subdomain>(otherSubdomainBody->shape);  
 	Vector3r pt1, pt2, axis; 
 	
 	if (useAABB) {
+		const shared_ptr<Bound>& otherSubDBound = otherSubdomainBody->bound; 
+		const shared_ptr<Bound>& thisSubDBound = (*scene->bodies)[subdomains[subdomainRank-1]]->bound; 
 		pt1 = 0.5*(thisSubDBound->min + thisSubDBound->max); 
 		pt2 = 0.5*(otherSubDBound->min + otherSubDBound->max); 
 	} else {
@@ -540,18 +540,18 @@ std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const
 	axis = pt1-pt2; axis.normalize(); 
 	
 	// from intersections (bodies in this subdomain which has intersections with the other sd) 
-	for (auto bId : intersections[otherSD-1]){
+	for (auto bId : intersections[otherSD]){
 		const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
-		if (!b || b->getIsSubdomain()){continue; } 
-		Real ps = boundOnAxisCpp(b->bound, axis, true);
+		if (!b or b->getIsSubdomain()){continue; } 
+		Real ps = boundOnAxisCpp(b->bound, axis, true); 
 		projectedBoundElem pElem(ps, std::make_pair(subdomainRank, bId)); 
 		pos.push_back(pElem); 
 	}
 	
 	// from mirror intersections (bodies from other subdomain which has intersections with this sd) 
-	for (auto bId : mirrorIntersections[otherSD-1]){
+	for (auto bId : mirrorIntersections[otherSD]){
 		const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
-		if (!b || b->getIsSubdomain()){continue; } 
+		if (!b or b->getIsSubdomain()){continue; } 
 		Real ps = boundOnAxisCpp(b->bound, axis, false);
 		projectedBoundElem pElem(ps, std::make_pair(otherSD, bId)); 
 		pos.push_back(pElem); 
@@ -566,7 +566,7 @@ std::vector<Body::id_t> Subdomain::medianFilterCPP(boost::python::list& idsToRec
 
 	std::vector<Body::id_t> idsToSend;  
 	std::vector<projectedBoundElem> pos = projectedBoundsCPP(otherSD, otherSubDCM, useAABB); 
-	if (! pos.size()) {LOG_WARN("ERROR IN CALCULATING PROJECTED BOUNDS WITH SUBDOMAIN = " << otherSD << "  from Subdomain = "  <<  subdomainRank); }
+	if (! pos.size()) {LOG_ERROR("ERROR IN CALCULATING PROJECTED BOUNDS WITH SUBDOMAIN = " << otherSD << "  from Subdomain = "  <<  subdomainRank); }
 	int xminus = 0; int xplus = (int) pos.size() - 1; 
 	
 	do{
