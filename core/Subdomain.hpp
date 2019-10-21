@@ -16,8 +16,24 @@
 
 namespace yade { // Cannot have #include directive inside.
 
+  //  pos shape = [-98.86741845752853, 3, 140];
+typedef std::pair<double, std::pair<int, int> > projectedBoundElem;  // position, subdomain, bodyid 
+  
+  // functor for comparison pos 
+class _compareProjectedBoundElem{
+	public: 
+		_compareProjectedBoundElem(){}; 
+		bool operator() (const projectedBoundElem& p1, const projectedBoundElem& p2){
+			return p1.first < p2.first; 
+		}
+		~_compareProjectedBoundElem(){}; 
+}; 
+  
+  
+ 
 class Subdomain: public Shape {
 	public:
+	  
 	void init(){
 		setRankSize();
 		stringBuff.resize(commSize);
@@ -238,7 +254,6 @@ class Subdomain: public Shape {
 	 
 	 
          
-         
         //declarations dpk 
          
 	vector<MPI_Status>  mpiStatus; 
@@ -276,6 +291,17 @@ class Subdomain: public Shape {
 	}
 		
 	// clang-format off
+	
+	 // body reallocation 
+	 
+	 std::vector<yade::projectedBoundElem> projectedBoundsCPP(int , const Vector3r&, bool  ); 
+	 std::vector<Body::id_t> medianFilterCPP(boost::python::list& , int otherSD, const Vector3r& , bool ); 
+	 //void reallocateBodiesPairWiseBlocking(int);  
+	 // testing only! 
+	 Real boundOnAxisCpp(const shared_ptr<Bound>&, Vector3r, bool); 
+
+
+>>>>>>> projected bounds and median filter in CPP
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Subdomain,Shape,"The bounding box of a mpi subdomain",
 // 		((testType, testArray,testType({0,0}),,""))
 		((Real,extraLength,0,,"verlet dist for the subdomain, added to bodies verletDist"))
@@ -316,6 +342,7 @@ class Subdomain: public Shape {
 		.def("setIDstoSubdomain", &Subdomain::setIDstoSubdomain, (boost::python::arg("idList")), "set list of ids to the subdomain." )
 		.def("boundOnAxis", &Subdomain::boundOnAxis,(boost::python::arg("bound"),boost::python::arg("axis"),boost::python::arg("min")), "computes projected position of a bound in a certain direction")
 		.def("centerOfMass", &Subdomain::centerOfMass, "returns center of mass of assigned bodies")
+		.def("medianFilterCPP", &Subdomain::medianFilterCPP, (boost::python::arg("bodiesToRecv"), boost::python::arg("otherSubdomain"), boost::python::arg("oterSubdomainCenterofMass"), boost::python::arg("useAABB")), "cpp version of median filter, used for body reallocation operations. ")
 	);
 	// clang-format on
 	DECLARE_LOGGER;
@@ -333,6 +360,8 @@ class Bo1_Subdomain_Aabb : public BoundFunctor{
 	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(Bo1_Subdomain_Aabb);
+
+
 
 } // namespace yade
 
