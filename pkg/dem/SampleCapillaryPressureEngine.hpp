@@ -10,9 +10,9 @@
 #ifndef SAMPLE_CAPILLARY_PRESSURE_ENGINE_HPP
 #define SAMPLE_CAPILLARY_PRESSURE_ENGINE_HPP
 
-#include<core/PartialEngine.hpp>
-#include<lib/base/Math.hpp>
-#include<pkg/dem/TriaxialStressController.hpp>
+#include <lib/base/Math.hpp>
+#include <core/PartialEngine.hpp>
+#include <pkg/dem/TriaxialStressController.hpp>
 #include <string>
 
 namespace yade { // Cannot have #include directive inside.
@@ -21,21 +21,20 @@ namespace yade { // Cannot have #include directive inside.
 
 class Law2_ScGeom_CapillaryPhys_Capillarity;
 
-class SampleCapillaryPressureEngine : public TriaxialStressController
-{
-	public :
-		//! is isotropicInternalCompactionFinished?
-		bool Phase1;
-		std::string Phase1End;
-		//! is this the beginning of the simulation, after reading the scene?
-		bool firstRun;
+class SampleCapillaryPressureEngine : public TriaxialStressController {
+public:
+	//! is isotropicInternalCompactionFinished?
+	bool        Phase1;
+	std::string Phase1End;
+	//! is this the beginning of the simulation, after reading the scene?
+	bool firstRun;
 
-		shared_ptr<Law2_ScGeom_CapillaryPhys_Capillarity>  capillaryCohesiveLaw;
-		//Law2_ScGeom_CapillaryPhys_Capillarity* capillaryCohesiveLaw; // which one is right?
+	shared_ptr<Law2_ScGeom_CapillaryPhys_Capillarity> capillaryCohesiveLaw;
+	//Law2_ScGeom_CapillaryPhys_Capillarity* capillaryCohesiveLaw; // which one is right?
 
-		virtual ~SampleCapillaryPressureEngine();
-		void updateParameters();
-		virtual void action();
+	virtual ~SampleCapillaryPressureEngine();
+	void         updateParameters();
+	virtual void action();
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(SampleCapillaryPressureEngine,TriaxialStressController,"It produces the isotropic compaction of an assembly and allows one to controlled the capillary pressure inside (uses Law2_ScGeom_CapillaryPhys_Capillarity).",
@@ -61,4 +60,3 @@ REGISTER_SERIALIZABLE(SampleCapillaryPressureEngine);
 #endif //  SAMPLECAPILLARYPRESSUREENGINE_HPP
 
 #endif //DEPREC CODE
-

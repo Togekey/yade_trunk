@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include<pkg/common/BoundaryController.hpp>
-#include<core/Scene.hpp>
-#include<lib/base/Math.hpp>
+#include <lib/base/Math.hpp>
+#include <core/Scene.hpp>
+#include <pkg/common/BoundaryController.hpp>
 
-#include<boost/array.hpp>
+#include <boost/array.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -23,58 +23,58 @@ class State;
 /*! \brief Controls the stress on the boundaries of a box and compute strain-like and stress-like quantities for the packing. The algorithms used have been developed initialy for simulations reported in [Chareyre2002a] and [Chareyre2005]. They have been ported to Yade in a second step and used in e.g. [Kozicki2008],[Scholtes2009b],[Jerier2010b].
 */
 
-class TriaxialStressController : public BoundaryController
-{
-	private :
-		bool first;
-		inline const Vector3r getForce(Scene* rb, Body::id_t id){ return rb->forces.getForce(id); /* needs sync, which is done at the beginning of action */ }
-	public :
-		//! internal index values for retrieving walls
-		enum {wall_left=0, wall_right, wall_bottom, wall_top, wall_back, wall_front};
-		//! real index values of walls in the Scene
-		int wall_id [6];
-		//! Stores the value of the translation at the previous time step, stiffness, and normal
-		boost::array<Vector3r,6> previousTranslation;
-		//! The value of stiffness (updated according to stiffnessUpdateInterval)
-		vector<Real>	stiffness;
-		Vector3r	strain;
-		Vector3r	normal [6];
-		//! The values of stresses
-		Vector3r	stress [6];
-		Vector3r	force [6];
-		//! Value of particles volume (solid volume of clumps and spheres)
-		Real particlesVolume;
-		//! Value of box volume
-		Real boxVolume;
-		//! Sample porosity
-		Real porosity;
+class TriaxialStressController : public BoundaryController {
+private:
+	bool                  first;
+	inline const Vector3r getForce(Scene* rb, Body::id_t id) { return rb->forces.getForce(id); /* needs sync, which is done at the beginning of action */ }
 
-		Real max_vel1;
-		Real max_vel2;
-		Real max_vel3;
-		Real position_top;
-		Real position_bottom;
-		Real position_right;
-		Real position_left;
-		Real position_front;
-		Real position_back;
+public:
+	//! internal index values for retrieving walls
+	enum { wall_left = 0, wall_right, wall_bottom, wall_top, wall_back, wall_front };
+	//! real index values of walls in the Scene
+	int wall_id[6];
+	//! Stores the value of the translation at the previous time step, stiffness, and normal
+	boost::array<Vector3r, 6> previousTranslation;
+	//! The value of stiffness (updated according to stiffnessUpdateInterval)
+	vector<Real> stiffness;
+	Vector3r     strain;
+	Vector3r     normal[6];
+	//! The values of stresses
+	Vector3r stress[6];
+	Vector3r force[6];
+	//! Value of particles volume (solid volume of clumps and spheres)
+	Real particlesVolume;
+	//! Value of box volume
+	Real boxVolume;
+	//! Sample porosity
+	Real porosity;
 
-		virtual ~TriaxialStressController();
+	Real max_vel1;
+	Real max_vel2;
+	Real max_vel3;
+	Real position_top;
+	Real position_bottom;
+	Real position_right;
+	Real position_left;
+	Real position_front;
+	Real position_back;
 
-		virtual void action();
-		//! Regulate the stress applied on walls with flag wall_XXX_activated = true
-		void controlExternalStress(int wall, Vector3r resultantForce, State* p, Real wall_max_vel);
-		//! Regulate the mean stress by changing spheres size, WARNING : this function assumes that all dynamic bodies in the problem are spheres
-		void controlInternalStress(Real multiplier);
-		//! update the stiffness of boundary-packing interaction (sum of contacts stiffness on the boundary)
-		void updateStiffness();
-		//! Compute stresses on walls as "Vector3r stress[6]", compute meanStress, strain[3] and mean strain
-		void computeStressStrain();
-		//! Compute the mean/max unbalanced force in the assembly (normalized by mean contact force)
-    		Real ComputeUnbalancedForce(bool maxUnbalanced=false);
-		///! Getter for stress and rates in python
-		Vector3r getStress(int boundId);
-		Vector3r getStrainRate();
+	virtual ~TriaxialStressController();
+
+	virtual void action();
+	//! Regulate the stress applied on walls with flag wall_XXX_activated = true
+	void controlExternalStress(int wall, Vector3r resultantForce, State* p, Real wall_max_vel);
+	//! Regulate the mean stress by changing spheres size, WARNING : this function assumes that all dynamic bodies in the problem are spheres
+	void controlInternalStress(Real multiplier);
+	//! update the stiffness of boundary-packing interaction (sum of contacts stiffness on the boundary)
+	void updateStiffness();
+	//! Compute stresses on walls as "Vector3r stress[6]", compute meanStress, strain[3] and mean strain
+	void computeStressStrain();
+	//! Compute the mean/max unbalanced force in the assembly (normalized by mean contact force)
+	Real ComputeUnbalancedForce(bool maxUnbalanced = false);
+	///! Getter for stress and rates in python
+	Vector3r getStress(int boundId);
+	Vector3r getStrainRate();
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(TriaxialStressController,BoundaryController,
@@ -149,9 +149,8 @@ class TriaxialStressController : public BoundaryController
 		.def("stress",&TriaxialStressController::getStress,(boost::python::arg("id")),"Returns the average stress on boundary 'id'. Here, 'id' refers to the internal numbering of boundaries, between 0 and 5.")
 		)
 	// clang-format on
-		DECLARE_LOGGER;
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(TriaxialStressController);
 
 } // namespace yade
-

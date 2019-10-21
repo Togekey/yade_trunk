@@ -1,65 +1,62 @@
 // YADE-OpenFOAM coupling module, Deepak kn  deepak.kunhappan@3sr-grenoble.fr/deepak.kn1990@gmail.com
 #ifdef YADE_MPI
 
-#pragma once 
+#pragma once
 
-#include <core/Scene.hpp> 
-#include <core/GlobalEngine.hpp> 
-#include <core/Body.hpp>
-#include <core/Omega.hpp>
-#include <mpi.h>
-#include <pkg/common/Sphere.hpp> 
-#include <vector> 
-#include <core/InteractionContainer.hpp> // for pairwise hydro interaction (to be implemented) 
 #include <lib/serialization/Serializable.hpp>
+#include <core/Body.hpp>
+#include <core/GlobalEngine.hpp>
+#include <core/InteractionContainer.hpp> // for pairwise hydro interaction (to be implemented)
+#include <core/Omega.hpp>
+#include <core/Scene.hpp>
+#include <pkg/common/Sphere.hpp>
+#include <mpi.h>
+#include <vector>
 
 namespace yade { // Cannot have #include directive inside.
 
-class Scene; 
+class Scene;
 class FoamCoupling : public GlobalEngine {
+private:
+	// some variables for MPI_Send/Recv
+	const int  sendTag = 500;
+	MPI_Status status;
+	int        rank, commSize;
 
 
-  private:
-    // some variables for MPI_Send/Recv 
-    const int sendTag=500;  
-    MPI_Status status; 
-    int rank, commSize; 
+public:
+	void         getRank();
+	void         setNumParticles(int);
+	void         setIdList(const std::vector<int>&);
+	void         killMPI();
+	void         updateProcList();
+	void         castParticle();
+	void         castNumParticle(int);
+	void         castTerminate();
+	void         resetProcList();
+	void         recvHydroForce();
+	void         setHydroForce();
+	void         sumHydroForce();
+	void         exchangeDeltaT();
+	void         runCoupling();
+	bool         exchangeData();
+	Real         getViscousTimeScale(); // not fully implemented, piece of code left in foam.
+	virtual void action();
+	virtual ~FoamCoupling() {};
+	std::vector<int>    bodyList;
+	std::vector<double> hydroForce;
+	std::vector<double> particleData;
+	std::vector<int>    procList;
+	Real                foamDeltaT;
+	long int            dataExchangeInterval = 1;
+	bool                recvdFoamDeltaT;
+	bool                isGaussianInterp;
+	bool                initDone = false;
+	void                insertBodyId(int);
+	bool                eraseId(int);
+	int                 getNumBodies();
+	std::vector<int>    getIdList();
 
-
-  public: 
-    
-    void getRank(); 
-    void setNumParticles(int); 
-    void setIdList(const std::vector<int>& );  
-    void killMPI(); 
-    void updateProcList();
-    void castParticle();
-    void castNumParticle(int); 
-    void castTerminate();  
-    void resetProcList(); 
-    void recvHydroForce(); 
-    void setHydroForce();
-    void sumHydroForce(); 
-    void exchangeDeltaT();  
-    void runCoupling(); 
-    bool exchangeData();
-    Real getViscousTimeScale();  // not fully implemented, piece of code left in foam.
-    virtual void action(); 
-    virtual ~FoamCoupling(){}; 
-    std::vector<int> bodyList; 
-    std::vector<double> hydroForce; 
-    std::vector<double> particleData;
-    std::vector<int>  procList; 
-    Real foamDeltaT; 
-    long int  dataExchangeInterval=1; 
-    bool recvdFoamDeltaT; 
-    bool isGaussianInterp;
-    bool initDone = false; 
-    void insertBodyId(int); 
-    bool eraseId(int);
-    int getNumBodies(); 
-    std::vector<int> getIdList(); 
-    
 	// clang-format off
     YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(FoamCoupling,GlobalEngine, "An engine for coupling Yade with the finite volume fluid solver OpenFOAM in parallel." " \n Requirements : Yade compiled with MPI libs, OpenFOAM-6 (openfoam is not required for compilation)." "Yade is executed under MPI environment with OpenFOAM simultaneously, and using MPI communication  routines data is exchanged between the solvers."
    " \n \n 1. Yade broadcasts the particle data -> position, velocity, ang-velocity, radius to all the foam processes as in :yref:`castParticle <FoamCoupling::castParticle>` \n"
@@ -86,10 +83,10 @@ class FoamCoupling : public GlobalEngine {
     .def_readwrite("isGaussianInterp", &FoamCoupling::isGaussianInterp, "switch for Gaussian interpolation of field varibles in openfoam. Uses  :yref:`sumHydroForce<FoamCoupling::sumHydroForce>` to obtain hydrodynamic force ") 
     )
 	// clang-format on
-    DECLARE_LOGGER; 
-}; 
-REGISTER_SERIALIZABLE(FoamCoupling); 
+	DECLARE_LOGGER;
+};
+REGISTER_SERIALIZABLE(FoamCoupling);
 
 } // namespace yade
 
-#endif  
+#endif

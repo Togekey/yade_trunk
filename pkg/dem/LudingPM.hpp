@@ -1,15 +1,15 @@
 #pragma once
 
-#include<core/Material.hpp>
-#include<pkg/dem/FrictPhys.hpp>
-#include<pkg/common/Dispatching.hpp>
-#include<pkg/dem/ScGeom.hpp>
+#include <core/Material.hpp>
+#include <pkg/common/Dispatching.hpp>
+#include <pkg/dem/FrictPhys.hpp>
+#include <pkg/dem/ScGeom.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
 class LudingMat : public Material {
-  public:
-    virtual ~LudingMat();
+public:
+	virtual ~LudingMat();
 	// clang-format off
   YADE_CLASS_BASE_DOC_ATTRS_CTOR(LudingMat,Material,"Material for simple Luding`s model of contact [Luding2008]_ ,[Singh2013]_ .\n",
     ((Real,k1,NaN,,"Slope of loading plastic branch"))
@@ -22,14 +22,14 @@ class LudingMat : public Material {
     createIndex();
   );
 	// clang-format on
-  REGISTER_CLASS_INDEX(LudingMat,Material);
+	REGISTER_CLASS_INDEX(LudingMat, Material);
 };
 REGISTER_SERIALIZABLE(LudingMat);
 
-class LudingPhys : public FrictPhys{
-	public:
-		virtual ~LudingPhys();
-		Real R;
+class LudingPhys : public FrictPhys {
+public:
+	virtual ~LudingPhys();
+	Real R;
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(LudingPhys,FrictPhys,"IPhys created from :yref:`LudingMat`, for use with :yref:`Law2_ScGeom_LudingPhys_Basic`.",
 		((Real,k1,NaN,,"Slope of loading plastic branch"))
@@ -50,27 +50,26 @@ class LudingPhys : public FrictPhys{
 };
 REGISTER_SERIALIZABLE(LudingPhys);
 
-class Ip2_LudingMat_LudingMat_LudingPhys: public IPhysFunctor {
-  public :
-    virtual void go(const shared_ptr<Material>& b1,
-          const shared_ptr<Material>& b2,
-          const shared_ptr<Interaction>& interaction);
+class Ip2_LudingMat_LudingMat_LudingPhys : public IPhysFunctor {
+public:
+	virtual void go(const shared_ptr<Material>& b1, const shared_ptr<Material>& b2, const shared_ptr<Interaction>& interaction);
 	// clang-format off
   YADE_CLASS_BASE_DOC(Ip2_LudingMat_LudingMat_LudingPhys,IPhysFunctor,"Convert 2 instances of :yref:`LudingMat` to :yref:`LudingPhys` using the rule of consecutive connection.");
 	// clang-format on
-  FUNCTOR2D(LudingMat,LudingMat);
-  private:
-    Real reduced(Real, Real);
+	FUNCTOR2D(LudingMat, LudingMat);
 
+private:
+	Real reduced(Real, Real);
 };
 REGISTER_SERIALIZABLE(Ip2_LudingMat_LudingMat_LudingPhys);
 
-class Law2_ScGeom_LudingPhys_Basic: public LawFunctor {
-  public :
-    virtual bool go(shared_ptr<IGeom>&, shared_ptr<IPhys>&, Interaction*);
-  private:
-    Real calculateCapillarForce(const ScGeom& geom, LudingPhys& phys);
-  FUNCTOR2D(ScGeom,LudingPhys);
+class Law2_ScGeom_LudingPhys_Basic : public LawFunctor {
+public:
+	virtual bool go(shared_ptr<IGeom>&, shared_ptr<IPhys>&, Interaction*);
+
+private:
+	Real calculateCapillarForce(const ScGeom& geom, LudingPhys& phys);
+	FUNCTOR2D(ScGeom, LudingPhys);
 	// clang-format off
   YADE_CLASS_BASE_DOC(Law2_ScGeom_LudingPhys_Basic,LawFunctor,"Linear viscoelastic model operating on :yref:`ScGeom` and :yref:`LudingPhys`. See [Luding2008]_ ,[Singh2013]_ for more details.");
 	// clang-format on
@@ -78,4 +77,3 @@ class Law2_ScGeom_LudingPhys_Basic: public LawFunctor {
 REGISTER_SERIALIZABLE(Law2_ScGeom_LudingPhys_Basic);
 
 } // namespace yade
-

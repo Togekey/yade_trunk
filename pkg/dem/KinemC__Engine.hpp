@@ -8,23 +8,22 @@
 
 #pragma once
 
-#include<pkg/dem/KinemSimpleShearBox.hpp>
+#include <pkg/dem/KinemSimpleShearBox.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class KinemCTDEngine : public KinemSimpleShearBox
-{
-	private :
-		Real current_sigma		// Computed in kPa
-			;
+class KinemCTDEngine : public KinemSimpleShearBox {
+private:
+	Real current_sigma // Computed in kPa
+	        ;
 
-		int		temoin;
+	int temoin;
 
-	public :
-		virtual ~KinemCTDEngine() {};
+public:
+	virtual ~KinemCTDEngine() {};
 
-		void action();
-// 			;
+	void action();
+	// 			;
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR(KinemCTDEngine,KinemSimpleShearBox,
@@ -35,21 +34,18 @@ class KinemCTDEngine : public KinemSimpleShearBox
 			temoin=0;
 						)
 	// clang-format on
-	
-
 };
 
 REGISTER_SERIALIZABLE(KinemCTDEngine);
 
-class KinemCNDEngine : public KinemSimpleShearBox
-{
-	private :
-		int temoinfin;
-	public :
-		void action();
+class KinemCNDEngine : public KinemSimpleShearBox {
+private:
+	int temoinfin;
 
-	protected :
+public:
+	void action();
 
+protected:
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR(KinemCNDEngine,KinemSimpleShearBox,
 			"To apply a Constant Normal Displacement (CND) shear for a parallelogram box\n\n \tThis engine, designed for simulations implying a simple shear box (:yref:`SimpleShear` Preprocessor or scripts/simpleShear.py), allows one to perform a constant normal displacement shear, by translating horizontally the upper plate, while the lateral ones rotate so that they always keep contact with the lower and upper walls.",
@@ -64,19 +60,15 @@ class KinemCNDEngine : public KinemSimpleShearBox
 
 REGISTER_SERIALIZABLE(KinemCNDEngine);
 
-class KinemCNLEngine : public KinemSimpleShearBox
-{
-	private :
+class KinemCNLEngine : public KinemSimpleShearBox {
+private:
+	int temoin, // utile pour savoir ou on en est
+	        it_stop;
 
-		int	temoin,// utile pour savoir ou on en est
-			it_stop
-			;
+public:
+	void action();
 
-	public :
-		void	action()
-			;
 
-	
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(KinemCNLEngine,KinemSimpleShearBox,
 				 "To apply a constant normal stress shear (i.e. Constant Normal Load : CNL) for a parallelogram box (simple shear box : :yref:`SimpleShear` Preprocessor or scripts/simpleShear.py)\n\nThis engine allows one to translate horizontally the upper plate while the lateral ones rotate so that they always keep contact with the lower and upper walls.\n\nIn fact the upper plate can move not only horizontally but also vertically, so that the normal stress acting on it remains constant (this constant value is not chosen by the user but is the one that exists at the beginning of the simulation)\n\nThe right vertical displacements which will be allowed are computed from the rigidity Kn of the sample over the wall (so to cancel a deltaSigma, a normal dplt deltaSigma*S/(Kn) is set)\n\nThe movement is moreover controlled by the user via a :yref:`shearSpeed<KinemCNLEngine.shearSpeed>` which will be the speed of the upper wall, and by a maximum value of horizontal displacement :yref:`gammalim<KinemCNLEngine.gammalim>`, after which the shear stops.\n\n.. note::\n\tNot only the positions of walls are updated but also their speeds, which is all but useless considering the fact that in the contact laws these velocities of bodies are used to compute values of tangential relative displacements.\n\n.. warning::\n\tBecause of this last point, if you want to use later saves of simulations executed with this Engine, but without that stopMovement was executed, your boxes will keep their speeds => you will have to cancel them 'by hand' in the .xml.\n",
@@ -92,14 +84,12 @@ class KinemCNLEngine : public KinemSimpleShearBox
 
 REGISTER_SERIALIZABLE(KinemCNLEngine);
 
-class KinemCNSEngine : public KinemSimpleShearBox
-{
-	private :
-		int	temoin,it_stop
-			;
-	public :
-		void 	action()
-			;
+class KinemCNSEngine : public KinemSimpleShearBox {
+private:
+	int temoin, it_stop;
+
+public:
+	void action();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(KinemCNSEngine,KinemSimpleShearBox,
 		"To apply a Constant Normal Stifness (CNS) shear for a parallelogram box (simple shear)\n\nThis engine, useable in simulations implying one deformable parallelepipedic box, allows one to translate horizontally the upper plate while the lateral ones rotate so that they always keep contact with the lower and upper walls. The upper plate can move not only horizontally but also vertically, so that the normal rigidity defined by DeltaF(upper plate)/DeltaU(upper plate) = constant (= :yref:`KnC<KinemCNSEngine.KnC>` defined by the user).\n\nThe movement is moreover controlled by the user via a :yref:`shearSpeed<KinemCNLEngine.shearSpeed>` which is the horizontal speed of the upper wall, and by a maximum value of horizontal displacement :yref:`gammalim<KinemCNLEngine.gammalim>` (of the upper plate), after which the shear stops.\n\n.. note::\n\t not only the positions of walls are updated but also their speeds, which is all but useless considering the fact that in the contact laws these velocities of bodies are used to compute values of tangential relative displacements.\n\n.. warning::\n\tBut, because of this last point, if you want to use later saves of simulations executed with this Engine, but without that stopMovement was executed, your boxes will keep their speeds => you will have to cancel them by hand in the .xml",
@@ -111,10 +101,8 @@ class KinemCNSEngine : public KinemSimpleShearBox
 		it_stop=0;
 	);
 	// clang-format on
-
 };
 
 REGISTER_SERIALIZABLE(KinemCNSEngine);
 
 } // namespace yade
-

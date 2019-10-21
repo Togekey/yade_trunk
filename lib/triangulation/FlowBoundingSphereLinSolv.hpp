@@ -13,17 +13,17 @@
 // #define TAUCS_LIB //comment this if TAUCS lib is not available, it will disable PARDISO lib as well
 
 #ifdef LINSOLV
-	#include <Eigen/Sparse>
-	#include <Eigen/SparseCore>
-	#include <Eigen/CholmodSupport>
-	#include <cholmod.h>
+#include <Eigen/CholmodSupport>
+#include <Eigen/Sparse>
+#include <Eigen/SparseCore>
+#include <cholmod.h>
 #endif
 
 #ifdef TAUCS_LIB
 #define TAUCS_CORE_DOUBLE
 #include <complex> //THIS ONE MUST ABSOLUTELY BE INCLUDED BEFORE TAUCS.H!
-#include <stdlib.h>
 #include <float.h>
+#include <stdlib.h>
 //#include <time.h>
 extern "C" {
 #include "taucs.h"
@@ -38,215 +38,216 @@ namespace yade { // Cannot have #include directive inside.
 
 namespace CGT {
 
-template<class _Tesselation, class FlowType=FlowBoundingSphere<_Tesselation> >
-class FlowBoundingSphereLinSolv : public FlowType
-{
-public:
-	DECLARE_TESSELATION_TYPES(FlowType)
-	typedef typename FlowType::Tesselation	Tesselation;
-	using FlowType::useSolver;
-	using FlowType::multithread;
-	using FlowType::T;
-	using FlowType::currentTes;
-	using FlowType::boundary;
-	using FlowType::yMinId;
-	using FlowType::yMaxId;
-	using FlowType::debugOut;
-	using FlowType::tolerance;
-	using FlowType::relax;
-	using FlowType::fluidBulkModulus;
-	using FlowType::equivalentCompressibility;
-	using FlowType::reApplyBoundaryConditions;
-	using FlowType::phiZero;
-	using FlowType::pressureChanged;
-	using FlowType::computedOnce;
-	using FlowType::resetNetwork;
-	using FlowType::tesselation;
-	using FlowType::resetRHS;
-	using FlowType::factorizeOnly;  // used for backgroundAction()
-	using FlowType::getCHOLMODPerfTimings;
-	using FlowType::saveMesh;
-	using FlowType::ompThreads;
-	using FlowType::reuseOrdering;
-	using FlowType::fluidRho;
-	using FlowType::fluidCp;
-	using FlowType::thermalEngine;
-	using FlowType::controlCavityPressure;
-	using FlowType::controlCavityVolumeChange;
-	using FlowType::cavityDV;
-	using FlowType::thermalPorosity;
+	template <class _Tesselation, class FlowType = FlowBoundingSphere<_Tesselation>> class FlowBoundingSphereLinSolv : public FlowType {
+	public:
+		DECLARE_TESSELATION_TYPES(FlowType)
+		typedef typename FlowType::Tesselation Tesselation;
+		using FlowType::boundary;
+		using FlowType::cavityDV;
+		using FlowType::computedOnce;
+		using FlowType::controlCavityPressure;
+		using FlowType::controlCavityVolumeChange;
+		using FlowType::currentTes;
+		using FlowType::debugOut;
+		using FlowType::equivalentCompressibility;
+		using FlowType::factorizeOnly; // used for backgroundAction()
+		using FlowType::fluidBulkModulus;
+		using FlowType::fluidCp;
+		using FlowType::fluidRho;
+		using FlowType::getCHOLMODPerfTimings;
+		using FlowType::multithread;
+		using FlowType::ompThreads;
+		using FlowType::phiZero;
+		using FlowType::pressureChanged;
+		using FlowType::reApplyBoundaryConditions;
+		using FlowType::relax;
+		using FlowType::resetNetwork;
+		using FlowType::resetRHS;
+		using FlowType::reuseOrdering;
+		using FlowType::saveMesh;
+		using FlowType::T;
+		using FlowType::tesselation;
+		using FlowType::thermalEngine;
+		using FlowType::thermalPorosity;
+		using FlowType::tolerance;
+		using FlowType::useSolver;
+		using FlowType::yMaxId;
+		using FlowType::yMinId;
 
-	//! TAUCS DECs
-	vector<FiniteCellsIterator> orderedCells;
-	bool isLinearSystemSet;
-	bool isFullLinearSystemGSSet;
-	bool areCellsOrdered;//true when orderedCells is filled, turn it false after retriangulation
-	bool updatedRHS;
-	struct timeval start, end;
+		//! TAUCS DECs
+		vector<FiniteCellsIterator> orderedCells;
+		bool                        isLinearSystemSet;
+		bool                        isFullLinearSystemGSSet;
+		bool                        areCellsOrdered; //true when orderedCells is filled, turn it false after retriangulation
+		bool                        updatedRHS;
+		struct timeval              start, end;
 
-	#ifdef LINSOLV
-	//Eigen's sparse matrix and solver
-	Eigen::SparseMatrix<double> A;
-	//Eigen::SparseMatrix<std::complex<double>,RowMajor> Ga; for row major stuff?
-	typedef Eigen::Triplet<double> ETriplet;
-	std::vector<ETriplet> tripletList;//The list of non-zero components in Eigen sparse matrix
-	Eigen::CholmodDecomposition<Eigen::SparseMatrix<double>, Eigen::Lower > eSolver;
-	bool factorizedEigenSolver;
-	void exportMatrix(const char* filename) {ofstream f; f.open(filename); f<<A; f.close();};
-	void exportTriplets(const char* filename) {ofstream f; f.open(filename);
-		for (int k=0; k<A.outerSize(); ++k)
-		  	for (Eigen::SparseMatrix<double>::InnerIterator it(A,k); it; ++it) f<< it.row()<<" "<< it.col()<<" "<<it.value()<<endl; f.close();};
-	//Multi-threading seems to work fine for Cholesky decomposition, but it fails for the solve phase in which -j1 is the fastest,
-	//here we specify both thread numbers independently
-	int numFactorizeThreads;
-	int numSolveThreads;
-	#endif
-	#ifdef SUITESPARSE_VERSION_4
-	// cholmod direct solver (useSolver=4)
+#ifdef LINSOLV
+		//Eigen's sparse matrix and solver
+		Eigen::SparseMatrix<double> A;
+		//Eigen::SparseMatrix<std::complex<double>,RowMajor> Ga; for row major stuff?
+		typedef Eigen::Triplet<double>                                         ETriplet;
+		std::vector<ETriplet>                                                  tripletList; //The list of non-zero components in Eigen sparse matrix
+		Eigen::CholmodDecomposition<Eigen::SparseMatrix<double>, Eigen::Lower> eSolver;
+		bool                                                                   factorizedEigenSolver;
+		void                                                                   exportMatrix(const char* filename)
+		{
+			ofstream f;
+			f.open(filename);
+			f << A;
+			f.close();
+		};
+		void exportTriplets(const char* filename)
+		{
+			ofstream f;
+			f.open(filename);
+			for (int k = 0; k < A.outerSize(); ++k)
+				for (Eigen::SparseMatrix<double>::InnerIterator it(A, k); it; ++it)
+					f << it.row() << " " << it.col() << " " << it.value() << endl;
+			f.close();
+		};
+		//Multi-threading seems to work fine for Cholesky decomposition, but it fails for the solve phase in which -j1 is the fastest,
+		//here we specify both thread numbers independently
+		int numFactorizeThreads;
+		int numSolveThreads;
+#endif
+#ifdef SUITESPARSE_VERSION_4
+		// cholmod direct solver (useSolver=4)
 
-	cholmod_triplet* cholT;
-	cholmod_factor* L;
-	cholmod_factor* M;
-	cholmod_factor* N;
-	cholmod_sparse* Achol;
-	cholmod_common com;
-	bool factorExists;
-	#ifdef PFV_GPU
-		#define CHOLMOD(name) cholmod_l_ ## name
+		cholmod_triplet* cholT;
+		cholmod_factor*  L;
+		cholmod_factor*  M;
+		cholmod_factor*  N;
+		cholmod_sparse*  Achol;
+		cholmod_common   com;
+		bool             factorExists;
+#ifdef PFV_GPU
+#define CHOLMOD(name) cholmod_l_##name
 		void add_T_entry(cholmod_triplet* T, long r, long c, double x)
 		{
-			size_t k = T->nnz;
-			((long*)T->i)[k] = r;
-			((long*)T->j)[k] = c;
+			size_t k           = T->nnz;
+			((long*)T->i)[k]   = r;
+			((long*)T->j)[k]   = c;
 			((double*)T->x)[k] = x;
 			T->nnz++;
 		}
-	#else
-		#define CHOLMOD(name) cholmod_ ## name
+#else
+#define CHOLMOD(name) cholmod_##name
 		void add_T_entry(cholmod_triplet* T, int r, int c, double x)
 		{
-			size_t k = T->nnz;
-			((int*)T->i)[k] = r;
-			((int*)T->j)[k] = c;
+			size_t k           = T->nnz;
+			((int*)T->i)[k]    = r;
+			((int*)T->j)[k]    = c;
 			((double*)T->x)[k] = x;
 			T->nnz++;
 		}
-	#endif
-	void CHOLMOD(wildcard)() {cout << "using cholmod in form of " << __func__ << endl;};
-	#endif
+#endif
+		void CHOLMOD(wildcard)() { cout << "using cholmod in form of " << __func__ << endl; };
+#endif
 
-	#ifdef TAUCS_LIB
-	taucs_ccs_matrix SystemMatrix;
-	taucs_ccs_matrix* T_A;
-	taucs_ccs_matrix* Fccs;
-	void* F;//The taucs factor
-	#endif
-
-
-	int T_nnz;
-	int ncols;
-	int T_size;
-
-	double pTime1, pTime2;
-	int pTimeInt, pTime1N, pTime2N;
-
-	double ZERO;
-	vector<double> T_an;//(size*5);
-	vector<int> T_jn;//(size+1);
-	vector<int> T_ia;//(size*5);
-	vector<double> T_f;//(size); // right-hand size vector object
-	vector<CellHandle> T_cells;//(size)
-	int T_index;
-
-	vector<double> T_b;
-	vector<double> T_bv;
-	vector <double> T_x, P_x;
-	vector <double> bodv;
-	vector <double> xodv;
-	int*         perm;
-	int*         invperm;
-	bool pardisoInitialized;
-	//! END TAUCS DECs
+#ifdef TAUCS_LIB
+		taucs_ccs_matrix  SystemMatrix;
+		taucs_ccs_matrix* T_A;
+		taucs_ccs_matrix* Fccs;
+		void*             F; //The taucs factor
+#endif
 
 
-	//! Pardiso
-	int*    ia;
-	int*    ja;
-	double*  a;
-	int nnz;
-	int mtype;        /* Real symmetric positive def. matrix */
-	double* b;
-	double* x;// the unknown vector to solve Ax=b
-	int      nrhs;          /* Number of right hand sides. */
-	void *pt[64];
-	int      iparm[64];
-	double   dparm[64];
-	int      maxfct, mnum, phase, error, msglvl, solver;
-	int      num_procs;
-	char    *var;
-	int      i;
-	double   ddum;              /* Double dummy */
-	int      idum;              /* Integer dummy. */
-	//! end pardiso
+		int T_nnz;
+		int ncols;
+		int T_size;
 
-	/// EXTERNAL_GS part
-	vector<vector<double> > fullAvalues;//contains Kij's and 1/(sum Kij) in 5th value (for use in GuaussSeidel)
-	vector<vector<double*> > fullAcolumns;//contains columns numbers
-	vector<double> gsP;//a vector of pressures
-	vector<double> gsdV;//a vector of dV
-	vector<double> gsB;//a vector of dV
+		double pTime1, pTime2;
+		int    pTimeInt, pTime1N, pTime2N;
 
-public:
-	virtual ~FlowBoundingSphereLinSolv();
-	FlowBoundingSphereLinSolv();
+		double             ZERO;
+		vector<double>     T_an; //(size*5);
+		vector<int>        T_jn; //(size+1);
+		vector<int>        T_ia; //(size*5);
+		vector<double>     T_f; //(size); // right-hand size vector object
+		vector<CellHandle> T_cells; //(size)
+		int                T_index;
 
-	///Linear system solve
-	virtual int setLinearSystem(Real dt);
-	void vectorizedGaussSeidel(Real dt);
-	virtual int setLinearSystemFullGS(Real dt);
-	void augmentConductivityMatrix(Real dt);
-	void setNewCellTemps(bool addToDeltaTemp);
-	void initializeInternalEnergy();
+		vector<double> T_b;
+		vector<double> T_bv;
+		vector<double> T_x, P_x;
+		vector<double> bodv;
+		vector<double> xodv;
+		int*           perm;
+		int*           invperm;
+		bool           pardisoInitialized;
+		//! END TAUCS DECs
 
-	int taucsSolveTest();
-	int taucsSolve(Real dt);
-	int pardisoSolveTest();
-	int pardisoSolve(Real dt);
-	int eigenSolve(Real dt);
-	int cholmodSolve(Real dt);
 
-	void copyGsToCells();
-	void copyCellsToGs(Real dt);
+		//! Pardiso
+		int*    ia;
+		int*    ja;
+		double* a;
+		int     nnz;
+		int     mtype; /* Real symmetric positive def. matrix */
+		double* b;
+		double* x; // the unknown vector to solve Ax=b
+		int     nrhs; /* Number of right hand sides. */
+		void*   pt[64];
+		int     iparm[64];
+		double  dparm[64];
+		int     maxfct, mnum, phase, error, msglvl, solver;
+		int     num_procs;
+		char*   var;
+		int     i;
+		double  ddum; /* Double dummy */
+		int     idum; /* Integer dummy. */
+		//! end pardiso
 
-	void copyLinToCells();
-	virtual void copyCellsToLin(Real dt);
-	void swapFwd (double* v, int i);
-	void swapFwd (int* v, int i);
-	void sortV(int k1, int k2, int* is, double* ds);
+		/// EXTERNAL_GS part
+		vector<vector<double>>  fullAvalues; //contains Kij's and 1/(sum Kij) in 5th value (for use in GuaussSeidel)
+		vector<vector<double*>> fullAcolumns; //contains columns numbers
+		vector<double>          gsP; //a vector of pressures
+		vector<double>          gsdV; //a vector of dV
+		vector<double>          gsB; //a vector of dV
 
-	virtual void gaussSeidel (Real dt) {
-		switch (useSolver) {
-		case 0:
-			vectorizedGaussSeidel(dt);
-			break;
-		case 1:
-			taucsSolve(dt);
-			break;
-		case 2:
-			pardisoSolve(dt);
-			break;
-		case 3:
-			eigenSolve(dt);
-			break;
-		case 4:
-			cholmodSolve(dt);
-			break;
+	public:
+		virtual ~FlowBoundingSphereLinSolv();
+		FlowBoundingSphereLinSolv();
+
+		///Linear system solve
+		virtual int setLinearSystem(Real dt);
+		void        vectorizedGaussSeidel(Real dt);
+		virtual int setLinearSystemFullGS(Real dt);
+		void        augmentConductivityMatrix(Real dt);
+		void        setNewCellTemps(bool addToDeltaTemp);
+		void        initializeInternalEnergy();
+
+		int taucsSolveTest();
+		int taucsSolve(Real dt);
+		int pardisoSolveTest();
+		int pardisoSolve(Real dt);
+		int eigenSolve(Real dt);
+		int cholmodSolve(Real dt);
+
+		void copyGsToCells();
+		void copyCellsToGs(Real dt);
+
+		void         copyLinToCells();
+		virtual void copyCellsToLin(Real dt);
+		void         swapFwd(double* v, int i);
+		void         swapFwd(int* v, int i);
+		void         sortV(int k1, int k2, int* is, double* ds);
+
+		virtual void gaussSeidel(Real dt)
+		{
+			switch (useSolver) {
+				case 0: vectorizedGaussSeidel(dt); break;
+				case 1: taucsSolve(dt); break;
+				case 2: pardisoSolve(dt); break;
+				case 3: eigenSolve(dt); break;
+				case 4: cholmodSolve(dt); break;
+			}
+			computedOnce = true;
 		}
-		computedOnce=true;
-	}
-	virtual void resetLinearSystem();
-	virtual void resetRHS() {updatedRHS=false;};
-};
+		virtual void resetLinearSystem();
+		virtual void resetRHS() { updatedRHS = false; };
+	};
 
 } //namespace CGT
 

@@ -2,39 +2,41 @@
 #ifdef YADE_POTENTIAL_BLOCKS
 #pragma once
 
-#include <vector>
 #include <core/Shape.hpp>
 #include <Eigen/Core>
 #include <Eigen/LU>
 #include <Eigen/QR>
+#include <vector>
 //#include <lib/base/openmp-accu.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
 
 class PotentialBlock : public Shape {
-	public:
-		struct Planes{ vector<int> vertexID; };
-//		struct Vertices{ vector<int> edgeID;  vector<int> planeID; };
-//		struct Edges{ vector<int> vertexID; };
+public:
+	struct Planes {
+		vector<int> vertexID;
+	};
+	//		struct Vertices{ vector<int> edgeID;  vector<int> planeID; };
+	//		struct Edges{ vector<int> vertexID; };
 
-		void addPlaneStruct();
-//		void addVertexStruct();
-//		void addEdgeStruct();
+	void addPlaneStruct();
+	//		void addVertexStruct();
+	//		void addEdgeStruct();
 
-		vector<Planes> planeStruct;
-//		vector<Vertices> vertexStruct;
-//		vector<Edges> edgeStruct;
+	vector<Planes> planeStruct;
+	//		vector<Vertices> vertexStruct;
+	//		vector<Edges> edgeStruct;
 
-//		Eigen::MatrixXd Amatrix;
-//		Eigen::MatrixXd Dmatrix;
-		virtual ~PotentialBlock ();
-		void postLoad(PotentialBlock&);
+	//		Eigen::MatrixXd Amatrix;
+	//		Eigen::MatrixXd Dmatrix;
+	virtual ~PotentialBlock();
+	void postLoad(PotentialBlock&);
 
-		double getDet(const Eigen::MatrixXd A);
-		double getSignedArea(const Vector3r pt1,const Vector3r pt2, const Vector3r pt3);
-		void calculateVertices();
-		void calculateInertia(Vector3r& centroid, Real& Ixx, Real& Iyy, Real& Izz,Real& Ixy, Real& Ixz, Real& Iyz);
+	double getDet(const Eigen::MatrixXd A);
+	double getSignedArea(const Vector3r pt1, const Vector3r pt2, const Vector3r pt3);
+	void   calculateVertices();
+	void   calculateInertia(Vector3r& centroid, Real& Ixx, Real& Iyy, Real& Izz, Real& Ixy, Real& Ixz, Real& Iyz);
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(PotentialBlock,Shape,"Geometry of PotentialBlock.",
@@ -104,7 +106,7 @@ class PotentialBlock : public Shape {
 	);
 	// clang-format on
 	//#endif
-	REGISTER_CLASS_INDEX(PotentialBlock,Shape);
+	REGISTER_CLASS_INDEX(PotentialBlock, Shape);
 };
 
 REGISTER_SERIALIZABLE(PotentialBlock);
@@ -114,8 +116,8 @@ REGISTER_SERIALIZABLE(PotentialBlock);
 #ifdef __cplusplus
 extern "C" {
 #endif
-	void dgesv_(const int *N, const int *nrhs, double *Hessian, const int *lda, int *ipiv, double *gradient, const int *ldb, int *info);
-	void dsyev_(const char *jobz, const char *uplo, const int *N, double *A, const int *lda, double *W, double *work, int *lwork, int *info);
+void dgesv_(const int* N, const int* nrhs, double* Hessian, const int* lda, int* ipiv, double* gradient, const int* ldb, int* info);
+void dsyev_(const char* jobz, const char* uplo, const int* N, double* A, const int* lda, double* W, double* work, int* lwork, int* info);
 #ifdef __cplusplus
 };
 #endif

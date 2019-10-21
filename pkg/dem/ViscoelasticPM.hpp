@@ -4,18 +4,18 @@
 
 #pragma once
 
-#include<pkg/common/ElastMat.hpp>
-#include<pkg/dem/FrictPhys.hpp>
-#include<pkg/common/Dispatching.hpp>
-#include<pkg/dem/ScGeom.hpp>
-#include<pkg/dem/DemXDofGeom.hpp>
-#include<pkg/common/MatchMaker.hpp>
-#include<pkg/common/InteractionLoop.hpp>
+#include <pkg/common/Dispatching.hpp>
+#include <pkg/common/ElastMat.hpp>
+#include <pkg/common/InteractionLoop.hpp>
+#include <pkg/common/MatchMaker.hpp>
+#include <pkg/dem/DemXDofGeom.hpp>
+#include <pkg/dem/FrictPhys.hpp>
+#include <pkg/dem/ScGeom.hpp>
 
 #ifdef YADE_SPH
-#include<pkg/common/SPHEngine.hpp>
+#include <pkg/common/SPHEngine.hpp>
 #endif
-#ifdef YADE_DEFORM 
+#ifdef YADE_DEFORM
 #include <core/PartialEngine.hpp>
 #endif
 
@@ -26,8 +26,8 @@ namespace yade { // Cannot have #include directive inside.
 /// Material
 /// Note: Shop::getViscoelasticFromSpheresInteraction can get kn,cn,ks,cs from a analytical solution of a pair spheres interaction problem.
 class ViscElMat : public FrictMat {
-	public:
-		virtual ~ViscElMat();
+public:
+	virtual ~ViscElMat();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(ViscElMat,FrictMat,"Material for simple viscoelastic model of contact from analytical solution of a pair spheres interaction problem  [Pournin2001]_ .",
 		((Real,tc,NaN,,"Contact time"))
@@ -52,15 +52,15 @@ class ViscElMat : public FrictMat {
 		createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(ViscElMat,FrictMat);
+	REGISTER_CLASS_INDEX(ViscElMat, FrictMat);
 };
 REGISTER_SERIALIZABLE(ViscElMat);
 
 /// Interaction physics
-class ViscElPhys : public FrictPhys{
-	public:
-		virtual ~ViscElPhys();
-		Real R;
+class ViscElPhys : public FrictPhys {
+public:
+	virtual ~ViscElPhys();
+	Real R;
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(ViscElPhys,FrictPhys,"IPhys created from :yref:`ViscElMat`, for use with :yref:`Law2_ScGeom_ViscElPhys_Basic`.",
 		((Real,cn,NaN,,"Normal viscous constant"))
@@ -81,21 +81,19 @@ class ViscElPhys : public FrictPhys{
 	)
 	// clang-format on
 #ifdef YADE_SPH
-		KernelFunction kernelFunctionCurrentPressure;
-		KernelFunction kernelFunctionCurrentVisco;
+	KernelFunction kernelFunctionCurrentPressure;
+	KernelFunction kernelFunctionCurrentVisco;
 #endif
-	REGISTER_CLASS_INDEX(ViscElPhys,FrictPhys);
+	REGISTER_CLASS_INDEX(ViscElPhys, FrictPhys);
 };
 REGISTER_SERIALIZABLE(ViscElPhys);
 
 /// Convert material to interaction physics.
 // Uses the rule of consecutively connection.
-class Ip2_ViscElMat_ViscElMat_ViscElPhys: public IPhysFunctor {
-	public :
-		static Real epsilon;
-		virtual void go(const shared_ptr<Material>& b1,
-					const shared_ptr<Material>& b2,
-					const shared_ptr<Interaction>& interaction);
+class Ip2_ViscElMat_ViscElMat_ViscElPhys : public IPhysFunctor {
+public:
+	static Real  epsilon;
+	virtual void go(const shared_ptr<Material>& b1, const shared_ptr<Material>& b2, const shared_ptr<Interaction>& interaction);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(Ip2_ViscElMat_ViscElMat_ViscElPhys,IPhysFunctor,"Convert 2 instances of :yref:`ViscElMat` to :yref:`ViscElPhys` using the rule of consecutive connection.",
  		((shared_ptr<MatchMaker>,tc,,,"Instance of :yref:`MatchMaker` determining contact time"))
@@ -104,18 +102,20 @@ class Ip2_ViscElMat_ViscElMat_ViscElPhys: public IPhysFunctor {
 		((shared_ptr<MatchMaker>,frictAngle,,,"Instance of :yref:`MatchMaker` determining how to compute interaction's friction angle. If ``None``, minimum value is used."))
 		);
 	// clang-format on
-	virtual void Calculate_ViscElMat_ViscElMat_ViscElPhys(const shared_ptr<Material>& b1, const shared_ptr<Material>& b2, const shared_ptr<Interaction>& interaction, shared_ptr<ViscElPhys> phys);
-	FUNCTOR2D(ViscElMat,ViscElMat);
+	virtual void Calculate_ViscElMat_ViscElMat_ViscElPhys(
+	        const shared_ptr<Material>& b1, const shared_ptr<Material>& b2, const shared_ptr<Interaction>& interaction, shared_ptr<ViscElPhys> phys);
+	FUNCTOR2D(ViscElMat, ViscElMat);
 };
 REGISTER_SERIALIZABLE(Ip2_ViscElMat_ViscElMat_ViscElPhys);
 
 /// Constitutive law
 /// This class provides linear viscoelastic contact model
-class Law2_ScGeom_ViscElPhys_Basic: public LawFunctor {
-	public :
-		virtual bool go(shared_ptr<IGeom>&, shared_ptr<IPhys>&, Interaction*);
-	public :
-	FUNCTOR2D(ScGeom,ViscElPhys);
+class Law2_ScGeom_ViscElPhys_Basic : public LawFunctor {
+public:
+	virtual bool go(shared_ptr<IGeom>&, shared_ptr<IPhys>&, Interaction*);
+
+public:
+	FUNCTOR2D(ScGeom, ViscElPhys);
 	// clang-format off
 	YADE_CLASS_BASE_DOC(Law2_ScGeom_ViscElPhys_Basic,LawFunctor,"Linear viscoelastic model operating on ScGeom and ViscElPhys. "
       "The contact law is visco-elastic in the normal direction, and visco-elastic frictional in the tangential direction. "
@@ -150,18 +150,17 @@ class Law2_ScGeom_ViscElPhys_Basic: public LawFunctor {
 };
 REGISTER_SERIALIZABLE(Law2_ScGeom_ViscElPhys_Basic);
 
-Real contactParameterCalculation(const Real& l1,const Real& l2);
-bool computeForceTorqueViscEl(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I, Vector3r & force, Vector3r & torque1, Vector3r & torque2);
+Real contactParameterCalculation(const Real& l1, const Real& l2);
+bool computeForceTorqueViscEl(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I, Vector3r& force, Vector3r& torque1, Vector3r& torque2);
 
 Real get_en_from_cn(const Real& cn, const Real& m, const Real& kn);
 Real find_cn_from_en(const Real& en, const Real& m, const Real& kn, const shared_ptr<Interaction>& interaction);
 
 
-
 #ifdef YADE_DEFORM
-class DeformControl: public PartialEngine{
-	public:
-		virtual void action();
+class DeformControl : public PartialEngine {
+public:
+	virtual void action();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(DeformControl,PartialEngine,"This engine implements particle deformation with const. volume, see [Haustein2017]_ . ",
 		// Attrs
@@ -175,4 +174,3 @@ REGISTER_SERIALIZABLE(DeformControl);
 #endif
 
 } // namespace yade
-

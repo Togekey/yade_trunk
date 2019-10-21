@@ -18,205 +18,252 @@
 // #define TWOPHASEFLOW
 #ifdef TWOPHASEFLOW
 #include "FlowEngine_TwoPhaseFlowEngineT.hpp"
-#include<Eigen/SparseLU>
+#include <Eigen/SparseLU>
 
 #ifdef LINSOLV
-      #include <cholmod.h>
+#include <cholmod.h>
 #endif
 
 namespace yade { // Cannot have #include directive inside.
 
 /// We can add data to the Info types by inheritance
-class TwoPhaseCellInfo : public FlowCellInfo_TwoPhaseFlowEngineT
-{
-	public:
-  	bool isWRes;//Flags for marking cell(pore unit) state: isWettingReservoirCell, isNonWettingReservoirCell, isTrappedWettingCell, isTrappedNonWettingCell
+class TwoPhaseCellInfo : public FlowCellInfo_TwoPhaseFlowEngineT {
+public:
+	bool isWRes; //Flags for marking cell(pore unit) state: isWettingReservoirCell, isNonWettingReservoirCell, isTrappedWettingCell, isTrappedNonWettingCell
 	bool isNWRes;
 	bool isTrapW;
 	bool isTrapNW;
-	double saturation;//the saturation of single pore (will be used in quasi-static imbibition and dynamic flow)
-	double trapCapP;//for calculating the pressure of trapped pore, cell->info().p() = pressureNW- trapCapP. OR cell->info().p() = pressureW + trapCapP
-	bool hasInterface; //Indicated whether a NW-W interface is present within the pore body
+	double saturation; //the saturation of single pore (will be used in quasi-static imbibition and dynamic flow)
+	double trapCapP; //for calculating the pressure of trapped pore, cell->info().p() = pressureNW- trapCapP. OR cell->info().p() = pressureW + trapCapP
+	bool   hasInterface; //Indicated whether a NW-W interface is present within the pore body
 	std::vector<double> poreThroatRadius;
-	double poreBodyRadius;
-	double poreBodyVolume;
-	double porosity;
-	int windowsID;//a temp cell info for experiment comparison(used by chao)
-	double solidLine [4][4];//the length of intersecting line between sphere and facet. [i][j] is for facet "i" and sphere (facetVertices)"[i][j]". Last component [i][3] for 1/sumLines in the facet "i" (used by chao).
-	
-	//DynamicTwoPhaseFlow 
+	double              poreBodyRadius;
+	double              poreBodyVolume;
+	double              porosity;
+	int                 windowsID; //a temp cell info for experiment comparison(used by chao)
+	double              solidLine
+	        [4]
+	        [4]; //the length of intersecting line between sphere and facet. [i][j] is for facet "i" and sphere (facetVertices)"[i][j]". Last component [i][3] for 1/sumLines in the facet "i" (used by chao).
+
+	//DynamicTwoPhaseFlow
 	std::vector<double> entryPressure;
 	std::vector<double> entrySaturation;
-	std::vector<int> poreNeighbors;
-	std::vector<int> poreIdConnectivity;
+	std::vector<int>    poreNeighbors;
+	std::vector<int>    poreIdConnectivity;
 	std::vector<double> listOfkNorm;
 	std::vector<double> listOfkNorm2;
 	std::vector<double> listOfEntrySaturation;
 	std::vector<double> listOfEntryPressure;
 	std::vector<double> kNorm2;
 	std::vector<double> listOfThroatArea;
-	std::vector<double> particleSurfaceArea;	//Surface area of four particles enclosing one grain-based tetrahedra
-	double accumulativeDVSwelling;
-	double saturation2;
-	int numberFacets;
-	int isFictiousId;
-	double mergedVolume;
-	int mergednr;
-	unsigned int mergedID;
-	double thresholdSaturation;
-	double flux;
-	double accumulativeDV; 	
-	double airWaterArea;
-	bool isWResInternal;
-      	double conductivityWRes;
-	double minSaturation;
-	int poreId;
-	bool airBC;
-	bool waterBC;
-	double thresholdPressure;
-	double apparentSolidVolume;
-	double dvSwelling;
-	double dvTPF;
-	bool isNWResDef;
-	int invadedFrom;
-	int label;//for marking disconnected clusters. NW-res: 0; W-res: 1; W-clusters by 2,3,4...
+	std::vector<double> particleSurfaceArea; //Surface area of four particles enclosing one grain-based tetrahedra
+	double              accumulativeDVSwelling;
+	double              saturation2;
+	int                 numberFacets;
+	int                 isFictiousId;
+	double              mergedVolume;
+	int                 mergednr;
+	unsigned int        mergedID;
+	double              thresholdSaturation;
+	double              flux;
+	double              accumulativeDV;
+	double              airWaterArea;
+	bool                isWResInternal;
+	double              conductivityWRes;
+	double              minSaturation;
+	int                 poreId;
+	bool                airBC;
+	bool                waterBC;
+	double              thresholdPressure;
+	double              apparentSolidVolume;
+	double              dvSwelling;
+	double              dvTPF;
+	bool                isNWResDef;
+	int                 invadedFrom;
+	int                 label; //for marking disconnected clusters. NW-res: 0; W-res: 1; W-clusters by 2,3,4...
 
-	TwoPhaseCellInfo (void)
+	TwoPhaseCellInfo(void)
 	{
-		saturation2 = 0.0;
+		saturation2  = 0.0;
 		isFictiousId = 0;
-		isWRes = true; isNWRes = false; isTrapW = false; isTrapNW = false;
-		saturation = 1.0;
+		isWRes       = true;
+		isNWRes      = false;
+		isTrapW      = false;
+		isTrapNW     = false;
+		saturation   = 1.0;
 		hasInterface = false;
-		trapCapP = 0;
+		trapCapP     = 0;
 		poreThroatRadius.resize(4, 0);
-		kNorm2.resize(4,0);
+		kNorm2.resize(4, 0);
 		poreBodyRadius = 0;
 		poreBodyVolume = 0;
-		windowsID = 0;
-		for (int k=0; k<4;k++) for (int l=0; l<4;l++) solidLine[k][l]=0;
-		
+		windowsID      = 0;
+		for (int k = 0; k < 4; k++)
+			for (int l = 0; l < 4; l++)
+				solidLine[k][l] = 0;
+
 		//dynamic TwoPhaseFlow
-		airBC = false;
-		waterBC = false;
-		numberFacets = 4;
-		mergedVolume = 0;
-		mergednr = 0;
-		mergedID = 0;
+		airBC               = false;
+		waterBC             = false;
+		numberFacets        = 4;
+		mergedVolume        = 0;
+		mergednr            = 0;
+		mergedID            = 0;
 		apparentSolidVolume = 0.0;
-		dvSwelling = 0.0;
-		entryPressure.resize(4,0);
-		entrySaturation.resize(4,0);
-		poreIdConnectivity.resize(4,-1);
-		particleSurfaceArea.resize(4,0);
+		dvSwelling          = 0.0;
+		entryPressure.resize(4, 0);
+		entrySaturation.resize(4, 0);
+		poreIdConnectivity.resize(4, -1);
+		particleSurfaceArea.resize(4, 0);
 		thresholdSaturation = 0.0;
-		flux = 0.0;			//NOTE can potentially be removed, currently not used but might be handy in future work
-		accumulativeDV = 0.0;
-		thresholdPressure = 0.0;
-		airWaterArea = 0.0;
-		accumulativeDV = 0.0;
-		minSaturation = 0.0;
-		poreId = -1;
-		isWResInternal = false;
-		dvTPF = 0.0;			//FIXME dvTPF is currently only used to impose pressure as dv() cannot be imposed from FlowEngine currently
-		isNWResDef = false;
-		conductivityWRes = 0.0;
-		invadedFrom = 0;
-		label=-1;
-		porosity=0.;
+		flux                = 0.0; //NOTE can potentially be removed, currently not used but might be handy in future work
+		accumulativeDV      = 0.0;
+		thresholdPressure   = 0.0;
+		airWaterArea        = 0.0;
+		accumulativeDV      = 0.0;
+		minSaturation       = 0.0;
+		poreId              = -1;
+		isWResInternal      = false;
+		dvTPF               = 0.0; //FIXME dvTPF is currently only used to impose pressure as dv() cannot be imposed from FlowEngine currently
+		isNWResDef          = false;
+		conductivityWRes    = 0.0;
+		invadedFrom         = 0;
+		label               = -1;
+		porosity            = 0.;
 	}
-	
 };
 
 class TwoPhaseVertexInfo : public FlowVertexInfo_TwoPhaseFlowEngineT {
-	public:
+public:
 	//same here if needed
 };
 
-typedef TemplateFlowEngine_TwoPhaseFlowEngineT<TwoPhaseCellInfo,TwoPhaseVertexInfo> TwoPhaseFlowEngineT;
+typedef TemplateFlowEngine_TwoPhaseFlowEngineT<TwoPhaseCellInfo, TwoPhaseVertexInfo> TwoPhaseFlowEngineT;
 REGISTER_SERIALIZABLE(TwoPhaseFlowEngineT);
 
 // A class to represent isolated single-phase cluster (main application in convective drying at the moment)
-class PhaseCluster : public Serializable
-{
-		double totalCellVolume;
-		bool factorized;
-// 		CellHandle entryPoreHandle;
+class PhaseCluster : public Serializable {
+	double totalCellVolume;
+	bool   factorized;
+	// 		CellHandle entryPoreHandle;
 
-	public :
-		typedef TwoPhaseFlowEngineT::CellHandle CellHandle;
-		typedef TwoPhaseFlowEngineT::Tesselation Tesselation;
-		typedef std::pair<std::pair<unsigned int,unsigned int>,double> Interface_t;
-		struct Interface : Interface_t {
-			unsigned outerIndex;// local index to outer cell from inner cell (from 0 to 3)
-			Real volume; // for tracking movements of the interface
-			Real capillaryP; // local capillary pressure
-			Real conductivity; //TODO: to be used instead of default one if not zero
-			CellHandle innerCell;
-			Interface (Interface_t i) : Interface_t(i),outerIndex(100),volume(0),capillaryP(0),conductivity(0)  {};
-		};
-		virtual ~PhaseCluster();
-		PhaseCluster (Tesselation& t) : PhaseCluster() {tes=&t; LC=NULL; ex=NULL; if (not tes) LOG_WARN("invalid initialization");}
-// 		PhaseCluster () {tes=NULL; LOG_WARN("avoid default constructor, 'tes' not initialized");}
-		Tesselation* tes;//point back to the full data structure
-		vector<CellHandle> pores;
-		vector<Interface> interfaces;
-// 		TwoPhaseFlowEngineT::RTriangulation* tri;
-		#ifdef LINSOLV
-		cholmod_common comC;
-		cholmod_factor* LC;
-		cholmod_dense* ex;//the pressure field
-		cholmod_common* pComC;
-// 		cholmod_dense** pEx = &ex;
-// 		cholmod_l_start(&comC);
-		void solvePressure();
-		void resetSolver() {if (LC) cholmod_l_free_factor(&LC, &comC); if (ex) cholmod_l_free_dense(&ex, &comC); factorized=false;}
-		#endif
-		
-		void reset() {label=entryPore=-1;volume=entryRadius=interfacialArea=0; pores.clear(); interfaces.clear(); resetSolver();}
-		
-		//merge another cluster into the current one, interfaces are duplicated selectively
-		//start is the cell leading to connectivity (preconditon: there's only one connecting cell)
-		void mergeCluster (PhaseCluster& otherCluster, const CellHandle& start) {
-			this->resetSolver();
-			for (auto p=otherCluster.pores.begin();p!=otherCluster.pores.end();p++) (*p)->info().label=label;
-// 			for (auto i=otherCluster.interfaces.begin();i!=otherCluster.interfaces.end();i++) i->first.firstlabel=label;
-			pores.insert(pores.end(), otherCluster.pores.begin(), otherCluster.pores.end());
-			for (auto itf = otherCluster.interfaces.begin(); itf != otherCluster.interfaces.end(); itf++)
-				if (itf->first.second != start->info().id) interfaces.push_back(*itf);
-			otherCluster.reset();
-		}
-		
-		vector<int> getPores() { vector<int> res;
-			for (vector<CellHandle>::iterator it =  pores.begin(); it!=pores.end(); it++) res.push_back((*it)->info().id);
-			return res;}
-			
-		boost::python::list getInterfaces(int cellId=-1){
-			boost::python::list ints;
-			for (vector<Interface>::iterator it =  interfaces.begin(); it!=interfaces.end(); it++)
-				if (cellId==-1 or unsigned(cellId)==it->first.first) ints.append(boost::python::make_tuple(it->first.first,it->first.second,it->second, it-interfaces.begin()));
-			return ints;
-		}
-		Real getFlux(unsigned nf) {
-			const CellHandle& innerCell = interfaces[nf].innerCell;
-			return innerCell->info().kNorm()[interfaces[nf].outerIndex] *
-				( innerCell->info().p() + interfaces[nf].capillaryP - innerCell->neighbor(interfaces[nf].outerIndex)->info().p());
-		}
-		Real getCapVol(unsigned nf) {return interfaces[nf].volume;}
-		Real getConductivity(unsigned nf) {
-			const CellHandle& innerCell = interfaces[nf].innerCell;
-			return innerCell->info().kNorm()[interfaces[nf].outerIndex];
-		}
+public:
+	typedef TwoPhaseFlowEngineT::CellHandle                          CellHandle;
+	typedef TwoPhaseFlowEngineT::Tesselation                         Tesselation;
+	typedef std::pair<std::pair<unsigned int, unsigned int>, double> Interface_t;
+	struct Interface : Interface_t {
+		unsigned   outerIndex; // local index to outer cell from inner cell (from 0 to 3)
+		Real       volume; // for tracking movements of the interface
+		Real       capillaryP; // local capillary pressure
+		Real       conductivity; //TODO: to be used instead of default one if not zero
+		CellHandle innerCell;
+		Interface(Interface_t i)
+		        : Interface_t(i)
+		        , outerIndex(100)
+		        , volume(0)
+		        , capillaryP(0)
+		        , conductivity(0) {};
+	};
+	virtual ~PhaseCluster();
+	PhaseCluster(Tesselation& t)
+	        : PhaseCluster()
+	{
+		tes = &t;
+		LC  = NULL;
+		ex  = NULL;
+		if (not tes)
+			LOG_WARN("invalid initialization");
+	}
+	// 		PhaseCluster () {tes=NULL; LOG_WARN("avoid default constructor, 'tes' not initialized");}
+	Tesselation*       tes; //point back to the full data structure
+	vector<CellHandle> pores;
+	vector<Interface>  interfaces;
+	// 		TwoPhaseFlowEngineT::RTriangulation* tri;
+#ifdef LINSOLV
+	cholmod_common  comC;
+	cholmod_factor* LC;
+	cholmod_dense*  ex; //the pressure field
+	cholmod_common* pComC;
+	// 		cholmod_dense** pEx = &ex;
+	// 		cholmod_l_start(&comC);
+	void solvePressure();
+	void resetSolver()
+	{
+		if (LC)
+			cholmod_l_free_factor(&LC, &comC);
+		if (ex)
+			cholmod_l_free_dense(&ex, &comC);
+		factorized = false;
+	}
+#endif
 
-		void setCapPressure(unsigned nf, Real pcap) {interfaces[nf].capillaryP=pcap;}
-		Real getCapPressure(unsigned nf) {return interfaces[nf].capillaryP;}
-		void setCapVol(unsigned nf, Real vcap) {interfaces[nf].volume=vcap;}
-		Real updateCapVol(unsigned nf, Real dt) {interfaces[nf].volume+=dt*getFlux(nf); /*LOG_WARN(interfaces[nf].volume);*/ return interfaces[nf].volume;}
-		void updateCapVolList(Real dt){
-			for (unsigned it = 0; it < interfaces.size(); ++it)
-			        interfaces[it].volume+=dt*getFlux(it);
-		}
-		
+	void reset()
+	{
+		label = entryPore = -1;
+		volume = entryRadius = interfacialArea = 0;
+		pores.clear();
+		interfaces.clear();
+		resetSolver();
+	}
+
+	//merge another cluster into the current one, interfaces are duplicated selectively
+	//start is the cell leading to connectivity (preconditon: there's only one connecting cell)
+	void mergeCluster(PhaseCluster& otherCluster, const CellHandle& start)
+	{
+		this->resetSolver();
+		for (auto p = otherCluster.pores.begin(); p != otherCluster.pores.end(); p++)
+			(*p)->info().label = label;
+		// 			for (auto i=otherCluster.interfaces.begin();i!=otherCluster.interfaces.end();i++) i->first.firstlabel=label;
+		pores.insert(pores.end(), otherCluster.pores.begin(), otherCluster.pores.end());
+		for (auto itf = otherCluster.interfaces.begin(); itf != otherCluster.interfaces.end(); itf++)
+			if (itf->first.second != start->info().id)
+				interfaces.push_back(*itf);
+		otherCluster.reset();
+	}
+
+	vector<int> getPores()
+	{
+		vector<int> res;
+		for (vector<CellHandle>::iterator it = pores.begin(); it != pores.end(); it++)
+			res.push_back((*it)->info().id);
+		return res;
+	}
+
+	boost::python::list getInterfaces(int cellId = -1)
+	{
+		boost::python::list ints;
+		for (vector<Interface>::iterator it = interfaces.begin(); it != interfaces.end(); it++)
+			if (cellId == -1 or unsigned(cellId) == it->first.first)
+				ints.append(boost::python::make_tuple(it->first.first, it->first.second, it->second, it - interfaces.begin()));
+		return ints;
+	}
+	Real getFlux(unsigned nf)
+	{
+		const CellHandle& innerCell = interfaces[nf].innerCell;
+		return innerCell->info().kNorm()[interfaces[nf].outerIndex]
+		        * (innerCell->info().p() + interfaces[nf].capillaryP - innerCell->neighbor(interfaces[nf].outerIndex)->info().p());
+	}
+	Real getCapVol(unsigned nf) { return interfaces[nf].volume; }
+	Real getConductivity(unsigned nf)
+	{
+		const CellHandle& innerCell = interfaces[nf].innerCell;
+		return innerCell->info().kNorm()[interfaces[nf].outerIndex];
+	}
+
+	void setCapPressure(unsigned nf, Real pcap) { interfaces[nf].capillaryP = pcap; }
+	Real getCapPressure(unsigned nf) { return interfaces[nf].capillaryP; }
+	void setCapVol(unsigned nf, Real vcap) { interfaces[nf].volume = vcap; }
+	Real updateCapVol(unsigned nf, Real dt)
+	{
+		interfaces[nf].volume += dt * getFlux(nf); /*LOG_WARN(interfaces[nf].volume);*/
+		return interfaces[nf].volume;
+	}
+	void updateCapVolList(Real dt)
+	{
+		for (unsigned it = 0; it < interfaces.size(); ++it)
+			interfaces[it].volume += dt * getFlux(it);
+	}
+
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(PhaseCluster,Serializable,"Preliminary.",
 		((int,label,-1,,"Unique label of this cluster, should be reflected in pores of this cluster."))
@@ -248,14 +295,13 @@ class PhaseCluster : public Serializable
 };
 REGISTER_SERIALIZABLE(PhaseCluster);
 
-class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
-{
-	public :
-	double airBoundaryPressure = 0.0;
-	std::vector<CellHandle> listOfPores;
-	bool imposeDeformationFluxTPFSwitch =false;
-	double totalCellVolume;
-	vector<shared_ptr<PhaseCluster> > clusters; // the list of clusters
+class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT {
+public:
+	double                           airBoundaryPressure = 0.0;
+	std::vector<CellHandle>          listOfPores;
+	bool                             imposeDeformationFluxTPFSwitch = false;
+	double                           totalCellVolume;
+	vector<shared_ptr<PhaseCluster>> clusters; // the list of clusters
 
 	//We can overload every functions of the base engine to make it behave differently
 	//if we overload action() like this, this engine is doing nothing in a standard timestep, it can still have useful functions
@@ -268,95 +314,129 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	void savePhaseVtk(const char* folder, bool withBoundaries);
 
 	//compute entry pore throat radius (drainage)
-	void computePoreThroatRadiusMethod1();//MS-P method
-	void computePoreThroatRadiusTrickyMethod1();//set the radius of pore throat between side pores negative.
+	void   computePoreThroatRadiusMethod1(); //MS-P method
+	void   computePoreThroatRadiusTrickyMethod1(); //set the radius of pore throat between side pores negative.
 	double computeEffPoreThroatRadius(CellHandle cell, int j);
 	double computeEffPoreThroatRadiusFine(CellHandle cell, int j);
 	double computeMSPRcByPosRadius(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC);
 	double computeTriRadian(double a, double b, double c);
-	double computeEffRcByPosRadius(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC){double reff=solver->computeEffectiveRadiusByPosRadius(makeCgPoint(posA),rA,makeCgPoint(posB),rB,makeCgPoint(posC),rC); return reff<0?1.0e-10:reff;};
-	double bisection(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC, double a, double b);
-	double computeDeltaForce(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC, double r);
+	double computeEffRcByPosRadius(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC)
+	{
+		double reff = solver->computeEffectiveRadiusByPosRadius(makeCgPoint(posA), rA, makeCgPoint(posB), rB, makeCgPoint(posC), rC);
+		return reff < 0 ? 1.0e-10 : reff;
+	};
+	double
+	bisection(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC, double a, double b);
+	double
+	computeDeltaForce(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC, double r);
 
-	void computePoreThroatRadiusMethod2();//radius of the inscribed circle
-	void computePoreThroatRadiusMethod3();//radius of area-equivalent circle
-	
+	void computePoreThroatRadiusMethod2(); //radius of the inscribed circle
+	void computePoreThroatRadiusMethod3(); //radius of area-equivalent circle
+
 	///begin of invasion (mainly drainage) model
 	void initialization();
 	void initializeReservoirs();
 
-	void invasion();//functions can be shared by two modes
-	void invasionSingleCell(CellHandle cell);
-	void updatePressure();
+	void   invasion(); //functions can be shared by two modes
+	void   invasionSingleCell(CellHandle cell);
+	void   updatePressure();
 	double getMinDrainagePc();
 	double getMaxImbibitionPc();
-	double getSaturation(bool isSideBoundaryIncluded=false);
+	double getSaturation(bool isSideBoundaryIncluded = false);
 
-	void invasion1();//with-trap
+	void invasion1(); //with-trap
 	void updateReservoirs1();
 	void WResRecursion(CellHandle cell);
 	void NWResRecursion(CellHandle cell);
 	void checkTrap(double pressure);
 	void updateReservoirLabel();
-	void invasion2();//without-trap
+	void invasion2(); //without-trap
 	void updateReservoirs2();
 	///end of invasion model
-	
+
 	//## Clusters ##
 	//FIXME: clusters have a pointers to solver->tesselation(), they won't be deserialized correctly, probably needs a post_load() and/or something in TPF.initialization()
 	void updateCellLabel();
 	void updateSingleCellLabelRecursion(CellHandle cell, PhaseCluster* cluster);
-	void clusterGetFacet(PhaseCluster* cluster, CellHandle cell, int facet);//update cluster inetrfacial area and max entry radius wrt to a facet
-	void clusterGetPore(PhaseCluster* cluster, CellHandle cell);//simple add pore to cluster, updating flags and cluster volume
-	vector<int> clusterInvadePore(PhaseCluster* cluster, CellHandle cell);//remove pore from cluster, if it splits the cluster in many pieces introduce new one(s)
-	vector<int> clusterInvadePoreFast(PhaseCluster* cluster, CellHandle cell);//nearly the same as above but faster and using splitCLuster() internally, warning: entry pcap is NOT updated since this function is supposed to be used for viscous invasion, OTOH interfaces are updated
-	vector<int> clusterOutvadePore(unsigned startingId, unsigned imbibedId, int index); //imbibe adjacent pore, including merge clusters if necessary. Returns ids of merged clusters. Giving index of the facet in cluster::interfaces should speedup its removal 
-// 	vector<int> clusterAddPore(PhaseCluster* cluster, CellHandle cell);// add a pore to a cluster, merge existing clusters if needed and return the merged ones
-	vector<int> splitCluster(PhaseCluster* cluster, CellHandle cellInit);//an attempt to optimize cluster splitting by skipping some simple cases before triggering a long recursive process
-	unsigned markRecursively(const CellHandle& cell, int newLabel);// mark and count accessible cells with same label as 'cell' and connected to it
-	vector<int> pyClusterInvadePore(int cellId) {
+	void clusterGetFacet(PhaseCluster* cluster, CellHandle cell, int facet); //update cluster inetrfacial area and max entry radius wrt to a facet
+	void clusterGetPore(PhaseCluster* cluster, CellHandle cell); //simple add pore to cluster, updating flags and cluster volume
+	vector<int>
+	            clusterInvadePore(PhaseCluster* cluster, CellHandle cell); //remove pore from cluster, if it splits the cluster in many pieces introduce new one(s)
+	vector<int> clusterInvadePoreFast(
+	        PhaseCluster* cluster,
+	        CellHandle
+	                cell); //nearly the same as above but faster and using splitCLuster() internally, warning: entry pcap is NOT updated since this function is supposed to be used for viscous invasion, OTOH interfaces are updated
+	vector<int> clusterOutvadePore(
+	        unsigned startingId,
+	        unsigned imbibedId,
+	        int      index); //imbibe adjacent pore, including merge clusters if necessary. Returns ids of merged clusters. Giving index of the facet in cluster::interfaces should speedup its removal
+	// 	vector<int> clusterAddPore(PhaseCluster* cluster, CellHandle cell);// add a pore to a cluster, merge existing clusters if needed and return the merged ones
+	vector<int> splitCluster(
+	        PhaseCluster* cluster,
+	        CellHandle    cellInit); //an attempt to optimize cluster splitting by skipping some simple cases before triggering a long recursive process
+	unsigned    markRecursively(const CellHandle& cell, int newLabel); // mark and count accessible cells with same label as 'cell' and connected to it
+	vector<int> pyClusterInvadePore(int cellId)
+	{
 		int label = solver->T[solver->currentTes].cellHandles[cellId]->info().label;
-		if (label<1) {LOG_WARN("the pore is not in a cluster, label="<<label); return vector<int>();}
-		return clusterInvadePore(clusters[label].get(), solver->tesselation().cellHandles[cellId]);}
-	vector<int> pyClusterInvadePoreFast(int cellId) {
+		if (label < 1) {
+			LOG_WARN("the pore is not in a cluster, label=" << label);
+			return vector<int>();
+		}
+		return clusterInvadePore(clusters[label].get(), solver->tesselation().cellHandles[cellId]);
+	}
+	vector<int> pyClusterInvadePoreFast(int cellId)
+	{
 		int label = solver->T[solver->currentTes].cellHandles[cellId]->info().label;
-		if (label<1) {LOG_WARN("the pore is not in a cluster, label="<<label); return vector<int>();}
-		return clusterInvadePoreFast(clusters[label].get(), solver->T[solver->currentTes].cellHandles[cellId]);}
+		if (label < 1) {
+			LOG_WARN("the pore is not in a cluster, label=" << label);
+			return vector<int>();
+		}
+		return clusterInvadePoreFast(clusters[label].get(), solver->T[solver->currentTes].cellHandles[cellId]);
+	}
 	boost::python::list pyClusters();
-	bool connectedAroundEdge(const RTriangulation& Tri, CellHandle& cell, unsigned facet1, unsigned facet2);
-// 	int getMaxCellLabel();
+	bool                connectedAroundEdge(const RTriangulation& Tri, CellHandle& cell, unsigned facet1, unsigned facet2);
+	// 	int getMaxCellLabel();
 
 	//compute forces
-	void computeFacetPoreForcesWithCache(bool onlyCache=false);	
-	void computeCapillaryForce(bool addForces, bool permanently) {
+	void computeFacetPoreForcesWithCache(bool onlyCache = false);
+	void computeCapillaryForce(bool addForces, bool permanently)
+	{
 		computeFacetPoreForcesWithCache(false);
 		if (addForces) {
-			for (FiniteVerticesIterator v = solver->tesselation().Triangulation().finite_vertices_begin(); v != solver->tesselation().Triangulation().finite_vertices_end(); ++v) {
-				if (permanently) scene->forces.setPermForce(v->info().id(),makeVector3r(v->info().forces));
-				else scene->forces.addForce(v->info().id(),makeVector3r(v->info().forces));}
+			for (FiniteVerticesIterator v = solver->tesselation().Triangulation().finite_vertices_begin();
+			     v != solver->tesselation().Triangulation().finite_vertices_end();
+			     ++v) {
+				if (permanently)
+					scene->forces.setPermForce(v->info().id(), makeVector3r(v->info().forces));
+				else
+					scene->forces.addForce(v->info().id(), makeVector3r(v->info().forces));
+			}
 		}
 	}
-	
+
 	//combine with pendular model
-	boost::python::list getPotentialPendularSpheresPair() {
-	  RTriangulation& Tri = solver->T[solver->currentTes].Triangulation();
-	  boost::python::list bridgeIds;
-	  FiniteEdgesIterator ed_it = Tri.finite_edges_begin();
-	  for ( ; ed_it!=Tri.finite_edges_end(); ed_it++ ) {
-	    if (detectBridge(ed_it)==true) {
-	      const VertexInfo& vi1=(ed_it->first)->vertex(ed_it->second)->info();
-	      const VertexInfo& vi2=(ed_it->first)->vertex(ed_it->third)->info();
-	      const int& id1 = vi1.id();
-	      const int& id2 = vi2.id();
-	      bridgeIds.append(boost::python::make_tuple(id1,id2));}}
-	  return bridgeIds;
+	boost::python::list getPotentialPendularSpheresPair()
+	{
+		RTriangulation&     Tri = solver->T[solver->currentTes].Triangulation();
+		boost::python::list bridgeIds;
+		FiniteEdgesIterator ed_it = Tri.finite_edges_begin();
+		for (; ed_it != Tri.finite_edges_end(); ed_it++) {
+			if (detectBridge(ed_it) == true) {
+				const VertexInfo& vi1 = (ed_it->first)->vertex(ed_it->second)->info();
+				const VertexInfo& vi2 = (ed_it->first)->vertex(ed_it->third)->info();
+				const int&        id1 = vi1.id();
+				const int&        id2 = vi2.id();
+				bridgeIds.append(boost::python::make_tuple(id1, id2));
+			}
+		}
+		return bridgeIds;
 	}
 	bool detectBridge(RTriangulation::Finite_edges_iterator& edge);
-	
+
 	//Library TwoPhaseFlow
 	double getKappa(int numberFacets);
 	double getChi(int numberFacets);
- 	double getLambda(int numberFacets);
+	double getLambda(int numberFacets);
 	double getN(int numberFacets);
 	double getDihedralAngle(int numberFacets);
 
@@ -367,25 +447,25 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	void getMergedCellStats();
 	void calculateResidualSaturation();
 	void adjustUnresolvedPoreThroatsAfterMerging();
- 	void actionMergingAlgorithm();
+	void actionMergingAlgorithm();
 	void checkVolumeConservationAfterMergingAlgorithm();
 
 	//Dynamic Engine
-	void actionTPF();
-	void solvePressure();
-	void setBoundaryConditions();
-	void setInitialConditions();
-	void setPoreNetwork();
-	void setListOfPores();
-	void getQuantities();
+	void   actionTPF();
+	void   solvePressure();
+	void   setBoundaryConditions();
+	void   setInitialConditions();
+	void   setPoreNetwork();
+	void   setListOfPores();
+	void   getQuantities();
 	double porePressureFromPcS(CellHandle cell, double saturation);
 	double getSolidVolumeInCell(CellHandle cell);
-	
-	double getConstantC4(CellHandle cell);  
+
+	double getConstantC4(CellHandle cell);
 	double getConstantC3(CellHandle cell);
 	double dsdp(CellHandle cell, double pw);
-	double poreSaturationFromPcS(CellHandle cell,double pw);
-	
+	double poreSaturationFromPcS(CellHandle cell, double pw);
+
 	void reTriangulate();
 	void readTriangulation();
 	void initializationTriangulation();
@@ -396,115 +476,151 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	void imposeDeformationFluxTPF();
 	void updateDeformationFluxTPF();
 	void copyPoreDataToCells();
-        void verifyCompatibilityBC();
+	void verifyCompatibilityBC();
 	void makeListOfPoresInCells(bool fast);
 
-        
-	std::vector<double> leftOverVolumePerSphere;
-	std::vector<double> untreatedAreaPerSphere;
-	std::vector<unsigned int> finishedUpdating;
-	std::vector<double> waterVolume;
-	std::vector< std::vector<unsigned int> > tetrahedra;
-	std::vector< std::vector<double> > solidFractionSpPerTet;
-	std::vector<double> deltaVoidVolume;
-	std::vector<double> leftOverDVPerSphere;
-	std::vector<double> saturationList;
-	std::vector<bool> hasInterfaceList;
-	std::vector<double> listOfFlux;
-	std::vector<double> listOfMergedVolume;
 
-	
-	Eigen::SparseMatrix<double> aMatrix;
-	typedef Eigen::Triplet<double> ETriplet;
-	std::vector<ETriplet> tripletList;
-	Eigen::SparseLU<Eigen::SparseMatrix<double,Eigen::ColMajor>,Eigen::COLAMDOrdering<int> > eSolver;
-	
-	int getCell2(double posX, double posY, double posZ){	//Should be fixed properly
-	  RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
-	  CellHandle cell = tri.locate(CGT::Sphere(posX,posY,posZ));
-	  return cell->info().id;
+	std::vector<double>                    leftOverVolumePerSphere;
+	std::vector<double>                    untreatedAreaPerSphere;
+	std::vector<unsigned int>              finishedUpdating;
+	std::vector<double>                    waterVolume;
+	std::vector<std::vector<unsigned int>> tetrahedra;
+	std::vector<std::vector<double>>       solidFractionSpPerTet;
+	std::vector<double>                    deltaVoidVolume;
+	std::vector<double>                    leftOverDVPerSphere;
+	std::vector<double>                    saturationList;
+	std::vector<bool>                      hasInterfaceList;
+	std::vector<double>                    listOfFlux;
+	std::vector<double>                    listOfMergedVolume;
+
+
+	Eigen::SparseMatrix<double>                                                               aMatrix;
+	typedef Eigen::Triplet<double>                                                            ETriplet;
+	std::vector<ETriplet>                                                                     tripletList;
+	Eigen::SparseLU<Eigen::SparseMatrix<double, Eigen::ColMajor>, Eigen::COLAMDOrdering<int>> eSolver;
+
+	int getCell2(double posX, double posY, double posZ)
+	{ //Should be fixed properly
+		RTriangulation& tri  = solver->T[solver->currentTes].Triangulation();
+		CellHandle      cell = tri.locate(CGT::Sphere(posX, posY, posZ));
+		return cell->info().id;
 	}
 
-	boost::python::list cellporeThroatConductivity(unsigned int id){ // Temporary function to allow for simulations in Python, can be easily accessed in c++
-	  boost::python::list ids;
-	  if (id>=solver->T[solver->currentTes].cellHandles.size()) {LOG_ERROR("id out of range, max value is "<<solver->T[solver->currentTes].cellHandles.size()); return ids;}
-	  for (unsigned int i=0;i<4;i++) ids.append(solver->T[solver->currentTes].cellHandles[id]->info().kNorm() [i]);
-	return ids;
+	boost::python::list cellporeThroatConductivity(unsigned int id)
+	{ // Temporary function to allow for simulations in Python, can be easily accessed in c++
+		boost::python::list ids;
+		if (id >= solver->T[solver->currentTes].cellHandles.size()) {
+			LOG_ERROR("id out of range, max value is " << solver->T[solver->currentTes].cellHandles.size());
+			return ids;
+		}
+		for (unsigned int i = 0; i < 4; i++)
+			ids.append(solver->T[solver->currentTes].cellHandles[id]->info().kNorm()[i]);
+		return ids;
 	}
-	
-      boost::python::list solidSurfaceAreaPerParticle(unsigned int id){ // Temporary function to allow for simulations in Python, can be easily accessed in c++
-	  boost::python::list ids;
-	  if (id>=solver->T[solver->currentTes].cellHandles.size()) {LOG_ERROR("id out of range, max value is "<<solver->T[solver->currentTes].cellHandles.size()); return ids;}
-	  for (unsigned int i=0;i<4;i++) ids.append(solver->T[solver->currentTes].cellHandles[id]->info().particleSurfaceArea[i]);
-	return ids;
+
+	boost::python::list solidSurfaceAreaPerParticle(unsigned int id)
+	{ // Temporary function to allow for simulations in Python, can be easily accessed in c++
+		boost::python::list ids;
+		if (id >= solver->T[solver->currentTes].cellHandles.size()) {
+			LOG_ERROR("id out of range, max value is " << solver->T[solver->currentTes].cellHandles.size());
+			return ids;
+		}
+		for (unsigned int i = 0; i < 4; i++)
+			ids.append(solver->T[solver->currentTes].cellHandles[id]->info().particleSurfaceArea[i]);
+		return ids;
 	}
 
 	//post-processing
 	void savePoreNetwork(const char* folder);
-// 	void saveVtk(const char* folder, bool withBoundaries) {bool initT=solver->noCache; solver->noCache=false; solver->saveVtk(folder,withBoundaries); solver->noCache=initT;}
-		
-	boost::python::list cellporeThroatRadius(unsigned int id){ 
-	  boost::python::list ids;
-	  if (id>=solver->T[solver->currentTes].cellHandles.size()) {LOG_ERROR("id out of range, max value is "<<solver->T[solver->currentTes].cellHandles.size()); return ids;}
-	  for (unsigned int i=0;i<4;i++) ids.append(solver->T[solver->currentTes].cellHandles[id]->info().poreThroatRadius[i]);
-	return ids;
+	// 	void saveVtk(const char* folder, bool withBoundaries) {bool initT=solver->noCache; solver->noCache=false; solver->saveVtk(folder,withBoundaries); solver->noCache=initT;}
+
+	boost::python::list cellporeThroatRadius(unsigned int id)
+	{
+		boost::python::list ids;
+		if (id >= solver->T[solver->currentTes].cellHandles.size()) {
+			LOG_ERROR("id out of range, max value is " << solver->T[solver->currentTes].cellHandles.size());
+			return ids;
+		}
+		for (unsigned int i = 0; i < 4; i++)
+			ids.append(solver->T[solver->currentTes].cellHandles[id]->info().poreThroatRadius[i]);
+		return ids;
 	}
 
-	boost::python::list getNeighbors(unsigned int id, bool withInfCell){ 
-		boost::python::list ids;
+	boost::python::list getNeighbors(unsigned int id, bool withInfCell)
+	{
+		boost::python::list   ids;
 		const RTriangulation& Tri = solver->tesselation().Triangulation();
-		if (id>=solver->tesselation().cellHandles.size()) {LOG_ERROR("id out of range, max value is "<<solver->T[solver->currentTes].cellHandles.size()); return ids;}
-		for (unsigned int i=0;i<4;i++) {
+		if (id >= solver->tesselation().cellHandles.size()) {
+			LOG_ERROR("id out of range, max value is " << solver->T[solver->currentTes].cellHandles.size());
+			return ids;
+		}
+		for (unsigned int i = 0; i < 4; i++) {
 			const CellHandle& neighbourCell = solver->tesselation().cellHandles[id]->neighbor(i);
-			if (withInfCell==true) ids.append(neighbourCell->info().id);
-			else if (!Tri.is_infinite(neighbourCell)) ids.append(neighbourCell->info().id);}
-		return ids;}
+			if (withInfCell == true)
+				ids.append(neighbourCell->info().id);
+			else if (!Tri.is_infinite(neighbourCell))
+				ids.append(neighbourCell->info().id);
+		}
+		return ids;
+	}
 
 	//TODO
 	//Dynamic code
-	boost::python::list cellEntrySaturation(unsigned int id){ // Temporary function to allow for simulations in Python, can be easily accessed in c++
-	  boost::python::list ids;
-	  if (id>=solver->T[solver->currentTes].cellHandles.size()) {LOG_ERROR("id out of range, max value is "<<solver->T[solver->currentTes].cellHandles.size()); return ids;}
-	  for (unsigned int i=0;i<4;i++) ids.append(solver->T[solver->currentTes].cellHandles[id]->info().entrySaturation[i]);
-	return ids;
+	boost::python::list cellEntrySaturation(unsigned int id)
+	{ // Temporary function to allow for simulations in Python, can be easily accessed in c++
+		boost::python::list ids;
+		if (id >= solver->T[solver->currentTes].cellHandles.size()) {
+			LOG_ERROR("id out of range, max value is " << solver->T[solver->currentTes].cellHandles.size());
+			return ids;
+		}
+		for (unsigned int i = 0; i < 4; i++)
+			ids.append(solver->T[solver->currentTes].cellHandles[id]->info().entrySaturation[i]);
+		return ids;
 	}
-	
+
 	//FIXME, needs to trigger initSolver() Somewhere, else changing flow.debug or other similar things after first calculation has no effect
 	//FIXME, I removed indexing cells from inside UnsatEngine (SoluteEngine shouldl be ok (?)) in order to get pressure computed, problem is they are not indexed at all if flow is not calculated
 
-	void computeOnePhaseFlow() {scene = Omega::instance().getScene().get(); if (!solver) cerr<<"no solver!"<<endl; solver->gaussSeidel(scene->dt);initSolver(*solver);}
+	void computeOnePhaseFlow()
+	{
+		scene = Omega::instance().getScene().get();
+		if (!solver)
+			cerr << "no solver!" << endl;
+		solver->gaussSeidel(scene->dt);
+		initSolver(*solver);
+	}
 	///manipulate/get/set on pore geometry
-	bool isCellNeighbor(unsigned int cell1, unsigned int cell2);
-	void setPoreThroatRadius(unsigned int cell1, unsigned int cell2, double radius);
+	bool   isCellNeighbor(unsigned int cell1, unsigned int cell2);
+	void   setPoreThroatRadius(unsigned int cell1, unsigned int cell2, double radius);
 	double getPoreThroatRadius(unsigned int cell1, unsigned int cell2);
 
-	CELL_SCALAR_GETTER(bool,.isWRes,cellIsWRes)
-	CELL_SCALAR_GETTER(bool,.isNWRes,cellIsNWRes)
-	CELL_SCALAR_GETTER(bool,.isTrapW,cellIsTrapW)
-	CELL_SCALAR_GETTER(bool,.isTrapNW,cellIsTrapNW)
-	CELL_SCALAR_SETTER(bool,.isNWRes,setCellIsNWRes)
-	CELL_SCALAR_SETTER(bool,.isWRes,setCellIsWRes)
-	CELL_SCALAR_GETTER(Real,.saturation,cellSaturation)
-	CELL_SCALAR_SETTER(Real,.saturation,setCellSaturation)
-	CELL_SCALAR_GETTER(bool,.isFictious,cellIsFictious) //Temporary function to allow for simulations in Python
-	CELL_SCALAR_GETTER(bool,.hasInterface,cellHasInterface) //Temporary function to allow for simulations in Python
-	CELL_SCALAR_GETTER(Real,.poreBodyRadius,cellInSphereRadius) //Temporary function to allow for simulations in Python	
-	CELL_SCALAR_SETTER(Real,.poreBodyRadius,setPoreBodyRadius) //Temporary function to allow for simulations in Python, for lbm coupling.	
-	CELL_SCALAR_GETTER(Real,.poreBodyVolume,cellVoidVolume) //Temporary function to allow for simulations in Python	
+	CELL_SCALAR_GETTER(bool, .isWRes, cellIsWRes)
+	CELL_SCALAR_GETTER(bool, .isNWRes, cellIsNWRes)
+	CELL_SCALAR_GETTER(bool, .isTrapW, cellIsTrapW)
+	CELL_SCALAR_GETTER(bool, .isTrapNW, cellIsTrapNW)
+	CELL_SCALAR_SETTER(bool, .isNWRes, setCellIsNWRes)
+	CELL_SCALAR_SETTER(bool, .isWRes, setCellIsWRes)
+	CELL_SCALAR_GETTER(Real, .saturation, cellSaturation)
+	CELL_SCALAR_SETTER(Real, .saturation, setCellSaturation)
+	CELL_SCALAR_GETTER(bool, .isFictious, cellIsFictious) //Temporary function to allow for simulations in Python
+	CELL_SCALAR_GETTER(bool, .hasInterface, cellHasInterface) //Temporary function to allow for simulations in Python
+	CELL_SCALAR_GETTER(Real, .poreBodyRadius, cellInSphereRadius) //Temporary function to allow for simulations in Python
+	CELL_SCALAR_SETTER(Real, .poreBodyRadius, setPoreBodyRadius) //Temporary function to allow for simulations in Python, for lbm coupling.
+	CELL_SCALAR_GETTER(Real, .poreBodyVolume, cellVoidVolume) //Temporary function to allow for simulations in Python
 
-	CELL_SCALAR_GETTER(Real,.mergedVolume,cellMergedVolume) //Temporary function to allow for simulations in Python
-	CELL_SCALAR_SETTER(Real,.dvTPF,setCellDV) //Temporary function to allow for simulations in Python
-	CELL_SCALAR_GETTER(Real,.porosity,cellPorosity)
-	CELL_SCALAR_SETTER(bool,.hasInterface,setCellHasInterface) //Temporary function to allow for simulations in Python
-	CELL_SCALAR_GETTER(int,.label,cellLabel)
-	CELL_SCALAR_GETTER(Real,.volume(),cellVolume) //Temporary function to allow for simulations in Python	
+	CELL_SCALAR_GETTER(Real, .mergedVolume, cellMergedVolume) //Temporary function to allow for simulations in Python
+	CELL_SCALAR_SETTER(Real, .dvTPF, setCellDV) //Temporary function to allow for simulations in Python
+	CELL_SCALAR_GETTER(Real, .porosity, cellPorosity)
+	CELL_SCALAR_SETTER(bool, .hasInterface, setCellHasInterface) //Temporary function to allow for simulations in Python
+	CELL_SCALAR_GETTER(int, .label, cellLabel)
+	CELL_SCALAR_GETTER(Real, .volume(), cellVolume) //Temporary function to allow for simulations in Python
 
 
 	//Dynamic Code
-	CELL_SCALAR_GETTER(Real,.thresholdSaturation,cellThresholdSaturation) //Temporary function to allow for simulations in Python	
-	CELL_SCALAR_GETTER(Real,.mergedID,cellMergedID) //Temporary function to allow for simulations in Python	
+	CELL_SCALAR_GETTER(Real, .thresholdSaturation, cellThresholdSaturation) //Temporary function to allow for simulations in Python
+	CELL_SCALAR_GETTER(Real, .mergedID, cellMergedID) //Temporary function to allow for simulations in Python
 
-	
+
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(TwoPhaseFlowEngine,TwoPhaseFlowEngineT,"documentation here",
 	((double,surfaceTension,0.0728,,"Water Surface Tension in contact with air at 20 Degrees Celsius is: 0.0728(N/m)"))
@@ -641,4 +757,3 @@ REGISTER_SERIALIZABLE(TwoPhaseFlowEngine);
 #endif //TwoPhaseFLOW
 
 #endif // FLOW_GUARD
- 

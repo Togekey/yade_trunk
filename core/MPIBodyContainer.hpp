@@ -1,79 +1,84 @@
-//Deepak kn, deepak.kn1990@gmail.com 
-// A dummy body container to serialize and send/recv in MPI messages. 
+//Deepak kn, deepak.kn1990@gmail.com
+// A dummy body container to serialize and send/recv in MPI messages.
 #pragma once
-#include <vector>
+#include <lib/base/Logging.hpp>
 #include <core/Body.hpp>
-#include <core/Scene.hpp>
 #include <core/BodyContainer.hpp>
 #include <core/Omega.hpp>
-#include <lib/base/Logging.hpp>
+#include <core/Scene.hpp>
 #include <mpi.h>
+#include <vector>
 
 namespace yade { // Cannot have #include directive inside.
 
-class MPIBodyContainer :  public Serializable{
+class MPIBodyContainer : public Serializable {
+public:
+	int subdomainRank; // MPI_Comm_rank(MPI_COMM_WORLD, &procRank) commented for testing.;
 
-  public:
+	void insertBody(int id)
+	{
+		const shared_ptr<Scene>&   scene         = Omega::instance().getScene();
+		shared_ptr<BodyContainer>& bodycontainer = scene->bodies;
+		shared_ptr<Body>           b             = (*bodycontainer)[id];
+		// if empty,  put body
+		if (bContainer.size() == 0) {
+			bContainer.push_back(b);
+		}
+		//check if body already exists
+		else {
+			int c = 0;
+			for (std::vector<shared_ptr<Body>>::iterator bodyIter = bContainer.begin(); bodyIter != bContainer.end(); ++bodyIter) {
+				const shared_ptr<Body>& inContainerBody = *(bodyIter);
+				if (inContainerBody->id == b->id) {
+					c += 1;
+				}
+			}
+			if (c == 0) {
+				bContainer.push_back(b);
+			}
+		}
+	}
 
-    int subdomainRank; // MPI_Comm_rank(MPI_COMM_WORLD, &procRank) commented for testing.;
+	void clearContainer();
 
-    void insertBody(int id) {
-      const shared_ptr<Scene>& scene = Omega::instance().getScene();
-      shared_ptr<BodyContainer>& bodycontainer = scene-> bodies;
-      shared_ptr<Body> b = (*bodycontainer)[id];
-      // if empty,  put body
-      if (bContainer.size() == 0 ){ bContainer.push_back(b); }
-      //check if body already exists
-      else {
-         int  c = 0;
-        for (std::vector<shared_ptr<Body> >::iterator bodyIter=bContainer.begin(); bodyIter != bContainer.end(); ++bodyIter ){
- 	        const shared_ptr<Body>& inContainerBody = *(bodyIter);
- 	        if (inContainerBody->id == b->id) {c += 1;}
-       } if (c==0){bContainer.push_back(b); }
-      }
-    }
+	virtual ~MPIBodyContainer() {};
 
-    void clearContainer();
+	void insertBodyListPy(boost::python::list& idList)
+	{
+		// insert a list of bodies
+		unsigned int listSize = boost::python::len(idList);
+		for (unsigned int i = 0; i != listSize; ++i) {
+			int b_id = boost::python::extract<int>(idList[i]);
+			insertBody(b_id);
+		}
+	}
 
-    virtual ~MPIBodyContainer(){};
+	void insertBodyList(const std::vector<Body::id_t>& idList)
+	{
+		for (unsigned int i = 0; i != idList.size(); ++i) {
+			insertBody(idList[i]);
+		}
+	}
 
-    void insertBodyListPy(boost::python::list&  idList) {
-      // insert a list of bodies
-      unsigned int listSize = boost::python::len(idList);
-      for (unsigned int i=0; i != listSize; ++i) {
-	      int  b_id = boost::python::extract <int> (idList[i]);
-	      insertBody(b_id);
-      }
-    }
-    
-    void insertBodyList(const std::vector<Body::id_t>& idList ){ 
-      for (unsigned int i=0; i != idList.size(); ++i) {
-	insertBody(idList[i]); 
-      }
-    }
+	unsigned int getCount() { return bContainer.size(); }
 
-    unsigned int getCount() {
-      return bContainer.size();
-    }
+	shared_ptr<Body> getBodyat(int pos) { return bContainer[pos]; }
 
-    shared_ptr<Body> getBodyat(int pos){
-      return bContainer[pos];
-    }
-    
-//     shared_ptr<Body> getBodybyId(int id ){
-//       
-//     }
+	//     shared_ptr<Body> getBodybyId(int id ){
+	//
+	//     }
 
-    
-    std::vector<Body::id_t> getIds(){
-      std::vector<Body::id_t> ids; 
-      for (unsigned int i=0; i != bContainer.size(); ++i) {
-	const shared_ptr<Body>& b = bContainer[i]; 
-	ids.push_back(b->id); 
-      }
-      return ids; 
-    }
-    
+
+	std::vector<Body::id_t> getIds()
+	{
+		std::vector<Body::id_t> ids;
+		for (unsigned int i = 0; i != bContainer.size(); ++i) {
+			const shared_ptr<Body>& b = bContainer[i];
+			ids.push_back(b->id);
+		}
+		return ids;
+	}
+
 
 	// clang-format off
   YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(MPIBodyContainer,Serializable,"a dummy container to serialize and send. ",
@@ -88,10 +93,9 @@ class MPIBodyContainer :  public Serializable{
   .def_readonly("subdomainRank", &MPIBodyContainer::subdomainRank, "origin rank of this container") 
   );
 	// clang-format on
-  
-  DECLARE_LOGGER;
+
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(MPIBodyContainer);
 
 } // namespace yade
-

@@ -12,9 +12,9 @@
 
 namespace yade { // Cannot have #include directive inside.
 
-class GlobalEngine: public Engine{
-	public :
-		virtual ~GlobalEngine() {};
+class GlobalEngine : public Engine {
+public:
+	virtual ~GlobalEngine() {};
 	// clang-format off
 	YADE_CLASS_BASE_DOC(GlobalEngine,Engine,"Engine that will generally affect the whole simulation (contrary to :yref:`PartialEngine`).");
 	// clang-format on
@@ -22,5 +22,3 @@ class GlobalEngine: public Engine{
 REGISTER_SERIALIZABLE(GlobalEngine);
 
 } // namespace yade
-
-

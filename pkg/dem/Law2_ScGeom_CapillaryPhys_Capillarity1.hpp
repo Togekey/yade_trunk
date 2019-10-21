@@ -10,17 +10,17 @@
 #pragma once
 
 #include <core/GlobalEngine.hpp>
-#include <set>
 #include <boost/tuple/tuple.hpp>
+#include <set>
 
-#include <vector>
-#include <list>
-#include <utility>
+#include <pkg/common/Dispatching.hpp>
 #include <pkg/dem/CapillaryPhys1.hpp>
-#include<pkg/common/Dispatching.hpp>
-#include <string>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <list>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -42,7 +42,6 @@ Rk: - the formulation is valid only for pendular menisci involving two grains (p
 /// !!! This version is deprecated. It should be updated to the new formalism -> ToDo !!!
 
 
-
 /// R = ratio(RadiusParticle1 on RadiusParticle2). Here, 10 R values from interpolation files (yade/extra/capillaryFiles), R = 1, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 //const int NB_R_VALUES = 10;
 
@@ -51,48 +50,46 @@ class Interaction;
 
 
 ///This container class is used to check if meniscii overlap. Wet interactions are put in a series of lists, with one list per body.
-class BodiesMenisciiList1
-{
+class BodiesMenisciiList1 {
 private:
-vector< list< shared_ptr<Interaction> > > interactionsOnBody;
+	vector<list<shared_ptr<Interaction>>> interactionsOnBody;
 
-//shared_ptr<Interaction> empty;
+	//shared_ptr<Interaction> empty;
 
 public:
-BodiesMenisciiList1();
-BodiesMenisciiList1(Scene* body);
-bool prepare(Scene* scene);
-bool insert(const shared_ptr<Interaction>& interaction);
-bool remove(const shared_ptr<Interaction>& interaction);
-list< shared_ptr<Interaction> >& operator[] (int index);
-int size();
-void display();
+	BodiesMenisciiList1();
+	BodiesMenisciiList1(Scene* body);
+	bool                           prepare(Scene* scene);
+	bool                           insert(const shared_ptr<Interaction>& interaction);
+	bool                           remove(const shared_ptr<Interaction>& interaction);
+	list<shared_ptr<Interaction>>& operator[](int index);
+	int                            size();
+	void                           display();
 
 
-bool initialized;
+	bool initialized;
 };
 
 /// This is the constitutive law
-class Law2_ScGeom_CapillaryPhys_Capillarity1 : public GlobalEngine
-{
-public :
-    void checkFusion();
+class Law2_ScGeom_CapillaryPhys_Capillarity1 : public GlobalEngine {
+public:
+	void checkFusion();
 
-    static DT dtVbased;
-    static DT dtPbased;
-    std::vector<MeniscusPhysicalData> solutions;
-    int switchTriangulation;//to detect switches between P-based and V-based data
+	static DT                         dtVbased;
+	static DT                         dtPbased;
+	std::vector<MeniscusPhysicalData> solutions;
+	int                               switchTriangulation; //to detect switches between P-based and V-based data
 
 
-    BodiesMenisciiList1 bodiesMenisciiList;
+	BodiesMenisciiList1 bodiesMenisciiList;
 
-    void action();
-     Real intEnergy();
-     Real swInterface();
-     Real wnInterface();
-     Real waterVolume();
-     void solver(Real suction, bool reset);
-     void triangulateData();
+	void action();
+	Real intEnergy();
+	Real swInterface();
+	Real wnInterface();
+	Real waterVolume();
+	void solver(Real suction, bool reset);
+	void triangulateData();
 
 	// clang-format off
     YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Law2_ScGeom_CapillaryPhys_Capillarity1,GlobalEngine,"This law allows one to take into account capillary forces/effects between spheres coming from the presence of interparticular liquid bridges (menisci).\n\nThe control parameter is the capillary pressure (or suction) Uc = ugas - Uliquid. Liquid bridges properties (volume V, extent over interacting grains delta1 and delta2) are computed as a result of the defined capillary pressure and of the interacting geometry (spheres radii and interparticular distance).\n\nReferences: in english [Scholtes2009b]_; more detailed, but in french [Scholtes2009d]_.\n\nThe law needs ascii files M(r=i) with i=R1/R2 to work (see https://yade-dem.org/wiki/CapillaryTriaxialTest). These ASCII files contain a set of results from the resolution of the Laplace-Young equation for different configurations of the interacting geometry."
@@ -122,8 +119,6 @@ public :
 };
 
 
-
 REGISTER_SERIALIZABLE(Law2_ScGeom_CapillaryPhys_Capillarity1);
 
 } // namespace yade
-

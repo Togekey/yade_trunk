@@ -8,49 +8,51 @@
 
 #pragma once
 
-#include<core/Omega.hpp>
-#include<pkg/common/BoundaryController.hpp>
-#include<core/Body.hpp>
+#include <core/Body.hpp>
+#include <core/Omega.hpp>
+#include <pkg/common/BoundaryController.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class Disp2DPropLoadEngine : public BoundaryController
-{
-	private :
-		Real	dgamma	// the increment of horizontal displacement in one timestep, part of the disturbation
-			,dh	// the increment of vertical displacement in one timestep, part of the disturbation
-			,H0	// the height of the top box, at the beginnig of the application of the disturbation
-			,X0	// the X-position of the top box, at the beginnig of the application of the disturbation
-			,Fn0,Ft0// the normal and tangential force acting on the top box, at...
-			,coordSs0,coordTot0
-			;
-		std::ofstream ofile;		
+class Disp2DPropLoadEngine : public BoundaryController {
+private:
+	Real dgamma // the increment of horizontal displacement in one timestep, part of the disturbation
+	        ,
+	        dh // the increment of vertical displacement in one timestep, part of the disturbation
+	        ,
+	        H0 // the height of the top box, at the beginnig of the application of the disturbation
+	        ,
+	        X0 // the X-position of the top box, at the beginnig of the application of the disturbation
+	        ,
+	        Fn0, Ft0 // the normal and tangential force acting on the top box, at...
+	        ,
+	        coordSs0, coordTot0;
+	std::ofstream ofile;
 
-		Real	alpha	// angle from the lower plate to the left box (trigo wise), as in other shear Engines, but here the Engine is able to find itself its value !
-			,dalpha	// the increment over alpha
-			;
+	Real alpha // angle from the lower plate to the left box (trigo wise), as in other shear Engines, but here the Engine is able to find itself its value !
+	        ,
+	        dalpha // the increment over alpha
+	        ;
 
-		bool	firstIt;// true if this is the first iteration, false else.
+	bool firstIt; // true if this is the first iteration, false else.
 
-		int	it_begin// the number of the it at which the computation starts
-			;
+	int it_begin // the number of the it at which the computation starts
+	        ;
 
-		shared_ptr<Body> leftbox;
-		shared_ptr<Body> rightbox;
-		shared_ptr<Body> frontbox;
-		shared_ptr<Body> backbox;
-		shared_ptr<Body> topbox;
-		shared_ptr<Body> boxbas;
-		void saveData();
-		void letDisturb();
-		void stopMovement();		// to cancel all the velocities
+	shared_ptr<Body> leftbox;
+	shared_ptr<Body> rightbox;
+	shared_ptr<Body> frontbox;
+	shared_ptr<Body> backbox;
+	shared_ptr<Body> topbox;
+	shared_ptr<Body> boxbas;
+	void             saveData();
+	void             letDisturb();
+	void             stopMovement(); // to cancel all the velocities
 
 
-	public :
-		void 	action()
-			,computeAlpha()
-			;
-		void postLoad(Disp2DPropLoadEngine&);
+public:
+	void action(), computeAlpha();
+	void postLoad(Disp2DPropLoadEngine&);
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(Disp2DPropLoadEngine,BoundaryController,
@@ -70,13 +72,8 @@ class Disp2DPropLoadEngine : public BoundaryController
 		alpha=Mathr::PI/2.0;
 	)
 	// clang-format on
-
-
-
-
 };
 
 REGISTER_SERIALIZABLE(Disp2DPropLoadEngine);
 
 } // namespace yade
-

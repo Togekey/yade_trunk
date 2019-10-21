@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include<core/PartialEngine.hpp>
-#include<lib/base/Math.hpp>
-#include<pkg/dem/TriaxialStressController.hpp>
+#include <lib/base/Math.hpp>
+#include <core/PartialEngine.hpp>
+#include <pkg/dem/TriaxialStressController.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -24,25 +24,24 @@ namespace yade { // Cannot have #include directive inside.
  *
  */
 
-class ThreeDTriaxialEngine : public TriaxialStressController
-{
-	public :
-// 		ThreeDTriaxialEngine();
-		virtual ~ThreeDTriaxialEngine();
-				
-		
-		Vector3r translationAxisy;
-		Vector3r translationAxisx;
-		Vector3r translationAxisz;
+class ThreeDTriaxialEngine : public TriaxialStressController {
+public:
+	// 		ThreeDTriaxialEngine();
+	virtual ~ThreeDTriaxialEngine();
 
-		//! is this the beginning of the simulation, after reading the scene? -> it is the first time that Yade passes trought the engine ThreeDTriaxialEngine
-		bool firstRun;
-				
-		virtual void action();
 
-		
-		///Change physical properties of interactions and/or bodies in the middle of a simulation (change only friction for the moment, complete this function to set cohesion and others before compression test)
-		void setContactProperties(Real frictionDegree);
+	Vector3r translationAxisy;
+	Vector3r translationAxisx;
+	Vector3r translationAxisz;
+
+	//! is this the beginning of the simulation, after reading the scene? -> it is the first time that Yade passes trought the engine ThreeDTriaxialEngine
+	bool firstRun;
+
+	virtual void action();
+
+
+	///Change physical properties of interactions and/or bodies in the middle of a simulation (change only friction for the moment, complete this function to set cohesion and others before compression test)
+	void setContactProperties(Real frictionDegree);
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(
@@ -84,4 +83,3 @@ class ThreeDTriaxialEngine : public TriaxialStressController
 REGISTER_SERIALIZABLE(ThreeDTriaxialEngine);
 
 } // namespace yade
-

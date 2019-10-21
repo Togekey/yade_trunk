@@ -16,88 +16,87 @@ Caulk, R. and Chareyre, B. (2019) An open framework for the simulation of therma
 
 //#define THERMAL
 #ifdef THERMAL
-#ifdef YADE_OPENMP  
-#pragma once 
+#ifdef YADE_OPENMP
+#pragma once
 
-#include<core/PartialEngine.hpp>
-#include<core/State.hpp>
-#include<pkg/dem/JointedCohesiveFrictionalPM.hpp>
-#include<pkg/dem/ScGeom.hpp>
-#include<pkg/common/Dispatching.hpp>
+#include <core/PartialEngine.hpp>
+#include <core/State.hpp>
+#include <pkg/common/Dispatching.hpp>
+#include <pkg/dem/JointedCohesiveFrictionalPM.hpp>
+#include <pkg/dem/ScGeom.hpp>
 
 #ifdef FLOW_ENGINE
 //#include<pkg/pfv/FlowEngine.hpp>
-#include<lib/triangulation/Tesselation.h>
-#include<lib/triangulation/FlowBoundingSphere.hpp>
 #include "FlowEngine_FlowEngineT.hpp"
-#include<pkg/dem/TesselationWrapper.hpp>
-#include<lib/triangulation/Network.hpp>
+#include <lib/triangulation/FlowBoundingSphere.hpp>
+#include <lib/triangulation/Network.hpp>
+#include <lib/triangulation/Tesselation.h>
+#include <pkg/dem/TesselationWrapper.hpp>
 #endif
 
 namespace yade { // Cannot have #include directive inside.
 
-class ThermalEngine : public PartialEngine
-{
-	public:
-		typedef TemplateFlowEngine_FlowEngineT<FlowCellInfo_FlowEngineT,FlowVertexInfo_FlowEngineT> FlowEngineT;
-		typedef FlowEngineT::Tesselation					Tesselation;
-		typedef FlowEngineT::RTriangulation					RTriangulation;
-		typedef FlowEngineT::FiniteCellsIterator				FiniteCellsIterator;
-		typedef RTriangulation::Finite_facets_iterator				FiniteFacetsIterator;
-		typedef FlowEngineT::CellHandle						CellHandle;
-		typedef FlowEngineT::VertexHandle	VertexHandle;
-		typedef FlowEngineT::Facet						Facet;
-		typedef std::vector<CellHandle>		VectorCell;
-		typedef typename VectorCell::iterator		VCellIterator;
+class ThermalEngine : public PartialEngine {
+public:
+	typedef TemplateFlowEngine_FlowEngineT<FlowCellInfo_FlowEngineT, FlowVertexInfo_FlowEngineT> FlowEngineT;
+	typedef FlowEngineT::Tesselation                                                             Tesselation;
+	typedef FlowEngineT::RTriangulation                                                          RTriangulation;
+	typedef FlowEngineT::FiniteCellsIterator                                                     FiniteCellsIterator;
+	typedef RTriangulation::Finite_facets_iterator                                               FiniteFacetsIterator;
+	typedef FlowEngineT::CellHandle                                                              CellHandle;
+	typedef FlowEngineT::VertexHandle                                                            VertexHandle;
+	typedef FlowEngineT::Facet                                                                   Facet;
+	typedef std::vector<CellHandle>                                                              VectorCell;
+	typedef typename VectorCell::iterator                                                        VCellIterator;
 
-	public:
-		Scene* scene;
-		bool energySet; //initialize the internal energy of the particles
-		FlowEngineT* flow;
-        	bool timeStepEstimated;
-       		Real thermalDT;
-        	bool conductionIter;
-        	int elapsedIters;
-        	int conductionIterPeriod;
-        	Real elapsedTime;
-        	bool first;
-        	bool runConduction;
-        	Real maxTimeStep;
-		Real Pr;
-		Real Nu;
-		Real NutimesFluidK;
-		double cavitySolidVolumeChange;
-		double cavityVolume;
-		double cavityDtemp;
-		
-		virtual ~ThermalEngine();
-		virtual void action();
-		void setReynoldsNumbers();
-		void setInitialValues();
-		void applyTempDeltaToSolids(Real delT);
-		void resetFlowBoundaryTemps();
-		void resetBoundaryFluxSums();
-		void setConductionBoundary();
-		void thermalExpansion();
-		void initializeInternalEnergy();
-        	void computeNewPoreTemperatures();
-        	void computeNewParticleTemperatures();
-		void computeSolidFluidFluxes();
-		void computeFluidFluidConduction();
-		void updateForces();
-		void computeVertexSphericalArea();
-		void computeFlux(CellHandle& cell, const shared_ptr<Body>& b, const double surfaceArea);
-		void computeSolidSolidFluxes();
-        	void timeStepEstimate();
-		CVector cellBarycenter(const CellHandle& cell);
-        	void computeCellVolumeChangeFromDeltaTemp(CellHandle& cell,double cavDens);
-		void accountForCavitySolidVolumeChange();
-		void accountForCavityThermalVolumeChange();
-		void unboundCavityParticles();
-        	void computeCellVolumeChangeFromSolidVolumeChange(CellHandle& cell);
-        	Real getThermalDT() {return thermalDT;}
-        	int getConductionIterPeriod() {return conductionIterPeriod;}
-        	Real getMaxTimeStep() {return maxTimeStep;}
+public:
+	Scene*       scene;
+	bool         energySet; //initialize the internal energy of the particles
+	FlowEngineT* flow;
+	bool         timeStepEstimated;
+	Real         thermalDT;
+	bool         conductionIter;
+	int          elapsedIters;
+	int          conductionIterPeriod;
+	Real         elapsedTime;
+	bool         first;
+	bool         runConduction;
+	Real         maxTimeStep;
+	Real         Pr;
+	Real         Nu;
+	Real         NutimesFluidK;
+	double       cavitySolidVolumeChange;
+	double       cavityVolume;
+	double       cavityDtemp;
+
+	virtual ~ThermalEngine();
+	virtual void action();
+	void         setReynoldsNumbers();
+	void         setInitialValues();
+	void         applyTempDeltaToSolids(Real delT);
+	void         resetFlowBoundaryTemps();
+	void         resetBoundaryFluxSums();
+	void         setConductionBoundary();
+	void         thermalExpansion();
+	void         initializeInternalEnergy();
+	void         computeNewPoreTemperatures();
+	void         computeNewParticleTemperatures();
+	void         computeSolidFluidFluxes();
+	void         computeFluidFluidConduction();
+	void         updateForces();
+	void         computeVertexSphericalArea();
+	void         computeFlux(CellHandle& cell, const shared_ptr<Body>& b, const double surfaceArea);
+	void         computeSolidSolidFluxes();
+	void         timeStepEstimate();
+	CVector      cellBarycenter(const CellHandle& cell);
+	void         computeCellVolumeChangeFromDeltaTemp(CellHandle& cell, double cavDens);
+	void         accountForCavitySolidVolumeChange();
+	void         accountForCavityThermalVolumeChange();
+	void         unboundCavityParticles();
+	void         computeCellVolumeChangeFromSolidVolumeChange(CellHandle& cell);
+	Real         getThermalDT() { return thermalDT; }
+	int          getConductionIterPeriod() { return conductionIterPeriod; }
+	Real         getMaxTimeStep() { return maxTimeStep; }
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(ThermalEngine,PartialEngine,"An engine typically used in combination with FlowEngine to simulate thermal-hydraulic-mechanical processes. Framework description and demonstration presented within the following paper [Caulk2019a]_ :Caulk, R.A. and Chareyre, B. (2019) An open framework for the simulation of thermal-hydraulic-mechanical processes in discrete element systems. Thermal Process Engineering: Proceedings of DEM8 International Conference for Discrete Element Methods, Enschede Netherlands, July 2019.",
 		/*attributes*/
@@ -149,13 +148,10 @@ class ThermalEngine : public PartialEngine
 	)
 	// clang-format on
 	DECLARE_LOGGER;
-
-	
 };
 REGISTER_SERIALIZABLE(ThermalEngine);
 
 } // namespace yade
 
-#endif//THERMAL
-#endif//YADE_OPENMP
-
+#endif //THERMAL
+#endif //YADE_OPENMP

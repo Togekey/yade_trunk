@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include<core/TimeStepper.hpp>
+#include <core/TimeStepper.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -20,25 +20,23 @@ class Interaction;
 class BodyContainer;
 class Scene;
 
-class GlobalStiffnessTimeStepper : public TimeStepper
-{
-	private :
-		vector<Vector3r> stiffnesses;
-		vector<Vector3r> Rstiffnesses;
-		vector<Vector3r> viscosities;
-		vector<Vector3r> Rviscosities;
-		void computeStiffnesses(Scene*);
+class GlobalStiffnessTimeStepper : public TimeStepper {
+private:
+	vector<Vector3r> stiffnesses;
+	vector<Vector3r> Rstiffnesses;
+	vector<Vector3r> viscosities;
+	vector<Vector3r> Rviscosities;
+	void             computeStiffnesses(Scene*);
 
-		Real		newDt;
-		bool		computedSomething,
- 				computedOnce;
-		void findTimeStepFromBody(const shared_ptr<Body>& body, Scene * ncb);
-	
-	public :
-		virtual ~GlobalStiffnessTimeStepper();
-	
-		virtual void computeTimeStep(Scene*);
-		virtual bool isActivated();
+	Real newDt;
+	bool computedSomething, computedOnce;
+	void findTimeStepFromBody(const shared_ptr<Body>& body, Scene* ncb);
+
+public:
+	virtual ~GlobalStiffnessTimeStepper();
+
+	virtual void computeTimeStep(Scene*);
+	virtual bool isActivated();
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR(
 			GlobalStiffnessTimeStepper,TimeStepper,"An engine assigning the time-step as a fraction of the minimum eigen-period in the problem. The derivation is detailed in the chapter on :ref:`DEM formulation <DEMSimulations>`. The viscEl option enables to evaluate the timestep in a similar way for the visco-elastic contact law :yref:`Law2_ScGeom_ViscElPhys_Basic`, more detail in :yref:`GlobalStiffnessTimestepper::viscEl`. ",
@@ -51,10 +49,9 @@ class GlobalStiffnessTimeStepper : public TimeStepper
 			((bool,viscEl,false,,"To use with :yref:`ViscElPhys`. if True, evaluate separetly the minimum eigen-period in the problem considering only the elastic contribution on one hand (spring only), and only the viscous contribution on the other hand (dashpot only). Take then the minimum of the two and use the safety coefficient :yref:`GlobalStiffnessTimestepper::timestepSafetyCoefficient` to take into account the possible coupling between the two contribution.")),
 			computedOnce=false;)
 	// clang-format on
-		DECLARE_LOGGER;
+	DECLARE_LOGGER;
 };
 
 REGISTER_SERIALIZABLE(GlobalStiffnessTimeStepper);
 
 } // namespace yade
-

@@ -12,9 +12,9 @@ namespace yade { // Cannot have #include directive inside.
 
 YADE_PLUGIN((DeformableElementMaterial)(LinIsoElastMat)(LinIsoRayleighDampElastMat));
 
-DeformableElementMaterial::~DeformableElementMaterial(void){}
-LinIsoElastMat::~LinIsoElastMat(void){}
-LinIsoRayleighDampElastMat::~LinIsoRayleighDampElastMat(void){}
+DeformableElementMaterial::~DeformableElementMaterial(void) {}
+LinIsoElastMat::~LinIsoElastMat(void) {}
+LinIsoRayleighDampElastMat::~LinIsoRayleighDampElastMat(void) {}
 
 } // namespace yade
 

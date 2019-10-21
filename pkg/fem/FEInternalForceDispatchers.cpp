@@ -12,7 +12,7 @@
 namespace yade { // Cannot have #include directive inside.
 
 YADE_PLUGIN((InternalForceFunctor)(InternalForceDispatcher));
-InternalForceFunctor::~InternalForceFunctor(){};
+InternalForceFunctor::~InternalForceFunctor() {};
 
 
 /********************************************************************

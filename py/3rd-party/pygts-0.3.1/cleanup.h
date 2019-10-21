@@ -35,10 +35,9 @@
 #ifndef __PYGTS_CLEANUP_H__
 #define __PYGTS_CLEANUP_H__
 
-GList* pygts_vertices_merge(GList* vertices, gdouble epsilon,
-			    gboolean (* check) (GtsVertex *, GtsVertex *));
-void pygts_vertex_cleanup(GtsSurface *s, gdouble threhold);
-void pygts_edge_cleanup(GtsSurface * s);
-void pygts_face_cleanup(GtsSurface * s);
+GList* pygts_vertices_merge(GList* vertices, gdouble epsilon, gboolean (*check)(GtsVertex*, GtsVertex*));
+void   pygts_vertex_cleanup(GtsSurface* s, gdouble threhold);
+void   pygts_edge_cleanup(GtsSurface* s);
+void   pygts_face_cleanup(GtsSurface* s);
 
 #endif /* __PYGTS_CLEANUP_H__ */

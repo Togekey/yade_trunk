@@ -1,11 +1,11 @@
 // (c) 2007 Vaclav Smilauer <eudoxos@arcig.cz>
- 
+
 #pragma once
 
-#include<core/Body.hpp>
-#include<lib/base/Logging.hpp>
-#include<lib/base/Math.hpp>
-#include<core/PartialEngine.hpp>
+#include <lib/base/Logging.hpp>
+#include <lib/base/Math.hpp>
+#include <core/Body.hpp>
+#include <core/PartialEngine.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -52,53 +52,59 @@ namespace yade { // Cannot have #include directive inside.
 
 class NewtonIntegrator;
 
-class Clump: public Shape {
-	public:
-		typedef std::map<Body::id_t,Se3r> MemberMap;
+class Clump : public Shape {
+public:
+	typedef std::map<Body::id_t, Se3r> MemberMap;
 
-		static void add(const shared_ptr<Body>& clump, const shared_ptr<Body>& subBody);
-		static void del(const shared_ptr<Body>& clump, const shared_ptr<Body>& subBody);
-		//! Recalculate physical properties of Clump.
-		static void updateProperties(const shared_ptr<Body>& clump, unsigned int discretization);
-		static void updatePropertiesNonSpherical(const shared_ptr<Body>& clump, bool intersecting,shared_ptr<Scene> rb);//FIXME
-		static void updatePropertiesNonSpherical(const shared_ptr<Body>& clump, bool intersecting);//FIXME
-		//! Calculate positions and orientations of members based on relative Se3; newton pointer (if non-NULL) calls NewtonIntegrator::saveMaximaVelocity
-		// done as template to avoid cross-dependency between clump and newton (not necessary if all plugins are linked together)
-		template<class IntegratorT>
-		static void moveMembers(const shared_ptr<Body>& clumpBody, Scene* scene, IntegratorT* integrator=NULL){
-			const shared_ptr<Clump>& clump=YADE_PTR_CAST<Clump>(clumpBody->shape);
-			const shared_ptr<State>& clumpState=clumpBody->state;
-			for (const auto & B : clump->members){
-				// B.first is Body::id_t, B.second is local Se3r of that body in the clump
-				const shared_ptr<Body>& b = Body::byId(B.first,scene);
-				const shared_ptr<State>& subState=b->state; const Vector3r& subPos(B.second.position); const Quaternionr& subOri(B.second.orientation);
-				// position update
-				subState->pos=clumpState->pos+clumpState->ori*subPos;
-				subState->ori=clumpState->ori*subOri;
-				// velocity update
-				subState->vel=clumpState->vel+clumpState->angVel.cross(subState->pos-clumpState->pos);
-				subState->angVel=clumpState->angVel;
-				if(integrator) integrator->saveMaximaDisplacement(b);
-			}
+	static void add(const shared_ptr<Body>& clump, const shared_ptr<Body>& subBody);
+	static void del(const shared_ptr<Body>& clump, const shared_ptr<Body>& subBody);
+	//! Recalculate physical properties of Clump.
+	static void updateProperties(const shared_ptr<Body>& clump, unsigned int discretization);
+	static void updatePropertiesNonSpherical(const shared_ptr<Body>& clump, bool intersecting, shared_ptr<Scene> rb); //FIXME
+	static void updatePropertiesNonSpherical(const shared_ptr<Body>& clump, bool intersecting); //FIXME
+	//! Calculate positions and orientations of members based on relative Se3; newton pointer (if non-NULL) calls NewtonIntegrator::saveMaximaVelocity
+	// done as template to avoid cross-dependency between clump and newton (not necessary if all plugins are linked together)
+	template <class IntegratorT> static void moveMembers(const shared_ptr<Body>& clumpBody, Scene* scene, IntegratorT* integrator = NULL)
+	{
+		const shared_ptr<Clump>& clump      = YADE_PTR_CAST<Clump>(clumpBody->shape);
+		const shared_ptr<State>& clumpState = clumpBody->state;
+		for (const auto& B : clump->members) {
+			// B.first is Body::id_t, B.second is local Se3r of that body in the clump
+			const shared_ptr<Body>&  b        = Body::byId(B.first, scene);
+			const shared_ptr<State>& subState = b->state;
+			const Vector3r&          subPos(B.second.position);
+			const Quaternionr&       subOri(B.second.orientation);
+			// position update
+			subState->pos = clumpState->pos + clumpState->ori * subPos;
+			subState->ori = clumpState->ori * subOri;
+			// velocity update
+			subState->vel    = clumpState->vel + clumpState->angVel.cross(subState->pos - clumpState->pos);
+			subState->angVel = clumpState->angVel;
+			if (integrator)
+				integrator->saveMaximaDisplacement(b);
 		}
+	}
 
-		static void addNonSpherical(const shared_ptr<Body>& clump, const shared_ptr<Body>& subBody); //FIXME
-		//! update member positions after clump being moved by mouse (in case simulation is paused and engines will not do that).
-		void userForcedDisplacementRedrawHook(){ throw runtime_error("Clump::userForcedDisplacementRedrawHook not yet implemented (with Clump as subclass of Shape).");}
+	static void addNonSpherical(const shared_ptr<Body>& clump, const shared_ptr<Body>& subBody); //FIXME
+	//! update member positions after clump being moved by mouse (in case simulation is paused and engines will not do that).
+	void userForcedDisplacementRedrawHook()
+	{
+		throw runtime_error("Clump::userForcedDisplacementRedrawHook not yet implemented (with Clump as subclass of Shape).");
+	}
 
-		//! get force and torque on the clump itself, from forces/torques on members; does not include force on clump itself
-		void addForceTorqueFromMembers(const State* clumpState, Scene* scene, Vector3r& F, Vector3r& T);
+	//! get force and torque on the clump itself, from forces/torques on members; does not include force on clump itself
+	void addForceTorqueFromMembers(const State* clumpState, Scene* scene, Vector3r& F, Vector3r& T);
 
 
-		//! Recalculates inertia tensor of a body after translation away from (default) or towards its centroid.
-		static Matrix3r inertiaTensorTranslate(const Matrix3r& I,const Real m, const Vector3r& off);
-		//! Recalculate body's inertia tensor in rotated coordinates.
-		static Matrix3r inertiaTensorRotate(const Matrix3r& I, const Matrix3r& T);
-		//! Recalculate body's inertia tensor in rotated coordinates.
-		static Matrix3r inertiaTensorRotate(const Matrix3r& I, const Quaternionr& rot);
+	//! Recalculates inertia tensor of a body after translation away from (default) or towards its centroid.
+	static Matrix3r inertiaTensorTranslate(const Matrix3r& I, const Real m, const Vector3r& off);
+	//! Recalculate body's inertia tensor in rotated coordinates.
+	static Matrix3r inertiaTensorRotate(const Matrix3r& I, const Matrix3r& T);
+	//! Recalculate body's inertia tensor in rotated coordinates.
+	static Matrix3r inertiaTensorRotate(const Matrix3r& I, const Quaternionr& rot);
 
-    boost::python::dict members_get();
-	
+	boost::python::dict members_get();
+
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Clump,Shape,"Rigid aggregate of bodies",
 		((MemberMap,members,,Attr::hidden,"Ids and relative positions+orientations of members of the clump (should not be accessed directly)"))
@@ -108,9 +114,8 @@ class Clump: public Shape {
 	);
 	// clang-format on
 	DECLARE_LOGGER;
-	REGISTER_CLASS_INDEX(Clump,Shape);
+	REGISTER_CLASS_INDEX(Clump, Shape);
 };
 REGISTER_SERIALIZABLE(Clump);
 
 } // namespace yade
-

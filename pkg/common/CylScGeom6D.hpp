@@ -1,17 +1,17 @@
 // 2011 © Bruno Chareyre <bruno.chareyre@hmg.inpg.fr>
 // 2012 © Kneib Francois <francois.kneib@irstea.fr>
 #pragma once
-#include<pkg/dem/ScGeom.hpp>
+#include <pkg/dem/ScGeom.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class CylScGeom: public ScGeom {
+class CylScGeom : public ScGeom {
 public:
-    /// Emulate a sphere whose position is the projection of sphere's center on cylinder sphere, and with motion linearly interpolated between nodes
-    State fictiousState;
-// 		shared_ptr<Interaction> duplicate;
+	/// Emulate a sphere whose position is the projection of sphere's center on cylinder sphere, and with motion linearly interpolated between nodes
+	State fictiousState;
+	// 		shared_ptr<Interaction> duplicate;
 
-    virtual ~CylScGeom () {};
+	virtual ~CylScGeom() {};
 	// clang-format off
     YADE_CLASS_BASE_DOC_ATTRS_CTOR(CylScGeom,ScGeom,"Geometry of a cylinder-sphere contact.",
                                    ((bool,onNode,false,,"contact on node?"))
@@ -24,25 +24,24 @@ public:
                                    createIndex(); /*ctor*/
                                   );
 	// clang-format on
-    REGISTER_CLASS_INDEX(CylScGeom,ScGeom);
+	REGISTER_CLASS_INDEX(CylScGeom, ScGeom);
 };
 REGISTER_SERIALIZABLE(CylScGeom);
 
 
-class CylScGeom6D: public ScGeom6D {
+class CylScGeom6D : public ScGeom6D {
 public:
-    virtual ~CylScGeom6D() {};
-    void precomputeRotations(const State& rbp1, const State& rbp2, bool /*isNew*/, bool /*creep*/=false) {
-      initRotations(rbp1,rbp2);
-    }
-    void initRotations(const State& rbp1, const State& rbp2){
-      initialOrientation1 = rbp1.ori;
-      initialOrientation2 = rbp2.ori;
-      twist=0;
-      bending=Vector3r::Zero();
-      twistCreep=Quaternionr(1.0,0.0,0.0,0.0);
-    }
-    State fictiousState;
+	virtual ~CylScGeom6D() {};
+	void precomputeRotations(const State& rbp1, const State& rbp2, bool /*isNew*/, bool /*creep*/ = false) { initRotations(rbp1, rbp2); }
+	void initRotations(const State& rbp1, const State& rbp2)
+	{
+		initialOrientation1 = rbp1.ori;
+		initialOrientation2 = rbp2.ori;
+		twist               = 0;
+		bending             = Vector3r::Zero();
+		twistCreep          = Quaternionr(1.0, 0.0, 0.0, 0.0);
+	}
+	State fictiousState;
 	// clang-format off
     YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(CylScGeom6D,ScGeom6D,"Class representing :yref:`geometry<IGeom>` of two :yref:`bodies<Body>` in contact. The contact has 6 DOFs (normal, 2×shear, twist, 2xbending) and uses :yref:`ScGeom` incremental algorithm for updating shear.",
                                            ((bool,onNode,false,,"contact on node?"))
@@ -57,9 +56,8 @@ public:
                                            /* py */
                                           );
 	// clang-format on
-    REGISTER_CLASS_INDEX(CylScGeom6D,ScGeom6D);
+	REGISTER_CLASS_INDEX(CylScGeom6D, ScGeom6D);
 };
 REGISTER_SERIALIZABLE(CylScGeom6D);
 
 } // namespace yade
-

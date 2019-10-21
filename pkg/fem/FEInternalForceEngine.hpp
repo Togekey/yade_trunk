@@ -13,25 +13,24 @@
 namespace yade { // Cannot have #include directive inside.
 
 #ifdef USE_TIMING_DELTAS
-	#define TIMING_DELTAS_CHECKPOINT(cpt) timingDeltas->checkpoint(cpt)
-	#define TIMING_DELTAS_START() timingDeltas->start()
+#define TIMING_DELTAS_CHECKPOINT(cpt) timingDeltas->checkpoint(cpt)
+#define TIMING_DELTAS_START() timingDeltas->start()
 #else
-	#define TIMING_DELTAS_CHECKPOINT(cpt)
-	#define TIMING_DELTAS_START()
+#define TIMING_DELTAS_CHECKPOINT(cpt)
+#define TIMING_DELTAS_START()
 #endif
 
-class FEInternalForceEngine: public GlobalEngine {
-
-//	#ifdef YADE_OPENMP
-//		std::vector<std::list<idPair> > eraseAfterLoopIds;
-//		void eraseAfterLoop(Body::id_t id1,Body::id_t id2){ eraseAfterLoopIds[omp_get_thread_num()].push_back(idPair(id1,id2)); }
-//	#else
-//		list<idPair> eraseAfterLoopIds;
-//		void eraseAfterLoop(Body::id_t id1,Body::id_t id2){ eraseAfterLoopIds.push_back(idPair(id1,id2)); }
-//	#endif
-	public:
-		virtual void pyHandleCustomCtorArgs(boost::python::tuple& t, boost::python::dict& d);
-		virtual void action();
+class FEInternalForceEngine : public GlobalEngine {
+	//	#ifdef YADE_OPENMP
+	//		std::vector<std::list<idPair> > eraseAfterLoopIds;
+	//		void eraseAfterLoop(Body::id_t id1,Body::id_t id2){ eraseAfterLoopIds[omp_get_thread_num()].push_back(idPair(id1,id2)); }
+	//	#else
+	//		list<idPair> eraseAfterLoopIds;
+	//		void eraseAfterLoop(Body::id_t id1,Body::id_t id2){ eraseAfterLoopIds.push_back(idPair(id1,id2)); }
+	//	#endif
+public:
+	virtual void pyHandleCustomCtorArgs(boost::python::tuple& t, boost::python::dict& d);
+	virtual void action();
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(FEInternalForceEngine,GlobalEngine,"Unified dispatcher for handling Finite Element internal force loop at every step, for parallel performance reasons.\n\n.. admonition:: Special constructor\n\n\tConstructs from 3 lists of :yref:`Ig2<IGeomFunctor>`, :yref:`Ip2<IPhysFunctor>`, :yref:`Law<LawFunctor>` functors respectively; they will be passed to interal dispatchers, which you might retrieve.",
 			((shared_ptr<InternalForceDispatcher>,internalforcedispatcher,new InternalForceDispatcher,Attr::readonly,":yref:`InternalForceDispatcher` object that is used for dispatching of element types."))
@@ -41,9 +40,8 @@ class FEInternalForceEngine: public GlobalEngine {
 			/*py*/
 		);
 	// clang-format on
-		DECLARE_LOGGER;
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(FEInternalForceEngine);
 
 } // namespace yade
-

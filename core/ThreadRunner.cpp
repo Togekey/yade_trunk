@@ -6,13 +6,13 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
-#include <lib/base/Logging.hpp>
 #include "ThreadRunner.hpp"
 #include "ThreadWorker.hpp"
+#include <lib/base/Logging.hpp>
 
-#include <boost/thread/thread.hpp>
-#include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <boost/function.hpp>
+#include <boost/thread/thread.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -22,16 +22,21 @@ void ThreadRunner::run()
 {
 	// this is the body of execution of separate thread
 	boost::mutex::scoped_lock lock(m_runmutex);
-	try{
-		workerThrew=false;
-		while(looping()) {
+	try {
+		workerThrew = false;
+		while (looping()) {
 			call();
-			if(m_thread_worker->shouldTerminate()){ stop(); return; }
+			if (m_thread_worker->shouldTerminate()) {
+				stop();
+				return;
+			}
 		}
-	} catch (std::exception& e){
-		LOG_FATAL("Exception occured: "<<std::endl<<e.what());
-		workerException=std::exception(e); workerThrew=true;
-		stop(); return;
+	} catch (std::exception& e) {
+		LOG_FATAL("Exception occured: " << std::endl << e.what());
+		workerException = std::exception(e);
+		workerThrew     = true;
+		stop();
+		return;
 	}
 }
 
@@ -48,7 +53,7 @@ void ThreadRunner::call()
 	// the solution is to use a counter (perhaps recursive_mutex?) which
 	// will count the number of threads in the queue, and only after they
 	// all finish execution the destructor will be able to finish its work
-	// 
+	//
 	boost::mutex::scoped_lock lock(m_callmutex);
 	m_thread_worker->setTerminate(false);
 	m_thread_worker->callSingleAction();
@@ -64,25 +69,28 @@ void ThreadRunner::spawnSingleAction()
 {
 	boost::mutex::scoped_lock boollock(m_boolmutex);
 	boost::mutex::scoped_lock calllock(m_callmutex);
-	if(m_looping) return;
-	boost::function0<void> call( boost::bind( &ThreadRunner::call , this ) );
-	boost::thread th(call);
+	if (m_looping)
+		return;
+	boost::function0<void> call(boost::bind(&ThreadRunner::call, this));
+	boost::thread          th(call);
 }
 
 void ThreadRunner::start()
 {
 	boost::mutex::scoped_lock lock(m_boolmutex);
-	if(m_looping) return;
-	m_looping=true;
-	boost::function0<void> run( boost::bind( &ThreadRunner::run , this ) );
-	boost::thread th(run);
+	if (m_looping)
+		return;
+	m_looping = true;
+	boost::function0<void> run(boost::bind(&ThreadRunner::run, this));
+	boost::thread          th(run);
 }
 
 void ThreadRunner::stop()
 {
-	if(!m_looping) return;
+	if (!m_looping)
+		return;
 	boost::mutex::scoped_lock lock(m_boolmutex);
-	m_looping=false;
+	m_looping = false;
 }
 
 bool ThreadRunner::looping()
@@ -99,4 +107,3 @@ ThreadRunner::~ThreadRunner()
 }
 
 } // namespace yade
-

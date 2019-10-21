@@ -7,20 +7,21 @@
 *************************************************************************/
 #pragma once
 
-#include <pkg/common/PeriodicEngines.hpp>
-#include <pkg/common/Dispatching.hpp>
-#include <pkg/common/Collider.hpp>
 #include <core/Scene.hpp>
-#include <vector>
+#include <pkg/common/Collider.hpp>
+#include <pkg/common/Dispatching.hpp>
+#include <pkg/common/PeriodicEngines.hpp>
 #include <string>
+#include <vector>
 
 namespace yade { // Cannot have #include directive inside.
 
-/// @brief Produces spheres over the course of a simulation. 
+/// @brief Produces spheres over the course of a simulation.
 class ResetRandomPosition : public PeriodicEngine {
 public:
 	/// @brief Create one sphere per call.
 	virtual void action();
+
 private:
 	/// @brief Pointer to Collider.
 	/// It is necessary in order to probe the bounding volume for new sphere.
@@ -29,20 +30,18 @@ private:
 	/// It is necessary in order to detect a real overlap with other bodies.
 	IGeomDispatcher* iGME;
 
-	std::vector<shared_ptr<Body> > shiftedBodies;
+	std::vector<shared_ptr<Body>> shiftedBodies;
 
 	bool first_run;
 	//bool generateNewPosition(const shared_ptr<Body>& b, Vector3r& new_position);
-   Vector3r generatePositionOnSurface();
-   Vector3r generatePositionInVolume();
+	Vector3r generatePositionOnSurface();
+	Vector3r generatePositionInVolume();
 
-	typedef	boost::variate_generator<boost::minstd_rand,boost::uniform_int<> > RandomInt;
-	shared_ptr<RandomInt> randomFacet;
+	typedef boost::variate_generator<boost::minstd_rand, boost::uniform_int<>> RandomInt;
+	shared_ptr<RandomInt>                                                      randomFacet;
 
-	static boost::variate_generator<boost::mt19937,boost::uniform_real<> > 
-		randomUnit;
-	static boost::variate_generator<boost::mt19937,boost::uniform_real<> >
-		randomSymmetricUnit;
+	static boost::variate_generator<boost::mt19937, boost::uniform_real<>> randomUnit;
+	static boost::variate_generator<boost::mt19937, boost::uniform_real<>> randomSymmetricUnit;
 
 	DECLARE_LOGGER;
 	// clang-format off
@@ -64,4 +63,3 @@ private:
 REGISTER_SERIALIZABLE(ResetRandomPosition);
 
 } // namespace yade
-

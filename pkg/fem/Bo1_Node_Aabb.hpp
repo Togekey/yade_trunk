@@ -5,7 +5,7 @@
 *  This program is free software; it is licensed under the terms of the  *
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
- 
+
 #pragma once
 
 #include <pkg/common/Dispatching.hpp>
@@ -13,10 +13,9 @@
 
 namespace yade { // Cannot have #include directive inside.
 
-class Bo1_Node_Aabb : public BoundFunctor
-{
-	public :
-		void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r&, const Body*);
+class Bo1_Node_Aabb : public BoundFunctor {
+public:
+	void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r&, const Body*);
 	FUNCTOR1D(Node);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(Bo1_Node_Aabb,BoundFunctor,"Functor creating :yref:`Aabb` from :yref:`Node`.",
@@ -28,4 +27,3 @@ class Bo1_Node_Aabb : public BoundFunctor
 REGISTER_SERIALIZABLE(Bo1_Node_Aabb);
 
 } // namespace yade
-

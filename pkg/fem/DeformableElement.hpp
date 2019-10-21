@@ -5,14 +5,14 @@
 *  This program is free software; it is licensed under the terms of the  *
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
- 
+
 #pragma once
 
+#include <lib/base/Logging.hpp>
+#include <lib/base/Math.hpp>
 #include <core/Body.hpp>
 #include <core/PartialEngine.hpp>
 #include <core/Shape.hpp>
-#include <lib/base/Logging.hpp>
-#include <lib/base/Math.hpp>
 
 //#include <yade/trunk/pkg/fem/Node.hpp> //Node shape
 
@@ -31,41 +31,37 @@ class NewtonIntegrator;
 class InternalForceFunctor;
 typedef Eigen::MatrixXd Matrix;
 
-class DeformableElement: public Shape {
-	public:
+class DeformableElement : public Shape {
+public:
+	typedef std::map<shared_ptr<Body>, Se3r> NodeMap; //Node id's with initial positions first node is selected as the reference node
+	typedef std::vector<Vector3r>            Triangles; // Used for drawing the element
 
-		typedef std::map<shared_ptr<Body>,Se3r> NodeMap;//Node id's with initial positions first node is selected as the reference node
-		typedef std::vector<Vector3r> Triangles; // Used for drawing the element
+	unsigned int maxNodeCount; //Maximum number of nodes of this element
+	Se3r         referenceCoord; //Reference node position in global coordinates
 
-		unsigned int maxNodeCount;//Maximum number of nodes of this element
-		Se3r referenceCoord;//Reference node position in global coordinates
+	virtual ~DeformableElement();
+	void             addNode(const shared_ptr<Body>& subBody);
+	shared_ptr<Body> getNode(int id);
 
-		virtual ~DeformableElement();
-		void addNode(const shared_ptr<Body>& subBody);
-		shared_ptr<Body> getNode(int id);
+	void                  delNode(const shared_ptr<Body>& subBody);
+	std::vector<Vector3r> getDisplacements(void);
 
-		void delNode(const shared_ptr<Body>& subBody);
-		std::vector<Vector3r> getDisplacements(void);
+	void addFace(Vector3r&);
+	void removeLastFace(void);
+	//! Recalculate physical properties of DeformableElement.
+	//virtual void getMassMatrix()=0;
 
-		void addFace(Vector3r&);
-		void removeLastFace(void);
-		//! Recalculate physical properties of DeformableElement.
-		//virtual void getMassMatrix()=0;
+	Se3r frame_get() const
+	{
+		const shared_ptr<Body>& member = localmap.begin()->first;
+		return member->state->se3;
+	}
 
-		Se3r frame_get() const
-		{
-			const shared_ptr<Body>& member=localmap.begin()->first;
-			return member->state->se3;
-		}
+	void frame_set(Se3r) const { return; }
 
-		void frame_set(Se3r) const
-		{
-			return;
-		}
+	boost::python::dict localmap_get();
 
-		boost::python::dict localmap_get();
-
-		virtual Real getVolume(){return -1;}
+	virtual Real getVolume() { return -1; }
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(DeformableElement,Shape,"Deformable aggregate of nodes",
 		((NodeMap,localmap,,,"Ids and relative positions+orientations of members of the deformable element (should not be accessed directly)"))
@@ -87,11 +83,10 @@ class DeformableElement: public Shape {
 
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(DeformableElement,Shape);
+	REGISTER_CLASS_INDEX(DeformableElement, Shape);
 	DECLARE_LOGGER;
 };
 
 REGISTER_SERIALIZABLE(DeformableElement);
 
 } // namespace yade
-

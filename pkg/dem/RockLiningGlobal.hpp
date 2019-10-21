@@ -6,8 +6,8 @@
 #include <pkg/dem/PotentialBlock.hpp>
 #include <pkg/dem/PotentialBlock2AABB.hpp>
 
-#include <vector>
 #include <pkg/common/PeriodicEngines.hpp>
+#include <vector>
 
 #include <stdio.h>
 
@@ -22,37 +22,38 @@
 #include <vtkTriangle.h>
 #pragma GCC diagnostic pop
 
-#include <vtkSmartPointer.h>
-#include <vtkFloatArray.h>
+#include <vtkAppendPolyData.h>
 #include <vtkCellArray.h>
 #include <vtkCellData.h>
+#include <vtkCylinderSource.h>
+#include <vtkExtractVOI.h>
+#include <vtkFloatArray.h>
+#include <vtkSmartPointer.h>
 #include <vtkStructuredPoints.h>
 #include <vtkStructuredPointsWriter.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
 #include <vtkWriter.h>
-#include <vtkExtractVOI.h>
 #include <vtkXMLImageDataWriter.h>
 #include <vtkXMLStructuredGridWriter.h>
 #include <vtkXMLUnstructuredGridWriter.h>
-#include <vtkTransformPolyDataFilter.h>
-#include <vtkTransform.h>
-#include <vtkAppendPolyData.h>
-#include <vtkCylinderSource.h>
 
 #include <ClpSimplex.hpp>
-#include <CoinHelperFunctions.hpp>
-#include <CoinTime.hpp>
 #include <CoinBuild.hpp>
+#include <CoinHelperFunctions.hpp>
 #include <CoinModel.hpp>
+#include <CoinTime.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class RockLiningGlobal: public PeriodicEngine{
-	protected:
-		double stiffnessMatrix[36];
-		//double * globalStiffnessMatrix;
-		double globalStiffnessMatrix[3*3*200*200];
-  	public:
-		#if 0
+class RockLiningGlobal : public PeriodicEngine {
+protected:
+	double stiffnessMatrix[36];
+	//double * globalStiffnessMatrix;
+	double globalStiffnessMatrix[3 * 3 * 200 * 200];
+
+public:
+#if 0
 		struct Bolts{
 			Bolts(Vector3r pt1, Vector3r  pt2){startingPoint = pt1; endPoint=pt2; }
 			Vector3r startingPoint;
@@ -64,14 +65,34 @@ class RockLiningGlobal: public PeriodicEngine{
 			vector<double> initialLength;
 		};
 		vector<Bolts> bolt;
-		#endif
+#endif
 
-		Vector3r getNodeDistance(const PotentialBlock* cm1,const State* state1,const PotentialBlock* cm2,const State* state2, const Vector3r localPt1, const Vector3r localPt2);
-		bool installLining(const PotentialBlock* cm1,const State* state1,const Vector3r startingPt,const Vector3r direction, const double length, Vector3r& intersectionPt);
-		int insertNode(Vector3r pos, double mass, double intervalLength);
-		double evaluateFNoSphereVol(const PotentialBlock* s1,const State* state1, const Vector3r newTrial);
-		bool intersectPlane(const PotentialBlock* s1,const State* state1,const Vector3r startingPt,const Vector3r direction, const double length, Vector3r& intersectionPt, const Vector3r plane, const double planeD);
-  		virtual void action(void);
+	Vector3r getNodeDistance(
+	        const PotentialBlock* cm1,
+	        const State*          state1,
+	        const PotentialBlock* cm2,
+	        const State*          state2,
+	        const Vector3r        localPt1,
+	        const Vector3r        localPt2);
+	bool installLining(
+	        const PotentialBlock* cm1,
+	        const State*          state1,
+	        const Vector3r        startingPt,
+	        const Vector3r        direction,
+	        const double          length,
+	        Vector3r&             intersectionPt);
+	int    insertNode(Vector3r pos, double mass, double intervalLength);
+	double evaluateFNoSphereVol(const PotentialBlock* s1, const State* state1, const Vector3r newTrial);
+	bool   intersectPlane(
+	          const PotentialBlock* s1,
+	          const State*          state1,
+	          const Vector3r        startingPt,
+	          const Vector3r        direction,
+	          const double          length,
+	          Vector3r&             intersectionPt,
+	          const Vector3r        plane,
+	          const double          planeD);
+	virtual void action(void);
 	// clang-format off
   	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(RockLiningGlobal,PeriodicEngine,"Engine recording potential blocks as surfaces into files with given periodicity.",
 		((bool,assembledKglobal,false ,,"global stiffness matrix"))
@@ -122,8 +143,6 @@ class RockLiningGlobal: public PeriodicEngine{
 		,
   	);
 	// clang-format on
-
-
 };
 REGISTER_SERIALIZABLE(RockLiningGlobal);
 
@@ -134,35 +153,70 @@ extern "C" {
 #endif
 
 /* LAPACK LU */
-	//int dgesv(int varNo, int varNo2, double *H, int varNo3, int *pivot, double* g, int varNo4, int info){
-	 extern void dgesv_(const int *N, const int *nrhs, double *Hessian, const int *lda, int *ipiv, double *gradient, const int *ldb, int *info);
-	// int ans;
-	// dgesv_(&varNo, &varNo2, H, &varNo3, pivot,g, &varNo4, &ans);
-	// return ans;
-	//}
+//int dgesv(int varNo, int varNo2, double *H, int varNo3, int *pivot, double* g, int varNo4, int info){
+extern void dgesv_(const int* N, const int* nrhs, double* Hessian, const int* lda, int* ipiv, double* gradient, const int* ldb, int* info);
+// int ans;
+// dgesv_(&varNo, &varNo2, H, &varNo3, pivot,g, &varNo4, &ans);
+// return ans;
+//}
 
 /* LAPACK Cholesky */
-	extern void dpbsv_(const char *uplo, const int *n, const int *kd, const int *nrhs, double *AB, const int *ldab, double *B, const int *ldb, int *info);
+extern void dpbsv_(const char* uplo, const int* n, const int* kd, const int* nrhs, double* AB, const int* ldab, double* B, const int* ldb, int* info);
 
 /* LAPACK QR */
-	extern void dgels_(const char *Trans, const int *m, const int *n, const int *nrhs, double *A, const int *lda, double *B, const int *ldb, const double *work, const int *lwork, int *info);
+extern void
+dgels_(const char*   Trans,
+       const int*    m,
+       const int*    n,
+       const int*    nrhs,
+       double*       A,
+       const int*    lda,
+       double*       B,
+       const int*    ldb,
+       const double* work,
+       const int*    lwork,
+       int*          info);
 
 
 /*BLAS */
-	extern void dgemm_(const char *transA, const char *transB, const int *m, const int *n, const int *k, const double *alpha, double *A, const int *lda, double *B, const int *ldb, const double *beta, double *C, const int *ldc);
+extern void
+dgemm_(const char*   transA,
+       const char*   transB,
+       const int*    m,
+       const int*    n,
+       const int*    k,
+       const double* alpha,
+       double*       A,
+       const int*    lda,
+       double*       B,
+       const int*    ldb,
+       const double* beta,
+       double*       C,
+       const int*    ldc);
 
-	extern void dgemv_(const char *trans, const int *m, const int *n, const double *alpha, double *A, const int *lda, double *x, const int *incx, const double *beta, double *y, const int *incy);
+extern void
+dgemv_(const char*   trans,
+       const int*    m,
+       const int*    n,
+       const double* alpha,
+       double*       A,
+       const int*    lda,
+       double*       x,
+       const int*    incx,
+       const double* beta,
+       double*       y,
+       const int*    incy);
 
-	extern void dcopy_(const int *N, double *x, const int *incx, double *y, const int *incy);
+extern void dcopy_(const int* N, double* x, const int* incx, double* y, const int* incy);
 
-	extern double ddot_(const int *N, double *x, const int *incx, double *y, const int *incy);
+extern double ddot_(const int* N, double* x, const int* incx, double* y, const int* incy);
 
-	extern void daxpy_(const int *N, const double *da, double *dx, const int *incx, double *dy, const int *incy);
+extern void daxpy_(const int* N, const double* da, double* dx, const int* incx, double* dy, const int* incy);
 
-	extern void dscal_(const int *N, const double *alpha, double *x, const int *incx);
+extern void dscal_(const int* N, const double* alpha, double* x, const int* incx);
 
 
-	void dsyev_(const char *jobz, const char *uplo, const int *N, double *A, const int *lda, double *W, double *work, int *lwork, int *info);
+void dsyev_(const char* jobz, const char* uplo, const int* N, double* A, const int* lda, double* W, double* work, int* lwork, int* info);
 
 
 #ifdef __cplusplus

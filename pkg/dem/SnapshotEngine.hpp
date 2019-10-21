@@ -1,19 +1,19 @@
 #pragma once
 
-#include<lib/opengl/OpenGLWrapper.hpp>
-#include<core/Scene.hpp>
-#include<pkg/common/PeriodicEngines.hpp>
+#include <lib/opengl/OpenGLWrapper.hpp>
+#include <core/Scene.hpp>
+#include <pkg/common/PeriodicEngines.hpp>
 
 #ifdef YADE_QT5
-#include<gui/qt5/OpenGLManager.hpp>
+#include <gui/qt5/OpenGLManager.hpp>
 #elif YADE_QT4
-#include<gui/qt5/OpenGLManager.hpp>
+#include <gui/qt5/OpenGLManager.hpp>
 #endif
 
 namespace yade { // Cannot have #include directive inside.
 
-class SnapshotEngine: public PeriodicEngine {
-	public:
+class SnapshotEngine : public PeriodicEngine {
+public:
 	virtual void action();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(SnapshotEngine,PeriodicEngine,"Periodically save snapshots of GLView(s) as .png files. Files are named *fileBase* + *counter* + '.png' (counter is left-padded by 0s, i.e. snap00004.png).",
@@ -33,4 +33,3 @@ class SnapshotEngine: public PeriodicEngine {
 REGISTER_SERIALIZABLE(SnapshotEngine);
 
 } // namespace yade
-

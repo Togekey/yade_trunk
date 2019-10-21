@@ -7,32 +7,28 @@
 *************************************************************************/
 #pragma once
 
-#include <pkg/common/Collider.hpp>
 #include <core/InteractionContainer.hpp>
+#include <pkg/common/Collider.hpp>
 #include <vector>
 
 namespace yade { // Cannot have #include directive inside.
 
 class SpatialQuickSortCollider : public Collider {
-    protected:
-
+protected:
 	struct AABBBound {
-	    Vector3r min,max;
-	    int id;
+		Vector3r min, max;
+		int      id;
 	};
 
 	class xBoundComparator {
-	    public:
-	      bool operator() (shared_ptr<AABBBound> b1, shared_ptr<AABBBound> b2)
-	      {
-		 return b1->min[0] < b2->min[0];
-	      }
+	public:
+		bool operator()(shared_ptr<AABBBound> b1, shared_ptr<AABBBound> b2) { return b1->min[0] < b2->min[0]; }
 	};
 
-	vector<shared_ptr<AABBBound> > rank;
+	vector<shared_ptr<AABBBound>> rank;
 
-   public:
-		virtual void action();
+public:
+	virtual void action();
 	// clang-format off
 	YADE_CLASS_BASE_DOC(SpatialQuickSortCollider,Collider,"Collider using quicksort along axes at each step, using :yref:`Aabb` bounds. \n\n Its performance is lower than that of :yref:`InsertionSortCollider` (see `Colliders' performance <https://yade-dem.org/wiki/Colliders_performace>`_), but the algorithm is simple enought to make it good for checking other collider's correctness.");
 	// clang-format on
@@ -41,4 +37,3 @@ class SpatialQuickSortCollider : public Collider {
 REGISTER_SERIALIZABLE(SpatialQuickSortCollider);
 
 } // namespace yade
-

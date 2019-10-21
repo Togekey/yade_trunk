@@ -29,25 +29,24 @@
 #define __PYGTS_OBJECT_H__
 
 
-typedef struct _PygtsObject PygtsObject;
+typedef struct _PygtsObject  PygtsObject;
 typedef struct _PygtsMethods PygtsMethods;
 
 #define PYGTS_OBJECT(obj) ((PygtsObject*)obj)
 
 struct _PygtsObject {
-  PyObject_HEAD
-  GtsObject *gtsobj;         /* Encapsulated GtsObject */
-  GtsObject *gtsobj_parent;  /* A parent object to ensure persistence */
+	PyObject_HEAD GtsObject* gtsobj; /* Encapsulated GtsObject */
+	GtsObject*               gtsobj_parent; /* A parent object to ensure persistence */
 };
 
 extern PyTypeObject PygtsObjectType;
 extern PygtsMethods PygtsObjectMethods;
 
 gboolean pygts_object_check(PyObject* o);
-gboolean pygts_object_is_ok(PygtsObject *o);
+gboolean pygts_object_is_ok(PygtsObject* o);
 
-extern GHashTable *obj_table; /* GtsObject key, associated PyObject value */
-void pygts_object_register(PygtsObject *o);
-void pygts_object_deregister(PygtsObject *o);
+extern GHashTable* obj_table; /* GtsObject key, associated PyObject value */
+void               pygts_object_register(PygtsObject* o);
+void               pygts_object_deregister(PygtsObject* o);
 
 #endif /* __PYGTS_OBJECT_H__ */

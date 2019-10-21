@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include<lib/serialization/Serializable.hpp>
-#include<lib/multimethods/Indexable.hpp>
-#include<core/Dispatcher.hpp>
+#include <lib/multimethods/Indexable.hpp>
+#include <lib/serialization/Serializable.hpp>
+#include <core/Dispatcher.hpp>
 
 #define BV_FUNCTOR_CACHE
 
@@ -20,14 +20,14 @@ class BoundFunctor;
 
 class InternalForceFunctor;
 
-class Shape: public Serializable, public Indexable {
-	public:
-		virtual ~Shape() {}; // vtable
-		#ifdef BV_FUNCTOR_CACHE
-			shared_ptr<BoundFunctor> boundFunctor;
-		#endif
-		//! cache functor that are called for this type of DeformableElement. Used by FEInternalForceEngine
-		shared_ptr<InternalForceFunctor> internalforcefunctor;
+class Shape : public Serializable, public Indexable {
+public:
+	virtual ~Shape() {}; // vtable
+#ifdef BV_FUNCTOR_CACHE
+	shared_ptr<BoundFunctor> boundFunctor;
+#endif
+	//! cache functor that are called for this type of DeformableElement. Used by FEInternalForceEngine
+	shared_ptr<InternalForceFunctor> internalforcefunctor;
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Shape,Serializable,"Geometry of a body",
@@ -43,4 +43,3 @@ class Shape: public Serializable, public Indexable {
 REGISTER_SERIALIZABLE(Shape);
 
 } // namespace yade
-

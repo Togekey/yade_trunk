@@ -2,27 +2,26 @@
 
 #pragma once
 
-#include<pkg/common/ElastMat.hpp>
-#include<pkg/common/Dispatching.hpp>
-#include<pkg/common/Sphere.hpp>
-#include<pkg/common/PeriodicEngines.hpp>
-#include<pkg/common/NormShearPhys.hpp>
-#include<pkg/dem/DemXDofGeom.hpp>
-#include<pkg/dem/ScGeom.hpp>
-#include<pkg/dem/FrictPhys.hpp>
-#include<pkg/dem/ElasticContactLaw.hpp>
-#include<pkg/dem/ViscoelasticPM.hpp>
-#include<pkg/dem/PDFEngine.hpp>
-#include<lib/base/AliasNamespaces.hpp>
+#include <lib/base/AliasNamespaces.hpp>
+#include <pkg/common/Dispatching.hpp>
+#include <pkg/common/ElastMat.hpp>
+#include <pkg/common/NormShearPhys.hpp>
+#include <pkg/common/PeriodicEngines.hpp>
+#include <pkg/common/Sphere.hpp>
+#include <pkg/dem/DemXDofGeom.hpp>
+#include <pkg/dem/ElasticContactLaw.hpp>
+#include <pkg/dem/FrictPhys.hpp>
+#include <pkg/dem/PDFEngine.hpp>
+#include <pkg/dem/ScGeom.hpp>
+#include <pkg/dem/ViscoelasticPM.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
 
-
-class LubricationPhys: public ViscElPhys {
-        public:
-//                 LubricationPhys(ViscElPhys const& ); // "copy" constructor
-                virtual ~LubricationPhys();
+class LubricationPhys : public ViscElPhys {
+public:
+	//                 LubricationPhys(ViscElPhys const& ); // "copy" constructor
+	virtual ~LubricationPhys();
 	// clang-format off
                 YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(LubricationPhys,ViscElPhys,"IPhys class for Lubrication w/o FlowEngine. Used by Law2_ScGeom_ImplicitLubricationPhys.",
 												  
@@ -49,17 +48,17 @@ class LubricationPhys: public ViscElPhys {
                 createIndex();,
                 );
 	// clang-format on
-                DECLARE_LOGGER;
-                REGISTER_CLASS_INDEX(LubricationPhys,ViscElPhys);
+	DECLARE_LOGGER;
+	REGISTER_CLASS_INDEX(LubricationPhys, ViscElPhys);
 };
 REGISTER_SERIALIZABLE(LubricationPhys);
 
 
-class Ip2_FrictMat_FrictMat_LubricationPhys: public IPhysFunctor{
-        public:
-                virtual void go(const shared_ptr<Material>& material1, const shared_ptr<Material>& material2, const shared_ptr<Interaction>& interaction);
-                FUNCTOR2D(FrictMat,FrictMat);
-                DECLARE_LOGGER;
+class Ip2_FrictMat_FrictMat_LubricationPhys : public IPhysFunctor {
+public:
+	virtual void go(const shared_ptr<Material>& material1, const shared_ptr<Material>& material2, const shared_ptr<Interaction>& interaction);
+	FUNCTOR2D(FrictMat, FrictMat);
+	DECLARE_LOGGER;
 	// clang-format off
                 YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Ip2_FrictMat_FrictMat_LubricationPhys,IPhysFunctor,"Ip2 creating LubricationPhys from two Material instances.",
                         ((Real,eta,1,,"Fluid viscosity [Pa.s]"))
@@ -72,37 +71,59 @@ class Ip2_FrictMat_FrictMat_LubricationPhys: public IPhysFunctor{
 REGISTER_SERIALIZABLE(Ip2_FrictMat_FrictMat_LubricationPhys);
 
 
-class Law2_ScGeom_ImplicitLubricationPhys: public LawFunctor{
-        public:
-		bool go(shared_ptr<IGeom>& iGeom, shared_ptr<IPhys>& iPhys, Interaction* interaction);
-                FUNCTOR2D(GenericSpheresContact,LubricationPhys);
-                static void getStressForEachBody(vector<Matrix3r>& NCStresses, vector<Matrix3r>& SCStresses, vector<Matrix3r>& NLStresses, vector<Matrix3r>& SLStresses );
-                static py::tuple PyGetStressForEachBody();
-                static void getTotalStresses(Matrix3r& NCStresses, Matrix3r& SCStresses, Matrix3r& NLStresses, Matrix3r& SLStresses);
-                static py::tuple PyGetTotalStresses();
-		
-		// integration of the gap by implicit theta method, adaptative sub-stepping is used if solutionless, the normal force is returned
-		// prevDotU, un_prev, and u_prev are modified after execution (and ready for next step)
-			Real normalForce_trapezoidal(LubricationPhys *phys, ScGeom* geom, Real undot, bool isNew /* FIXME: delete those variables */);
-			Real trapz_integrate_u(Real& prevDotU, Real& un_prev, Real& u_prev, Real un_curr,
-							const Real& nu, Real k, const Real& keps, const Real& eps, 
-							Real dt, bool withContact, int depth=0);
-		
-			Real normalForce_trpz_adim(LubricationPhys *phys, ScGeom* geom, Real undot, bool isNew);
-			Real trapz_integrate_u_adim(Real const& u_n, Real const& eps, Real const& dt, Real const& prev_d, Real const& ladh, bool const& inContact, Real & prevDotU);
-			
-			Real normalForce_AdimExp(LubricationPhys *phys, ScGeom* geom, Real undot, bool isNew, bool dichotomie);
-			Real NRAdimExp_integrate_u(Real const& un, Real const& eps, Real const& alpha, Real & prevDotU, Real const& dt, Real const& prev_d, Real const& undot, int depth=0);
+class Law2_ScGeom_ImplicitLubricationPhys : public LawFunctor {
+public:
+	bool go(shared_ptr<IGeom>& iGeom, shared_ptr<IPhys>& iPhys, Interaction* interaction);
+	FUNCTOR2D(GenericSpheresContact, LubricationPhys);
+	static void
+	                 getStressForEachBody(vector<Matrix3r>& NCStresses, vector<Matrix3r>& SCStresses, vector<Matrix3r>& NLStresses, vector<Matrix3r>& SLStresses);
+	static py::tuple PyGetStressForEachBody();
+	static void      getTotalStresses(Matrix3r& NCStresses, Matrix3r& SCStresses, Matrix3r& NLStresses, Matrix3r& SLStresses);
+	static py::tuple PyGetTotalStresses();
 
-			Real DichoAdimExp_integrate_u(Real const& un, Real const& eps, Real const& alpha, Real & prevDotU, Real const& dt, Real const& prev_d, Real const& undot, Real const& ladh);
-			Real ObjF(Real const& un, Real const& eps, Real const& alpha, Real const& prevDotU, Real const& dt, Real const& prev_d, Real const& undot, Real const& d, Real const& ladh);
-			
-			void shearForce_firstOrder(LubricationPhys *phys, ScGeom* geom);
-			void shearForce_firstOrder_log(LubricationPhys *phys, ScGeom* geom);
-			
-			void computeShearForceAndTorques(LubricationPhys *phys, ScGeom* geom, State * s1, State *s2, Vector3r & Cr, Vector3r & Ct);
-			void computeShearForceAndTorques_log(LubricationPhys *phys, ScGeom* geom, State * s1, State *s2, Vector3r & Cr, Vector3r & Ct);
-		
+	// integration of the gap by implicit theta method, adaptative sub-stepping is used if solutionless, the normal force is returned
+	// prevDotU, un_prev, and u_prev are modified after execution (and ready for next step)
+	Real normalForce_trapezoidal(LubricationPhys* phys, ScGeom* geom, Real undot, bool isNew /* FIXME: delete those variables */);
+	Real trapz_integrate_u(
+	        Real&       prevDotU,
+	        Real&       un_prev,
+	        Real&       u_prev,
+	        Real        un_curr,
+	        const Real& nu,
+	        Real        k,
+	        const Real& keps,
+	        const Real& eps,
+	        Real        dt,
+	        bool        withContact,
+	        int         depth = 0);
+
+	Real normalForce_trpz_adim(LubricationPhys* phys, ScGeom* geom, Real undot, bool isNew);
+	Real
+	trapz_integrate_u_adim(Real const& u_n, Real const& eps, Real const& dt, Real const& prev_d, Real const& ladh, bool const& inContact, Real& prevDotU);
+
+	Real normalForce_AdimExp(LubricationPhys* phys, ScGeom* geom, Real undot, bool isNew, bool dichotomie);
+	Real NRAdimExp_integrate_u(
+	        Real const& un, Real const& eps, Real const& alpha, Real& prevDotU, Real const& dt, Real const& prev_d, Real const& undot, int depth = 0);
+
+	Real DichoAdimExp_integrate_u(
+	        Real const& un, Real const& eps, Real const& alpha, Real& prevDotU, Real const& dt, Real const& prev_d, Real const& undot, Real const& ladh);
+	Real
+	ObjF(Real const& un,
+	     Real const& eps,
+	     Real const& alpha,
+	     Real const& prevDotU,
+	     Real const& dt,
+	     Real const& prev_d,
+	     Real const& undot,
+	     Real const& d,
+	     Real const& ladh);
+
+	void shearForce_firstOrder(LubricationPhys* phys, ScGeom* geom);
+	void shearForce_firstOrder_log(LubricationPhys* phys, ScGeom* geom);
+
+	void computeShearForceAndTorques(LubricationPhys* phys, ScGeom* geom, State* s1, State* s2, Vector3r& Cr, Vector3r& Ct);
+	void computeShearForceAndTorques_log(LubricationPhys* phys, ScGeom* geom, State* s1, State* s2, Vector3r& Cr, Vector3r& Ct);
+
 	// clang-format off
                 YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Law2_ScGeom_ImplicitLubricationPhys,
 			LawFunctor,
@@ -129,14 +150,14 @@ class Law2_ScGeom_ImplicitLubricationPhys: public LawFunctor{
 			.staticmethod("getTotalStresses")
                 );
 	// clang-format on
-                DECLARE_LOGGER;
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(Law2_ScGeom_ImplicitLubricationPhys);
 
 
-class LubricationPDFEngine: public PDFEngine {
-	public :
-		virtual void action();
+class LubricationPDFEngine : public PDFEngine {
+public:
+	virtual void action();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(LubricationPDFEngine,PDFEngine,
 		 "Implementation of :yref:`PDFEngine` for Lubrication law",/*ATTRS*/
@@ -148,4 +169,3 @@ class LubricationPDFEngine: public PDFEngine {
 REGISTER_SERIALIZABLE(LubricationPDFEngine);
 
 } // namespace yade
-

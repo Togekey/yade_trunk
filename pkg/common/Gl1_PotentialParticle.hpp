@@ -1,17 +1,17 @@
 /*CWBoon 2015 */
 #pragma once
 #ifdef YADE_POTENTIAL_PARTICLES
+#include <lib/computational-geometry/MarchingCube.hpp>
+#include <pkg/common/GLDrawFunctors.hpp>
+#include <pkg/common/PeriodicEngines.hpp>
 #include <pkg/dem/PotentialParticle.hpp>
 #include <pkg/dem/PotentialParticle2AABB.hpp>
-#include <pkg/common/GLDrawFunctors.hpp>
-#include <lib/computational-geometry/MarchingCube.hpp>
 #include <vector>
-#include <pkg/common/PeriodicEngines.hpp>
 
 #include <vtkImplicitFunction.h>
+#include <vtkPolyData.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
-#include <vtkPolyData.h>
 
 #include <vtkXMLUnstructuredGridWriter.h>
 
@@ -21,116 +21,113 @@
 #pragma GCC diagnostic ignored "-Wcomment"
 // Code that generates this warning, Note: we cannot do this trick in yade. If we have a warning in yade, we have to fix it! See also https://gitlab.com/yade-dev/trunk/merge_requests/73
 // This method will work once g++ bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53431#c34 is fixed.
-#include<vtkTriangle.h>
+#include <vtkTriangle.h>
 #pragma GCC diagnostic pop
 
-#include <vtkSmartPointer.h>
-#include <vtkFloatArray.h>
-#include <vtkCellArray.h>
-#include <vtkCellData.h>
-#include <vtkSampleFunction.h>
-#include <vtkStructuredPoints.h>
-#include <vtkStructuredPointsWriter.h>
-#include <vtkWriter.h>
-#include <vtkExtractVOI.h>
-#include <vtkXMLImageDataWriter.h>
-#include <vtkXMLStructuredGridWriter.h>
-#include <vtkTransformPolyDataFilter.h>
-#include <vtkTransform.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkActor.h>
 #include <vtkAppendPolyData.h>
+#include <vtkCellArray.h>
+#include <vtkCellData.h>
+#include <vtkExtractVOI.h>
+#include <vtkFloatArray.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkSampleFunction.h>
+#include <vtkSmartPointer.h>
+#include <vtkStructuredPoints.h>
+#include <vtkStructuredPointsWriter.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkWriter.h>
+#include <vtkXMLImageDataWriter.h>
+#include <vtkXMLStructuredGridWriter.h>
+#include <vtkXMLUnstructuredGridWriter.h>
 
+#include <vtkCylinderSource.h>
+#include <vtkLinearExtrusionFilter.h>
 #include <vtkTextActor.h>
+#include <vtkTextActor3D.h>
 #include <vtkTextProperty.h>
 #include <vtkVectorText.h>
-#include <vtkLinearExtrusionFilter.h>
-#include <vtkTextActor3D.h>
-#include <vtkCylinderSource.h>
 
 namespace yade { // Cannot have #include directive inside.
 
 class ImpFunc : public vtkImplicitFunction {
-	public:
-		vtkTypeMacro(ImpFunc,vtkImplicitFunction);
-		//void PrintSelf(ostream& os, vtkIndent indent);
+public:
+	vtkTypeMacro(ImpFunc, vtkImplicitFunction);
+	//void PrintSelf(ostream& os, vtkIndent indent);
 
-		// Description
-		// Create a new function
-		static ImpFunc * New(void);
-		vector<Real>a;
-		vector<Real>b;
-		vector<Real>c;
-		vector<Real>d;
-		Real k;
-		Real r;
-		Real R;
-		Eigen::Matrix3d rotationMatrix;
-		bool clump;
-		Real clumpMemberCentreX;
-		Real clumpMemberCentreY;
-		Real clumpMemberCentreZ;
-		// Description
-		// Evaluate function
-		Real FunctionValue(Real x[3]);
-		Real EvaluateFunction(Real x[3]) {
-			//return this->vtkImplicitFunction::EvaluateFunction(x);
-			return FunctionValue(x);
-		};
+	// Description
+	// Create a new function
+	static ImpFunc* New(void);
+	vector<Real>    a;
+	vector<Real>    b;
+	vector<Real>    c;
+	vector<Real>    d;
+	Real            k;
+	Real            r;
+	Real            R;
+	Eigen::Matrix3d rotationMatrix;
+	bool            clump;
+	Real            clumpMemberCentreX;
+	Real            clumpMemberCentreY;
+	Real            clumpMemberCentreZ;
+	// Description
+	// Evaluate function
+	Real FunctionValue(Real x[3]);
+	Real EvaluateFunction(Real x[3])
+	{
+		//return this->vtkImplicitFunction::EvaluateFunction(x);
+		return FunctionValue(x);
+	};
 
-		Real EvaluateFunction(Real x, Real y, Real z) {
-			return this->vtkImplicitFunction::EvaluateFunction(x, y, z);
-		};
-
+	Real EvaluateFunction(Real x, Real y, Real z) { return this->vtkImplicitFunction::EvaluateFunction(x, y, z); };
 
 
+	// Description
+	// Evaluate gradient for function
+	void EvaluateGradient(
+	        Real /*x*/[3], Real /*n*/[3]) {}; // FIXME - better use Vector3r here instead of Real[3] (here I only fix the unused parameter warning).
 
-		// Description
-		// Evaluate gradient for function
-		void EvaluateGradient(Real /*x*/[3], Real /*n*/[3]) { }; // FIXME - better use Vector3r here instead of Real[3] (here I only fix the unused parameter warning).
+	// If you need to set parameters, add methods here
 
-		// If you need to set parameters, add methods here
+protected:
+	ImpFunc();
+	~ImpFunc();
+	ImpFunc(const ImpFunc&)
+	        : vtkImplicitFunction()
+	{
+	}
+	void operator=(const ImpFunc&) {}
 
-	protected:
-		ImpFunc();
-		~ImpFunc();
-		ImpFunc(const ImpFunc&) : vtkImplicitFunction()  {}
-		void operator=(const ImpFunc&) {}
-
-		// Add parameters/members here if you need
+	// Add parameters/members here if you need
 };
 
 #ifdef YADE_OPENGL
 class Gl1_PotentialParticle : public GlShapeFunctor {
-	private :
-		MarchingCube mc;
-		Vector3r min,max;
-		vector<vector<vector<Real > > > scalarField,weights;
-		void generateScalarField(const PotentialParticle& pp);
-		void calcMinMax(const PotentialParticle& pp);
-		Real oldIsoValue,oldIsoSec,oldIsoThick;
-		Vector3r isoStep;
-		struct Leaf {
-			Vector3r centre;
-			Leaf(Vector3r pos) {
-				centre = pos;
-			}
-			Leaf() {
-				centre = Vector3r(0,0,0);
-			}
-		};
-		struct scalarF {
-			vector<vector<vector<Real > > > scalarField2;
-			vector<Vector3r> triangles;
-//			vector<Vector3r> normals;
-			int nbTriangles;
-		};
-		Real evaluateF(const PotentialParticle& pp, Real x, Real y, Real z);
-		static vector<scalarF> SF ;
+private:
+	MarchingCube                 mc;
+	Vector3r                     min, max;
+	vector<vector<vector<Real>>> scalarField, weights;
+	void                         generateScalarField(const PotentialParticle& pp);
+	void                         calcMinMax(const PotentialParticle& pp);
+	Real                         oldIsoValue, oldIsoSec, oldIsoThick;
+	Vector3r                     isoStep;
+	struct Leaf {
+		Vector3r centre;
+		Leaf(Vector3r pos) { centre = pos; }
+		Leaf() { centre = Vector3r(0, 0, 0); }
+	};
+	struct scalarF {
+		vector<vector<vector<Real>>> scalarField2;
+		vector<Vector3r>             triangles;
+		//			vector<Vector3r> normals;
+		int nbTriangles;
+	};
+	Real                   evaluateF(const PotentialParticle& pp, Real x, Real y, Real z);
+	static vector<scalarF> SF;
 
-	public :
-		virtual void go(const shared_ptr<Shape>&, const shared_ptr<State>&,bool,const GLViewInfo&);
+public:
+	virtual void go(const shared_ptr<Shape>&, const shared_ptr<State>&, bool, const GLViewInfo&);
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_STATICATTRS(Gl1_PotentialParticle,GlShapeFunctor,"Renders :yref:`PotentialParticle` object",
@@ -143,17 +140,17 @@ class Gl1_PotentialParticle : public GlShapeFunctor {
 			((bool,wire,false,,"Only show wireframe"))
 		);
 	// clang-format on
-		RENDERS(PotentialParticle);
+	RENDERS(PotentialParticle);
 };
 REGISTER_SERIALIZABLE(Gl1_PotentialParticle);
 #endif // YADE_OPENGL
 
 
-class PotentialParticleVTKRecorder: public PeriodicEngine {
-	public:
-		vtkSmartPointer<ImpFunc> function;
+class PotentialParticleVTKRecorder : public PeriodicEngine {
+public:
+	vtkSmartPointer<ImpFunc> function;
 
-		virtual void action(void);
+	virtual void action(void);
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(PotentialParticleVTKRecorder,PeriodicEngine,"Engine recording potential blocks as surfaces into files with given periodicity.",
 			((string,fileName,,,"File prefix to save to"))

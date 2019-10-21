@@ -1,8 +1,8 @@
 // 2010 © Václav Šmilauer <eudoxos@arcig.cz>
 #pragma once
+#include <lib/base/AliasNamespaces.hpp>
 #include <lib/serialization/Serializable.hpp>
 #include <boost/unordered_map.hpp>
-#include <lib/base/AliasNamespaces.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -12,31 +12,40 @@ namespace yade { // Cannot have #include directive inside.
 2. Use algo to update fbPtr, instead of string-comparison of algo every time
 
 */
-class MatchMaker: public Serializable {
-		Real fbZero(Real /*v1*/, Real /*v2*/) const{ return 0.; }
-		Real fbAvg(Real v1, Real v2) const{ return (v1+v2)/2.; }
-		Real fbMin(Real v1, Real v2) const{ return min(v1,v2); }
-		Real fbMax(Real v1, Real v2) const{ return max(v1,v2); }
-		Real fbHarmAvg(Real v1, Real v2) const { return 2*v1*v2/(v1+v2); }
-		Real fbVal(Real /*v1*/, Real /*v2*/) const { return val; }
-		Real (MatchMaker::*fbPtr)(Real,Real) const;
-		// whether the current fbPtr function needs valid input values in order to give meaningful result.
-		// must be kept in sync with fbPtr, which is done in postLoad
-		bool fbNeedsValues;
-		
-		// unordered set for a fast coefficient search
-		boost::unordered_map<std::pair<int, int>, Real> matchSet;
-		
-	public:
-		virtual ~MatchMaker() {};
-		MatchMaker(std::string _algo): algo(_algo){ postLoad(*this); }
-		MatchMaker(Real _val): algo("val"), val(_val){ postLoad(*this); }
-		Real computeFallback(Real val1, Real val2) const ;
-		void postLoad(MatchMaker&);
-		// return value looking up matches for id1+id2 (the order is arbitrary)
-		// if no match is found, use val1,val2 and algo strategy to compute new value.
-		// if no match is found and val1 or val2 are not given, throw exception
-		Real operator()(const int id1, const int id2, const Real val1=NaN, const Real val2=NaN) const;
+class MatchMaker : public Serializable {
+	Real fbZero(Real /*v1*/, Real /*v2*/) const { return 0.; }
+	Real fbAvg(Real v1, Real v2) const { return (v1 + v2) / 2.; }
+	Real fbMin(Real v1, Real v2) const { return min(v1, v2); }
+	Real fbMax(Real v1, Real v2) const { return max(v1, v2); }
+	Real fbHarmAvg(Real v1, Real v2) const { return 2 * v1 * v2 / (v1 + v2); }
+	Real fbVal(Real /*v1*/, Real /*v2*/) const { return val; }
+	Real (MatchMaker::*fbPtr)(Real, Real) const;
+	// whether the current fbPtr function needs valid input values in order to give meaningful result.
+	// must be kept in sync with fbPtr, which is done in postLoad
+	bool fbNeedsValues;
+
+	// unordered set for a fast coefficient search
+	boost::unordered_map<std::pair<int, int>, Real> matchSet;
+
+public:
+	virtual ~MatchMaker() {};
+	MatchMaker(std::string _algo)
+	        : algo(_algo)
+	{
+		postLoad(*this);
+	}
+	MatchMaker(Real _val)
+	        : algo("val")
+	        , val(_val)
+	{
+		postLoad(*this);
+	}
+	Real computeFallback(Real val1, Real val2) const;
+	void postLoad(MatchMaker&);
+	// return value looking up matches for id1+id2 (the order is arbitrary)
+	// if no match is found, use val1,val2 and algo strategy to compute new value.
+	// if no match is found and val1 or val2 are not given, throw exception
+	Real operator()(const int id1, const int id2, const Real val1 = NaN, const Real val2 = NaN) const;
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(MatchMaker,Serializable,"Class matching pair of ids to return pre-defined (for a pair of ids defined in :yref:`matches<MatchMaker.matches>`) or derived value (computed using :yref:`algo<MatchMaker.algo>`) of a scalar parameter. It can be called (``id1``, ``id2``, ``val1=NaN``, ``val2=NaN``) in both python and c++. \n\n.. note:: There is a :ref:`converter <customconverters>` from python number defined for this class, which creates a new :yref:`MatchMaker` returning the value of that number; instead of giving the object instance therefore, you can only pass the number value and it will be converted automatically.",
 			((std::vector<Vector3r>,matches,,Attr::readonly,"Array of ``(id1,id2,value)`` items; queries matching ``id1`` + ``id2`` or ``id2`` + ``id1`` will return ``value``"))
@@ -51,4 +60,3 @@ class MatchMaker: public Serializable {
 REGISTER_SERIALIZABLE(MatchMaker);
 
 } // namespace yade
-

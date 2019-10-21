@@ -1,16 +1,20 @@
 // 2008 © Václav Šmilauer <eudoxos@arcig.cz>
 #pragma once
-#include<core/GlobalEngine.hpp>
-#include<core/Scene.hpp>
-#include<pkg/common/PeriodicEngines.hpp>
-#include<lib/pyutil/gil.hpp>
+#include <lib/pyutil/gil.hpp>
+#include <core/GlobalEngine.hpp>
+#include <core/Scene.hpp>
+#include <pkg/common/PeriodicEngines.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class PyRunner: public PeriodicEngine {
-	public :
-		/* virtual bool isActivated: not overridden, PeriodicEngine handles that */
-		virtual void action(){ if(command.size()>0) pyRunString(command); }
+class PyRunner : public PeriodicEngine {
+public:
+	/* virtual bool isActivated: not overridden, PeriodicEngine handles that */
+	virtual void action()
+	{
+		if (command.size() > 0)
+			pyRunString(command);
+	}
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(PyRunner,PeriodicEngine,
 		"Execute a python command periodically, with defined (and adjustable) periodicity. See :yref:`PeriodicEngine` documentation for details.",
@@ -21,4 +25,3 @@ class PyRunner: public PeriodicEngine {
 REGISTER_SERIALIZABLE(PyRunner);
 
 } // namespace yade
-

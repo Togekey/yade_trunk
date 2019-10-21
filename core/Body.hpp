@@ -9,76 +9,107 @@
 *************************************************************************/
 #pragma once
 
-#include "Shape.hpp"
 #include "Bound.hpp"
-#include "State.hpp"
 #include "Material.hpp"
+#include "Shape.hpp"
+#include "State.hpp"
 
 #include <lib/base/Math.hpp>
-#include <lib/serialization/Serializable.hpp>
 #include <lib/multimethods/Indexable.hpp>
+#include <lib/serialization/Serializable.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
 class Scene;
 class Interaction;
 
-class Body: public Serializable{
-	public:
-		// numerical types for storing ids
-		using id_t = int ;
-		// internal structure to hold some interaction of a body; used by InteractionContainer;
-		using MapId2IntrT = std::map<Body::id_t, shared_ptr<Interaction> >;
-		// groupMask type
+class Body : public Serializable {
+public:
+	// numerical types for storing ids
+	using id_t = int;
+	// internal structure to hold some interaction of a body; used by InteractionContainer;
+	using MapId2IntrT = std::map<Body::id_t, shared_ptr<Interaction>>;
+	// groupMask type
 
-		// bits for Body::flags
-		enum { FLAG_BOUNDED=1, FLAG_ASPHERICAL=2, FLAG_SUBDOMAIN=4 }; /* add powers of 2 as needed */
-		//! symbolic constant for body that doesn't exist.
-		static const Body::id_t ID_NONE;
-		//! get Body pointer given its id. 
-		static const shared_ptr<Body>& byId(Body::id_t _id,Scene* rb=NULL);
-		static const shared_ptr<Body>& byId(Body::id_t _id,shared_ptr<Scene> rb);
-		
-		//! Whether this Body is a Clump.
-		//! @note The following is always true: \code (Body::isClump() XOR Body::isClumpMember() XOR Body::isStandalone()) \endcode
-		bool isClump() const {return clumpId!=ID_NONE && id==clumpId;}
-		//! Whether this Body is member of a Clump.
-		bool isClumpMember() const {return clumpId!=ID_NONE && id!=clumpId;}
-		//! Whether this body is standalone (neither Clump, nor member of a Clump)
-		bool isStandalone() const {return clumpId==ID_NONE;}
+	// bits for Body::flags
+	enum { FLAG_BOUNDED = 1, FLAG_ASPHERICAL = 2, FLAG_SUBDOMAIN = 4 }; /* add powers of 2 as needed */
+	//! symbolic constant for body that doesn't exist.
+	static const Body::id_t ID_NONE;
+	//! get Body pointer given its id.
+	static const shared_ptr<Body>& byId(Body::id_t _id, Scene* rb = NULL);
+	static const shared_ptr<Body>& byId(Body::id_t _id, shared_ptr<Scene> rb);
 
-		//! Whether this body has all DOFs blocked
-		// inline accessors
-		// logic: http://stackoverflow.com/questions/47981/how-do-you-set-clear-and-toggle-a-single-bit-in-c
-		bool isDynamic() const { assert(state); return state->blockedDOFs!=State::DOF_ALL; }
-		void setDynamic(bool d){ assert(state); if(d){ state->blockedDOFs=State::DOF_NONE; } else { state->blockedDOFs=State::DOF_ALL; state->vel=state->angVel=Vector3r::Zero(); } }
-		bool isBounded() const {return flags & FLAG_BOUNDED; }
-		void setBounded(bool d){ if(d) flags|=FLAG_BOUNDED; else flags&=~(FLAG_BOUNDED); }
-		bool getIsSubdomain() const {return flags & FLAG_SUBDOMAIN; }
-		void setIsSubdomain(bool d){ if(d) flags|=FLAG_SUBDOMAIN; else flags&=~(FLAG_SUBDOMAIN); }
-		bool isAspherical() const {return flags & FLAG_ASPHERICAL; }
-		void setAspherical(bool d){ if(d) flags|=FLAG_ASPHERICAL; else flags&=~(FLAG_ASPHERICAL); }
-		
-		/*! Hook for clump to update position of members when user-forced reposition and redraw (through GUI) occurs.
+	//! Whether this Body is a Clump.
+	//! @note The following is always true: \code (Body::isClump() XOR Body::isClumpMember() XOR Body::isStandalone()) \endcode
+	bool isClump() const { return clumpId != ID_NONE && id == clumpId; }
+	//! Whether this Body is member of a Clump.
+	bool isClumpMember() const { return clumpId != ID_NONE && id != clumpId; }
+	//! Whether this body is standalone (neither Clump, nor member of a Clump)
+	bool isStandalone() const { return clumpId == ID_NONE; }
+
+	//! Whether this body has all DOFs blocked
+	// inline accessors
+	// logic: http://stackoverflow.com/questions/47981/how-do-you-set-clear-and-toggle-a-single-bit-in-c
+	bool isDynamic() const
+	{
+		assert(state);
+		return state->blockedDOFs != State::DOF_ALL;
+	}
+	void setDynamic(bool d)
+	{
+		assert(state);
+		if (d) {
+			state->blockedDOFs = State::DOF_NONE;
+		} else {
+			state->blockedDOFs = State::DOF_ALL;
+			state->vel = state->angVel = Vector3r::Zero();
+		}
+	}
+	bool isBounded() const { return flags & FLAG_BOUNDED; }
+	void setBounded(bool d)
+	{
+		if (d)
+			flags |= FLAG_BOUNDED;
+		else
+			flags &= ~(FLAG_BOUNDED);
+	}
+	bool getIsSubdomain() const { return flags & FLAG_SUBDOMAIN; }
+	void setIsSubdomain(bool d)
+	{
+		if (d)
+			flags |= FLAG_SUBDOMAIN;
+		else
+			flags &= ~(FLAG_SUBDOMAIN);
+	}
+	bool isAspherical() const { return flags & FLAG_ASPHERICAL; }
+	void setAspherical(bool d)
+	{
+		if (d)
+			flags |= FLAG_ASPHERICAL;
+		else
+			flags &= ~(FLAG_ASPHERICAL);
+	}
+
+	/*! Hook for clump to update position of members when user-forced reposition and redraw (through GUI) occurs.
 		 * This is useful only in cases when engines that do that in every iteration are not active - i.e. when the simulation is paused.
 		 * (otherwise, GLViewer would depend on Clump and therefore Clump would have to go to core...) */
-		virtual void userForcedDisplacementRedrawHook(){return;}
+	virtual void userForcedDisplacementRedrawHook() { return; }
 
-		boost::python::list py_intrs();
+	boost::python::list py_intrs();
 
-		Body::id_t getId() const {return id;};
-		unsigned int coordNumber() const;  // Number of neighboring particles
+	Body::id_t   getId() const { return id; };
+	unsigned int coordNumber() const; // Number of neighboring particles
 
-		mask_t getGroupMask() const {return groupMask; };
-		bool maskOk(int mask) const;
-		bool maskCompatible(int mask) const;
+	mask_t getGroupMask() const { return groupMask; };
+	bool   maskOk(int mask) const;
+	bool   maskCompatible(int mask) const;
 #ifdef YADE_MASK_ARBITRARY
-		bool maskOk(const mask_t& mask) const;
-		bool maskCompatible(const mask_t& mask) const;
+	bool maskOk(const mask_t& mask) const;
+	bool maskCompatible(const mask_t& mask) const;
 #endif
 
-		// only BodyContainer can set the id of a body
-		friend class BodyContainer;
+	// only BodyContainer can set the id of a body
+	friend class BodyContainer;
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Body,Serializable,"A particle, basic element of simulation; interacts with other bodies.",
@@ -123,4 +154,3 @@ class Body: public Serializable{
 REGISTER_SERIALIZABLE(Body);
 
 } // namespace yade
-

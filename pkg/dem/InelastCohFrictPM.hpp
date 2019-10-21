@@ -8,19 +8,18 @@
 
 #pragma once
 
-#include <pkg/common/ElastMat.hpp>
-#include <pkg/dem/ScGeom.hpp>
-#include <pkg/dem/FrictPhys.hpp>
 #include "CohesiveFrictionalContactLaw.hpp"
+#include <pkg/common/ElastMat.hpp>
+#include <pkg/dem/FrictPhys.hpp>
+#include <pkg/dem/ScGeom.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class InelastCohFrictMat : public FrictMat
-{
-	public :
-		virtual ~InelastCohFrictMat () {};
+class InelastCohFrictMat : public FrictMat {
+public:
+	virtual ~InelastCohFrictMat() {};
 
-/// Serialization
+	/// Serialization
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(InelastCohFrictMat,FrictMat,"",
 		((Real,tensionModulus,0.0,,"Tension elasticity modulus"))
@@ -50,16 +49,15 @@ class InelastCohFrictMat : public FrictMat
 		createIndex();			  
 					);
 	// clang-format on
-/// Indexable
-	REGISTER_CLASS_INDEX(InelastCohFrictMat,FrictMat);
+	/// Indexable
+	REGISTER_CLASS_INDEX(InelastCohFrictMat, FrictMat);
 };
 
 REGISTER_SERIALIZABLE(InelastCohFrictMat);
 
-class InelastCohFrictPhys : public FrictPhys
-{
-	public :
-		virtual ~InelastCohFrictPhys() {};
+class InelastCohFrictPhys : public FrictPhys {
+public:
+	virtual ~InelastCohFrictPhys() {};
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(InelastCohFrictPhys,FrictPhys,"",
 		((bool,cohesionBroken,false,,"is cohesion active? will be set false when a fragile contact is broken"))
@@ -113,20 +111,16 @@ class InelastCohFrictPhys : public FrictPhys
 		createIndex();
 	);
 	// clang-format on
-/// Indexable
-	REGISTER_CLASS_INDEX(InelastCohFrictPhys,FrictPhys);
-
+	/// Indexable
+	REGISTER_CLASS_INDEX(InelastCohFrictPhys, FrictPhys);
 };
 
 REGISTER_SERIALIZABLE(InelastCohFrictPhys);
 
-class Ip2_2xInelastCohFrictMat_InelastCohFrictPhys : public IPhysFunctor
-{
-	public :
-		virtual void go(const shared_ptr<Material>& b1,
-					const shared_ptr<Material>& b2,
-					const shared_ptr<Interaction>& interaction);
-		int cohesionDefinitionIteration;
+class Ip2_2xInelastCohFrictMat_InelastCohFrictPhys : public IPhysFunctor {
+public:
+	virtual void go(const shared_ptr<Material>& b1, const shared_ptr<Material>& b2, const shared_ptr<Interaction>& interaction);
+	int          cohesionDefinitionIteration;
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR(Ip2_2xInelastCohFrictMat_InelastCohFrictPhys,IPhysFunctor,
@@ -135,16 +129,16 @@ class Ip2_2xInelastCohFrictMat_InelastCohFrictPhys : public IPhysFunctor
 		cohesionDefinitionIteration = -1;
 		);
 	// clang-format on
-	FUNCTOR2D(InelastCohFrictMat,InelastCohFrictMat);
+	FUNCTOR2D(InelastCohFrictMat, InelastCohFrictMat);
 };
 
 REGISTER_SERIALIZABLE(Ip2_2xInelastCohFrictMat_InelastCohFrictPhys);
 
 
-class Law2_ScGeom6D_InelastCohFrictPhys_CohesionMoment: public LawFunctor{
-	public:
-		Real normElastEnergy();
-		Real shearElastEnergy();
+class Law2_ScGeom6D_InelastCohFrictPhys_CohesionMoment : public LawFunctor {
+public:
+	Real         normElastEnergy();
+	Real         shearElastEnergy();
 	virtual bool go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Law2_ScGeom6D_InelastCohFrictPhys_CohesionMoment,LawFunctor,"This law is currently under developpement. Final version and documentation will come before the end of 2014.",
@@ -153,10 +147,9 @@ class Law2_ScGeom6D_InelastCohFrictPhys_CohesionMoment: public LawFunctor{
 		.def("shearElastEnergy",&Law2_ScGeom6D_InelastCohFrictPhys_CohesionMoment::shearElastEnergy,"Compute shear elastic energy.")
 	);
 	// clang-format on
-	FUNCTOR2D(ScGeom6D,InelastCohFrictPhys);
+	FUNCTOR2D(ScGeom6D, InelastCohFrictPhys);
 	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(Law2_ScGeom6D_InelastCohFrictPhys_CohesionMoment);
 
 } // namespace yade
-

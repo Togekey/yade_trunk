@@ -25,15 +25,15 @@ Features of the interaction law:
 
 #pragma once
 
-#include<pkg/common/ElastMat.hpp>
-#include<pkg/common/Dispatching.hpp>
-#include<pkg/dem/FrictPhys.hpp>
-#include<pkg/dem/ScGeom.hpp>
+#include <pkg/common/Dispatching.hpp>
+#include <pkg/common/ElastMat.hpp>
+#include <pkg/dem/FrictPhys.hpp>
+#include <pkg/dem/ScGeom.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
 /** This class holds information associated with each body state*/
-class WireState: public State {
+class WireState : public State {
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(WireState,State,"Wire state information of each body.\n\nNone of that is used for computation (at least not now), only for post-processing.",
 		((int,numBrokenLinks,0,,"Number of broken links (e.g. number of wires connected to the body which are broken). [-]"))
@@ -41,16 +41,16 @@ class WireState: public State {
 		createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(WireState,State);
+	REGISTER_CLASS_INDEX(WireState, State);
 };
 REGISTER_SERIALIZABLE(WireState);
 
 /** This class holds information associated with each body */
-class WireMat: public FrictMat {
-	public:
-		virtual shared_ptr<State> newAssocState() const { return shared_ptr<State>(new WireState); }
-		virtual bool stateTypeOk(State* s) const { return (bool)dynamic_cast<WireState*>(s); }
-		void postLoad(WireMat&);
+class WireMat : public FrictMat {
+public:
+	virtual shared_ptr<State> newAssocState() const { return shared_ptr<State>(new WireState); }
+	virtual bool              stateTypeOk(State* s) const { return (bool)dynamic_cast<WireState*>(s); }
+	void                      postLoad(WireMat&);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(WireMat,FrictMat,"Material for use with the Wire classes. In conjunction with the corresponding functors it can be used to model steel wire meshes [Thoeni2014]_, geotextiles [Cheng2016]_ and more.",
 			((Real,diameter,0.0027,,"Diameter of the single wire in [m] (the diameter is used to compute the cross-section area of the wire)."))
@@ -76,16 +76,16 @@ class WireMat: public FrictMat {
 	);
 	// clang-format on
 	DECLARE_LOGGER;
-	REGISTER_CLASS_INDEX(WireMat,FrictMat);
+	REGISTER_CLASS_INDEX(WireMat, FrictMat);
 };
 REGISTER_SERIALIZABLE(WireMat);
 
 /** This class holds information associated with each interaction */
 // NOTE: even if WirePhys has no shear force it is derived from FrictPhys since all implemented functions (e.g. unbalancedForce) work properly for FrictPhys only
-class WirePhys: public FrictPhys {
-	public:
-		virtual ~WirePhys();
-	
+class WirePhys : public FrictPhys {
+public:
+	virtual ~WirePhys();
+
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(WirePhys,FrictPhys,"Representation of a single interaction of the WirePM type, storage for relevant parameters",
 			((Real,initD,0.,,"Equilibrium distance for particles. Computed as the initial inter-particular distance when particle are linked."))
@@ -103,32 +103,32 @@ class WirePhys: public FrictPhys {
 		);
 	// clang-format on
 	DECLARE_LOGGER;
-	REGISTER_CLASS_INDEX(WirePhys,FrictPhys);
+	REGISTER_CLASS_INDEX(WirePhys, FrictPhys);
 };
 REGISTER_SERIALIZABLE(WirePhys);
 
 /** 2d functor creating IPhys (Ip2) taking WireMat and WireMat of 2 bodies, returning type WirePhys */
-class Ip2_WireMat_WireMat_WirePhys: public IPhysFunctor{
-	public:
-		virtual void go(const shared_ptr<Material>& pp1, const shared_ptr<Material>& pp2, const shared_ptr<Interaction>& interaction);
-		
-		FUNCTOR2D(WireMat,WireMat);
-		
+class Ip2_WireMat_WireMat_WirePhys : public IPhysFunctor {
+public:
+	virtual void go(const shared_ptr<Material>& pp1, const shared_ptr<Material>& pp2, const shared_ptr<Interaction>& interaction);
+
+	FUNCTOR2D(WireMat, WireMat);
+
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS(Ip2_WireMat_WireMat_WirePhys,IPhysFunctor,"Converts 2 :yref:`WireMat` instances to :yref:`WirePhys` with corresponding parameters.",
 			((int,linkThresholdIteration,1,,"Iteration to create the link."))
 		);
 	// clang-format on
-		DECLARE_LOGGER;
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(Ip2_WireMat_WireMat_WirePhys);
 
 /** 2d functor creating the interaction law (Law2) based on SphereContactGeometry (ScGeom) and WirePhys of 2 bodies, returning type WirePM */
-class Law2_ScGeom_WirePhys_WirePM: public LawFunctor{
-	public:
-		virtual bool go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I);
-		
-		FUNCTOR2D(ScGeom,WirePhys);
+class Law2_ScGeom_WirePhys_WirePM : public LawFunctor {
+public:
+	virtual bool go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I);
+
+	FUNCTOR2D(ScGeom, WirePhys);
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS(Law2_ScGeom_WirePhys_WirePM,LawFunctor,"Constitutive law for the wire model.",
@@ -140,4 +140,3 @@ class Law2_ScGeom_WirePhys_WirePM: public LawFunctor{
 REGISTER_SERIALIZABLE(Law2_ScGeom_WirePhys_WirePM);
 
 } // namespace yade
-

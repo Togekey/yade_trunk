@@ -5,21 +5,20 @@
 *  This program is free software; it is licensed under the terms of the  *
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
- 
+
 #pragma once
 
-#include <pkg/common/Dispatching.hpp>
 #include <pkg/common/Aabb.hpp>
-#include <pkg/common/Sphere.hpp>
-#include <pkg/common/Facet.hpp>
 #include <pkg/common/Box.hpp>
+#include <pkg/common/Dispatching.hpp>
+#include <pkg/common/Facet.hpp>
+#include <pkg/common/Sphere.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class Bo1_Sphere_Aabb : public BoundFunctor
-{
-	public :
-		void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r&, const Body*);
+class Bo1_Sphere_Aabb : public BoundFunctor {
+public:
+	void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r&, const Body*);
 	FUNCTOR1D(Sphere);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(Bo1_Sphere_Aabb,BoundFunctor,"Functor creating :yref:`Aabb` from :yref:`Sphere`.",
@@ -39,9 +38,9 @@ REGISTER_SERIALIZABLE(Bo1_Sphere_Aabb);
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
-class Bo1_Facet_Aabb : public BoundFunctor{
-	public:
-		void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body*);
+class Bo1_Facet_Aabb : public BoundFunctor {
+public:
+	void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body*);
 	FUNCTOR1D(Facet);
 	// clang-format off
 	YADE_CLASS_BASE_DOC(Bo1_Facet_Aabb,BoundFunctor,"Creates/updates an :yref:`Aabb` of a :yref:`Facet`.");
@@ -59,9 +58,9 @@ REGISTER_SERIALIZABLE(Bo1_Facet_Aabb);
 *************************************************************************/
 
 class Box;
-class Bo1_Box_Aabb : public BoundFunctor{
-	public:
-		void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body*);
+class Bo1_Box_Aabb : public BoundFunctor {
+public:
+	void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body*);
 	FUNCTOR1D(Box);
 	// clang-format off
 	YADE_CLASS_BASE_DOC(Bo1_Box_Aabb,BoundFunctor,"Create/update an :yref:`Aabb` of a :yref:`Box`.");
@@ -71,4 +70,3 @@ class Bo1_Box_Aabb : public BoundFunctor{
 REGISTER_SERIALIZABLE(Bo1_Box_Aabb);
 
 } // namespace yade
-

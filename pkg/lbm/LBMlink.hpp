@@ -9,22 +9,25 @@
 #ifdef LBM_ENGINE
 
 #pragma once
-#include<lib/serialization/Serializable.hpp>
-#include<lib/multimethods/Indexable.hpp>
+#include <lib/multimethods/Indexable.hpp>
+#include <lib/serialization/Serializable.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class LBMlink: public Serializable{
-    public:
-        void ReinitDynamicalProperties() {
-                sid=-1; fid=-1;
-                idx_sigma_i=-1; isBd=false;
-                VbMid=Vector3r::Zero();
-                DistMid=Vector3r::Zero();
-                ct=0.;
-                return;
-                };
-        virtual ~LBMlink() {};
+class LBMlink : public Serializable {
+public:
+	void ReinitDynamicalProperties()
+	{
+		sid         = -1;
+		fid         = -1;
+		idx_sigma_i = -1;
+		isBd        = false;
+		VbMid       = Vector3r::Zero();
+		DistMid     = Vector3r::Zero();
+		ct          = 0.;
+		return;
+	};
+	virtual ~LBMlink() {};
 
 	// clang-format off
     YADE_CLASS_BASE_DOC_ATTRS_CTOR(LBMlink,Serializable,

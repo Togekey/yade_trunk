@@ -8,21 +8,27 @@
 
 #pragma once
 
-#include "Interaction.hpp"
 #include "GlobalEngine.hpp"
+#include "Interaction.hpp"
 #include "Scene.hpp"
 
 namespace yade { // Cannot have #include directive inside.
 
 class Body;
 
-class TimeStepper: public GlobalEngine{
-	public:
-		virtual void computeTimeStep(Scene* ) { throw; };
-		virtual bool isActivated() {return (active && (scene->iter % timeStepUpdateInterval == 0));};
-		virtual void action() { computeTimeStep(scene);} ;
-		void setActive(bool a, int nb=-1) {active = a; if (nb>0) {timeStepUpdateInterval = (unsigned int)nb;}}
-		
+class TimeStepper : public GlobalEngine {
+public:
+	virtual void computeTimeStep(Scene*) { throw; };
+	virtual bool isActivated() { return (active && (scene->iter % timeStepUpdateInterval == 0)); };
+	virtual void action() { computeTimeStep(scene); };
+	void         setActive(bool a, int nb = -1)
+	{
+		active = a;
+		if (nb > 0) {
+			timeStepUpdateInterval = (unsigned int)nb;
+		}
+	}
+
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS(
 			TimeStepper,GlobalEngine,"Engine defining time-step (fundamental class)",
@@ -34,4 +40,3 @@ class TimeStepper: public GlobalEngine{
 REGISTER_SERIALIZABLE(TimeStepper);
 
 } // namespace yade
-

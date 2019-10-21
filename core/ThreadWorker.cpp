@@ -13,7 +13,7 @@ namespace yade { // Cannot have #include directive inside.
 void ThreadWorker::setTerminate(bool b)
 {
 	boost::mutex::scoped_lock lock(m_mutex);
-	m_should_terminate=b;
+	m_should_terminate = b;
 };
 
 bool ThreadWorker::shouldTerminate()
@@ -21,17 +21,17 @@ bool ThreadWorker::shouldTerminate()
 	boost::mutex::scoped_lock lock(m_mutex);
 	return m_should_terminate;
 };
-		
+
 void ThreadWorker::setProgress(float i)
 {
 	boost::mutex::scoped_lock lock(m_mutex);
-	m_progress=i;
+	m_progress = i;
 };
 
 void ThreadWorker::setStatus(std::string s)
 {
 	boost::mutex::scoped_lock lock(m_mutex);
-	m_status=s;
+	m_status = s;
 };
 
 float ThreadWorker::progress()
@@ -78,4 +78,3 @@ void ThreadWorker::callSingleAction()
 };
 
 } // namespace yade
-

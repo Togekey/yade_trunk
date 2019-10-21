@@ -25,13 +25,13 @@ namespace yade { // Cannot have #include directive inside.
 
 class TriaxialStressController;
 
-class TriaxialStateRecorder : public Recorder
-{
-	private :
-		shared_ptr<TriaxialStressController> triaxialStressController; 
-	public :
-		virtual ~TriaxialStateRecorder ();
-		virtual void action();
+class TriaxialStateRecorder : public Recorder {
+private:
+	shared_ptr<TriaxialStressController> triaxialStressController;
+
+public:
+	virtual ~TriaxialStateRecorder();
+	virtual void action();
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(TriaxialStateRecorder,Recorder,"Engine recording triaxial variables (see the variables list in the first line of the output file). This recorder needs :yref:`TriaxialCompressionEngine` or :yref:`ThreeDTriaxialEngine` present in the simulation).",
@@ -44,4 +44,3 @@ class TriaxialStateRecorder : public Recorder
 REGISTER_SERIALIZABLE(TriaxialStateRecorder);
 
 } // namespace yade
-

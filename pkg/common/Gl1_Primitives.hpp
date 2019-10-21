@@ -15,17 +15,17 @@
 
 #pragma once
 
-#include<pkg/common/GLDrawFunctors.hpp>
-#include<pkg/common/Aabb.hpp>
-#include<pkg/common/Box.hpp>
-#include<pkg/common/Facet.hpp>
-#include<pkg/common/Sphere.hpp>
+#include <pkg/common/Aabb.hpp>
+#include <pkg/common/Box.hpp>
+#include <pkg/common/Facet.hpp>
+#include <pkg/common/GLDrawFunctors.hpp>
+#include <pkg/common/Sphere.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class Gl1_Aabb: public GlBoundFunctor{
-	public:
-		virtual void go(const shared_ptr<Bound>&, Scene*);
+class Gl1_Aabb : public GlBoundFunctor {
+public:
+	virtual void go(const shared_ptr<Bound>&, Scene*);
 	RENDERS(Aabb);
 	// clang-format off
 	YADE_CLASS_BASE_DOC(Gl1_Aabb,GlBoundFunctor,"Render Axis-aligned bounding box (:yref:`Aabb`).");
@@ -34,9 +34,9 @@ class Gl1_Aabb: public GlBoundFunctor{
 REGISTER_SERIALIZABLE(Gl1_Aabb);
 
 
-class Gl1_Box : public GlShapeFunctor{
-	public :
-		virtual void go(const shared_ptr<Shape>&, const shared_ptr<State>&,bool,const GLViewInfo&);
+class Gl1_Box : public GlShapeFunctor {
+public:
+	virtual void go(const shared_ptr<Shape>&, const shared_ptr<State>&, bool, const GLViewInfo&);
 	RENDERS(Box);
 	// clang-format off
 	YADE_CLASS_BASE_DOC(Gl1_Box,GlShapeFunctor,"Renders :yref:`Box` object");
@@ -45,10 +45,9 @@ class Gl1_Box : public GlShapeFunctor{
 
 REGISTER_SERIALIZABLE(Gl1_Box);
 
-class Gl1_Facet : public GlShapeFunctor
-{	
-	public:
-		virtual void go(const shared_ptr<Shape>&, const shared_ptr<State>&,bool,const GLViewInfo&);
+class Gl1_Facet : public GlShapeFunctor {
+public:
+	virtual void go(const shared_ptr<Shape>&, const shared_ptr<State>&, bool, const GLViewInfo&);
 	RENDERS(Facet);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_STATICATTRS(Gl1_Facet,GlShapeFunctor,"Renders :yref:`Facet` object",
@@ -60,25 +59,26 @@ class Gl1_Facet : public GlShapeFunctor
 REGISTER_SERIALIZABLE(Gl1_Facet);
 
 
-class Gl1_Sphere : public GlShapeFunctor{
-	private:
-		// for stripes
-		static vector<Vector3r> vertices, faces;
-		static int glStripedSphereList;
-		static int glGlutSphereList;
-		void subdivideTriangle(Vector3r& v1,Vector3r& v2,Vector3r& v3, int depth);
-		//Generate GlList for GLUT sphere
-		void initGlutGlList();
-		//Generate GlList for sliced spheres
-		void initStripedGlList();
-		//for regenerating glutSphere or glutTorus list if needed
-		static Real prevQuality;
-		//for regenerating glutSphere or glutTorus list if needed
-		static string prevDisplayMode;
-		//for regenerating glutTorus list if needed
-		static char prevCircleAllowedRotationAxis;
-	public:
-		virtual void go(const shared_ptr<Shape>&, const shared_ptr<State>&,bool,const GLViewInfo&);
+class Gl1_Sphere : public GlShapeFunctor {
+private:
+	// for stripes
+	static vector<Vector3r> vertices, faces;
+	static int              glStripedSphereList;
+	static int              glGlutSphereList;
+	void                    subdivideTriangle(Vector3r& v1, Vector3r& v2, Vector3r& v3, int depth);
+	//Generate GlList for GLUT sphere
+	void initGlutGlList();
+	//Generate GlList for sliced spheres
+	void initStripedGlList();
+	//for regenerating glutSphere or glutTorus list if needed
+	static Real prevQuality;
+	//for regenerating glutSphere or glutTorus list if needed
+	static string prevDisplayMode;
+	//for regenerating glutTorus list if needed
+	static char prevCircleAllowedRotationAxis;
+
+public:
+	virtual void go(const shared_ptr<Shape>&, const shared_ptr<State>&, bool, const GLViewInfo&);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_STATICATTRS(Gl1_Sphere,GlShapeFunctor,"Renders :yref:`Sphere` object",
 		((Real,quality,1.0,,"Change discretization level of spheres. quality>1  for better image quality, at the price of more cpu/gpu usage, 0<quality<1 for faster rendering. If mono-color spheres are displayed (:yref:`Gl1_Sphere::stripes` = False), quality mutiplies :yref:`Gl1_Sphere::glutSlices` and :yref:`Gl1_Sphere::glutStacks`. If striped spheres are displayed (:yref:`Gl1_Sphere::stripes` = True), only integer increments are meaningfull : quality=1 and quality=1.9 will give the same result, quality=2 will give finer result."))
@@ -98,4 +98,3 @@ class Gl1_Sphere : public GlShapeFunctor{
 REGISTER_SERIALIZABLE(Gl1_Sphere);
 
 } // namespace yade
-

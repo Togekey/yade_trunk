@@ -1,26 +1,29 @@
-// 2008 © Václav Šmilauer <eudoxos@arcig.cz> 
+// 2008 © Václav Šmilauer <eudoxos@arcig.cz>
 #pragma once
-#include<core/PartialEngine.hpp>
-#include<core/State.hpp>
-#include<core/Scene.hpp>
+#include <core/PartialEngine.hpp>
+#include <core/Scene.hpp>
+#include <core/State.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class StepDisplacer: public PartialEngine {
-	public:
-		virtual void action() {
-			FOREACH(Body::id_t id, ids){
-			const shared_ptr<Body>& b=Body::byId(id,scene);
-			if(setVelocities){
-				const Real& dt=scene->dt;
-				b->state->vel=mov/dt;
-				AngleAxisr aa(rot); aa.axis().normalize();
-				b->state->angVel=aa.axis()*aa.angle()/dt;
-				LOG_DEBUG("Angular velocity set to "<<aa.axis()*aa.angle()/dt<<". Axis="<<aa.axis()<<", angle="<<aa.angle());
+class StepDisplacer : public PartialEngine {
+public:
+	virtual void action()
+	{
+		FOREACH(Body::id_t id, ids)
+		{
+			const shared_ptr<Body>& b = Body::byId(id, scene);
+			if (setVelocities) {
+				const Real& dt = scene->dt;
+				b->state->vel  = mov / dt;
+				AngleAxisr aa(rot);
+				aa.axis().normalize();
+				b->state->angVel = aa.axis() * aa.angle() / dt;
+				LOG_DEBUG("Angular velocity set to " << aa.axis() * aa.angle() / dt << ". Axis=" << aa.axis() << ", angle=" << aa.angle());
 			}
-			if(!setVelocities){
-				b->state->pos+=mov;
-				b->state->ori=rot*b->state->ori;
+			if (!setVelocities) {
+				b->state->pos += mov;
+				b->state->ori = rot * b->state->ori;
 			}
 		}
 	}
@@ -35,4 +38,3 @@ class StepDisplacer: public PartialEngine {
 REGISTER_SERIALIZABLE(StepDisplacer);
 
 } // namespace yade
-

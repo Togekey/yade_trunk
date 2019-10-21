@@ -11,37 +11,35 @@
 
 #include <dlfcn.h>
 
-#include<lib/base/Logging.hpp>
-#include<lib/base/Math.hpp>
+#include <lib/base/Logging.hpp>
+#include <lib/base/Math.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class DynLibManager 
-{
-	private :
-		std::map<const std::string, void *> handles;
-		bool autoUnload;
+class DynLibManager {
+private:
+	std::map<const std::string, void*> handles;
+	bool                               autoUnload;
 
-	public :
-		DynLibManager ();
-		~DynLibManager ();
-		void addBaseDirectory(const std::string& dir);
+public:
+	DynLibManager();
+	~DynLibManager();
+	void addBaseDirectory(const std::string& dir);
 
-		bool load(const std::string& libName);
+	bool load(const std::string& libName);
 
-		bool unload (const std::string& libName);
-		bool isLoaded (const std::string& libName);
-		bool unloadAll ();
-		void setAutoUnload ( bool enabled );
+	bool unload(const std::string& libName);
+	bool isLoaded(const std::string& libName);
+	bool unloadAll();
+	void setAutoUnload(bool enabled);
 
-    std::string lastError();
-		DECLARE_LOGGER;
+	std::string lastError();
+	DECLARE_LOGGER;
 
-	private :
-		bool closeLib(const std::string libName);
-		bool error();
-    std::string lastError_;
+private:
+	bool        closeLib(const std::string libName);
+	bool        error();
+	std::string lastError_;
 };
 
 } // namespace yade
-

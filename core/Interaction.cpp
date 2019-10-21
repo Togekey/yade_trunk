@@ -8,39 +8,47 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
-#include"Interaction.hpp"
+#include "Interaction.hpp"
 
-#include<core/Scene.hpp>
+#include <core/Scene.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-Interaction::Interaction(Body::id_t newId1,Body::id_t newId2): id1(newId1), id2(newId2), cellDist(Vector3i(0,0,0)){ reset(); }
-
-bool Interaction::isFresh(Scene* rb){ return iterMadeReal==rb->iter;}
-
-void Interaction::init(){
-	iterMadeReal=-1;
-	functorCache.geomExists=true;
-	isActive=true;
+Interaction::Interaction(Body::id_t newId1, Body::id_t newId2)
+        : id1(newId1)
+        , id2(newId2)
+        , cellDist(Vector3i(0, 0, 0))
+{
+	reset();
 }
 
-void Interaction::reset(){
-	geom=shared_ptr<IGeom>();
-	phys=shared_ptr<IPhys>();
-	functorCache.geom = nullptr;
-	functorCache.phys = nullptr;
+bool Interaction::isFresh(Scene* rb) { return iterMadeReal == rb->iter; }
+
+void Interaction::init()
+{
+	iterMadeReal            = -1;
+	functorCache.geomExists = true;
+	isActive                = true;
+}
+
+void Interaction::reset()
+{
+	geom                  = shared_ptr<IGeom>();
+	phys                  = shared_ptr<IPhys>();
+	functorCache.geom     = nullptr;
+	functorCache.phys     = nullptr;
 	functorCache.constLaw = nullptr;
 	init();
 }
 
 
-void Interaction::swapOrder(){
-	if(geom || phys){
+void Interaction::swapOrder()
+{
+	if (geom || phys) {
 		throw std::logic_error("Bodies in interaction cannot be swapped if they have geom or phys.");
 	}
-	std::swap(id1,id2);
-	cellDist*=-1;
+	std::swap(id1, id2);
+	cellDist *= -1;
 }
 
 } // namespace yade
-

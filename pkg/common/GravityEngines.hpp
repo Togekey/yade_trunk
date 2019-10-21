@@ -1,16 +1,16 @@
 // 2004 © Janek Kozicki <cosurgi@berlios.de>
-// 2007,2008 © Václav Šmilauer <eudoxos@arcig.cz> 
+// 2007,2008 © Václav Šmilauer <eudoxos@arcig.cz>
 #pragma once
-#include<pkg/common/FieldApplier.hpp>
-#include<core/Interaction.hpp>
-#include<core/Body.hpp>
+#include <core/Body.hpp>
+#include <core/Interaction.hpp>
+#include <pkg/common/FieldApplier.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
 /*! Homogeneous gravity field; applies gravity×mass force on all bodies. */
-class GravityEngine: public FieldApplier{
-	public:
-		virtual void action();
+class GravityEngine : public FieldApplier {
+public:
+	virtual void action();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(GravityEngine,FieldApplier,"Engine applying constant acceleration to all bodies. DEPRECATED, use :yref:`Newton::gravity` unless you need energy tracking or selective gravity application using groupMask).",
 		((Vector3r,gravity,Vector3r::Zero(),,"Acceleration [kgms⁻²]"))
@@ -29,9 +29,9 @@ REGISTER_SERIALIZABLE(GravityEngine);
  *
  * @todo This code has not been yet tested at all.
  */
-class CentralGravityEngine: public FieldApplier {
-	public:
-		virtual void action();
+class CentralGravityEngine : public FieldApplier {
+public:
+	virtual void action();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(CentralGravityEngine,FieldApplier,"Engine applying acceleration to all bodies, towards a central body.",
 		((Body::id_t,centralBody,Body::ID_NONE,,"The :yref:`body<Body>` towards which all other bodies are attracted."))
@@ -47,8 +47,8 @@ REGISTER_SERIALIZABLE(CentralGravityEngine);
 /*! Apply acceleration (independent of distance) directed towards an axis.
  *
  */
-class AxialGravityEngine: public FieldApplier {
-	public:
+class AxialGravityEngine : public FieldApplier {
+public:
 	virtual void action();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(AxialGravityEngine,FieldApplier,"Apply acceleration (independent of distance) directed towards an axis.",
@@ -61,9 +61,9 @@ class AxialGravityEngine: public FieldApplier {
 };
 REGISTER_SERIALIZABLE(AxialGravityEngine);
 
-class HdapsGravityEngine: public GravityEngine{
-	public:
-	Vector2i readSysfsFile(const std::string& name);
+class HdapsGravityEngine : public GravityEngine {
+public:
+	Vector2i     readSysfsFile(const std::string& name);
 	virtual void action();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(HdapsGravityEngine,GravityEngine,"Read accelerometer in Thinkpad laptops (`HDAPS <http://en.wikipedia.org/wiki/Active_hard_drive_protection>`__ and accordingly set gravity within the simulation. This code draws from `hdaps-gl <https://sourceforge.net/project/showfiles.php?group_id=138242>`__ . See :ysrc:`scripts/test/hdaps.py` for an example.",
@@ -81,4 +81,3 @@ class HdapsGravityEngine: public GravityEngine{
 REGISTER_SERIALIZABLE(HdapsGravityEngine);
 
 } // namespace yade
-

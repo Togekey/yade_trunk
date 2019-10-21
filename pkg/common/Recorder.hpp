@@ -1,32 +1,40 @@
 // 2009 © Václav Šmilauer <eudoxos@arcig.cz>
-#pragma once 
-#include<pkg/common/PeriodicEngines.hpp>
+#pragma once
+#include <pkg/common/PeriodicEngines.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class Recorder: public PeriodicEngine{
-	void openAndCheck() {
+class Recorder : public PeriodicEngine {
+	void openAndCheck()
+	{
 		assert(!out.is_open());
-		
+
 		std::string fileTemp = file;
-		if (addIterNum) fileTemp+="-" + boost::lexical_cast<string>(scene->iter);
-		
-		if(fileTemp.empty()) throw ios_base::failure(__FILE__ ": Empty filename.");
+		if (addIterNum)
+			fileTemp += "-" + boost::lexical_cast<string>(scene->iter);
+
+		if (fileTemp.empty())
+			throw ios_base::failure(__FILE__ ": Empty filename.");
 		out.open(fileTemp.c_str(), truncate ? fstream::trunc : fstream::app);
-		if(!out.good()) throw ios_base::failure(__FILE__ ": I/O error opening file `"+fileTemp+"'.");
+		if (!out.good())
+			throw ios_base::failure(__FILE__ ": I/O error opening file `" + fileTemp + "'.");
 	}
-	protected:
-		//! stream object that derived engines should write to
-		std::ofstream out;
-	public:
-		virtual ~Recorder() {};
-		virtual bool isActivated(){
-			if(PeriodicEngine::isActivated()){
-				if(!out.is_open()) openAndCheck();
-				return true;
-			}
-			return false;
+
+protected:
+	//! stream object that derived engines should write to
+	std::ofstream out;
+
+public:
+	virtual ~Recorder() {};
+	virtual bool isActivated()
+	{
+		if (PeriodicEngine::isActivated()) {
+			if (!out.is_open())
+				openAndCheck();
+			return true;
 		}
+		return false;
+	}
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(Recorder,PeriodicEngine,"Engine periodically storing some data to (one) external file. In addition PeriodicEngine, it handles opening the file as needed. See :yref:`PeriodicEngine` for controlling periodicity.",
 		((std::string,file,,,"Name of file to save to; must not be empty."))
@@ -38,4 +46,3 @@ class Recorder: public PeriodicEngine{
 REGISTER_SERIALIZABLE(Recorder);
 
 } // namespace yade
-

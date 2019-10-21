@@ -5,27 +5,26 @@
 *  This program is free software; it is licensed under the terms of the  *
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
- 
+
 #pragma once
 
-#include <map>
-#include <stdexcept>
-#include <core/Body.hpp>
 #include <lib/base/Logging.hpp>
 #include <lib/base/Math.hpp>
+#include <core/Body.hpp>
 #include <core/PartialEngine.hpp>
 #include <pkg/fem/DeformableCohesiveElement.hpp>
+#include <map>
+#include <stdexcept>
 
 namespace yade { // Cannot have #include directive inside.
 
 
-class Lin4NodeTetra_Lin4NodeTetra_InteractionElement: public DeformableCohesiveElement {
-	public:
+class Lin4NodeTetra_Lin4NodeTetra_InteractionElement : public DeformableCohesiveElement {
+public:
+	friend class If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat;
+	virtual ~Lin4NodeTetra_Lin4NodeTetra_InteractionElement();
+	void initialize(void);
 
-		friend class If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat;
-		virtual ~Lin4NodeTetra_Lin4NodeTetra_InteractionElement();
-		void initialize(void);
-	
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(Lin4NodeTetra_Lin4NodeTetra_InteractionElement,DeformableCohesiveElement,"Tetrahedral Deformable Element Composed of Nodes",
 		,
@@ -37,13 +36,11 @@ class Lin4NodeTetra_Lin4NodeTetra_InteractionElement: public DeformableCohesiveE
 
 	);
 	// clang-format on
-		DECLARE_LOGGER;
+	DECLARE_LOGGER;
 
-		REGISTER_CLASS_INDEX(Lin4NodeTetra_Lin4NodeTetra_InteractionElement,DeformableCohesiveElement);
-
+	REGISTER_CLASS_INDEX(Lin4NodeTetra_Lin4NodeTetra_InteractionElement, DeformableCohesiveElement);
 };
 
 REGISTER_SERIALIZABLE(Lin4NodeTetra_Lin4NodeTetra_InteractionElement);
 
 }; // namespace yade
-

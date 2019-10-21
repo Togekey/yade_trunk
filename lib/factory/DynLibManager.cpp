@@ -15,77 +15,73 @@ namespace yade { // Cannot have #include directive inside.
 CREATE_LOGGER(DynLibManager);
 
 
-DynLibManager::DynLibManager ()
-{
-	autoUnload = true;
-}
+DynLibManager::DynLibManager() { autoUnload = true; }
 
 
-DynLibManager::~DynLibManager ()
+DynLibManager::~DynLibManager()
 {
-	if(autoUnload) unloadAll();
+	if (autoUnload)
+		unloadAll();
 }
 
 // load plugin with given filename
-bool DynLibManager::load (const string& lib){
-	if (lib.empty()) throw std::runtime_error(__FILE__ ": got empty library name to load.");
-	void* handle = dlopen(lib.c_str(),RTLD_GLOBAL | RTLD_NOW);
-	if (!handle) return !error();
+bool DynLibManager::load(const string& lib)
+{
+	if (lib.empty())
+		throw std::runtime_error(__FILE__ ": got empty library name to load.");
+	void* handle = dlopen(lib.c_str(), RTLD_GLOBAL | RTLD_NOW);
+	if (!handle)
+		return !error();
 	handles[lib] = handle;
 	return true;
 }
 
 // unload plugin, given full filename
-bool DynLibManager::unload (const string& libName)
+bool DynLibManager::unload(const string& libName)
 {
 	if (isLoaded(libName))
-	return closeLib(libName);
-	else return false;
+		return closeLib(libName);
+	else
+		return false;
 }
 
 
-bool DynLibManager::unloadAll ()
+bool DynLibManager::unloadAll()
 {
-	std::map<const string, void *>::iterator ith  = handles.begin();
-	std::map<const string, void *>::iterator ithEnd  = handles.end();
-	for( ; ith!=ithEnd ; ++ith)
-		if ((*ith).first.length()!=0)
+	std::map<const string, void*>::iterator ith    = handles.begin();
+	std::map<const string, void*>::iterator ithEnd = handles.end();
+	for (; ith != ithEnd; ++ith)
+		if ((*ith).first.length() != 0)
 			unload((*ith).first);
 	return false;
 }
 
 
-bool DynLibManager::isLoaded (const string& libName)
+bool DynLibManager::isLoaded(const string& libName)
 {
-	std::map<const string, void *>::iterator ith = handles.find(libName);	
-	return (ith!= handles.end() && (*ith).second!=NULL);
+	std::map<const string, void*>::iterator ith = handles.find(libName);
+	return (ith != handles.end() && (*ith).second != NULL);
 }
 
 
-void DynLibManager::setAutoUnload ( bool enabled )
-{
-	autoUnload = enabled;
-}
+void DynLibManager::setAutoUnload(bool enabled) { autoUnload = enabled; }
 
 
 bool DynLibManager::closeLib(const string libName)
 {
 	dlclose(handles[libName]);
 	return !error();
-
 }
 
-std::string DynLibManager::lastError()
-{
-        return lastError_;
-}
+std::string DynLibManager::lastError() { return lastError_; }
 
-bool DynLibManager::error() 
+bool DynLibManager::error()
 {
- 	char * error = dlerror();
-	if (error != NULL)  { lastError_ = error;	}
-	return (error!=NULL);
+	char* error = dlerror();
+	if (error != NULL) {
+		lastError_ = error;
+	}
+	return (error != NULL);
 }
 
 } // namespace yade
-

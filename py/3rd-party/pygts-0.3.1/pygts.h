@@ -32,9 +32,9 @@
 #define PYGTS_DEBUG 1
 #endif /* PYGTS_DEBUG */
 
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
 #include <Python.h>
 #include <structmember.h>
@@ -54,14 +54,14 @@
 // Code that generates this warning, Note: we cannot do this trick in yade. If we have a warning in yade, we have to fix it! See also https://gitlab.com/yade-dev/trunk/merge_requests/73
 // This method will work once g++ bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53431#c34 is fixed.
 
+#include "edge.h"
+#include "face.h"
 #include "object.h"
 #include "point.h"
-#include "vertex.h"
 #include "segment.h"
-#include "edge.h"
-#include "triangle.h"
-#include "face.h"
 #include "surface.h"
+#include "triangle.h"
+#include "vertex.h"
 
 #include "cleanup.h"
 
@@ -69,16 +69,14 @@
 
 // used in several cpp files without having any good header for it
 // defined in pygts.cpp
-FILE* FILE_from_py_file__raises(PyObject *f_, const char* mode);
+FILE* FILE_from_py_file__raises(PyObject* f_, const char* mode);
 
 // helpers for py3k compatibility
 #if PY_MAJOR_VERSION < 3
-	#ifndef PyLong_AsLong
-	   #define PyLong_AsLong PyInt_AsLong
-	#endif
+#ifndef PyLong_AsLong
+#define PyLong_AsLong PyInt_AsLong
 #endif
-
-
+#endif
 
 
 #endif /* __PYGTS_H__ */

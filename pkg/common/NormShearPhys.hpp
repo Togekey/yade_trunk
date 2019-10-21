@@ -2,14 +2,14 @@
 // © 2008 Václav Šmilauer <eudoxos@arcig.cz>
 #pragma once
 
-#include<core/IPhys.hpp>
+#include <core/IPhys.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class NormPhys:public IPhys {
-	public:
-		virtual ~NormPhys() {};
-		virtual Vector3r getRotStiffness() {return Vector3r::Zero();}
+class NormPhys : public IPhys {
+public:
+	virtual ~NormPhys() {};
+	virtual Vector3r getRotStiffness() { return Vector3r::Zero(); }
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(NormPhys,IPhys,"Abstract class for interactions that have normal stiffness.",
 		((Real,kn,0,,"Normal stiffness"))
@@ -17,13 +17,13 @@ class NormPhys:public IPhys {
 		createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(NormPhys,IPhys);
+	REGISTER_CLASS_INDEX(NormPhys, IPhys);
 };
 REGISTER_SERIALIZABLE(NormPhys);
 
-class NormShearPhys: public NormPhys{
-	public:
-		virtual ~NormShearPhys() {};
+class NormShearPhys : public NormPhys {
+public:
+	virtual ~NormShearPhys() {};
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(NormShearPhys,NormPhys,
 		"Abstract class for interactions that have shear stiffnesses, in addition to normal stiffness. This class is used in the PFC3d-style stiffness timestepper.",
@@ -32,9 +32,8 @@ class NormShearPhys: public NormPhys{
 		createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(NormShearPhys,NormPhys);
+	REGISTER_CLASS_INDEX(NormShearPhys, NormPhys);
 };
 REGISTER_SERIALIZABLE(NormShearPhys);
 
 } // namespace yade
-

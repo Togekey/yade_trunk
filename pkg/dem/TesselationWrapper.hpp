@@ -8,12 +8,12 @@
 #ifdef YADE_CGAL
 
 #pragma once
-#include<core/GlobalEngine.hpp>
-#include<pkg/common/Sphere.hpp>
-#include<core/Omega.hpp>
-#include<core/Scene.hpp>
-#include<lib/triangulation/Tesselation.h>
-#include<pkg/dem/MicroMacroAnalyser.hpp>
+#include <lib/triangulation/Tesselation.h>
+#include <core/GlobalEngine.hpp>
+#include <core/Omega.hpp>
+#include <core/Scene.hpp>
+#include <pkg/common/Sphere.hpp>
+#include <pkg/dem/MicroMacroAnalyser.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -35,86 +35,97 @@ namespace yade { // Cannot have #include directive inside.
  */
 
 
-class TesselationWrapper : public GlobalEngine{
+class TesselationWrapper : public GlobalEngine {
 public:
-	typedef CGT::_Tesselation<CGT::SimpleTriangulationTypes> 			Tesselation;
-	typedef Tesselation::RTriangulation						RTriangulation;
-	typedef Tesselation::VertexInfo							VertexInfo;
-	typedef Tesselation::CellInfo							CellInfo;
-	typedef RTriangulation::Finite_edges_iterator					FiniteEdgesIterator;
-	#ifdef ALPHASHAPE
-	typedef Tesselation::AlphaFace							AlphaFace;
-	typedef Tesselation::AlphaCap                                                   AlphaCap;
-	#endif	
-	
+	typedef CGT::_Tesselation<CGT::SimpleTriangulationTypes> Tesselation;
+	typedef Tesselation::RTriangulation                      RTriangulation;
+	typedef Tesselation::VertexInfo                          VertexInfo;
+	typedef Tesselation::CellInfo                            CellInfo;
+	typedef RTriangulation::Finite_edges_iterator            FiniteEdgesIterator;
+#ifdef ALPHASHAPE
+	typedef Tesselation::AlphaFace AlphaFace;
+	typedef Tesselation::AlphaCap  AlphaCap;
+#endif
+
 	Tesselation* Tes;
-	double mean_radius, inf;
-	bool rad_divided;
-	bool bounded;
-	CGT::Point Pmin;
-	CGT::Point Pmax;
+	double       mean_radius, inf;
+	bool         rad_divided;
+	bool         bounded;
+	CGT::Point   Pmin;
+	CGT::Point   Pmax;
 
 	~TesselationWrapper();
 
-    	/// Insert a sphere, "id" will be used by some getters to retrieve spheres
-    	bool insert(double x, double y, double z, double rad, unsigned int id);
+	/// Insert a sphere, "id" will be used by some getters to retrieve spheres
+	bool insert(double x, double y, double z, double rad, unsigned int id);
 	/// A faster version of insert, inserting all spheres in scene (first erasing current triangulation  if reset=true)
-	void insertSceneSpheres(bool reset=true);
+	void insertSceneSpheres(bool reset = true);
 	/// Move one sphere to the new position (x,y,z) and maintain triangulation (invalidates the tesselation)
-	bool move (double x, double y, double z, double rad, unsigned int id);
+	bool move(double x, double y, double z, double rad, unsigned int id);
 
-    	void checkMinMax(double x, double y, double z, double rad);//for experimentation purpose
+	void checkMinMax(double x, double y, double z, double rad); //for experimentation purpose
 	/// Reset the triangulation
-    	void clear(void);
-    	void clear2(void);
+	void clear(void);
+	void clear2(void);
 
 	/// Add axis aligned bounding planes (modelised as spheres with (almost) infinite radius)
-  	void 	addBoundingPlanes (void);
+	void addBoundingPlanes(void);
 	/// Force boudaries at positions not equal to precomputed ones
- 	void	addBoundingPlanes(double pminx, double pmaxx, double pminy, double pmaxy, double pminz, double pmaxz);
+	void addBoundingPlanes(double pminx, double pmaxx, double pminy, double pmaxy, double pminz, double pmaxz);
 	///compute voronoi centers then stop (don't compute anything else)
- 	void	computeTesselation (void);
- 	void	computeTesselation( double pminx, double pmaxx, double pminy, double pmaxy, double pminz, double pmaxz);
-	
-	#ifdef ALPHASHAPE
-	void	testAlphaShape(double alpha) {Tes->testAlphaShape(alpha);}
+	void computeTesselation(void);
+	void computeTesselation(double pminx, double pmaxx, double pminy, double pmaxy, double pminz, double pmaxz);
+
+#ifdef ALPHASHAPE
+	void                testAlphaShape(double alpha) { Tes->testAlphaShape(alpha); }
 	boost::python::list getAlphaFaces(double alpha);
 	boost::python::list getAlphaCaps(double alpha, double shrinkedAlpha, bool fixedAlpha);
 	boost::python::list getAlphaVertices(double alpha);
-        boost::python::list getAlphaGraph(double alpha, double shrinkedAlpha, bool fixedAlpha);
-	void applyAlphaForces(Matrix3r stress, double alpha, double shrinkedAlpha, bool fixedAlpha);
-	#endif
-	
+	boost::python::list getAlphaGraph(double alpha, double shrinkedAlpha, bool fixedAlpha);
+	void                applyAlphaForces(Matrix3r stress, double alpha, double shrinkedAlpha, bool fixedAlpha);
+#endif
+
 	///compute Voronoi vertices + volumes of all cells
 	///use computeTesselation to force update, e.g. after spheres positions have been updated
-	void	computeVolumes	(void);
-	void	computeDeformations (void) {mma.analyser->computeParticlesDeformation();}
+	void computeVolumes(void);
+	void computeDeformations(void) { mma.analyser->computeParticlesDeformation(); }
 	///Get volume of the sphere inserted with indentifier "id""
-	double	Volume	(unsigned int id);
-	double	deformation (unsigned int id,unsigned int i,unsigned int j) {
-		if (!mma.analyser->ParticleDeformation.size()) {LOG_ERROR("compute deformations first"); return 0;}
-		if (mma.analyser->ParticleDeformation.size()<id) {LOG_ERROR("id out of bounds"); return 0;}
-		if (i<1 || i>3 || j<1 || j>3) {LOG_ERROR("tensor index must be between 1 and 3"); return 0;}
-		return mma.analyser->ParticleDeformation[id](i,j);}
+	double Volume(unsigned int id);
+	double deformation(unsigned int id, unsigned int i, unsigned int j)
+	{
+		if (!mma.analyser->ParticleDeformation.size()) {
+			LOG_ERROR("compute deformations first");
+			return 0;
+		}
+		if (mma.analyser->ParticleDeformation.size() < id) {
+			LOG_ERROR("id out of bounds");
+			return 0;
+		}
+		if (i < 1 || i > 3 || j < 1 || j > 3) {
+			LOG_ERROR("tensor index must be between 1 and 3");
+			return 0;
+		}
+		return mma.analyser->ParticleDeformation[id](i, j);
+	}
 
 	/// number of facets in the tesselation (finite branches of the triangulation)
-	unsigned int NumberOfFacets(bool initIters=false);
+	unsigned int NumberOfFacets(bool initIters = false);
 	/// set first and last facets, set facet_it = facet_begin
 	void InitIter(void);
 	/// set facet = next pair (body1->id,body2->id), returns facet_it==facet_end
-	bool nextFacet (std::pair<unsigned int, unsigned int>& facet);
+	bool nextFacet(std::pair<unsigned int, unsigned int>& facet);
 
 	/// make the current state the initial (0) or final (1) configuration for the definition of displacement increments, use only state=0 if you just want to get only volmumes and porosity
-	void setState (bool state=0);
-	void loadState (string fileName, bool stateNumber=0, bool bz2=false);
-	void saveState (string fileName, bool stateNumber=0, bool bz2=false);
+	void setState(bool state = 0);
+	void loadState(string fileName, bool stateNumber = 0, bool bz2 = false);
+	void saveState(string fileName, bool stateNumber = 0, bool bz2 = false);
 	/// read two state files and write per-particle deformation to a vtk file. The second variant uses existing states.
- 	void defToVtkFromStates (string inputFile1, string inputFile2, string outputFile="def.vtk", bool bz2=false);
-	void defToVtkFromPositions (string inputFile1, string inputFile2, string outputFile="def.vtk", bool bz2=false);
-	void defToVtk (string outputFile="def.vtk");
+	void defToVtkFromStates(string inputFile1, string inputFile2, string outputFile = "def.vtk", bool bz2 = false);
+	void defToVtkFromPositions(string inputFile1, string inputFile2, string outputFile = "def.vtk", bool bz2 = false);
+	void defToVtk(string outputFile = "def.vtk");
 
 	/// return python array containing voronoi volumes, per-particle porosity, and optionaly per-particle deformation, if states 0 and 1 have been assigned
-	boost::python::dict getVolPoroDef(bool deformation);//FIXME ; unexplained crash for now
+	boost::python::dict getVolPoroDef(bool deformation); //FIXME ; unexplained crash for now
 
 
 public:
@@ -122,7 +133,7 @@ public:
 	FiniteEdgesIterator facet_begin;
 	FiniteEdgesIterator facet_end;
 	FiniteEdgesIterator facet_it;
-	MicroMacroAnalyser mma;
+	MicroMacroAnalyser  mma;
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(TesselationWrapper,GlobalEngine,"Handle the triangulation of spheres in a scene, build tesselation on request, and give access to computed quantities (see also the :ref:`dedicated section in user manual <MicroStressAndMicroStrain>`). The calculation of microstrain is explained in [Catalano2014a]_ \n\nSee example usage in script example/tesselationWrapper/tesselationWrapper.py.\n\nBelow is an output of the :yref:`defToVtk<TesselationWrapper::defToVtk>` function visualized with paraview (in this case Yade's TesselationWrapper was used to process experimental data obtained on sand by Edward Ando at Grenoble University, 3SR lab.)\n\n.. figure:: fig/localstrain.*\n\t:width: 9cm",

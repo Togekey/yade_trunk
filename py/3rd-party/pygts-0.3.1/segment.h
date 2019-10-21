@@ -37,10 +37,10 @@ typedef struct _PygtsObject PygtsSegment;
 extern PyTypeObject PygtsSegmentType;
 
 gboolean pygts_segment_check(PyObject* o);
-gboolean pygts_segment_is_ok(PygtsSegment *t);
+gboolean pygts_segment_is_ok(PygtsSegment* t);
 
-PygtsSegment* pygts_segment_new(GtsSegment *f);
+PygtsSegment* pygts_segment_new(GtsSegment* f);
 
-int pygts_segment_compare(GtsSegment* s1,GtsSegment* s2);
+int pygts_segment_compare(GtsSegment* s1, GtsSegment* s2);
 
 #endif /* __PYGTS_SEGMENT_H__ */

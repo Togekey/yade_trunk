@@ -1,12 +1,12 @@
 // 2009 © Václav Šmilauer <eudoxos@arcig.cz>
 #pragma once
-#include<core/Material.hpp>
+#include <core/Material.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
 /*! Elastic material */
-class ElastMat: public Material{
-	public:
+class ElastMat : public Material {
+public:
 	virtual ~ElastMat() {};
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(ElastMat,Material,"Purely elastic material. The material parameters may have different meanings depending on the :yref:`IPhysFunctor` used : true Young and Poisson in :yref:`Ip2_FrictMat_FrictMat_MindlinPhys`, or contact stiffnesses in :yref:`Ip2_FrictMat_FrictMat_FrictPhys`.",
@@ -15,13 +15,13 @@ class ElastMat: public Material{
 		/*ctor*/ createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(ElastMat,Material);
+	REGISTER_CLASS_INDEX(ElastMat, Material);
 };
 REGISTER_SERIALIZABLE(ElastMat);
 
 /*! Granular material */
-class FrictMat: public ElastMat{
-	public:
+class FrictMat : public ElastMat {
+public:
 	virtual ~FrictMat() {};
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(FrictMat,ElastMat,"Elastic material with contact friction. See also :yref:`ElastMat`.",
@@ -29,9 +29,8 @@ class FrictMat: public ElastMat{
 		createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(FrictMat,ElastMat);
+	REGISTER_CLASS_INDEX(FrictMat, ElastMat);
 };
 REGISTER_SERIALIZABLE(FrictMat);
 
 } // namespace yade
-

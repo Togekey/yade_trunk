@@ -1,21 +1,48 @@
 #pragma once
-#include<lib/compatibility/VTKCompatibility.hpp> // fix InsertNextTupleValue → InsertNextTuple name change (and others in the future)
-#include<pkg/common/PeriodicEngines.hpp>
-#include<vtkQuad.h>
-#include<vtkSmartPointer.h>
+#include <lib/compatibility/VTKCompatibility.hpp> // fix InsertNextTupleValue → InsertNextTuple name change (and others in the future)
+#include <pkg/common/PeriodicEngines.hpp>
+#include <vtkQuad.h>
+#include <vtkSmartPointer.h>
 
 // multiblock features don't seem to exist prioor to 5.2
-#if (VTK_MAJOR_VERSION==5 && VTK_MINOR_VERSION>=2) || (VTK_MAJOR_VERSION > 5)
-	#define YADE_VTK_MULTIBLOCK
+#if (VTK_MAJOR_VERSION == 5 && VTK_MINOR_VERSION >= 2) || (VTK_MAJOR_VERSION > 5)
+#define YADE_VTK_MULTIBLOCK
 #endif
 
 namespace yade { // Cannot have #include directive inside.
 
-class VTKRecorder: public PeriodicEngine {
-	public:
-  enum {REC_SPHERES=0,REC_FACETS,REC_BOXES,REC_COLORS,REC_MASS,REC_TEMP,REC_CPM,REC_INTR,REC_VELOCITY,REC_ID,REC_CLUMPID,REC_SENTINEL,REC_MATERIALID,REC_STRESS,REC_MASK,REC_RPM,REC_JCFPM,REC_CRACKS,REC_MOMENTS,REC_WPM,REC_PERICELL,REC_LIQ,REC_BSTRESS,REC_FORCE,REC_COORDNUMBER,REC_SPH,REC_DEFORM,REC_LUBRICATION};
-		virtual void action();
-		void addWallVTK (vtkSmartPointer<vtkQuad>& boxes, vtkSmartPointer<vtkPoints>& boxesPos, Vector3r& W1, Vector3r& W2, Vector3r& W3, Vector3r& W4);
+class VTKRecorder : public PeriodicEngine {
+public:
+	enum { REC_SPHERES = 0,
+	       REC_FACETS,
+	       REC_BOXES,
+	       REC_COLORS,
+	       REC_MASS,
+	       REC_TEMP,
+	       REC_CPM,
+	       REC_INTR,
+	       REC_VELOCITY,
+	       REC_ID,
+	       REC_CLUMPID,
+	       REC_SENTINEL,
+	       REC_MATERIALID,
+	       REC_STRESS,
+	       REC_MASK,
+	       REC_RPM,
+	       REC_JCFPM,
+	       REC_CRACKS,
+	       REC_MOMENTS,
+	       REC_WPM,
+	       REC_PERICELL,
+	       REC_LIQ,
+	       REC_BSTRESS,
+	       REC_FORCE,
+	       REC_COORDNUMBER,
+	       REC_SPH,
+	       REC_DEFORM,
+	       REC_LUBRICATION };
+	virtual void action();
+	void         addWallVTK(vtkSmartPointer<vtkQuad>& boxes, vtkSmartPointer<vtkPoints>& boxesPos, Vector3r& W1, Vector3r& W2, Vector3r& W3, Vector3r& W4);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(VTKRecorder,PeriodicEngine,"Engine recording snapshots of simulation into series of \\*.vtu files, readable by VTK-based postprocessing programs such as Paraview. Both bodies (spheres and facets) and interactions can be recorded, with various vector/scalar quantities that are defined on them.\n\n:yref:`PeriodicEngine.initRun` is initialized to ``True`` automatically.",
 		((bool,compress,false,,"Compress output XML files [experimental]."))
@@ -109,4 +136,3 @@ class VTKRecorder: public PeriodicEngine {
 REGISTER_SERIALIZABLE(VTKRecorder);
 
 } // namespace yade
-

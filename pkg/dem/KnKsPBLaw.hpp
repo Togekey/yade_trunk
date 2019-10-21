@@ -1,27 +1,27 @@
 #ifdef YADE_POTENTIAL_BLOCKS
 
 #pragma once
-#include <pkg/common/ElastMat.hpp>
+#include <lib/base/openmp-accu.hpp>
 #include <pkg/common/Dispatching.hpp>
+#include <pkg/common/ElastMat.hpp>
 #include <pkg/common/NormShearPhys.hpp>
 #include <pkg/dem/FrictPhys.hpp>
 #include <pkg/dem/ScGeom.hpp>
-#include <set>
 #include <boost/tuple/tuple.hpp>
-#include <lib/base/openmp-accu.hpp>
+#include <set>
 
 #ifdef USE_TIMING_DELTAS
-	#define TIMING_DELTAS_CHECKPOINT(cpt) timingDeltas->checkpoint(cpt)
-	#define TIMING_DELTAS_START() timingDeltas->start()
+#define TIMING_DELTAS_CHECKPOINT(cpt) timingDeltas->checkpoint(cpt)
+#define TIMING_DELTAS_START() timingDeltas->start()
 #else
-	#define TIMING_DELTAS_CHECKPOINT(cpt)
-	#define TIMING_DELTAS_START()
+#define TIMING_DELTAS_CHECKPOINT(cpt)
+#define TIMING_DELTAS_START()
 #endif
 
 namespace yade { // Cannot have #include directive inside.
 
-class KnKsPBPhys: public FrictPhys {
-	public:
+class KnKsPBPhys : public FrictPhys {
+public:
 	virtual ~KnKsPBPhys();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(KnKsPBPhys,FrictPhys,"EXPERIMENTAL. IPhys for :yref:`PotentialBlock`.",
@@ -138,16 +138,15 @@ class KnKsPBPhys: public FrictPhys {
 		createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(KnKsPBPhys,FrictPhys);
+	REGISTER_CLASS_INDEX(KnKsPBPhys, FrictPhys);
 	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(KnKsPBPhys);
 
 
-
-class Ip2_FrictMat_FrictMat_KnKsPBPhys: public IPhysFunctor{
-	public:
-		virtual void go(const shared_ptr<Material>& pp1, const shared_ptr<Material>& pp2, const shared_ptr<Interaction>& interaction);
+class Ip2_FrictMat_FrictMat_KnKsPBPhys : public IPhysFunctor {
+public:
+	virtual void go(const shared_ptr<Material>& pp1, const shared_ptr<Material>& pp2, const shared_ptr<Interaction>& interaction);
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS(Ip2_FrictMat_FrictMat_KnKsPBPhys,IPhysFunctor,"EXPERIMENTAL. Ip2 functor for :yref:`KnKsPBPhys`",
 		((Real, Knormal, ,,"Volumetric stiffness in the contact normal direction (units: stress/length)"))
@@ -170,32 +169,48 @@ class Ip2_FrictMat_FrictMat_KnKsPBPhys: public IPhysFunctor{
 //		((bool, twoDimension, false,,"Whether the contact is 2-D")) // Moved this attr in Ig2_PB_PB_ScGeom @vsangelidakis
 		);
 	// clang-format on
-		FUNCTOR2D(FrictMat,FrictMat);
-		DECLARE_LOGGER;
+	FUNCTOR2D(FrictMat, FrictMat);
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(Ip2_FrictMat_FrictMat_KnKsPBPhys);
 
 
+class Law2_SCG_KnKsPBPhys_KnKsPBLaw : public LawFunctor {
+public:
+	OpenMPAccumulator<Real> plasticDissipation; // Energy dissipation due to sliding
+	OpenMPAccumulator<Real> normDampDissip; // Energy dissipated by normal damping
+	OpenMPAccumulator<Real> shearDampDissip; // Energy dissipated by tangential damping
 
-class Law2_SCG_KnKsPBPhys_KnKsPBLaw: public LawFunctor{
-	public:
-		OpenMPAccumulator<Real> plasticDissipation; // Energy dissipation due to sliding
-		OpenMPAccumulator<Real> normDampDissip; // Energy dissipated by normal damping
-		OpenMPAccumulator<Real> shearDampDissip; // Energy dissipated by tangential damping
+	Real elasticEnergy();
+	Real getPlasticDissipation();
+	void initPlasticDissipation(Real initVal = 0);
+	Real ratioSlidingContacts();
+	Real getnormDampDissip();
+	Real getshearDampDissip();
 
-		Real elasticEnergy();
-		Real getPlasticDissipation();
-		void initPlasticDissipation(Real initVal=0);
-		Real ratioSlidingContacts();
-		Real getnormDampDissip();
-		Real getshearDampDissip();
+	//		double stressUpdate(shared_ptr<IPhys>& ip, const Vector3r Fs_prev, const Vector3r du, const Vector3r prev_us, const double ks /*shear stiffness */,const double fN, const double dFn, const double phi_b, Vector3r & newFs);
+	double stressUpdateVec(
+	        shared_ptr<IPhys>& ip,
+	        const Vector3r     Fs_prev,
+	        const Vector3r     du,
+	        const double       prev_us,
+	        const double       ks /*shear stiffness */,
+	        const double       fN,
+	        const double       phi_b,
+	        Vector3r&          newFs);
+	double stressUpdateVecTalesnick(
+	        shared_ptr<IPhys>& ip,
+	        const Vector3r     Fs_prev,
+	        const Vector3r     du,
+	        const double       prev_us,
+	        const double       ks /*shear stiffness */,
+	        const double       fN,
+	        const double       phi_b,
+	        Vector3r&          newFs,
+	        const double       upeak);
 
-//		double stressUpdate(shared_ptr<IPhys>& ip, const Vector3r Fs_prev, const Vector3r du, const Vector3r prev_us, const double ks /*shear stiffness */,const double fN, const double dFn, const double phi_b, Vector3r & newFs);
-		double stressUpdateVec(shared_ptr<IPhys>& ip, const Vector3r Fs_prev, const Vector3r du, const double prev_us, const double ks /*shear stiffness */,const double fN, const double phi_b, Vector3r & newFs);
-		double stressUpdateVecTalesnick(shared_ptr<IPhys>& ip, const Vector3r Fs_prev, const Vector3r du, const double prev_us, const double ks /*shear stiffness */,const double fN, const double phi_b, Vector3r & newFs, const double upeak);
-
-		virtual bool go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I);
-		FUNCTOR2D(ScGeom,KnKsPBPhys);
+	virtual bool go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I);
+	FUNCTOR2D(ScGeom, KnKsPBPhys);
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Law2_SCG_KnKsPBPhys_KnKsPBLaw,LawFunctor,"Law for linear compression, without cohesion and Mohr-Coulomb plasticity surface.\n\n.. note::\n This law uses :yref:`ScGeom`; there is also functionally equivalent :yref:`Law2_Dem3DofGeom_FrictPhys_Basic`, which uses :yref:`Dem3DofGeom` (sphere-box interactions are not implemented for the latest).",
 		((bool, neverErase, false,,"Keep interactions even if particles go away from each other (only in case another constitutive law is in the scene, e.g. :yref:`Law2_ScGeom_CapillaryPhys_Capillarity`)"))
@@ -220,7 +235,7 @@ class Law2_SCG_KnKsPBPhys_KnKsPBLaw: public LawFunctor{
 		.def("ratioSlidingContacts",&Law2_SCG_KnKsPBPhys_KnKsPBLaw::ratioSlidingContacts,"Return the ratio between the number of contacts sliding to the total number at a given time.")
 		);
 	// clang-format on
-		DECLARE_LOGGER;
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(Law2_SCG_KnKsPBPhys_KnKsPBLaw);
 

@@ -16,24 +16,34 @@
 
 namespace yade { // Cannot have #include directive inside.
 
-typedef TemplateFlowEngine_FlowEngineT<FlowCellInfo_FlowEngineT,FlowVertexInfo_FlowEngineT> FlowEngineT;
+typedef TemplateFlowEngine_FlowEngineT<FlowCellInfo_FlowEngineT, FlowVertexInfo_FlowEngineT> FlowEngineT;
 REGISTER_SERIALIZABLE(FlowEngineT);
 
-class FlowEngine : public FlowEngineT
-{
-	public :
-		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(FlowEngine,FlowEngineT,"An engine to solve flow problem in saturated granular media. Model description can be found in [Chareyre2012a]_ and [Catalano2014a]_. See the example script FluidCouplingPFV/oedometer.py. More documentation to come.\n\n.. note::Multi-threading seems to work fine for Cholesky decomposition, but it fails for the solve phase in which -j1 is the fastest, here we specify thread numbers independently using :yref:`FlowEngine::numFactorizeThreads` and :yref:`FlowEngine::numSolveThreads`. These multhreading settings are only impacting the behaviour of openblas library and are relatively independant of :yref:`FlowEngine::multithread`. However, the settings have to be globally consistent. For instance, :yref:`multithread<FlowEngine::multithread>` =True with  yref:`numFactorizeThreads<FlowEngine::numFactorizeThreads>` = yref:`numSolveThreads<FlowEngine::numSolveThreads>` = 4 implies that openblas will mobilize 8 processors at some point. If the system does not have so many procs. it will hurt performance.",
-		,,
-		,
-		//nothing special to define here, we simply re-use FlowEngine methods
-		//.def("meanVelocity",&PeriodicFlowEngine::meanVelocity,"measure the mean velocity in the period")
-		)
-		DECLARE_LOGGER;
+class FlowEngine : public FlowEngineT {
+public:
+	YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(
+	        FlowEngine,
+	        FlowEngineT,
+	        "An engine to solve flow problem in saturated granular media. Model description can be found in [Chareyre2012a]_ and [Catalano2014a]_. See the "
+	        "example script FluidCouplingPFV/oedometer.py. More documentation to come.\n\n.. note::Multi-threading seems to work fine for Cholesky "
+	        "decomposition, but it fails for the solve phase in which -j1 is the fastest, here we specify thread numbers independently using "
+	        ":yref:`FlowEngine::numFactorizeThreads` and :yref:`FlowEngine::numSolveThreads`. These multhreading settings are only impacting the behaviour "
+	        "of openblas library and are relatively independant of :yref:`FlowEngine::multithread`. However, the settings have to be globally consistent. "
+	        "For instance, :yref:`multithread<FlowEngine::multithread>` =True with  yref:`numFactorizeThreads<FlowEngine::numFactorizeThreads>` = "
+	        "yref:`numSolveThreads<FlowEngine::numSolveThreads>` = 4 implies that openblas will mobilize 8 processors at some point. If the system does "
+	        "not have so many procs. it will hurt performance.",
+	        ,
+	        ,
+	        ,
+	        //nothing special to define here, we simply re-use FlowEngine methods
+	        //.def("meanVelocity",&PeriodicFlowEngine::meanVelocity,"measure the mean velocity in the period")
+	)
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(FlowEngine);
 
 YADE_PLUGIN((FlowEngineT));
-CREATE_LOGGER(FlowEngine );
+CREATE_LOGGER(FlowEngine);
 YADE_PLUGIN((FlowEngine));
 
 } // namespace yade
@@ -41,4 +51,3 @@ YADE_PLUGIN((FlowEngine));
 #endif //FLOW_ENGINE
 
 #endif /* YADE_CGAL */
-

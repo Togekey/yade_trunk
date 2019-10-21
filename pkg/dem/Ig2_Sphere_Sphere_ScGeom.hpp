@@ -4,15 +4,29 @@
 
 #pragma once
 
-#include<pkg/common/Dispatching.hpp>
-#include<pkg/common/Sphere.hpp>
+#include <pkg/common/Dispatching.hpp>
+#include <pkg/common/Sphere.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class Ig2_Sphere_Sphere_ScGeom: public IGeomFunctor{
-	public:
-		virtual bool go(const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c);
-		virtual bool goReverse(	const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c);
+class Ig2_Sphere_Sphere_ScGeom : public IGeomFunctor {
+public:
+	virtual bool
+	             go(const shared_ptr<Shape>&       cm1,
+	                const shared_ptr<Shape>&       cm2,
+	                const State&                   state1,
+	                const State&                   state2,
+	                const Vector3r&                shift2,
+	                const bool&                    force,
+	                const shared_ptr<Interaction>& c);
+	virtual bool goReverse(
+	        const shared_ptr<Shape>&       cm1,
+	        const shared_ptr<Shape>&       cm2,
+	        const State&                   state1,
+	        const State&                   state2,
+	        const Vector3r&                shift2,
+	        const bool&                    force,
+	        const shared_ptr<Interaction>& c);
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS(Ig2_Sphere_Sphere_ScGeom,IGeomFunctor,
@@ -31,16 +45,30 @@ class Ig2_Sphere_Sphere_ScGeom: public IGeomFunctor{
 		))
 	);
 	// clang-format on
-	FUNCTOR2D(Sphere,Sphere);
+	FUNCTOR2D(Sphere, Sphere);
 	// needed for the dispatcher, even if it is symmetric
-	DEFINE_FUNCTOR_ORDER_2D(Sphere,Sphere);
+	DEFINE_FUNCTOR_ORDER_2D(Sphere, Sphere);
 };
 REGISTER_SERIALIZABLE(Ig2_Sphere_Sphere_ScGeom);
 
-class Ig2_Sphere_Sphere_ScGeom6D: public Ig2_Sphere_Sphere_ScGeom{
-	public:
-		virtual bool go(const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c);
-		virtual bool goReverse(	const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c);
+class Ig2_Sphere_Sphere_ScGeom6D : public Ig2_Sphere_Sphere_ScGeom {
+public:
+	virtual bool
+	             go(const shared_ptr<Shape>&       cm1,
+	                const shared_ptr<Shape>&       cm2,
+	                const State&                   state1,
+	                const State&                   state2,
+	                const Vector3r&                shift2,
+	                const bool&                    force,
+	                const shared_ptr<Interaction>& c);
+	virtual bool goReverse(
+	        const shared_ptr<Shape>&       cm1,
+	        const shared_ptr<Shape>&       cm2,
+	        const State&                   state1,
+	        const State&                   state2,
+	        const Vector3r&                shift2,
+	        const bool&                    force,
+	        const shared_ptr<Interaction>& c);
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS(Ig2_Sphere_Sphere_ScGeom6D,Ig2_Sphere_Sphere_ScGeom,"Create/update a :yref:`ScGeom6D` instance representing the geometry of a contact point between two :yref:`Spheres<Sphere>`, including relative rotations.",
@@ -49,11 +77,10 @@ class Ig2_Sphere_Sphere_ScGeom6D: public Ig2_Sphere_Sphere_ScGeom{
 		))
 	);
 	// clang-format on
-	FUNCTOR2D(Sphere,Sphere);
+	FUNCTOR2D(Sphere, Sphere);
 	// needed for the dispatcher, even if it is symmetric
-	DEFINE_FUNCTOR_ORDER_2D(Sphere,Sphere);
+	DEFINE_FUNCTOR_ORDER_2D(Sphere, Sphere);
 };
 REGISTER_SERIALIZABLE(Ig2_Sphere_Sphere_ScGeom6D);
 
 } // namespace yade
-

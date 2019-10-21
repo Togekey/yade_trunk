@@ -8,21 +8,22 @@
 
 #pragma once
 
-#include<lib/serialization/Serializable.hpp>
-#include<lib/base/Logging.hpp>
+#include <lib/base/Logging.hpp>
+#include <lib/serialization/Serializable.hpp>
 
 #include "Scene.hpp"
 #include "ThreadWorker.hpp"
 
 namespace yade { // Cannot have #include directive inside.
 
-class FileGenerator: public Serializable
-{
-	protected:
-		shared_ptr<Scene>	 scene;
-	public:
-		bool generateAndSave(const string& outFile, string& message);
-	protected :
+class FileGenerator : public Serializable {
+protected:
+	shared_ptr<Scene> scene;
+
+public:
+	bool generateAndSave(const string& outFile, string& message);
+
+protected:
 	//! Returns whether the generation was successful; message for user is in FileGenerator::message
 	virtual bool generate(std::string& msg);
 
@@ -43,4 +44,3 @@ class FileGenerator: public Serializable
 REGISTER_SERIALIZABLE(FileGenerator);
 
 } // namespace yade
-

@@ -8,40 +8,44 @@
 
 #pragma once
 
-#include<pkg/common/BoundaryController.hpp>
-#include<core/Body.hpp>
-#include<lib/base/Math.hpp>
+#include <lib/base/Math.hpp>
+#include <core/Body.hpp>
 #include <core/Scene.hpp>
+#include <pkg/common/BoundaryController.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class KinemSimpleShearBox : public BoundaryController
-{
+class KinemSimpleShearBox : public BoundaryController {
+protected:
+	Real Scontact // computed by computeScontact()
+	        ,
+	        dt // value of the time step, obtained in getBoxes_Dt
+	        ,
+	        stiffness // the normal stifness on the sample acting below the upper plate. Computed by computeStiffness
+	        ,
+	        dalpha // the increment over alpha, due to vertical displacement of upper box
+	        ,
+	        deltaH // the vertical increment of displacement to allow on the upper plate on this time step to verify either the constant normal stress or the constant normal stifness. Computed here by computeDY(..)
+	        ;
 
-	protected :
-		Real Scontact // computed by computeScontact()
-		     ,dt // value of the time step, obtained in getBoxes_Dt
-		     ,stiffness	// the normal stifness on the sample acting below the upper plate. Computed by computeStiffness
-		     ,dalpha	// the increment over alpha, due to vertical displacement of upper box
-		      ,deltaH	// the vertical increment of displacement to allow on the upper plate on this time step to verify either the constant normal stress or the constant normal stifness. Computed here by computeDY(..)
-			;
-			
-		shared_ptr<Body> leftbox;
-		shared_ptr<Body> rightbox;
-		shared_ptr<Body> frontbox;
-		shared_ptr<Body> backbox;
-		shared_ptr<Body> topbox;
-		shared_ptr<Body> boxbas;
+	shared_ptr<Body> leftbox;
+	shared_ptr<Body> rightbox;
+	shared_ptr<Body> frontbox;
+	shared_ptr<Body> backbox;
+	shared_ptr<Body> topbox;
+	shared_ptr<Body> boxbas;
 
-		void 	computeAlpha()
-			,computeScontact()
-			,stopMovement() // to cancel all velocities when end of the loading is reached
-			,letMove(Real dgamma,Real dH) //dgamma and dH being computed by different ways in the different Kinem... Engines
-			,computeStiffness() // computes the stiffness of the contact sample - upper side. Useful for CNL and CNS loads
-			,computeDY(Real KnC) // computes vertical displacement to perform to obey to the stiffness of the shear wanted : KnC. Useful for CNL (for which KnC = 0) and CNS loads
-			,getBoxes_Dt()
-			;
-	
+	void computeAlpha(), computeScontact(), stopMovement() // to cancel all velocities when end of the loading is reached
+	        ,
+	        letMove(Real dgamma, Real dH) //dgamma and dH being computed by different ways in the different Kinem... Engines
+	        ,
+	        computeStiffness() // computes the stiffness of the contact sample - upper side. Useful for CNL and CNS loads
+	        ,
+	        computeDY(
+	                Real KnC) // computes vertical displacement to perform to obey to the stiffness of the shear wanted : KnC. Useful for CNL (for which KnC = 0) and CNS loads
+	        ,
+	        getBoxes_Dt();
+
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(KinemSimpleShearBox,BoundaryController,
 			 "This class is supposed to be a mother class for all Engines performing loadings on the simple shear box of :yref:`SimpleShear`. It is not intended to be used by itself, but its declaration and implentation will thus contain all what is useful for all these Engines. The script simpleShear.py illustrates the use of the various corresponding Engines.",
@@ -78,4 +82,3 @@ class KinemSimpleShearBox : public BoundaryController
 REGISTER_SERIALIZABLE(KinemSimpleShearBox);
 
 } // namespace yade
-

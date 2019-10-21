@@ -8,15 +8,14 @@
 
 #pragma once
 
-#include<lib/base/Math.hpp>
-#include<lib/serialization/Serializable.hpp>
-#include<lib/multimethods/Indexable.hpp>
-#include<core/Dispatcher.hpp>
+#include <lib/base/Math.hpp>
+#include <lib/multimethods/Indexable.hpp>
+#include <lib/serialization/Serializable.hpp>
+#include <core/Dispatcher.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class IGeom : public Serializable, public Indexable
-{
+class IGeom : public Serializable, public Indexable {
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(IGeom,Serializable,"Geometrical configuration of interaction",
 		/*no attrs*/,
@@ -31,4 +30,3 @@ class IGeom : public Serializable, public Indexable
 REGISTER_SERIALIZABLE(IGeom);
 
 } // namespace yade
-

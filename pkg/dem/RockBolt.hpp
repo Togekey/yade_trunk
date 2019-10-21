@@ -3,11 +3,11 @@
 /* CW Boon, GT Houlsby, S Utili (2015).  Designing Tunnel Support in Jointed Rock Masses Via the DEM.  Rock Mechanics and Rock Engineering,  48 (2), 603-632. */
 #ifdef YADE_POTENTIAL_BLOCKS
 #pragma once
-#include<pkg/dem/PotentialBlock.hpp>
-#include<pkg/dem/PotentialBlock2AABB.hpp>
+#include <pkg/dem/PotentialBlock.hpp>
+#include <pkg/dem/PotentialBlock2AABB.hpp>
 
-#include <vector>
 #include <pkg/common/PeriodicEngines.hpp>
+#include <vector>
 
 #include <stdio.h>
 
@@ -20,35 +20,35 @@
 #pragma GCC diagnostic ignored "-Wcomment"
 // Code that generates this warning, Note: we cannot do this trick in yade. If we have a warning in yade, we have to fix it! See also https://gitlab.com/yade-dev/trunk/merge_requests/73
 // This method will work once g++ bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53431#c34 is fixed.
-#include<vtkTriangle.h>
+#include <vtkTriangle.h>
 #pragma GCC diagnostic pop
 
-#include <vtkSmartPointer.h>
-#include <vtkFloatArray.h>
+#include <ClpSimplex.hpp>
+#include <CoinBuild.hpp>
+#include <CoinHelperFunctions.hpp>
+#include <CoinModel.hpp>
+#include <CoinTime.hpp>
+#include <vtkAppendPolyData.h>
 #include <vtkCellArray.h>
 #include <vtkCellData.h>
+#include <vtkCylinderSource.h>
+#include <vtkExtractVOI.h>
+#include <vtkFloatArray.h>
+#include <vtkSmartPointer.h>
 #include <vtkStructuredPoints.h>
 #include <vtkStructuredPointsWriter.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
 #include <vtkWriter.h>
-#include <vtkExtractVOI.h>
 #include <vtkXMLImageDataWriter.h>
 #include <vtkXMLStructuredGridWriter.h>
-#include <vtkTransformPolyDataFilter.h>
-#include <vtkTransform.h>
 #include <vtkXMLUnstructuredGridWriter.h>
-#include <vtkAppendPolyData.h>
-#include <vtkCylinderSource.h>
-#include <ClpSimplex.hpp>
-#include <CoinHelperFunctions.hpp>
-#include <CoinTime.hpp>
-#include <CoinBuild.hpp>
-#include <CoinModel.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class RockBolt: public PeriodicEngine{
-	public:
-		#if 0
+class RockBolt : public PeriodicEngine {
+public:
+#if 0
 		struct Bolts{
 			Bolts(Vector3r pt1, Vector3r  pt2){startingPoint = pt1; endPoint=pt2; }
 			Vector3r startingPoint;
@@ -60,13 +60,33 @@ class RockBolt: public PeriodicEngine{
 			vector<double> initialLength;
 		};
 		vector<Bolts> bolt;
-		#endif
+#endif
 
-		Vector3r getNodeDistance(const PotentialBlock* cm1,const State* state1,const PotentialBlock* cm2,const State* state2, const Vector3r localPt1, const Vector3r localPt2);
-		bool installBolts(const PotentialBlock* cm1,const State* state1,const Vector3r startingPt,const Vector3r direction, const double length, Vector3r& intersectionPt);
-		double evaluateFNoSphereVol(const PotentialBlock* s1,const State* state1, const Vector3r newTrial);
-		bool intersectPlane(const PotentialBlock* s1,const State* state1,const Vector3r startingPt,const Vector3r direction, const double length, Vector3r& intersectionPt, const Vector3r plane, const double planeD);
-		virtual void action(void);
+	Vector3r getNodeDistance(
+	        const PotentialBlock* cm1,
+	        const State*          state1,
+	        const PotentialBlock* cm2,
+	        const State*          state2,
+	        const Vector3r        localPt1,
+	        const Vector3r        localPt2);
+	bool installBolts(
+	        const PotentialBlock* cm1,
+	        const State*          state1,
+	        const Vector3r        startingPt,
+	        const Vector3r        direction,
+	        const double          length,
+	        Vector3r&             intersectionPt);
+	double evaluateFNoSphereVol(const PotentialBlock* s1, const State* state1, const Vector3r newTrial);
+	bool   intersectPlane(
+	          const PotentialBlock* s1,
+	          const State*          state1,
+	          const Vector3r        startingPt,
+	          const Vector3r        direction,
+	          const double          length,
+	          Vector3r&             intersectionPt,
+	          const Vector3r        plane,
+	          const double          planeD);
+	virtual void action(void);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(RockBolt,PeriodicEngine,"Engine recording potential blocks as surfaces into files with given periodicity.",
 		((double,normalStiffness,0.0 ,,"EA/L"))
@@ -106,8 +126,6 @@ class RockBolt: public PeriodicEngine{
 		,
 	);
 	// clang-format on
-
-
 };
 REGISTER_SERIALIZABLE(RockBolt);
 

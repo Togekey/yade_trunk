@@ -7,10 +7,10 @@
 *************************************************************************/
 #pragma once
 
-#include<lib/base/Math.hpp>
-#include<lib/serialization/Serializable.hpp>
-#include<lib/multimethods/Indexable.hpp>
-#include<core/Dispatcher.hpp>
+#include <lib/base/Math.hpp>
+#include <lib/multimethods/Indexable.hpp>
+#include <lib/serialization/Serializable.hpp>
+#include <core/Dispatcher.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -21,8 +21,8 @@ namespace yade { // Cannot have #include directive inside.
 
 */
 
-class Bound: public Serializable, public Indexable{
-	public:
+class Bound : public Serializable, public Indexable {
+public:
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Bound,Serializable,"Object bounding part of space taken by associated body; might be larger, used to optimalize collision detection",
 		((int,lastUpdateIter,0,Attr::readonly,"record iteration of last reference position update |yupdate|"))
@@ -43,4 +43,3 @@ class Bound: public Serializable, public Indexable{
 REGISTER_SERIALIZABLE(Bound);
 
 } // namespace yade
-

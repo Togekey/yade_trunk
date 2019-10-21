@@ -32,18 +32,16 @@ typedef struct _PygtsObject PygtsTriangle;
 
 #define PYGTS_TRIANGLE(obj) ((PygtsTriangle*)obj)
 
-#define PYGTS_TRIANGLE_AS_GTS_TRIANGLE(o) \
-  (GTS_TRIANGLE(PYGTS_OBJECT(o)->gtsobj))
+#define PYGTS_TRIANGLE_AS_GTS_TRIANGLE(o) (GTS_TRIANGLE(PYGTS_OBJECT(o)->gtsobj))
 
 extern PyTypeObject PygtsTriangleType;
 
 gboolean pygts_triangle_check(PyObject* o);
-gboolean pygts_triangle_is_ok(PygtsTriangle *t);
+gboolean pygts_triangle_is_ok(PygtsTriangle* t);
 
-PygtsTriangle* pygts_triangle_new(GtsTriangle *t);
+PygtsTriangle* pygts_triangle_new(GtsTriangle* t);
 
-int pygts_triangle_compare(GtsTriangle* t1,GtsTriangle* t2);
-
+int pygts_triangle_compare(GtsTriangle* t1, GtsTriangle* t2);
 
 
 /* Replacement for gts_triangle_is_ok().  The problem is that sometimes the 
@@ -53,6 +51,6 @@ int pygts_triangle_compare(GtsTriangle* t1,GtsTriangle* t2);
  * that there is no failure when PYGTS_DEBUG is set.  A bug report should be 
  * submitted.
  */
-gboolean pygts_gts_triangle_is_ok(GtsTriangle *t);
+gboolean pygts_gts_triangle_is_ok(GtsTriangle* t);
 
 #endif /* __PYGTS_TRIANGLE_H__ */

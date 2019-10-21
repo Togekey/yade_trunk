@@ -1,16 +1,19 @@
-// 2009 © Václav Šmilauer <eudoxos@arcig.cz> 
+// 2009 © Václav Šmilauer <eudoxos@arcig.cz>
 
 #pragma once
 
-#include<pkg/common/BoundaryController.hpp>
+#include <pkg/common/BoundaryController.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class PeriIsoCompressor: public BoundaryController{
-	Real avgStiffness; Real maxDisplPerStep; Vector3r sumForces, sigma; 
-	Real currUnbalanced;
-	public:
-		void action();
+class PeriIsoCompressor : public BoundaryController {
+	Real     avgStiffness;
+	Real     maxDisplPerStep;
+	Vector3r sumForces, sigma;
+	Real     currUnbalanced;
+
+public:
+	void action();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(PeriIsoCompressor,BoundaryController,"Compress/decompress cloud of spheres by controlling periodic cell size until it reaches prescribed average stress, then moving to next stress value in given stress series.",
 		((vector<Real>,stresses,,,"Stresses that should be reached, one after another"))
@@ -46,10 +49,10 @@ See scripts/test/periodic-triax.py for a simple example.
 
 */
 
-class PeriTriaxController: public BoundaryController{
-	public:
-		virtual void action();
-		void strainStressStiffUpdate();
+class PeriTriaxController : public BoundaryController {
+public:
+	virtual void action();
+	void         strainStressStiffUpdate();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(PeriTriaxController,BoundaryController,"Engine for independently controlling stress or strain in periodic simulations.\n\n :yref:`PeriTriaxController.goal` contains absolute values for the controlled quantity, and :yref:`PeriTriaxController.stressMask` determines meaning of those values (0 for strain, 1 for stress): e.g. ``( 1<<0 | 1<<2 ) = 1 | 4 = 5`` means that ``goal[0]`` and ``goal[2]`` are stress values, and ``goal[1]`` is strain. \n\nSee scripts/test/periodic-triax.py for a simple example.",
 		((bool,dynCell,false,,"Imposed stress can be controlled using the packing stiffness or by applying the laws of dynamic (dynCell=true). Don't forget to assign a :yref:`mass<PeriTriaxController.mass>` to the cell."))
@@ -80,12 +83,12 @@ class PeriTriaxController: public BoundaryController{
 };
 REGISTER_SERIALIZABLE(PeriTriaxController);
 
-class Peri3dController: public BoundaryController{
-	public:
-		Vector6r stressOld;
-		Matrix3r sigma, epsilon, epsilonRate, rot, nonrot;
-		
-		virtual void action();
+class Peri3dController : public BoundaryController {
+public:
+	Vector6r stressOld;
+	Matrix3r sigma, epsilon, epsilonRate, rot, nonrot;
+
+	virtual void action();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Peri3dController,BoundaryController,"Experimental controller of full strain/stress tensors on periodic cell. Detailed documentation is in py/_extraDocs.py.",
 		((Vector6r,stress,Vector6r::Zero(),,"Current stress vector ($\\sigma_x$,$\\sigma_y$,$\\sigma_z$,$\\tau_{yz}$,$\\tau_{zx}$,$\\tau_{xy}$)|yupdate|."))
@@ -129,4 +132,3 @@ class Peri3dController: public BoundaryController{
 REGISTER_SERIALIZABLE(Peri3dController);
 
 } // namespace yade
-

@@ -6,18 +6,17 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 #pragma once
-#include<pkg/dem/FrictPhys.hpp>
-#include<pkg/common/ElastMat.hpp>
-#include<pkg/common/Dispatching.hpp>
+#include <pkg/common/Dispatching.hpp>
+#include <pkg/common/ElastMat.hpp>
+#include <pkg/dem/FrictPhys.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class CapillaryPhys : public FrictPhys
-{
-	public :
-		int currentIndexes [4]; // used for faster interpolation (stores previous positions in tables)
-		
-		virtual ~CapillaryPhys() {};
+class CapillaryPhys : public FrictPhys {
+public:
+	int currentIndexes[4]; // used for faster interpolation (stores previous positions in tables)
+
+	virtual ~CapillaryPhys() {};
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(CapillaryPhys,FrictPhys,"Physics (of interaction) for :yref:`Law2_ScGeom_CapillaryPhys_Capillarity`.",
@@ -36,25 +35,20 @@ class CapillaryPhys : public FrictPhys
 				 ,
 				 );
 	// clang-format on
-	REGISTER_CLASS_INDEX(CapillaryPhys,FrictPhys);
+	REGISTER_CLASS_INDEX(CapillaryPhys, FrictPhys);
 };
 REGISTER_SERIALIZABLE(CapillaryPhys);
 
 
-class Ip2_FrictMat_FrictMat_CapillaryPhys : public IPhysFunctor
-{
-	public :
-		virtual void go(	const shared_ptr<Material>& b1,
-					const shared_ptr<Material>& b2,
-					const shared_ptr<Interaction>& interaction);
+class Ip2_FrictMat_FrictMat_CapillaryPhys : public IPhysFunctor {
+public:
+	virtual void go(const shared_ptr<Material>& b1, const shared_ptr<Material>& b2, const shared_ptr<Interaction>& interaction);
 
-	FUNCTOR2D(FrictMat,FrictMat);
+	FUNCTOR2D(FrictMat, FrictMat);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(Ip2_FrictMat_FrictMat_CapillaryPhys,IPhysFunctor, "RelationShips to use with :yref:`Law2_ScGeom_CapillaryPhys_Capillarity`.\n\n In these RelationShips all the interaction attributes are computed. \n\n.. warning::\n\tas in the others :yref:`Ip2 functors<IPhysFunctor>`, most of the attributes are computed only once, when the interaction is new.",,;);
 	// clang-format on
-	
 };
 REGISTER_SERIALIZABLE(Ip2_FrictMat_FrictMat_CapillaryPhys);
 
 } // namespace yade
-

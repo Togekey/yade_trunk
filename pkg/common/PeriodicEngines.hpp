@@ -1,46 +1,62 @@
 // 2008, 2009 © Václav Šmilauer <eudoxos@arcig.cz>
 #pragma once
 
-#include<time.h>
-#include<core/GlobalEngine.hpp>
-#include<core/Omega.hpp>
-#include<core/Scene.hpp>
+#include <core/GlobalEngine.hpp>
+#include <core/Omega.hpp>
+#include <core/Scene.hpp>
+#include <time.h>
 
 namespace yade { // Cannot have #include directive inside.
 
-class PeriodicEngine:  public GlobalEngine {
-	public:
-		static Real getClock(){ timeval tp; gettimeofday(&tp,NULL); return tp.tv_sec+tp.tv_usec/1e6; }
-		virtual ~PeriodicEngine() {}; // vtable
-		virtual bool isActivated(){
-			const Real& virtNow=scene->time;
-			Real realNow=getClock();
-			const long& iterNow=scene->iter;
-			
-			if((firstIterRun > 0) && (nDone==0)) {
-				if((firstIterRun > 0) && (firstIterRun == iterNow)) {
-					realLast=realNow; virtLast=virtNow; iterLast=iterNow; nDone++;
-					return true;
-				}
-				return false;
-			}
-			
-			if (iterNow<iterLast) nDone=0;//handle O.resetTime(), all counters will be initialized again
-			if((nDo<0 || nDone<nDo) &&
-				((virtPeriod>0 && virtNow-virtLast>=virtPeriod) ||
-				 (realPeriod>0 && realNow-realLast>=realPeriod) ||
-				 (iterPeriod>0 && iterNow-iterLast>=iterPeriod))){
-				realLast=realNow; virtLast=virtNow; iterLast=iterNow; nDone++;
+class PeriodicEngine : public GlobalEngine {
+public:
+	static Real getClock()
+	{
+		timeval tp;
+		gettimeofday(&tp, NULL);
+		return tp.tv_sec + tp.tv_usec / 1e6;
+	}
+	virtual ~PeriodicEngine() {}; // vtable
+	virtual bool isActivated()
+	{
+		const Real& virtNow = scene->time;
+		Real        realNow = getClock();
+		const long& iterNow = scene->iter;
+
+		if ((firstIterRun > 0) && (nDone == 0)) {
+			if ((firstIterRun > 0) && (firstIterRun == iterNow)) {
+				realLast = realNow;
+				virtLast = virtNow;
+				iterLast = iterNow;
+				nDone++;
 				return true;
-			}
-			
-			if(nDone==0){
-				realLast=realNow; virtLast=virtNow; iterLast=iterNow; nDone++;
-				if(initRun) return true;
-				return false;
 			}
 			return false;
 		}
+
+		if (iterNow < iterLast)
+			nDone = 0; //handle O.resetTime(), all counters will be initialized again
+		if ((nDo < 0 || nDone < nDo)
+		    && ((virtPeriod > 0 && virtNow - virtLast >= virtPeriod) || (realPeriod > 0 && realNow - realLast >= realPeriod)
+		        || (iterPeriod > 0 && iterNow - iterLast >= iterPeriod))) {
+			realLast = realNow;
+			virtLast = virtNow;
+			iterLast = iterNow;
+			nDone++;
+			return true;
+		}
+
+		if (nDone == 0) {
+			realLast = realNow;
+			virtLast = virtNow;
+			iterLast = iterNow;
+			nDone++;
+			if (initRun)
+				return true;
+			return false;
+		}
+		return false;
+	}
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(PeriodicEngine,GlobalEngine,
 		"Run Engine::action with given fixed periodicity real time (=wall clock time, computation time), \
@@ -84,4 +100,3 @@ class PeriodicEngine:  public GlobalEngine {
 REGISTER_SERIALIZABLE(PeriodicEngine);
 
 } // namespace yade
-

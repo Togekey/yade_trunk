@@ -1,4 +1,4 @@
- 
+
 /*************************************************************************
 *  Copyright (C) 2014 by Bruno Chareyre <bruno.chareyre@hmg.inpg.fr>     *
 *                                                                        *
@@ -19,45 +19,45 @@
 namespace yade { // Cannot have #include directive inside.
 
 /// We can add data to the Info types by inheritance
-class DummyCellInfo : public FlowCellInfo_DummyFlowEngineT
-{
-	public:
+class DummyCellInfo : public FlowCellInfo_DummyFlowEngineT {
+public:
 	Real anotherVariable;
 	void anotherFunction() {};
 };
 
 class DummyVertexInfo : public FlowVertexInfo_DummyFlowEngineT {
-	public:
+public:
 	//same here if needed
 };
 
-typedef TemplateFlowEngine_DummyFlowEngineT<DummyCellInfo,DummyVertexInfo> DummyFlowEngineT;
+typedef TemplateFlowEngine_DummyFlowEngineT<DummyCellInfo, DummyVertexInfo> DummyFlowEngineT;
 REGISTER_SERIALIZABLE(DummyFlowEngineT);
 YADE_PLUGIN((DummyFlowEngineT));
 
-class DummyFlowEngine : public DummyFlowEngineT
-{
-	public :
+class DummyFlowEngine : public DummyFlowEngineT {
+public:
 	//We can overload every functions of the base engine to make it behave differently
 	//if we overload action() like this, this engine is doing nothing in a standard timestep, it can still have useful functions
 	virtual void action() {};
-	
+
 	//If a new function is specific to the derived engine, put it here, else go to the base TemplateFlowEngine
 	//if it is useful for everyone
 	void fancyFunction(Real what);
 
-	YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(DummyFlowEngine,DummyFlowEngineT,"documentation here",
-	((Real, myNewAttribute, 0,,"useless example"))
-	,/*DummyFlowEngineT()*/,
-	,
-	.def("fancyFunction",&DummyFlowEngine::fancyFunction,(boost::python::arg("what")=0),"test function")
-	)
+	YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(
+	        DummyFlowEngine,
+	        DummyFlowEngineT,
+	        "documentation here",
+	        ((Real, myNewAttribute, 0, , "useless example")),
+	        /*DummyFlowEngineT()*/,
+	        ,
+	        .def("fancyFunction", &DummyFlowEngine::fancyFunction, (boost::python::arg("what") = 0), "test function"))
 	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(DummyFlowEngine);
 YADE_PLUGIN((DummyFlowEngine));
 
-void DummyFlowEngine::fancyFunction(Real what) {std::cerr<<"yes, I'm a new function"<<std::endl;}
+void DummyFlowEngine::fancyFunction(Real what) { std::cerr << "yes, I'm a new function" << std::endl; }
 
 } // namespace yade
 

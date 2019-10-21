@@ -13,12 +13,10 @@
 
 namespace yade { // Cannot have #include directive inside.
 
-class SimulationFlow : public ThreadWorker
-{
-	public:
-		virtual void	singleAction();
+class SimulationFlow : public ThreadWorker {
+public:
+	virtual void singleAction();
 	DECLARE_LOGGER;
 };
 
 } // namespace yade
-

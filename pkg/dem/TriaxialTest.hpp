@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include<core/FileGenerator.hpp>
+#include <core/FileGenerator.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -42,27 +42,27 @@ class GlobalStiffnessTimeStepper;
 	
  */
 
-class TriaxialTest : public FileGenerator
-{
-	private	:
-		Vector3r	 gravity;
-		Vector3r	 spheresColor;
-		bool		spheresRandomColor;
-	
-		shared_ptr<TriaxialCompressionEngine> triaxialcompressionEngine;
-		shared_ptr<TriaxialStressController> triaxialstressController;
-		shared_ptr<TriaxialStateRecorder> triaxialStateRecorder;
-		shared_ptr<GlobalStiffnessTimeStepper> globalStiffnessTimeStepper;
-			
-		void createBox(shared_ptr<Body>& body, Vector3r position, Vector3r extents,bool wire);
-		void createSphere(shared_ptr<Body>& body, Vector3r position, Real radius,bool big,bool dynamic);
-		void createActors(shared_ptr<Scene>& scene);
-		void positionRootBody(shared_ptr<Scene>& scene);
-		typedef pair<Vector3r, Real> BasicSphere;	
-	public : 
-		~TriaxialTest ();
-		bool generate(string& message);
-		
+class TriaxialTest : public FileGenerator {
+private:
+	Vector3r gravity;
+	Vector3r spheresColor;
+	bool     spheresRandomColor;
+
+	shared_ptr<TriaxialCompressionEngine>  triaxialcompressionEngine;
+	shared_ptr<TriaxialStressController>   triaxialstressController;
+	shared_ptr<TriaxialStateRecorder>      triaxialStateRecorder;
+	shared_ptr<GlobalStiffnessTimeStepper> globalStiffnessTimeStepper;
+
+	void                         createBox(shared_ptr<Body>& body, Vector3r position, Vector3r extents, bool wire);
+	void                         createSphere(shared_ptr<Body>& body, Vector3r position, Real radius, bool big, bool dynamic);
+	void                         createActors(shared_ptr<Scene>& scene);
+	void                         positionRootBody(shared_ptr<Scene>& scene);
+	typedef pair<Vector3r, Real> BasicSphere;
+
+public:
+	~TriaxialTest();
+	bool generate(string& message);
+
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(
 		TriaxialTest,FileGenerator,"Prepare a scene for triaxial tests. Full documentation in py/_extraDocs.py."
@@ -129,4 +129,3 @@ class TriaxialTest : public FileGenerator
 REGISTER_SERIALIZABLE(TriaxialTest);
 
 } // namespace yade
-

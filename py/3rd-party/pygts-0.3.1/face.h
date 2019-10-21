@@ -41,8 +41,8 @@ typedef struct _PygtsObject PygtsFace;
 extern PyTypeObject PygtsFaceType;
 
 gboolean pygts_face_check(PyObject* o);
-gboolean pygts_face_is_ok(PygtsFace *f);
+gboolean pygts_face_is_ok(PygtsFace* f);
 
-PygtsFace* pygts_face_new(GtsFace *f);
+PygtsFace* pygts_face_new(GtsFace* f);
 
 #endif /* __PYGTS_FACE_H__ */

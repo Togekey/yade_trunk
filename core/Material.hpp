@@ -1,9 +1,9 @@
 // 2009 © Václav Šmilauer <eudoxos@arcig.cz>
 #pragma once
-#include<lib/serialization/Serializable.hpp>
-#include<lib/multimethods/Indexable.hpp>
-#include<core/State.hpp>
-#include<core/Dispatcher.hpp>
+#include <lib/multimethods/Indexable.hpp>
+#include <lib/serialization/Serializable.hpp>
+#include <core/Dispatcher.hpp>
+#include <core/State.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -13,28 +13,28 @@ class Scene;
 Historical note: this used to be part of the PhysicalParameters class.
 The other data are now in the State class.
 */
-class Material: public Serializable, public Indexable{
-	public:
-		virtual ~Material() {};
+class Material : public Serializable, public Indexable {
+public:
+	virtual ~Material() {};
 
-		//! Function to return empty default-initialized instance of State that 
-		// is supposed to go along with this Material. Don't override unless you need
-		// something else than basic State.
-		virtual shared_ptr<State> newAssocState() const { return shared_ptr<State>(new State); }
-		/*! Function that returns true if given State instance is what this material expects.
+	//! Function to return empty default-initialized instance of State that
+	// is supposed to go along with this Material. Don't override unless you need
+	// something else than basic State.
+	virtual shared_ptr<State> newAssocState() const { return shared_ptr<State>(new State); }
+	/*! Function that returns true if given State instance is what this material expects.
 			
 			Base Material class has no requirements, but the check would normally look like this:
 
 				return (bool)dynamic_cast<State*> state;
 		*/
-		virtual bool stateTypeOk(State*) const { return true; }
+	virtual bool stateTypeOk(State*) const { return true; }
 
-		static const shared_ptr<Material> byId(int id, Scene* scene=NULL);
-		static const shared_ptr<Material> byId(int id, shared_ptr<Scene> scene) {return byId(id,scene.get());}
-		static const shared_ptr<Material> byLabel(const std::string& label, Scene* scene=NULL);
-		static const shared_ptr<Material> byLabel(const std::string& label, shared_ptr<Scene> scene) {return byLabel(label,scene.get());}
-		// return index of material, given its label
-		static int byLabelIndex(const std::string& label, Scene* scene=NULL);
+	static const shared_ptr<Material> byId(int id, Scene* scene = NULL);
+	static const shared_ptr<Material> byId(int id, shared_ptr<Scene> scene) { return byId(id, scene.get()); }
+	static const shared_ptr<Material> byLabel(const std::string& label, Scene* scene = NULL);
+	static const shared_ptr<Material> byLabel(const std::string& label, shared_ptr<Scene> scene) { return byLabel(label, scene.get()); }
+	// return index of material, given its label
+	static int byLabelIndex(const std::string& label, Scene* scene = NULL);
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Material,Serializable,"Material properties of a :yref:`body<Body>`.",
@@ -52,4 +52,3 @@ class Material: public Serializable, public Indexable{
 REGISTER_SERIALIZABLE(Material);
 
 } // namespace yade
-

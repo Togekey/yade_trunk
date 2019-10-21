@@ -1,16 +1,16 @@
 
-#include<pkg/common/PeriodicEngines.hpp>
-#include<core/PartialEngine.hpp>
-#include<pkg/common/Sphere.hpp>
+#include <core/PartialEngine.hpp>
+#include <pkg/common/PeriodicEngines.hpp>
+#include <pkg/common/Sphere.hpp>
 #ifdef YADE_OPENGL
-#include<pkg/common/OpenGLRenderer.hpp>
+#include <pkg/common/OpenGLRenderer.hpp>
 #endif
 
 namespace yade { // Cannot have #include directive inside.
 
-class DomainLimiter: public PeriodicEngine{
-	public:
-		virtual void action();
+class DomainLimiter : public PeriodicEngine {
+public:
+	virtual void action();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(DomainLimiter,PeriodicEngine,"Delete particles that are out of axis-aligned box given by *lo* and *hi*.",
 		((Vector3r,lo,Vector3r(0,0,0),,"Lower corner of the domain."))
@@ -24,15 +24,39 @@ class DomainLimiter: public PeriodicEngine{
 };
 REGISTER_SERIALIZABLE(DomainLimiter);
 
-class LawTester: public PartialEngine{
-	Body::id_t id1,id2; // shorthands for local use
-	public:
-		void init();
-		virtual void action();
-		void postLoad(LawTester&);
-		void warnDeprec(const string& s1, const string& s2){ if(!warnedDeprecPtRot){ warnedDeprecPtRot=true; LOG_WARN("LawTester."<<s1<<" is deprecated, use LawTester."<<s2<<" instead.");} }
-		Vector3r get_ptOurs(){ warnDeprec("ptOurs","uTest.head()"); return uTest.head<3>(); } Vector3r get_ptGeom(){ warnDeprec("ptGeom","uGeom.head()"); return uGeom.head<3>(); }
-		Vector3r get_rotOurs(){ warnDeprec("rotOurs","uTest.tail()"); return uTest.tail<3>(); }  Vector3r get_rotGeom(){ warnDeprec("rotGeom","uGeom.tail()"); return uGeom.tail<3>(); }
+class LawTester : public PartialEngine {
+	Body::id_t id1, id2; // shorthands for local use
+public:
+	void         init();
+	virtual void action();
+	void         postLoad(LawTester&);
+	void         warnDeprec(const string& s1, const string& s2)
+	{
+		if (!warnedDeprecPtRot) {
+			warnedDeprecPtRot = true;
+			LOG_WARN("LawTester." << s1 << " is deprecated, use LawTester." << s2 << " instead.");
+		}
+	}
+	Vector3r get_ptOurs()
+	{
+		warnDeprec("ptOurs", "uTest.head()");
+		return uTest.head<3>();
+	}
+	Vector3r get_ptGeom()
+	{
+		warnDeprec("ptGeom", "uGeom.head()");
+		return uGeom.head<3>();
+	}
+	Vector3r get_rotOurs()
+	{
+		warnDeprec("rotOurs", "uTest.tail()");
+		return uTest.tail<3>();
+	}
+	Vector3r get_rotGeom()
+	{
+		warnDeprec("rotGeom", "uGeom.tail()");
+		return uGeom.tail<3>();
+	}
 	DECLARE_LOGGER;
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(LawTester,PartialEngine,"Prescribe and apply deformations of an interaction in terms of local normal and shear displacements and rotations (using either :yref:`disPpath<LawTester.disPath>` and :yref:`rotPath<LawTester.rotPath>` [or :yref:`path<LawTester.path>` in the future]). Supported :yref:`IGeom` types are :yref:`ScGeom`, :yref:`L3Geom` and :yref:`L6Geom`. \n\nSee :ysrc:`scripts/test/law-test.py` for an example.",
@@ -76,8 +100,8 @@ REGISTER_SERIALIZABLE(LawTester);
 
 #ifdef YADE_OPENGL
 
-class GlExtra_LawTester: public GlExtraDrawer{
-	public:
+class GlExtra_LawTester : public GlExtraDrawer {
+public:
 	DECLARE_LOGGER;
 	virtual void render();
 	// clang-format off
@@ -88,12 +112,16 @@ class GlExtra_LawTester: public GlExtraDrawer{
 };
 REGISTER_SERIALIZABLE(GlExtra_LawTester);
 
-class GlExtra_OctreeCubes: public GlExtraDrawer{
-	public:
-	struct OctreeBox{ Vector3r center, extents; int fill; int level; };
+class GlExtra_OctreeCubes : public GlExtraDrawer {
+public:
+	struct OctreeBox {
+		Vector3r center, extents;
+		int      fill;
+		int      level;
+	};
 	std::vector<OctreeBox> boxes;
-	void postLoad(GlExtra_OctreeCubes&);
-	virtual void render();
+	void                   postLoad(GlExtra_OctreeCubes&);
+	virtual void           render();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(GlExtra_OctreeCubes,GlExtraDrawer,"Render boxed read from file",
 		((string,boxesFile,,Attr::triggerPostLoad,"File to read boxes from; ascii files with ``x0 y0 z0 x1 y1 z1 c`` records, where ``c`` is an integer specifying fill (0 for wire, 1 for filled)."))
@@ -108,4 +136,3 @@ REGISTER_SERIALIZABLE(GlExtra_OctreeCubes);
 #endif
 
 } // namespace yade
-

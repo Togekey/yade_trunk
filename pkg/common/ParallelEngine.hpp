@@ -1,19 +1,19 @@
 #pragma once
-#include<core/GlobalEngine.hpp>
+#include <core/GlobalEngine.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
 class ParallelEngine;
 shared_ptr<ParallelEngine> ParallelEngine_ctor_list(const boost::python::list& slaves);
 
-class ParallelEngine: public Engine {
-	public:
-		typedef vector<vector<shared_ptr<Engine> > > slaveContainer;
-		virtual void action();
-		virtual bool isActivated(){return true;}
+class ParallelEngine : public Engine {
+public:
+	typedef vector<vector<shared_ptr<Engine>>> slaveContainer;
+	virtual void                               action();
+	virtual bool                               isActivated() { return true; }
 	// py access
-		boost::python::list slaves_get();
-		void slaves_set(const boost::python::list& slaves);
+	boost::python::list slaves_get();
+	void                slaves_set(const boost::python::list& slaves);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(ParallelEngine,Engine,"Engine for running other Engine in parallel.",
 		((slaveContainer,slaves,,,"[will be overridden]"))
@@ -30,4 +30,3 @@ class ParallelEngine: public Engine {
 REGISTER_SERIALIZABLE(ParallelEngine);
 
 } // namespace yade
-

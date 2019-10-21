@@ -24,147 +24,146 @@
 #ifdef LBM_ENGINE
 
 #pragma once
-#include<pkg/lbm/LBMnode.hpp>
-#include<pkg/lbm/LBMlink.hpp>
-#include<pkg/lbm/LBMbody.hpp>
-#include<core/GlobalEngine.hpp>
+#include <core/GlobalEngine.hpp>
+#include <pkg/lbm/LBMbody.hpp>
+#include <pkg/lbm/LBMlink.hpp>
+#include <pkg/lbm/LBMnode.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class HydrodynamicsLawLBM : public GlobalEngine
-{
-    private :
-        std::ofstream ofile;
+class HydrodynamicsLawLBM : public GlobalEngine {
+private:
+	std::ofstream ofile;
 
-    public :
-        bool    firstRun,                       /*!  = 1 if it is the first iteration during 1 YADE simulation*/
-                use_ConvergenceCriterion,       /*! use stop condition based on the convergence criterion*/
-                SAVE_VELOCITY,                  /*! Switch to save node velocities*/
-                SAVE_VELOCITYCOMP,              /*! Switch to save node velocities in each directions*/
-                SAVE_RHO,                       /*! Switch to save node densities*/
-                SAVE_FORCES,                    /*! Switch to save node force and momentum on grid*/
-                SAVE_BODIES,                    /*! Switch to save particle nodes*/
-                SAVE_NODEBD,                    /*! Switch to save fluid or solid boundary nodes*/
-                SAVE_NODEISNEW,                 /*! Switch to save new fluid/solid nodes*/
-                SAVE_DEBUGFILES,                /*! Switch to save some debug data*/
-                SAVE_OBSERVEDPTC,               /*! Switch to save properties of the observed particle*/
-                SAVE_OBSERVEDNODE,              /*! Switch to save properties of the observed node*/
-                SAVE_CONTACTINFO,               /*! Switch to save contact properties*/
-		SAVE_SPHERES,			/*! Switch to save spheres properties*/
-                COMPRESS_DATA,                  /*! Switch to enable file compression*/
-                Xperiodicity,                   /*! Switch to activate lattice periodicity in x direction*/
-                Yperiodicity,                   /*! Switch to activate lattice periodicity in y direction*/
-                Zperiodicity;                   /*! Switch to activate lattice periodicity in z direction*/
+public:
+	bool firstRun, /*!  = 1 if it is the first iteration during 1 YADE simulation*/
+	        use_ConvergenceCriterion, /*! use stop condition based on the convergence criterion*/
+	        SAVE_VELOCITY, /*! Switch to save node velocities*/
+	        SAVE_VELOCITYCOMP, /*! Switch to save node velocities in each directions*/
+	        SAVE_RHO, /*! Switch to save node densities*/
+	        SAVE_FORCES, /*! Switch to save node force and momentum on grid*/
+	        SAVE_BODIES, /*! Switch to save particle nodes*/
+	        SAVE_NODEBD, /*! Switch to save fluid or solid boundary nodes*/
+	        SAVE_NODEISNEW, /*! Switch to save new fluid/solid nodes*/
+	        SAVE_DEBUGFILES, /*! Switch to save some debug data*/
+	        SAVE_OBSERVEDPTC, /*! Switch to save properties of the observed particle*/
+	        SAVE_OBSERVEDNODE, /*! Switch to save properties of the observed node*/
+	        SAVE_CONTACTINFO, /*! Switch to save contact properties*/
+	        SAVE_SPHERES, /*! Switch to save spheres properties*/
+	        COMPRESS_DATA, /*! Switch to enable file compression*/
+	        Xperiodicity, /*! Switch to activate lattice periodicity in x direction*/
+	        Yperiodicity, /*! Switch to activate lattice periodicity in y direction*/
+	        Zperiodicity; /*! Switch to activate lattice periodicity in z direction*/
 
-        int     NB_BODIES,                      /*! Number of bodies*/
-                NB_GRAINS,                      /*! number of grains*/
-                NB_DYNGRAINS,                   /*! number of dynamic grains*/
-                NB_DYNBODIES,                   /*! number of dynamic bodies*/
-                NB_WALLS,                       /*! Number of walls*/
-                DEM_ITER,                       /*! Number of iteration of the DEM loop*/
-                LBM_ITER,                       /*! Number of iteration of the LBM loop*/
-                MODE,                           /*! 1->only a LBM loop, 2->lbm subcycling, 3->lbm subcycling after lbm loop*/
-                dim,                            /*! dimension*/
-                NbDir,                          /*! number of directions of the lattice model*/
-                NbNodes,                        /*! Total number of nodes*/
-                NbFluidNodes,                   /*! Number of fluid nodes*/
-                NbSolidNodes,                   /*! Number of solid nodes*/
-                NbParticleNodes,                /*! Number of particle nodes*/
-                NbContacts,                     /*! Number of Contact*/
-                InitialNumberOfDynamicParticles,/*! Initial number of dynamic particles*/
-                NumberOfDynamicParticles,       /*! Number of dynamic particles*/
-                Ny,                             /*! Number of grid divisions in y direction */
-                Nz,                             /*! Number of grid divisions in z direction */
-                NumberPtcEroded,                /*! The bumber of eroded/removed particles*/
-                iter,                           /*! LBM Iteration number in current DEM loop (=1 in mode=2)*/
-                IdFirstSphere;                  /*! Id of the first sphere*/
+	int NB_BODIES, /*! Number of bodies*/
+	        NB_GRAINS, /*! number of grains*/
+	        NB_DYNGRAINS, /*! number of dynamic grains*/
+	        NB_DYNBODIES, /*! number of dynamic bodies*/
+	        NB_WALLS, /*! Number of walls*/
+	        DEM_ITER, /*! Number of iteration of the DEM loop*/
+	        LBM_ITER, /*! Number of iteration of the LBM loop*/
+	        MODE, /*! 1->only a LBM loop, 2->lbm subcycling, 3->lbm subcycling after lbm loop*/
+	        dim, /*! dimension*/
+	        NbDir, /*! number of directions of the lattice model*/
+	        NbNodes, /*! Total number of nodes*/
+	        NbFluidNodes, /*! Number of fluid nodes*/
+	        NbSolidNodes, /*! Number of solid nodes*/
+	        NbParticleNodes, /*! Number of particle nodes*/
+	        NbContacts, /*! Number of Contact*/
+	        InitialNumberOfDynamicParticles, /*! Initial number of dynamic particles*/
+	        NumberOfDynamicParticles, /*! Number of dynamic particles*/
+	        Ny, /*! Number of grid divisions in y direction */
+	        Nz, /*! Number of grid divisions in z direction */
+	        NumberPtcEroded, /*! The bumber of eroded/removed particles*/
+	        iter, /*! LBM Iteration number in current DEM loop (=1 in mode=2)*/
+	        IdFirstSphere; /*! Id of the first sphere*/
 
-        Real    height,				/*! System height  */
-                width,				/*! System width  */
-                depth,				/*! System depth  */
-                halfWallthickness,		/*! Half Wall thickness  */
-                Wallthickness,			/*! Wall thickness  */
-                cub,                            /*! A temporary variable to calculate equilibrium distribution function */
-                c,                              /*! Lattice speed */
-                c2,                             /*! The squared lattice speed*/
-                dx,                             /*! The lattice size*/
-                invdx,                          /*! 1 / lattice size*/
-                dx2,                            /*! The squared lattice size*/
-                uMax,                           /// TODO: PLEASE EXPLAIN uMax
-                cs,                             /*! c/sqrt(3) */
-                dt,                             /*! LBM timestep */
-                invdt,                          /*! one over LBM timestep */
-                nu,                             /*! LBM kinematic viscosity */
-                feqb,                           /*! Equilibrium distribution function*/
-                omega,				/*! 1/tau */
-                Lx0,                            /*! LBM grid size in x direction*/
-                Ly0,                            /*! LBM grid size in y direction*/
-                Lz0,                            /*! LBM grid size in z direction*/
-                outside_limit,                  /*! the x coordinate of a  point outside the system*/
-                DEMdt,                          /*! timestep for the DEM iteration*/
-                DEMdt0,                         /*! original timestep for the DEM iteration*/
-                newDEMdt,                       /*! the new timestep for the DEM iteration*/
-                Vr,                             /*! Volume of the removed particles*/
-                Vo,                             /*! Initial volume of dynamic particles */
-                VmeanFluidC,                    /*! Current mean fluid velocity */
-                PrevVmeanFluidC,                /*! Previous mean fluid velocity */
-                PrevPrevVmeanFluidC,            /*! Previous previous mean fluid velocity */
-                VmaxC,                          /*! Maximum velocity during the current time step*/
-                VminC,                          /*! Minimum velocity during the current time step*/
-                RhomaxC,                        /*! Maximum density during the current time step*/
-                RhominC,                        /*! Minimum density during the current time step*/
-                LBM_TIME,			/*! The time ellapsed in the LB method*/
-                DEM_TIME,			/*! The time ellapsed in the DE method*/
-                RhoTot,                         /*! Cumulative density*/
-                FmoyCur,                        /*! Mean force at the current LB iteration*/
-                FmoyPrev,                       /*! Mean force at the previous LB iteration*/
-                FmoyPrevPrev,                   /*! Mean force at 2 previous LB iteration*/
-                UMaxtheo,                       /// TODO: PLEASE EXPLAIN UMaxtheo
-                MaxBodyRadius,                  /*! Max radius of spheres*/
-                MinBodyRadius,                  /*! Min radius of spheres*/
-                MeanBodyRadius;                 /*! Mean radius of spheres*/
+	Real height, /*! System height  */
+	        width, /*! System width  */
+	        depth, /*! System depth  */
+	        halfWallthickness, /*! Half Wall thickness  */
+	        Wallthickness, /*! Wall thickness  */
+	        cub, /*! A temporary variable to calculate equilibrium distribution function */
+	        c, /*! Lattice speed */
+	        c2, /*! The squared lattice speed*/
+	        dx, /*! The lattice size*/
+	        invdx, /*! 1 / lattice size*/
+	        dx2, /*! The squared lattice size*/
+	        uMax, /// TODO: PLEASE EXPLAIN uMax
+	        cs, /*! c/sqrt(3) */
+	        dt, /*! LBM timestep */
+	        invdt, /*! one over LBM timestep */
+	        nu, /*! LBM kinematic viscosity */
+	        feqb, /*! Equilibrium distribution function*/
+	        omega, /*! 1/tau */
+	        Lx0, /*! LBM grid size in x direction*/
+	        Ly0, /*! LBM grid size in y direction*/
+	        Lz0, /*! LBM grid size in z direction*/
+	        outside_limit, /*! the x coordinate of a  point outside the system*/
+	        DEMdt, /*! timestep for the DEM iteration*/
+	        DEMdt0, /*! original timestep for the DEM iteration*/
+	        newDEMdt, /*! the new timestep for the DEM iteration*/
+	        Vr, /*! Volume of the removed particles*/
+	        Vo, /*! Initial volume of dynamic particles */
+	        VmeanFluidC, /*! Current mean fluid velocity */
+	        PrevVmeanFluidC, /*! Previous mean fluid velocity */
+	        PrevPrevVmeanFluidC, /*! Previous previous mean fluid velocity */
+	        VmaxC, /*! Maximum velocity during the current time step*/
+	        VminC, /*! Minimum velocity during the current time step*/
+	        RhomaxC, /*! Maximum density during the current time step*/
+	        RhominC, /*! Minimum density during the current time step*/
+	        LBM_TIME, /*! The time ellapsed in the LB method*/
+	        DEM_TIME, /*! The time ellapsed in the DE method*/
+	        RhoTot, /*! Cumulative density*/
+	        FmoyCur, /*! Mean force at the current LB iteration*/
+	        FmoyPrev, /*! Mean force at the previous LB iteration*/
+	        FmoyPrevPrev, /*! Mean force at 2 previous LB iteration*/
+	        UMaxtheo, /// TODO: PLEASE EXPLAIN UMaxtheo
+	        MaxBodyRadius, /*! Max radius of spheres*/
+	        MinBodyRadius, /*! Min radius of spheres*/
+	        MeanBodyRadius; /*! Mean radius of spheres*/
 
-        std::string LBMlogFile,                 /*! Name of the logfile */
-                    LBMmachFile,                /*! Name of the stat file */
-                    LBMcontactsFile,            /*! Name of the contact file */
-                    RemovedPtcFile,             /*! Name of the file to store removed particle informations*/
-                    ObservedPtcFile,            /*! Name of the file to store observed particle informations*/
-                    ObservedNodeFile,           /*! Name of the file to store observed particle informations*/
-                    lbm_dir,                    /*! Directory name to save LBM files */
-                    dem_dir,                    /*! Directory name to save DEM files */
-                    cntct_dir;                  /*! Directory name to save contact properties */
+	std::string LBMlogFile, /*! Name of the logfile */
+	        LBMmachFile, /*! Name of the stat file */
+	        LBMcontactsFile, /*! Name of the contact file */
+	        RemovedPtcFile, /*! Name of the file to store removed particle informations*/
+	        ObservedPtcFile, /*! Name of the file to store observed particle informations*/
+	        ObservedNodeFile, /*! Name of the file to store observed particle informations*/
+	        lbm_dir, /*! Directory name to save LBM files */
+	        dem_dir, /*! Directory name to save DEM files */
+	        cntct_dir; /*! Directory name to save contact properties */
 
-        std::stringstream spherefile_name;      /*! Name of the file where sphere data are saved*/
+	std::stringstream spherefile_name; /*! Name of the file where sphere data are saved*/
 
-        vector<int> IdOfNextErodedPtc,          /*! List of particles which will be eroded*/
-                    opp;                        /*! opposite nodes */
+	vector<int> IdOfNextErodedPtc, /*! List of particles which will be eroded*/
+	        opp; /*! opposite nodes */
 
-        vector<Real>    w;                      /*! Weighting factor */
+	vector<Real> w; /*! Weighting factor */
 
-        vector <LBMnode> nodes;                 /*! the LBM nodes*/
-        vector <LBMlink> links;                 /*! the LBM links*/
-       vector <LBMbody> LBbodies;                /*! the LBM bodies*/
+	vector<LBMnode> nodes; /*! the LBM nodes*/
+	vector<LBMlink> links; /*! the LBM links*/
+	vector<LBMbody> LBbodies; /*! the LBM bodies*/
 
-        vector <Vector3r>   eib;                /*! node velocity directions*/
+	vector<Vector3r> eib; /*! node velocity directions*/
 
-        Vector3r FhTotale;                      ///Total hydrodynamic force
+	Vector3r FhTotale; ///Total hydrodynamic force
 
-        virtual ~HydrodynamicsLawLBM ();
-        virtual bool isActivated();
-        virtual void action();
-        void save(int iter_number, Real timestep);
-        void saveStats(int iter_number, Real timestep);
-        void saveEroded(int iter_number, Real timestep);
-        void saveContacts(int iter_number, Real timestep);
-        void saveObservedNode(int iter_number, Real timestep);
-        void saveObservedPtc(int iter_number, Real timestep);
-        void createNewFiles();
+	virtual ~HydrodynamicsLawLBM();
+	virtual bool isActivated();
+	virtual void action();
+	void         save(int iter_number, Real timestep);
+	void         saveStats(int iter_number, Real timestep);
+	void         saveEroded(int iter_number, Real timestep);
+	void         saveContacts(int iter_number, Real timestep);
+	void         saveObservedNode(int iter_number, Real timestep);
+	void         saveObservedPtc(int iter_number, Real timestep);
+	void         createNewFiles();
 	//void createDirectories(); // ModLuc: to create directories only if necessary
-        void createDirectories(bool dirLBM, bool dirDem, bool dirCntct);
-        void writelogfile();
-        void modeTransition();
-        void LbmEnd();
-        void CalculateAndApplyForcesAndTorquesOnBodies(bool mean,bool apply);
+	void createDirectories(bool dirLBM, bool dirDem, bool dirCntct);
+	void writelogfile();
+	void modeTransition();
+	void LbmEnd();
+	void CalculateAndApplyForcesAndTorquesOnBodies(bool mean, bool apply);
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(HydrodynamicsLawLBM,GlobalEngine,"Engine to simulate fluid flow (with the lattice Boltzmann method) with a coupling with the discrete element method.\n If you use this Engine, please cite and refer to F. Lominé et al. International Journal For Numerical and Analytical Method in Geomechanics, 2012, doi: 10.1002/nag.1109",
@@ -304,4 +303,3 @@ REGISTER_SERIALIZABLE(HydrodynamicsLawLBM);
 } // namespace yade
 
 #endif //LBM_ENGINE
-

@@ -1,57 +1,60 @@
 #pragma once
 
-#include<pkg/dem/Shop.hpp>
-#include<core/Scene.hpp>
-#include<core/Omega.hpp>
-#include<pkg/dem/ScGeom.hpp>
-#include<pkg/dem/DemXDofGeom.hpp>
-#include<pkg/common/Facet.hpp>
-#include<pkg/dem/Tetra.hpp>
-#include<pkg/common/Sphere.hpp>
-#include<pkg/common/NormShearPhys.hpp>
-#include<lib/computational-geometry/Hull2d.hpp>
-#include<lib/pyutil/doc_opts.hpp>
-#include<pkg/dem/ViscoelasticPM.hpp>
-#include<lib/base/AliasNamespaces.hpp>
+#include <lib/base/AliasNamespaces.hpp>
+#include <lib/computational-geometry/Hull2d.hpp>
+#include <lib/pyutil/doc_opts.hpp>
+#include <core/Omega.hpp>
+#include <core/Scene.hpp>
+#include <pkg/common/Facet.hpp>
+#include <pkg/common/NormShearPhys.hpp>
+#include <pkg/common/Sphere.hpp>
+#include <pkg/dem/DemXDofGeom.hpp>
+#include <pkg/dem/ScGeom.hpp>
+#include <pkg/dem/Shop.hpp>
+#include <pkg/dem/Tetra.hpp>
+#include <pkg/dem/ViscoelasticPM.hpp>
 #ifdef YADE_MPI
-	#include <mpi.h>
-#endif 
+#include <mpi.h>
+#endif
 
 
 namespace yade { // Cannot have #include directive inside.
 
 #ifdef YADE_MPI
 
-  void initMPI() {
-
-  int threads; int rank; int commSize; 
-  MPI_Init_thread(0,0,MPI_THREAD_SINGLE,&threads); 
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  std::cout  << "myrank = " << rank << std::endl;  
-  MPI_Comm_size(MPI_COMM_WORLD, &commSize);
-  std::cout << "commSize = " << commSize << endl;  
-  int color = 2; //Foam uses 1  
-  MPI_Comm yadeComm; // dummy communicator; 
-  MPI_Comm_split(MPI_COMM_WORLD,color,rank,&yadeComm); }
+void initMPI()
+{
+	int threads;
+	int rank;
+	int commSize;
+	MPI_Init_thread(0, 0, MPI_THREAD_SINGLE, &threads);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	std::cout << "myrank = " << rank << std::endl;
+	MPI_Comm_size(MPI_COMM_WORLD, &commSize);
+	std::cout << "commSize = " << commSize << endl;
+	int      color = 2; //Foam uses 1
+	MPI_Comm yadeComm; // dummy communicator;
+	MPI_Comm_split(MPI_COMM_WORLD, color, rank, &yadeComm);
+}
 
 #else
 
-  void initMPI() { return; }
+void initMPI() { return; }
 
-#endif 
+#endif
 
-py::tuple negPosExtremeIds(int axis, Real distFactor=1.1);
+py::tuple negPosExtremeIds(int axis, Real distFactor = 1.1);
 
-py::tuple coordsAndDisplacements(int axis,py::tuple Aabb=py::tuple());
+py::tuple coordsAndDisplacements(int axis, py::tuple Aabb = py::tuple());
 
 void setRefSe3();
 
 Real PWaveTimeStep();
 Real RayleighWaveTimeStep();
 
-py::tuple interactionAnglesHistogram(int axis, int mask=0, size_t bins=20, py::tuple aabb=py::tuple(), bool sphSph=0, Real minProjLen=1e-6);
+py::tuple interactionAnglesHistogram(int axis, int mask = 0, size_t bins = 20, py::tuple aabb = py::tuple(), bool sphSph = 0, Real minProjLen = 1e-6);
 
-py::tuple bodyNumInteractionsHistogram(py::tuple aabb=py::tuple());
+py::tuple bodyNumInteractionsHistogram(py::tuple aabb = py::tuple());
 
 Vector3r inscribedCircleCenter(const Vector3r& v0, const Vector3r& v1, const Vector3r& v2);
 py::dict getViscoelasticFromSpheresInteraction(Real tc, Real en, Real es);
@@ -82,7 +85,7 @@ Real sumForces(py::list ids, const Vector3r& direction);
 /* Sum force acting on facets given by their ids in the sense of their respective normals.
    If axis is given, it will sum forces perpendicular to given axis only (not the the facet normals).
 */
-Real sumFacetNormalForces(vector<Body::id_t> ids, int axis=-1);
+Real sumFacetNormalForces(vector<Body::id_t> ids, int axis = -1);
 
 /* Set wire display of all/some/none bodies depending on the filter. */
 void wireSome(string filter);
@@ -128,37 +131,37 @@ Real approxSectionArea(Real coord, int axis);
 
 	(This could be easily extended to return sum of only normal forces or only of shear forces.)
 */
-Vector3r forcesOnPlane(const Vector3r& planePt, const Vector3r&  normal);
+Vector3r forcesOnPlane(const Vector3r& planePt, const Vector3r& normal);
 
 /* Less general than forcesOnPlane, computes force on plane perpendicular to axis, passing through coordinate coord. */
 Vector3r forcesOnCoordPlane(Real coord, int axis);
 
-py::tuple spiralProject(const Vector3r& pt, Real dH_dTheta, int axis=2, Real periodStart=std::numeric_limits<Real>::quiet_NaN(), Real theta0=0);
+py::tuple spiralProject(const Vector3r& pt, Real dH_dTheta, int axis = 2, Real periodStart = std::numeric_limits<Real>::quiet_NaN(), Real theta0 = 0);
 
 shared_ptr<Interaction> Shop__createExplicitInteraction(Body::id_t id1, Body::id_t id2, bool virtualI);
 
-Real Shop__unbalancedForce(bool useMaxForce /*false by default*/);
-py::tuple Shop__totalForceInVolume();
-Real Shop__getSpheresVolume(int mask=-1);
-Real Shop__getSpheresMass(int mask=-1);
-py::object Shop__kineticEnergy(bool findMaxId=false);
+Real       Shop__unbalancedForce(bool useMaxForce /*false by default*/);
+py::tuple  Shop__totalForceInVolume();
+Real       Shop__getSpheresVolume(int mask = -1);
+Real       Shop__getSpheresMass(int mask = -1);
+py::object Shop__kineticEnergy(bool findMaxId = false);
 
 Real maxOverlapRatio();
 
-Real Shop__getPorosity(Real volume=-1);
-Real Shop__getVoxelPorosity(int resolution=200, Vector3r start=Vector3r(0,0,0),Vector3r end=Vector3r(0,0,0));
+Real Shop__getPorosity(Real volume = -1);
+Real Shop__getVoxelPorosity(int resolution = 200, Vector3r start = Vector3r(0, 0, 0), Vector3r end = Vector3r(0, 0, 0));
 
 //Matrix3r Shop__stressTensorOfPeriodicCell(bool smallStrains=false){return Shop::stressTensorOfPeriodicCell(smallStrains);}
-py::tuple Shop__fabricTensor(Real cutoff=0.0,bool splitTensor=false, Real thresholdForce=NaN);
-py::tuple Shop__normalShearStressTensors(bool compressionPositive=false, bool splitNormalTensor=false, Real thresholdForce=NaN);
+py::tuple Shop__fabricTensor(Real cutoff = 0.0, bool splitTensor = false, Real thresholdForce = NaN);
+py::tuple Shop__normalShearStressTensors(bool compressionPositive = false, bool splitNormalTensor = false, Real thresholdForce = NaN);
 
 py::list Shop__getStressLWForEachBody();
 
-py::list Shop__getBodyIdsContacts(Body::id_t bodyID=-1);
+py::list Shop__getBodyIdsContacts(Body::id_t bodyID = -1);
 
 Real shiftBodies(py::list ids, const Vector3r& shift);
 
-void Shop__calm(int mask=-1);
+void Shop__calm(int mask = -1);
 
 void setNewVerticesOfFacet(const shared_ptr<Body>& b, const Vector3r& v1, const Vector3r& v2, const Vector3r& v3);
 
@@ -178,14 +181,14 @@ py::list numIntrsOfEachBody();
  *  @param newPos is the desired updated position
  *  @param axis is the axis along which the position has to be updated (ex: if axis=="xy" and newPos==Vector3r(r0,r1,r2), r2 will be ignored and the position along z will not be updated).
 */
-void setBodyPosition(int id, Vector3r newPos, string axis="xyz");
+void setBodyPosition(int id, Vector3r newPos, string axis = "xyz");
 
 /* Set a body velocity from its id and a new vector3r.
  *  @param id is the body id
  *  @param newPos is the desired updated velocity
  *  @param axis is the axis along which the velocity has to be updated (ex: if axis=="xy" and newVel==Vector3r(r0,r1,r2), r2 will be ignored and the velocity along z will not be updated).
 */
-void setBodyVelocity(int id, Vector3r newVel, string axis="xyz");
+void setBodyVelocity(int id, Vector3r newVel, string axis = "xyz");
 
 /* Set a body orientation from its id and a new Quaternionr.
  *  @param id is the body id
@@ -206,4 +209,3 @@ void setBodyAngularVelocity(int id, Vector3r newAngVel);
 void setBodyColor(int id, Vector3r newColor);
 
 } // namespace yade
-

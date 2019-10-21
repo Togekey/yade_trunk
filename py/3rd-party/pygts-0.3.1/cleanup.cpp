@@ -62,261 +62,245 @@
  * deallocating any objects referenced by the live-objects table.  The 
  * approach is similar to what is used for replace() in vertex.c.
  */
-GList*
-pygts_vertices_merge(GList* vertices, gdouble epsilon,
-		     gboolean (* check) (GtsVertex *, GtsVertex *))
+GList* pygts_vertices_merge(GList* vertices, gdouble epsilon, gboolean (*check)(GtsVertex*, GtsVertex*))
 {
-  GPtrArray *array;
-  GList *i, *next;
-  GNode *kdtree;
-  GtsVertex *v;
-  GtsBBox *bbox;
-  GSList *selected, *j;
-  GtsVertex *sv;
-  PygtsObject *obj;
-  PygtsVertex *vertex=NULL;
-  GSList *parents=NULL, *ii,*cur;
+	GPtrArray*   array;
+	GList *      i, *next;
+	GNode*       kdtree;
+	GtsVertex*   v;
+	GtsBBox*     bbox;
+	GSList *     selected, *j;
+	GtsVertex*   sv;
+	PygtsObject* obj;
+	PygtsVertex* vertex  = NULL;
+	GSList *     parents = NULL, *ii, *cur;
 
-  g_return_val_if_fail(vertices != NULL, 0);
+	g_return_val_if_fail(vertices != NULL, 0);
 
-  array = g_ptr_array_new();
-  i = vertices;
-  while (i) {
-    g_ptr_array_add(array, i->data);
-    i = g_list_next(i);
-  }
-  kdtree = gts_kdtree_new(array, NULL);
-  g_ptr_array_free(array, TRUE);
+	array = g_ptr_array_new();
+	i     = vertices;
+	while (i) {
+		g_ptr_array_add(array, i->data);
+		i = g_list_next(i);
+	}
+	kdtree = gts_kdtree_new(array, NULL);
+	g_ptr_array_free(array, TRUE);
 
-  i = vertices;
-  while(i) {
-    v = (GtsVertex*)i->data;
-    if (!GTS_OBJECT(v)->reserved) { /* Do something only if v is active */
+	i = vertices;
+	while (i) {
+		v = (GtsVertex*)i->data;
+		if (!GTS_OBJECT(v)->reserved) { /* Do something only if v is active */
 
-      /* build bounding box */
-      bbox = gts_bbox_new(gts_bbox_class(), v, 
-			  GTS_POINT(v)->x - epsilon,
-			  GTS_POINT(v)->y - epsilon,
-			  GTS_POINT(v)->z - epsilon,
-			  GTS_POINT(v)->x + epsilon,
-			  GTS_POINT(v)->y + epsilon,
-			  GTS_POINT(v)->z + epsilon);
+			/* build bounding box */
+			bbox = gts_bbox_new(
+			        gts_bbox_class(),
+			        v,
+			        GTS_POINT(v)->x - epsilon,
+			        GTS_POINT(v)->y - epsilon,
+			        GTS_POINT(v)->z - epsilon,
+			        GTS_POINT(v)->x + epsilon,
+			        GTS_POINT(v)->y + epsilon,
+			        GTS_POINT(v)->z + epsilon);
 
-      /* select vertices which are inside bbox using kdtree */
-      j = selected = gts_kdtree_range(kdtree, bbox, NULL);
-      while(j) {
-        sv = (GtsVertex*)j->data;
-        if( sv!=v && !GTS_OBJECT(sv)->reserved && (!check||(*check)(sv, v)) ) {
-          /* sv is not v and is active */
-	  if( (obj = (PygtsObject*)g_hash_table_lookup(obj_table,GTS_OBJECT(sv))) !=NULL ) {
-	    vertex = PYGTS_VERTEX(obj);
-	    /* Detach and save any parent segments */
-	    ii = sv->segments;
-	    while(ii!=NULL) {
-	      cur = ii;
-	      ii = g_slist_next(ii);
-	      if(PYGTS_IS_PARENT_SEGMENT(cur->data)) {
-		sv->segments = g_slist_remove_link(sv->segments, cur);
-		parents = g_slist_prepend(parents,cur->data);
-		g_slist_free_1(cur);
-	      }
-	    } 
-	  }
+			/* select vertices which are inside bbox using kdtree */
+			j = selected = gts_kdtree_range(kdtree, bbox, NULL);
+			while (j) {
+				sv = (GtsVertex*)j->data;
+				if (sv != v && !GTS_OBJECT(sv)->reserved && (!check || (*check)(sv, v))) {
+					/* sv is not v and is active */
+					if ((obj = (PygtsObject*)g_hash_table_lookup(obj_table, GTS_OBJECT(sv))) != NULL) {
+						vertex = PYGTS_VERTEX(obj);
+						/* Detach and save any parent segments */
+						ii = sv->segments;
+						while (ii != NULL) {
+							cur = ii;
+							ii  = g_slist_next(ii);
+							if (PYGTS_IS_PARENT_SEGMENT(cur->data)) {
+								sv->segments = g_slist_remove_link(sv->segments, cur);
+								parents      = g_slist_prepend(parents, cur->data);
+								g_slist_free_1(cur);
+							}
+						}
+					}
 
-          gts_vertex_replace(sv, v);
-          GTS_OBJECT(sv)->reserved = sv; /* mark sv as inactive */
+					gts_vertex_replace(sv, v);
+					GTS_OBJECT(sv)->reserved = sv; /* mark sv as inactive */
 
-	  /* Reattach the parent segments */
-	  if( vertex != NULL ) {
-	    ii = parents;
-	    while(ii!=NULL) {
-	      sv->segments = g_slist_prepend(sv->segments, ii->data);
-	      ii = g_slist_next(ii);
-	    }
-	    g_slist_free(parents);
-	    parents = NULL;
-	  }
-	  vertex = NULL;
-        }
-        j = g_slist_next(j);
-      }
-      g_slist_free(selected);
-      gts_object_destroy(GTS_OBJECT(bbox));
-    }
-    i = g_list_next(i);
-  }
-  gts_kdtree_destroy(kdtree);
+					/* Reattach the parent segments */
+					if (vertex != NULL) {
+						ii = parents;
+						while (ii != NULL) {
+							sv->segments = g_slist_prepend(sv->segments, ii->data);
+							ii           = g_slist_next(ii);
+						}
+						g_slist_free(parents);
+						parents = NULL;
+					}
+					vertex = NULL;
+				}
+				j = g_slist_next(j);
+			}
+			g_slist_free(selected);
+			gts_object_destroy(GTS_OBJECT(bbox));
+		}
+		i = g_list_next(i);
+	}
+	gts_kdtree_destroy(kdtree);
 
 
-  /* destroy inactive vertices and removes them from list */
+	/* destroy inactive vertices and removes them from list */
 
-  /* we want to control vertex destruction */
-  gts_allow_floating_vertices = TRUE;
+	/* we want to control vertex destruction */
+	gts_allow_floating_vertices = TRUE;
 
-  i = vertices;
-  while (i) {
-    v = (GtsVertex*)i->data;
-    next = g_list_next(i);
-    if(GTS_OBJECT(v)->reserved) { /* v is inactive */
-      if( g_hash_table_lookup(obj_table,GTS_OBJECT(v))==NULL ) {
-	gts_object_destroy(GTS_OBJECT(v));
-      }
-      else {
-	GTS_OBJECT(v)->reserved = 0;
-      }
-      vertices = g_list_remove_link(vertices, i);
-      g_list_free_1(i);
-    }
-    i = next;
-  }
-  gts_allow_floating_vertices = FALSE; 
+	i = vertices;
+	while (i) {
+		v    = (GtsVertex*)i->data;
+		next = g_list_next(i);
+		if (GTS_OBJECT(v)->reserved) { /* v is inactive */
+			if (g_hash_table_lookup(obj_table, GTS_OBJECT(v)) == NULL) {
+				gts_object_destroy(GTS_OBJECT(v));
+			} else {
+				GTS_OBJECT(v)->reserved = 0;
+			}
+			vertices = g_list_remove_link(vertices, i);
+			g_list_free_1(i);
+		}
+		i = next;
+	}
+	gts_allow_floating_vertices = FALSE;
 
-  return vertices;
+	return vertices;
 }
 
 
-static void 
-build_list(gpointer data, GSList ** list)
+static void build_list(gpointer data, GSList** list) { *list = g_slist_prepend(*list, data); }
+
+
+static void build_list1(gpointer data, GList** list) { *list = g_list_prepend(*list, data); }
+
+
+void pygts_vertex_cleanup(GtsSurface* s, gdouble threshold)
 {
-  *list = g_slist_prepend(*list, data);
-}
+	GList* vertices = NULL;
 
+	/* merge vertices which are close enough */
+	/* build list of vertices */
+	gts_surface_foreach_vertex(s, (GtsFunc)build_list1, &vertices);
 
-static void
-build_list1(gpointer data, GList ** list)
-{
-  *list = g_list_prepend(*list, data);
-}
-
-
-void 
-pygts_vertex_cleanup(GtsSurface *s, gdouble threshold)
-{
-  GList * vertices = NULL;
-
-  /* merge vertices which are close enough */
-  /* build list of vertices */
-  gts_surface_foreach_vertex(s, (GtsFunc) build_list1, &vertices);
-
-  /* merge vertices: we MUST update the variable vertices because this function
+	/* merge vertices: we MUST update the variable vertices because this function
      modifies the list (i.e. removes the merged vertices). */
-  vertices = pygts_vertices_merge(vertices, threshold, NULL);
+	vertices = pygts_vertices_merge(vertices, threshold, NULL);
 
-  /* free the list */
-  g_list_free(vertices);
+	/* free the list */
+	g_list_free(vertices);
 }
 
 
-void 
-pygts_edge_cleanup(GtsSurface *s)
+void pygts_edge_cleanup(GtsSurface* s)
 {
-  GSList *edges = NULL;
-  GSList *i, *ii, *cur, *parents=NULL;
-  PygtsEdge *edge;
-  GtsEdge *e, *duplicate;
+	GSList*    edges = NULL;
+	GSList *   i, *ii, *cur, *parents = NULL;
+	PygtsEdge* edge;
+	GtsEdge *  e, *duplicate;
 
-  g_return_if_fail(s != NULL);
+	g_return_if_fail(s != NULL);
 
-  /* build list of edges */
-  gts_surface_foreach_edge(s, (GtsFunc)build_list, &edges);
+	/* build list of edges */
+	gts_surface_foreach_edge(s, (GtsFunc)build_list, &edges);
 
-  /* remove degenerate and duplicate edges.
+	/* remove degenerate and duplicate edges.
      Note: we could use gts_edges_merge() to remove the duplicates and then
      remove the degenerate edges but it is more efficient to do everything 
      at once (and it's more pedagogical too ...) */
 
-  /* We want to control manually the destruction of edges */
-  gts_allow_floating_edges = TRUE;
+	/* We want to control manually the destruction of edges */
+	gts_allow_floating_edges = TRUE;
 
-  i = edges;
-  while(i) {
-    e = (GtsEdge*)i->data;
-    if(GTS_SEGMENT(e)->v1 == GTS_SEGMENT(e)->v2) {
-      /* edge is degenerate */
-      if( !g_hash_table_lookup(obj_table,GTS_OBJECT(e)) ) {
-	/* destroy e */
-	gts_object_destroy(GTS_OBJECT(e));
-      }
-    }
-    else {
-      if((duplicate = gts_edge_is_duplicate(e))) {
+	i = edges;
+	while (i) {
+		e = (GtsEdge*)i->data;
+		if (GTS_SEGMENT(e)->v1 == GTS_SEGMENT(e)->v2) {
+			/* edge is degenerate */
+			if (!g_hash_table_lookup(obj_table, GTS_OBJECT(e))) {
+				/* destroy e */
+				gts_object_destroy(GTS_OBJECT(e));
+			}
+		} else {
+			if ((duplicate = gts_edge_is_duplicate(e))) {
+				/* Detach and save any parent triangles */
+				if ((edge = PYGTS_EDGE(g_hash_table_lookup(obj_table, GTS_OBJECT(e)))) != NULL) {
+					ii = e->triangles;
+					while (ii != NULL) {
+						cur = ii;
+						ii  = g_slist_next(ii);
+						if (PYGTS_IS_PARENT_TRIANGLE(cur->data)) {
+							e->triangles = g_slist_remove_link(e->triangles, cur);
+							parents      = g_slist_prepend(parents, cur->data);
+							g_slist_free_1(cur);
+						}
+					}
+				}
 
-	/* Detach and save any parent triangles */
-	if( (edge = PYGTS_EDGE(g_hash_table_lookup(obj_table,GTS_OBJECT(e))))
-	    !=NULL ) {
-	  ii = e->triangles;
-	  while(ii!=NULL) {
-	    cur = ii;
-	    ii = g_slist_next(ii);
-	    if(PYGTS_IS_PARENT_TRIANGLE(cur->data)) {
-	      e->triangles = g_slist_remove_link(e->triangles, cur);
-	      parents = g_slist_prepend(parents,cur->data);
-	      g_slist_free_1(cur);
-	    }
-	  } 
+				/* replace e with its duplicate */
+				gts_edge_replace(e, duplicate);
+
+				/* Reattach the parent segments */
+				if (edge != NULL) {
+					ii = parents;
+					while (ii != NULL) {
+						e->triangles = g_slist_prepend(e->triangles, ii->data);
+						ii           = g_slist_next(ii);
+					}
+					g_slist_free(parents);
+					parents = NULL;
+				}
+
+				if (!g_hash_table_lookup(obj_table, GTS_OBJECT(e))) {
+					/* destroy e */
+					gts_object_destroy(GTS_OBJECT(e));
+				}
+			}
+		}
+		i = g_slist_next(i);
 	}
 
-	/* replace e with its duplicate */
-	gts_edge_replace(e, duplicate);
+	/* don't forget to reset to default */
+	gts_allow_floating_edges = FALSE;
 
-	/* Reattach the parent segments */
-	if( edge != NULL ) {
-	  ii = parents;
-	  while(ii!=NULL) {
-	    e->triangles = g_slist_prepend(e->triangles, ii->data);
-	    ii = g_slist_next(ii);
-	  }
-	  g_slist_free(parents);
-	  parents = NULL;
-	}
-
-	if( !g_hash_table_lookup(obj_table,GTS_OBJECT(e)) ) {
-	  /* destroy e */
-	  gts_object_destroy(GTS_OBJECT (e));
-	}
-      }
-    }
-    i = g_slist_next(i);
-  }
-  
-  /* don't forget to reset to default */
-  gts_allow_floating_edges = FALSE;
-
-  /* free list of edges */
-  g_slist_free (edges);
+	/* free list of edges */
+	g_slist_free(edges);
 }
 
 
-void 
-pygts_face_cleanup(GtsSurface * s)
+void pygts_face_cleanup(GtsSurface* s)
 {
-  GSList *triangles = NULL;
-  GSList * i;
+	GSList* triangles = NULL;
+	GSList* i;
 
-  g_return_if_fail(s != NULL);
+	g_return_if_fail(s != NULL);
 
-  /* build list of triangles */
-  gts_surface_foreach_face(s, (GtsFunc) build_list, &triangles);
-  
-  /* remove duplicate and degenerate triangles */
-  i = triangles;
-  while(i) {
-    GtsTriangle * t = (GtsTriangle*)i->data;
-    if (!gts_triangle_is_ok(t)) {
-      /* destroy t, its edges (if not used by any other triangle)
+	/* build list of triangles */
+	gts_surface_foreach_face(s, (GtsFunc)build_list, &triangles);
+
+	/* remove duplicate and degenerate triangles */
+	i = triangles;
+	while (i) {
+		GtsTriangle* t = (GtsTriangle*)i->data;
+		if (!gts_triangle_is_ok(t)) {
+			/* destroy t, its edges (if not used by any other triangle)
 	 and its corners (if not used by any other edge) */
-      if( g_hash_table_lookup(obj_table,GTS_OBJECT(t))==NULL ) {
-	gts_object_destroy(GTS_OBJECT(t));
-      }
-      else {
-	gts_surface_remove_face(PYGTS_SURFACE_AS_GTS_SURFACE(s),GTS_FACE(t));
-      }
-    }
-    i = g_slist_next(i);
-  }
-  
-  /* free list of triangles */
-  g_slist_free(triangles);
+			if (g_hash_table_lookup(obj_table, GTS_OBJECT(t)) == NULL) {
+				gts_object_destroy(GTS_OBJECT(t));
+			} else {
+				gts_surface_remove_face(PYGTS_SURFACE_AS_GTS_SURFACE(s), GTS_FACE(t));
+			}
+		}
+		i = g_slist_next(i);
+	}
+
+	/* free list of triangles */
+	g_slist_free(triangles);
 }
 
 
@@ -460,7 +444,7 @@ pygts_face_cleanup(GtsSurface * s)
 /*   /\* if verbose on print stats *\/ */
 /*   if (verbose) */
 /*     gts_surface_print_stats (s, stderr); */
- 
+
 /*   /\* merge vertices which are close enough *\/ */
 /*   /\* build list of vertices *\/ */
 /*   gts_surface_foreach_vertex (s, boundary ? (GtsFunc) build_list2 : (GtsFunc) build_list1, */
@@ -496,4 +480,3 @@ pygts_face_cleanup(GtsSurface * s)
 /* } */
 
 #pragma GCC diagnostic pop
-

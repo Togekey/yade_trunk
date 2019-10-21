@@ -9,12 +9,11 @@
 namespace yade { // Cannot have #include directive inside.
 
 class PotentialParticle2AABB : public BoundFunctor {
-	public :
+public:
+	void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r&, const Body*);
 
-		void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r&, const Body*);
-
-		FUNCTOR1D(PotentialParticle);
-		//REGISTER_ATTRIBUTES(BoundFunctor,(aabbEnlargeFactor));
+	FUNCTOR1D(PotentialParticle);
+	//REGISTER_ATTRIBUTES(BoundFunctor,(aabbEnlargeFactor));
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS(PotentialParticle2AABB,BoundFunctor,"EXPERIMENTAL. Functor creating :yref:`Aabb` from :yref:`PotentialParticle`.",
 			((Real,aabbEnlargeFactor,((void)"deactivated",-1),,"see :yref:`Sphere2AABB`."))

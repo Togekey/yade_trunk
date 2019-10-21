@@ -14,9 +14,26 @@ class Body;
 class InteractionContainer;
 
 #ifdef YADE_OPENMP
-	#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b_,bodies) bodies->updateShortLists(); const vector<Body::id_t>& realBodies= bodies->realBodies; const bool redirect=bodies->useRedirection; const Body::id_t _sz(redirect ? realBodies.size() : bodies->size()); _Pragma("omp parallel for") for(int k=0; k<_sz; k++){  if(not redirect and not (*bodies)[k]) continue; b_((*bodies)[redirect? realBodies[k]: k]);
+#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b_, bodies)                                                                                                           \
+	bodies->updateShortLists();                                                                                                                            \
+	const vector<Body::id_t>& realBodies = bodies->realBodies;                                                                                             \
+	const bool                redirect   = bodies->useRedirection;                                                                                         \
+	const Body::id_t          _sz(redirect ? realBodies.size() : bodies->size());                                                                          \
+	_Pragma("omp parallel for") for (int k = 0; k < _sz; k++)                                                                                              \
+	{                                                                                                                                                      \
+		if (not redirect and not(*bodies)[k])                                                                                                          \
+			continue;                                                                                                                              \
+		b_((*bodies)[redirect ? realBodies[k] : k]);
 #else
-	#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b_,bodies) bodies->updateShortLists(); const vector<Body::id_t>& realBodies= bodies->realBodies; const bool redirect=bodies->useRedirection; const Body::id_t _sz(redirect ? realBodies.size() : bodies->size()); for(int k=0; k<_sz; k++){  if(not redirect and not (*bodies)[k]) continue; b_((*bodies)[redirect? realBodies[k]: k]);
+#define YADE_PARALLEL_FOREACH_BODY_BEGIN(b_, bodies)                                                                                                           \
+	bodies->updateShortLists();                                                                                                                            \
+	const vector<Body::id_t>& realBodies = bodies->realBodies;                                                                                             \
+	const bool                redirect   = bodies->useRedirection;                                                                                         \
+	const Body::id_t          _sz(redirect ? realBodies.size() : bodies->size());                                                                          \
+	for (int k = 0; k < _sz; k++) {                                                                                                                        \
+		if (not redirect and not(*bodies)[k])                                                                                                          \
+			continue;                                                                                                                              \
+		b_((*bodies)[redirect ? realBodies[k] : k]);
 #endif
 #define YADE_PARALLEL_FOREACH_BODY_END() }
 
@@ -26,59 +43,82 @@ The nested iterators and the specialized FOREACH_BODY macros above will silently
 
 Any alternative implementation should use the same API.
 */
-class BodyContainer: public Serializable{
-	private:
-		using ContainerT = std::vector<shared_ptr<Body> > ;
-		using MemberMap = std::map<Body::id_t,Se3r> ;
-// 		ContainerT body;
-	public:
-		friend class InteractionContainer;  // accesses the body vector directly
-		
-		//An iterator that will automatically jump slots with null bodies
-		class smart_iterator : public ContainerT::iterator {
-			public:
-			ContainerT::iterator end;
-			smart_iterator& operator++() {
-				ContainerT::iterator::operator++();
-				while (((*this)->get() != nullptr) && !(this->operator*()) && end!=(*this)) ContainerT::iterator::operator++();
-				return *this;}
-			smart_iterator operator++(int) {smart_iterator temp(*this); operator++(); return temp;}
-			smart_iterator& operator=(const ContainerT::iterator& rhs) {ContainerT::iterator::operator=(rhs); return *this;}
-			smart_iterator& operator=(const smart_iterator& rhs) {ContainerT::iterator::operator=(rhs); end=rhs.end; return *this;}
-			smart_iterator() {}
-			smart_iterator(const ContainerT::iterator& source) {(*this)=source;}
-			smart_iterator(const smart_iterator& source) : ContainerT::iterator()  {(*this)=source; end=source.end;}
-		};
-		using iterator = smart_iterator ;
-		using const_iterator = const smart_iterator ;
+class BodyContainer : public Serializable {
+private:
+	using ContainerT = std::vector<shared_ptr<Body>>;
+	using MemberMap  = std::map<Body::id_t, Se3r>;
+	// 		ContainerT body;
+public:
+	friend class InteractionContainer; // accesses the body vector directly
 
-// 		BodyContainer() {};
-		virtual ~BodyContainer() {};
-		Body::id_t insert(shared_ptr<Body>); // => body.push_back()
-		Body::id_t insertAtId(shared_ptr<Body> b, Body::id_t candidate);  // => body[candidate]=...
-			
-		void clear();
-		iterator begin() {
-			iterator temp(body.begin());
-			temp.end=body.end();
-			return (body.begin()==body.end() || *temp)?temp:++temp;}
-		iterator end() {
-			iterator temp(body.end());
-			temp.end=body.end();
+	//An iterator that will automatically jump slots with null bodies
+	class smart_iterator : public ContainerT::iterator {
+	public:
+		ContainerT::iterator end;
+		smart_iterator&      operator++()
+		{
+			ContainerT::iterator::operator++();
+			while (((*this)->get() != nullptr) && !(this->operator*()) && end != (*this))
+				ContainerT::iterator::operator++();
+			return *this;
+		}
+		smart_iterator operator++(int)
+		{
+			smart_iterator temp(*this);
+			               operator++();
 			return temp;
 		}
-
-		size_t size() const { return body.size(); }
-		shared_ptr<Body>& operator[](unsigned int id){ return body[id];}
-		const shared_ptr<Body>& operator[](unsigned int id) const { return body[id]; }
-
-		bool exists(Body::id_t id) const {
-			return ((id>=0) && ((size_t)id<body.size()) && ((bool)body[id]));
+		smart_iterator& operator=(const ContainerT::iterator& rhs)
+		{
+			ContainerT::iterator::operator=(rhs);
+			return *this;
 		}
-		bool erase(Body::id_t id, bool eraseClumpMembers);
-		
-		void updateShortLists();
-		
+		smart_iterator& operator=(const smart_iterator& rhs)
+		{
+			ContainerT::iterator::operator=(rhs);
+			end                           = rhs.end;
+			return *this;
+		}
+		smart_iterator() {}
+		smart_iterator(const ContainerT::iterator& source) { (*this) = source; }
+		smart_iterator(const smart_iterator& source)
+		        : ContainerT::iterator()
+		{
+			(*this) = source;
+			end     = source.end;
+		}
+	};
+	using iterator       = smart_iterator;
+	using const_iterator = const smart_iterator;
+
+	// 		BodyContainer() {};
+	virtual ~BodyContainer() {};
+	Body::id_t insert(shared_ptr<Body>); // => body.push_back()
+	Body::id_t insertAtId(shared_ptr<Body> b, Body::id_t candidate); // => body[candidate]=...
+
+	void     clear();
+	iterator begin()
+	{
+		iterator temp(body.begin());
+		temp.end = body.end();
+		return (body.begin() == body.end() || *temp) ? temp : ++temp;
+	}
+	iterator end()
+	{
+		iterator temp(body.end());
+		temp.end = body.end();
+		return temp;
+	}
+
+	size_t                  size() const { return body.size(); }
+	shared_ptr<Body>&       operator[](unsigned int id) { return body[id]; }
+	const shared_ptr<Body>& operator[](unsigned int id) const { return body[id]; }
+
+	bool exists(Body::id_t id) const { return ((id >= 0) && ((size_t)id < body.size()) && ((bool)body[id])); }
+	bool erase(Body::id_t id, bool eraseClumpMembers);
+
+	void updateShortLists();
+
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(BodyContainer,Serializable,"Standard body container for a scene",
 		((ContainerT,body,,,"The underlying vector<shared_ptr<Body> >"))
@@ -101,4 +141,3 @@ class BodyContainer: public Serializable{
 REGISTER_SERIALIZABLE(BodyContainer);
 
 } // namespace yade
-

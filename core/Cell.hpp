@@ -13,29 +13,35 @@ The transformation is split between "normal" part and "rotation/shear" part for 
 
 #pragma once
 
-#include<lib/serialization/Serializable.hpp>
-#include<lib/base/Math.hpp>
+#include <lib/base/Math.hpp>
+#include <lib/serialization/Serializable.hpp>
 
 //#include<pkg/dem/Shop.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class Cell: public Serializable{
-	public:
+class Cell : public Serializable {
+public:
 	//! Get/set sizes of cell base vectors
 	const Vector3r& getSize() const { return _size; }
-	void setSize(const Vector3r& s){for (int k=0;k<3;k++) hSize.col(k)*=s[k]/hSize.col(k).norm(); refHSize=hSize;  postLoad(*this);}
+	void            setSize(const Vector3r& s)
+	{
+		for (int k = 0; k < 3; k++)
+			hSize.col(k) *= s[k] / hSize.col(k).norm();
+		refHSize = hSize;
+		postLoad(*this);
+	}
 	//! Return copy of the current size (used only by the python wrapper)
 	Vector3r getSize_copy() const { return _size; }
 	//! return vector of consines of skew angle in yz, xz, xy planes between respective transformed base vectors
-	const Vector3r& getCos() const {return _cos;}
+	const Vector3r& getCos() const { return _cos; }
 	//! transformation matrix applying pure shear&rotation (scaling removed)
 	const Matrix3r& getShearTrsf() const { return _shearTrsf; }
 	//! inverse of getShearTrsfMatrix().
-	const Matrix3r& getUnshearTrsf() const {return _unshearTrsf;}
+	const Matrix3r& getUnshearTrsf() const { return _unshearTrsf; }
 	//! transformation increment matrix applying arbitrary field (remove if not used in NewtonIntegrator! )
 	// const Matrix3r& getTrsfInc() const { return _trsfInc; }
-	
+
 	/*! return pointer to column-major OpenGL 4x4 matrix applying pure shear. This matrix is suitable as argument for glMultMatrixd.
 
 	Note: the order of OpenGL transoformations matters; for instance, if you draw sheared wire box of size *size*,
@@ -50,21 +56,21 @@ class Cell: public Serializable{
 	*/
 	const double* getGlShearTrsfMatrix() const { return _glShearTrsfMatrix; }
 	//! Whether any shear (non-diagonal) component of the strain matrix is nonzero.
-	bool hasShear() const {return _hasShear; }
+	bool hasShear() const { return _hasShear; }
 
 	// caches; private
-	private:
-		Matrix3r _invTrsf;
-		Matrix3r _trsfInc;
-		Matrix3r _vGradTimesPrevH;
-		Vector3r _size, _cos;
-		Vector3r _refSize;
-		bool _hasShear;
-		Matrix3r _shearTrsf, _unshearTrsf;
-		double _glShearTrsfMatrix[16];
-		void fillGlShearTrsfMatrix(double m[16]);
-	public:
+private:
+	Matrix3r _invTrsf;
+	Matrix3r _trsfInc;
+	Matrix3r _vGradTimesPrevH;
+	Vector3r _size, _cos;
+	Vector3r _refSize;
+	bool     _hasShear;
+	Matrix3r _shearTrsf, _unshearTrsf;
+	double   _glShearTrsfMatrix[16];
+	void     fillGlShearTrsfMatrix(double m[16]);
 
+public:
 	DECLARE_LOGGER;
 
 	//! "integrate" velGrad, update cached values used by public getter.
@@ -72,84 +78,152 @@ class Cell: public Serializable{
 	/*! Return point inside periodic cell, even if shear is applied */
 	Vector3r wrapShearedPt(const Vector3r& pt) const { return shearPt(wrapPt(unshearPt(pt))); }
 	/*! Return point inside periodic cell, even if shear is applied; store cell coordinates in period. */
-	Vector3r wrapShearedPt(const Vector3r& pt, Vector3i& period) const { return shearPt(wrapPt(unshearPt(pt),period)); }
+	Vector3r wrapShearedPt(const Vector3r& pt, Vector3i& period) const { return shearPt(wrapPt(unshearPt(pt), period)); }
 	/*! Apply inverse shear on point; to put it inside (unsheared) periodic cell, apply wrapPt on the returned value. */
-	Vector3r unshearPt(const Vector3r& pt) const { return _unshearTrsf*pt; }
-	//! Apply shear on point. 
-	Vector3r shearPt(const Vector3r& pt) const { return _shearTrsf*pt; }
+	Vector3r unshearPt(const Vector3r& pt) const { return _unshearTrsf * pt; }
+	//! Apply shear on point.
+	Vector3r shearPt(const Vector3r& pt) const { return _shearTrsf * pt; }
 	/*! Wrap point to inside the periodic cell; don't compute number of periods wrapped */
-	Vector3r wrapPt(const Vector3r& pt) const {
-		Vector3r ret; for(int i=0;i<3;i++) ret[i]=wrapNum(pt[i],_size[i]); return ret;}
+	Vector3r wrapPt(const Vector3r& pt) const
+	{
+		Vector3r ret;
+		for (int i = 0; i < 3; i++)
+			ret[i] = wrapNum(pt[i], _size[i]);
+		return ret;
+	}
 	/*! Wrap point to inside the periodic cell; period will contain by how many cells it was wrapped. */
-	Vector3r wrapPt(const Vector3r& pt, Vector3i& period) const {
-		Vector3r ret; for(int i=0; i<3; i++){ ret[i]=wrapNum(pt[i],_size[i],period[i]); } return ret;}
+	Vector3r wrapPt(const Vector3r& pt, Vector3i& period) const
+	{
+		Vector3r ret;
+		for (int i = 0; i < 3; i++) {
+			ret[i] = wrapNum(pt[i], _size[i], period[i]);
+		}
+		return ret;
+	}
 	/*! Wrap number to interval 0…sz */
-	static Real wrapNum(const Real& x, const Real& sz) {
-		Real norm=x/sz; return (norm-floor(norm))*sz;}
+	static Real wrapNum(const Real& x, const Real& sz)
+	{
+		Real norm = x / sz;
+		return (norm - floor(norm)) * sz;
+	}
 	/*! Wrap number to interval 0…sz; store how many intervals were wrapped in period */
-	static Real wrapNum(const Real& x, const Real& sz, int& period) {
-		Real norm=x/sz; period=(int)floor(norm); return (norm-period)*sz;}
+	static Real wrapNum(const Real& x, const Real& sz, int& period)
+	{
+		Real norm = x / sz;
+		period    = (int)floor(norm);
+		return (norm - period) * sz;
+	}
 
 	// relative position and velocity for interaction accross multiple cells
-	Vector3r intrShiftPos(const Vector3i& cellDist) const { return hSize*cellDist.cast<Real>(); }
-	Vector3r intrShiftVel(const Vector3i& cellDist) const { return _vGradTimesPrevH*cellDist.cast<Real>(); }
+	Vector3r intrShiftPos(const Vector3i& cellDist) const { return hSize * cellDist.cast<Real>(); }
+	Vector3r intrShiftVel(const Vector3i& cellDist) const { return _vGradTimesPrevH * cellDist.cast<Real>(); }
 	// return body velocity while taking away mean field velocity (coming from velGrad) if the mean field velocity is applied on velocity
-	Vector3r bodyFluctuationVel(const Vector3r& pos, const Vector3r& vel, const Matrix3r& prevVelGrad) const { return (vel-prevVelGrad*pos); }
+	Vector3r bodyFluctuationVel(const Vector3r& pos, const Vector3r& vel, const Matrix3r& prevVelGrad) const { return (vel - prevVelGrad * pos); }
 
 	// get/set current shape; setting resets trsf to identity
 	Matrix3r getHSize() const { return hSize; }
-	void setHSize(const Matrix3r& m){ hSize=refHSize=m; postLoad(*this); }
+	void     setHSize(const Matrix3r& m)
+	{
+		hSize = refHSize = m;
+		postLoad(*this);
+	}
 	// set current transformation; has no influence on current configuration (hSize); sets display refHSize as side-effect
 	Matrix3r getTrsf() const { return trsf; }
-	void setTrsf(const Matrix3r& m){ trsf=m; postLoad(*this); }
+	void     setTrsf(const Matrix3r& m)
+	{
+		trsf = m;
+		postLoad(*this);
+	}
 	Matrix3r getVelGrad() const { return velGrad; }
-	void setVelGrad(const Matrix3r& m){ nextVelGrad=m; velGradChanged=true;}
+	void     setVelGrad(const Matrix3r& m)
+	{
+		nextVelGrad    = m;
+		velGradChanged = true;
+	}
 	//BEGIN Deprecated (see refSize property)
 	// get undeformed shape
-	Matrix3r getHSize0() const { return _invTrsf*hSize; }
+	Matrix3r getHSize0() const { return _invTrsf * hSize; }
 	// edge lengths of the undeformed shape
-	Vector3r getRefSize() const { Matrix3r h=getHSize0(); return Vector3r(h.col(0).norm(),h.col(1).norm(),h.col(2).norm()); }
+	Vector3r getRefSize() const
+	{
+		Matrix3r h = getHSize0();
+		return Vector3r(h.col(0).norm(), h.col(1).norm(), h.col(2).norm());
+	}
 	// temporary, will be removed in favor of more descriptive setBox(...)
-	void setRefSize(const Vector3r& s){
+	void setRefSize(const Vector3r& s)
+	{
 		// if refSize is set to the current size and the cell is a box (used in older scripts), say it is not necessary
-		Matrix3r hSizeEigen3=hSize.diagonal().asDiagonal();		//Eigen3 support
-		if(s==_size && hSize==hSizeEigen3){ LOG_WARN("Setting O.cell.refSize=O.cell.size is useless, O.trsf=Matrix3.Identity is enough now."); }
-		else {LOG_WARN("Setting Cell.refSize is deprecated, use Cell.setBox(...) instead.");}
-		setBox(s); postLoad(*this);
-	} 
+		Matrix3r hSizeEigen3 = hSize.diagonal().asDiagonal(); //Eigen3 support
+		if (s == _size && hSize == hSizeEigen3) {
+			LOG_WARN("Setting O.cell.refSize=O.cell.size is useless, O.trsf=Matrix3.Identity is enough now.");
+		} else {
+			LOG_WARN("Setting Cell.refSize is deprecated, use Cell.setBox(...) instead.");
+		}
+		setBox(s);
+		postLoad(*this);
+	}
 	//END Deprecated
 	// set box shape of the cell
-	void setBox(const Vector3r& size){ setHSize(size.asDiagonal()); trsf=Matrix3r::Identity(); postLoad(*this); }
-	void setBox3(const Real& s0, const Real& s1, const Real& s2){ setBox(Vector3r(s0,s1,s2)); }
-	
+	void setBox(const Vector3r& size)
+	{
+		setHSize(size.asDiagonal());
+		trsf = Matrix3r::Identity();
+		postLoad(*this);
+	}
+	void setBox3(const Real& s0, const Real& s1, const Real& s2) { setBox(Vector3r(s0, s1, s2)); }
+
 
 	// return current cell volume
-	Real getVolume() const {return hSize.determinant();}
-	void postLoad(Cell&){ integrateAndUpdate(0); }
+	Real getVolume() const { return hSize.determinant(); }
+	void postLoad(Cell&) { integrateAndUpdate(0); }
 
 	// to resolve overloads
-	Vector3r wrapShearedPt_py(const Vector3r& pt) const { return wrapShearedPt(pt);}
-	Vector3r wrapPt_py(const Vector3r& pt) const { return wrapPt(pt);}
+	Vector3r wrapShearedPt_py(const Vector3r& pt) const { return wrapShearedPt(pt); }
+	Vector3r wrapPt_py(const Vector3r& pt) const { return wrapPt(pt); }
 
 	// strain measures
-	Matrix3r getDefGrad() { return trsf; }
-	Matrix3r getSmallStrain() { return .5*(trsf+trsf.transpose()) - Matrix3r::Identity(); }
-	Matrix3r getRCauchyGreenDef() { return trsf.transpose()*trsf; }
-	Matrix3r getLCauchyGreenDef() { return trsf*trsf.transpose(); }
-	Matrix3r getLagrangianStrain() { return .5*(getRCauchyGreenDef()-Matrix3r::Identity()); }
-	Matrix3r getEulerianAlmansiStrain() { return .5*(Matrix3r::Identity()-getLCauchyGreenDef().inverse()); }
-	void computePolarDecOfDefGrad(Matrix3r& R, Matrix3r& U) { Matrix_computeUnitaryPositive(trsf,&R,&U); }
-	boost::python::tuple getPolarDecOfDefGrad(){ Matrix3r R,U; computePolarDecOfDefGrad(R,U); return boost::python::make_tuple(R,U); }
-	Matrix3r getRotation() { Matrix3r R,U; computePolarDecOfDefGrad(R,U); return R; }
-	Matrix3r getLeftStretch() { Matrix3r R,U; computePolarDecOfDefGrad(R,U); return U; }
-	Matrix3r getRightStretch() { Matrix3r R,U; computePolarDecOfDefGrad(R,U); return trsf*R.transpose(); }
-	Vector3r getSpin() {Matrix3r R=.5*(velGrad-velGrad.transpose()); return Vector3r(-R(1,2),R(0,2),-R(0,1));}
+	Matrix3r             getDefGrad() { return trsf; }
+	Matrix3r             getSmallStrain() { return .5 * (trsf + trsf.transpose()) - Matrix3r::Identity(); }
+	Matrix3r             getRCauchyGreenDef() { return trsf.transpose() * trsf; }
+	Matrix3r             getLCauchyGreenDef() { return trsf * trsf.transpose(); }
+	Matrix3r             getLagrangianStrain() { return .5 * (getRCauchyGreenDef() - Matrix3r::Identity()); }
+	Matrix3r             getEulerianAlmansiStrain() { return .5 * (Matrix3r::Identity() - getLCauchyGreenDef().inverse()); }
+	void                 computePolarDecOfDefGrad(Matrix3r& R, Matrix3r& U) { Matrix_computeUnitaryPositive(trsf, &R, &U); }
+	boost::python::tuple getPolarDecOfDefGrad()
+	{
+		Matrix3r R, U;
+		computePolarDecOfDefGrad(R, U);
+		return boost::python::make_tuple(R, U);
+	}
+	Matrix3r getRotation()
+	{
+		Matrix3r R, U;
+		computePolarDecOfDefGrad(R, U);
+		return R;
+	}
+	Matrix3r getLeftStretch()
+	{
+		Matrix3r R, U;
+		computePolarDecOfDefGrad(R, U);
+		return U;
+	}
+	Matrix3r getRightStretch()
+	{
+		Matrix3r R, U;
+		computePolarDecOfDefGrad(R, U);
+		return trsf * R.transpose();
+	}
+	Vector3r getSpin()
+	{
+		Matrix3r R = .5 * (velGrad - velGrad.transpose());
+		return Vector3r(-R(1, 2), R(0, 2), -R(0, 1));
+	}
 
 	// stress measures
 	//Matrix3r getStress() { return Shop::getStress(); }
 	//Matrix3r getCauchyStress() { Matrix3r s=getStress(); return .5*(s+s.transpose()); }
 
-	enum { HOMO_NONE=0, HOMO_POS=1, HOMO_VEL=2, HOMO_VEL_2ND=3 };
+	enum { HOMO_NONE = 0, HOMO_POS = 1, HOMO_VEL = 2, HOMO_VEL_2ND = 3 };
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Cell,Serializable,"Parameters of periodic boundary conditions. Only applies if O.isPeriodic==True.",
 		/* overridden below to be modified by getters/setters because of intended side-effects */
@@ -202,4 +276,3 @@ class Cell: public Serializable{
 REGISTER_SERIALIZABLE(Cell);
 
 } // namespace yade
-

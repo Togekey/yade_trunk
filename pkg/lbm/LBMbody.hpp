@@ -9,19 +9,31 @@
 #ifdef LBM_ENGINE
 
 #pragma once
-#include<lib/serialization/Serializable.hpp>
-#include<lib/multimethods/Indexable.hpp>
+#include <lib/multimethods/Indexable.hpp>
+#include <lib/serialization/Serializable.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class LBMbody:  public Serializable{
-    public:
-        virtual ~LBMbody() {};
-        //Real radius(){return ext[0];}
-        bool isBox(){if(type==1)return true; else return false;}
-        bool isPtc(){if(type==2)return true; else return false;}
-        void setAsPtc(){type=2;}
-        void setAsBox(){type=1;}
+class LBMbody : public Serializable {
+public:
+	virtual ~LBMbody() {};
+	//Real radius(){return ext[0];}
+	bool isBox()
+	{
+		if (type == 1)
+			return true;
+		else
+			return false;
+	}
+	bool isPtc()
+	{
+		if (type == 2)
+			return true;
+		else
+			return false;
+	}
+	void setAsPtc() { type = 2; }
+	void setAsBox() { type = 1; }
 
 	// clang-format off
     YADE_CLASS_BASE_DOC_ATTRS_CTOR(LBMbody,Serializable,

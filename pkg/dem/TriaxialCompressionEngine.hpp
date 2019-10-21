@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include<core/PartialEngine.hpp>
-#include<lib/base/Math.hpp>
-#include<pkg/dem/TriaxialStressController.hpp>
+#include <lib/base/Math.hpp>
+#include <core/PartialEngine.hpp>
+#include <pkg/dem/TriaxialStressController.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -44,38 +44,49 @@ namespace yade { // Cannot have #include directive inside.
  *
  */
 
-class TriaxialCompressionEngine : public TriaxialStressController
-{
-	private :
-		std::string Phase1End;//used to name output files based on current state
+class TriaxialCompressionEngine : public TriaxialStressController {
+private:
+	std::string Phase1End; //used to name output files based on current state
 
-	public :
-		//TriaxialCompressionEngine();
-		virtual ~TriaxialCompressionEngine();
+public:
+	//TriaxialCompressionEngine();
+	virtual ~TriaxialCompressionEngine();
 
-		// FIXME: current serializer doesn't handle named enum types, this is workaround.
-		#define stateNum int
-		// should be "enum stateNum {...}" once this is fixed
-		enum {STATE_UNINITIALIZED, STATE_ISO_COMPACTION, STATE_ISO_UNLOADING, STATE_TRIAX_LOADING,  STATE_FIXED_POROSITY_COMPACTION, STATE_LIMBO};
+// FIXME: current serializer doesn't handle named enum types, this is workaround.
+#define stateNum int
+	// should be "enum stateNum {...}" once this is fixed
+	enum { STATE_UNINITIALIZED, STATE_ISO_COMPACTION, STATE_ISO_UNLOADING, STATE_TRIAX_LOADING, STATE_FIXED_POROSITY_COMPACTION, STATE_LIMBO };
 
-		void doStateTransition(stateNum nextState);
-		#define _STATE_CASE(ST) case ST: return #ST
-		string stateName(stateNum st){switch(st){ _STATE_CASE(STATE_UNINITIALIZED);_STATE_CASE(STATE_ISO_COMPACTION);_STATE_CASE(STATE_ISO_UNLOADING);_STATE_CASE(STATE_TRIAX_LOADING);_STATE_CASE(STATE_FIXED_POROSITY_COMPACTION);_STATE_CASE(STATE_LIMBO); default: return "<unknown state>"; } }
-		#undef _STATE_CASE
+	void doStateTransition(stateNum nextState);
+#define _STATE_CASE(ST)                                                                                                                                        \
+	case ST: return #ST
+	string stateName(stateNum st)
+	{
+		switch (st) {
+			_STATE_CASE(STATE_UNINITIALIZED);
+			_STATE_CASE(STATE_ISO_COMPACTION);
+			_STATE_CASE(STATE_ISO_UNLOADING);
+			_STATE_CASE(STATE_TRIAX_LOADING);
+			_STATE_CASE(STATE_FIXED_POROSITY_COMPACTION);
+			_STATE_CASE(STATE_LIMBO);
+			default: return "<unknown state>";
+		}
+	}
+#undef _STATE_CASE
 
-		Vector3r translationAxisx;
-		Vector3r translationAxisz;
-		//! is isotropicInternalCompactionFinished?
-		bool Phase1, saveSimulation, DieCompaction;//FIXME : document DieCompaction
-		//! is this the beginning of the simulation, after reading the scene?
-		bool firstRun;
-		int FinalIterationPhase1, Iteration/*, testEquilibriumInterval*/;//FIXME : what is that?
+	Vector3r translationAxisx;
+	Vector3r translationAxisz;
+	//! is isotropicInternalCompactionFinished?
+	bool Phase1, saveSimulation, DieCompaction; //FIXME : document DieCompaction
+	//! is this the beginning of the simulation, after reading the scene?
+	bool firstRun;
+	int  FinalIterationPhase1, Iteration /*, testEquilibriumInterval*/; //FIXME : what is that?
 
-		virtual void action();
-		void updateParameters();
+	virtual void action();
+	void         updateParameters();
 
-		///Change physical properties of interactions and/or bodies in the middle of a simulation (change only friction for the moment, complete this function to set cohesion and others before compression test)
-		void setContactProperties(Real frictionDegree);
+	///Change physical properties of interactions and/or bodies in the middle of a simulation (change only friction for the moment, complete this function to set cohesion and others before compression test)
+	void setContactProperties(Real frictionDegree);
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(
@@ -138,4 +149,3 @@ class TriaxialCompressionEngine : public TriaxialStressController
 REGISTER_SERIALIZABLE(TriaxialCompressionEngine);
 
 } // namespace yade
-

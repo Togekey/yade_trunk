@@ -5,14 +5,14 @@
 *  This program is free software; it is licensed under the terms of the  *
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
- 
+
 #pragma once
 
+#include <lib/base/Logging.hpp>
+#include <lib/base/Math.hpp>
 #include <core/Body.hpp>
 #include <core/PartialEngine.hpp>
 #include <pkg/fem/DeformableElement.hpp>
-#include <lib/base/Logging.hpp>
-#include <lib/base/Math.hpp>
 
 //#include <yade/trunk/pkg/fem/Node.hpp> //Node shape
 
@@ -29,43 +29,45 @@ its members that are node shaped bodies.
 namespace yade { // Cannot have #include directive inside.
 
 
-class DeformableCohesiveElement: public DeformableElement {
+class DeformableCohesiveElement : public DeformableElement {
+public:
+	struct nodepair : public Serializable {
 	public:
-
-		struct nodepair:public Serializable{
-				public:
-
-	// clang-format off
+		// clang-format off
 				YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(nodepair,Serializable,"Geometry of a body",
 						((shared_ptr<Body>,node1,,,"Node1 of node pair"))
 						((shared_ptr<Body>,node2,,,"Node2 of node pair")),
 						/*ctor*/,
 						/*py*/
 					);
-	// clang-format on
+		// clang-format on
 
-				// Comparison operator for table sorting.
-				bool operator<(const nodepair& param) const
-				{
-				    if (node1.get() < param.node1.get()) return true;
-				    if (node1.get() > param.node1.get()) return false;
-				    if (node2.get() < param.node2.get()) return true;
-				    if (node2.get() > param.node2.get()) return false;
-				    LOG_ERROR("Incomplete 'if' sequence");
-				    return false;
-				}
-			};
+		// Comparison operator for table sorting.
+		bool operator<(const nodepair& param) const
+		{
+			if (node1.get() < param.node1.get())
+				return true;
+			if (node1.get() > param.node1.get())
+				return false;
+			if (node2.get() < param.node2.get())
+				return true;
+			if (node2.get() > param.node2.get())
+				return false;
+			LOG_ERROR("Incomplete 'if' sequence");
+			return false;
+		}
+	};
 
-		typedef std::map<nodepair,Se3r> NodePairsMap;//Initial node differences
-		typedef std::map<Vector3r,Se3r> localTriad;//Updated on every step
-		unsigned int max_pair;
-		Matrix calculateStiffness(Real, Real ,Vector3r,Vector3r,Vector3r,Vector3r);
-		Matrix calculateMassMatrix(Real, Real);
-		virtual ~DeformableCohesiveElement();
-		void initialize(void){max_pair=3;}
+	typedef std::map<nodepair, Se3r> NodePairsMap; //Initial node differences
+	typedef std::map<Vector3r, Se3r> localTriad; //Updated on every step
+	unsigned int                     max_pair;
+	Matrix                           calculateStiffness(Real, Real, Vector3r, Vector3r, Vector3r, Vector3r);
+	Matrix                           calculateMassMatrix(Real, Real);
+	virtual ~DeformableCohesiveElement();
+	void initialize(void) { max_pair = 3; }
 
-		void addPair(const shared_ptr<Body>& node1,const shared_ptr<Body>& node2);
-		void delPair(const shared_ptr<Body>& node1,const shared_ptr<Body>& node2);
+	void addPair(const shared_ptr<Body>& node1, const shared_ptr<Body>& node2);
+	void delPair(const shared_ptr<Body>& node1, const shared_ptr<Body>& node2);
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(DeformableCohesiveElement,DeformableElement,"Tetrahedral Deformable Element Composed of Nodes",
@@ -80,13 +82,11 @@ class DeformableCohesiveElement: public DeformableElement {
 		.def("removePair",&DeformableCohesiveElement::delPair,"Add a node shared_pt<:yref:'Body'>& as into the element")
 	);
 	// clang-format on
-		DECLARE_LOGGER;
+	DECLARE_LOGGER;
 
-		REGISTER_CLASS_INDEX(DeformableCohesiveElement,DeformableElement);
-
+	REGISTER_CLASS_INDEX(DeformableCohesiveElement, DeformableElement);
 };
 
 REGISTER_SERIALIZABLE(DeformableCohesiveElement);
 
 } // namespace yade
-

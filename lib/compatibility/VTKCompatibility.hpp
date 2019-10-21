@@ -12,15 +12,15 @@ And use a macro in these places:
 #pragma once
 
 #ifdef YADE_VTK
-	#include <vtkVersion.h>
+#include <vtkVersion.h>
 // fix InsertNextTupleValue → InsertNextTuple name change
-	#if VTK_MAJOR_VERSION < 8
-		#define INSERT_NEXT_TUPLE(a) InsertNextTupleValue(a)
-		#define INSERT_NEXT_TYPED_TUPLE(a) InsertNextTupleValue(a)
-	#else
-		#define INSERT_NEXT_TUPLE(a) InsertNextTuple(a)
-		#define INSERT_NEXT_TYPED_TUPLE(a) InsertNextTypedTuple(a)
-	#endif
+#if VTK_MAJOR_VERSION < 8
+#define INSERT_NEXT_TUPLE(a) InsertNextTupleValue(a)
+#define INSERT_NEXT_TYPED_TUPLE(a) InsertNextTupleValue(a)
+#else
+#define INSERT_NEXT_TUPLE(a) InsertNextTuple(a)
+#define INSERT_NEXT_TYPED_TUPLE(a) InsertNextTypedTuple(a)
+#endif
 // (and others in the future)
 #endif
 
@@ -35,4 +35,3 @@ ELSE()
   ADD_DEFINITIONS("-DINSERT_NEXT_TUPLE(a)=InsertNextTuple(a)")
 ENDIF()
 */
-

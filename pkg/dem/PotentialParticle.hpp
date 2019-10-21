@@ -3,20 +3,20 @@
 #pragma once
 #ifdef YADE_POTENTIAL_PARTICLES
 
-#include <vector>
+#include <lib/base/openmp-accu.hpp>
 #include <core/Shape.hpp>
 #include <Eigen/Core>
 #include <Eigen/LU>
 #include <Eigen/QR>
-#include <lib/base/openmp-accu.hpp>
+#include <vector>
 //#include <lib/base/openmp-accu.hpp>
 
 
 namespace yade { // Cannot have #include directive inside.
 
 class PotentialParticle : public Shape {
-	public:
-		virtual ~PotentialParticle ();
+public:
+	virtual ~PotentialParticle();
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR(PotentialParticle,Shape,"EXPERIMENTAL. Geometry of PotentialParticle.",
@@ -52,8 +52,8 @@ class PotentialParticle : public Shape {
 #endif
 		);
 	// clang-format on
-		//#endif
-		REGISTER_CLASS_INDEX(PotentialParticle,Shape);
+	//#endif
+	REGISTER_CLASS_INDEX(PotentialParticle, Shape);
 };
 
 REGISTER_SERIALIZABLE(PotentialParticle);
@@ -63,8 +63,8 @@ REGISTER_SERIALIZABLE(PotentialParticle);
 #ifdef __cplusplus
 extern "C" {
 #endif
-void dgesv_(const int *N, const int *nrhs, Real *Hessian, const int *lda, int *ipiv, Real *gradient, const int *ldb, int *info);
-void dsyev_(const char *jobz, const char *uplo, const int *N, Real *A, const int *lda, Real *W, Real *work, int *lwork, int *info);
+void dgesv_(const int* N, const int* nrhs, Real* Hessian, const int* lda, int* ipiv, Real* gradient, const int* ldb, int* info);
+void dsyev_(const char* jobz, const char* uplo, const int* N, Real* A, const int* lda, Real* W, Real* work, int* lwork, int* info);
 #ifdef __cplusplus
 };
 #endif

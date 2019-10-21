@@ -31,23 +31,18 @@
 typedef struct _PygtsObject PygtsVertex;
 
 
-#define PYGTS_VERTEX(o)							\
-  ( PyObject_TypeCheck((PyObject*)o, &PygtsVertexType) ?		\
-    (PygtsVertex*)o :							\
-    pygts_vertex_from_sequence((PyObject*)o) )
+#define PYGTS_VERTEX(o) (PyObject_TypeCheck((PyObject*)o, &PygtsVertexType) ? (PygtsVertex*)o : pygts_vertex_from_sequence((PyObject*)o))
 
-#define PYGTS_VERTEX_AS_GTS_VERTEX(o)					\
-  ( PyObject_TypeCheck((PyObject*)o, &PygtsVertexType) ?		\
-    GTS_VERTEX(PYGTS_OBJECT(o)->gtsobj) :				\
-    GTS_VERTEX(PYGTS_OBJECT(PYGTS_VERTEX(o))->gtsobj) )
+#define PYGTS_VERTEX_AS_GTS_VERTEX(o)                                                                                                                          \
+	(PyObject_TypeCheck((PyObject*)o, &PygtsVertexType) ? GTS_VERTEX(PYGTS_OBJECT(o)->gtsobj) : GTS_VERTEX(PYGTS_OBJECT(PYGTS_VERTEX(o))->gtsobj))
 
 extern PyTypeObject PygtsVertexType;
 
 gboolean pygts_vertex_check(PyObject* o);
-gboolean pygts_vertex_is_ok(PygtsVertex *v);
+gboolean pygts_vertex_is_ok(PygtsVertex* v);
 
-PygtsVertex* pygts_vertex_new(GtsVertex *f);
-PygtsVertex* pygts_vertex_from_sequence(PyObject *tuple);
+PygtsVertex* pygts_vertex_new(GtsVertex* f);
+PygtsVertex* pygts_vertex_from_sequence(PyObject* tuple);
 
 
 /*-------------------------------------------------------------------------*/
@@ -60,12 +55,9 @@ PygtsVertex* pygts_vertex_from_sequence(PyObject *tuple);
  */
 typedef struct _GtsSegment PygtsParentSegment;
 
-#define PYGTS_PARENT_SEGMENT(obj) GTS_OBJECT_CAST(obj,\
-					     GtsSegment,\
-					     pygts_parent_segment_class())
+#define PYGTS_PARENT_SEGMENT(obj) GTS_OBJECT_CAST(obj, GtsSegment, pygts_parent_segment_class())
 
-#define PYGTS_IS_PARENT_SEGMENT(obj)(gts_object_is_from_class(obj,\
-                                             pygts_parent_segment_class()))
+#define PYGTS_IS_PARENT_SEGMENT(obj) (gts_object_is_from_class(obj, pygts_parent_segment_class()))
 
 GtsSegmentClass* pygts_parent_segment_class(void);
 
@@ -74,13 +66,10 @@ GtsSegmentClass* pygts_parent_segment_class(void);
 
 typedef struct _GtsVertex PygtsParentVertex;
 
-#define PYGTS_PARENT_VERTEX(obj) GTS_OBJECT_CAST(obj,\
-						 GtsVertex,\
-						 pygts_parent_vertex_class())
+#define PYGTS_PARENT_VERTEX(obj) GTS_OBJECT_CAST(obj, GtsVertex, pygts_parent_vertex_class())
 
-#define PYGTS_IS_PARENT_VERTEX(obj)(gts_object_is_from_class(obj,\
-                                             pygts_parent_vertex_class()))
+#define PYGTS_IS_PARENT_VERTEX(obj) (gts_object_is_from_class(obj, pygts_parent_vertex_class()))
 
-GtsVertexClass *pygts_parent_vertex_class(void);
+GtsVertexClass* pygts_parent_vertex_class(void);
 
 #endif /* __PYGTS_VERTEX_H__ */

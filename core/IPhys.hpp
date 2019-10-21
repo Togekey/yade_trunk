@@ -8,15 +8,14 @@
 
 #pragma once
 
-#include<lib/base/Math.hpp>
-#include<lib/serialization/Serializable.hpp>
-#include<lib/multimethods/Indexable.hpp>
-#include<core/Dispatcher.hpp>
+#include <lib/base/Math.hpp>
+#include <lib/multimethods/Indexable.hpp>
+#include <lib/serialization/Serializable.hpp>
+#include <core/Dispatcher.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-class IPhys : public Serializable, public Indexable
-{
+class IPhys : public Serializable, public Indexable {
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(IPhys,Serializable,"Physical (material) properties of :yref:`interaction<Interaction>`.",
 		/*attrs*/,
@@ -29,4 +28,3 @@ class IPhys : public Serializable, public Indexable
 REGISTER_SERIALIZABLE(IPhys);
 
 } // namespace yade
-

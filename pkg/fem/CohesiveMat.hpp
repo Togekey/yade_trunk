@@ -12,8 +12,8 @@
 namespace yade { // Cannot have #include directive inside.
 
 /*! Elastic material */
-class CohesiveDeformableElementMaterial: public Material{
-	public:
+class CohesiveDeformableElementMaterial : public Material {
+public:
 	virtual ~CohesiveDeformableElementMaterial();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(CohesiveDeformableElementMaterial,Material,"Deformable Element Material.",
@@ -22,12 +22,12 @@ class CohesiveDeformableElementMaterial: public Material{
 		/*ctor*/ createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(CohesiveDeformableElementMaterial,Material);
+	REGISTER_CLASS_INDEX(CohesiveDeformableElementMaterial, Material);
 };
 REGISTER_SERIALIZABLE(CohesiveDeformableElementMaterial);
 
-class LinCohesiveElasticMaterial: public CohesiveDeformableElementMaterial{
-	public:
+class LinCohesiveElasticMaterial : public CohesiveDeformableElementMaterial {
+public:
 	virtual ~LinCohesiveElasticMaterial();
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR(LinCohesiveElasticMaterial,CohesiveDeformableElementMaterial,"Linear Isotropic Elastic material",
@@ -36,14 +36,14 @@ class LinCohesiveElasticMaterial: public CohesiveDeformableElementMaterial{
 			createIndex();
 		);
 	// clang-format on
-		REGISTER_CLASS_INDEX(LinCohesiveElasticMaterial,CohesiveDeformableElementMaterial);
+	REGISTER_CLASS_INDEX(LinCohesiveElasticMaterial, CohesiveDeformableElementMaterial);
 };
 REGISTER_SERIALIZABLE(LinCohesiveElasticMaterial);
 
 
 /*Stiffness proportional damping material*/
-class LinCohesiveStiffPropDampElastMat: public LinCohesiveElasticMaterial{
-	public:
+class LinCohesiveStiffPropDampElastMat : public LinCohesiveElasticMaterial {
+public:
 	virtual ~LinCohesiveStiffPropDampElastMat();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(LinCohesiveStiffPropDampElastMat,LinCohesiveElasticMaterial,"Elastic material with Rayleigh Damping.",
@@ -52,9 +52,8 @@ class LinCohesiveStiffPropDampElastMat: public LinCohesiveElasticMaterial{
 		createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(LinCohesiveStiffPropDampElastMat,LinCohesiveElasticMaterial);
+	REGISTER_CLASS_INDEX(LinCohesiveStiffPropDampElastMat, LinCohesiveElasticMaterial);
 };
 REGISTER_SERIALIZABLE(LinCohesiveStiffPropDampElastMat);
 
 } // namespace yade
-

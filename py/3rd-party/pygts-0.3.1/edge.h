@@ -37,9 +37,9 @@ typedef struct _PygtsObject PygtsEdge;
 extern PyTypeObject PygtsEdgeType;
 
 gboolean pygts_edge_check(PyObject* o);
-gboolean pygts_edge_is_ok(PygtsEdge *e);
+gboolean pygts_edge_is_ok(PygtsEdge* e);
 
-PygtsEdge* pygts_edge_new(GtsEdge *e);
+PygtsEdge* pygts_edge_new(GtsEdge* e);
 
 
 /*-------------------------------------------------------------------------*/
@@ -52,12 +52,9 @@ PygtsEdge* pygts_edge_new(GtsEdge *e);
  */
 typedef struct _GtsTriangle PygtsParentTriangle;
 
-#define PYGTS_PARENT_TRIANGLE(obj) GTS_OBJECT_CAST(obj,\
-					      GtsTriangle,\
-					      pygts_parent_triangle_class())
+#define PYGTS_PARENT_TRIANGLE(obj) GTS_OBJECT_CAST(obj, GtsTriangle, pygts_parent_triangle_class())
 
-#define PYGTS_IS_PARENT_TRIANGLE(obj)(gts_object_is_from_class(obj,\
-                                             pygts_parent_triangle_class()))
+#define PYGTS_IS_PARENT_TRIANGLE(obj) (gts_object_is_from_class(obj, pygts_parent_triangle_class()))
 
 GtsTriangleClass* pygts_parent_triangle_class(void);
 
@@ -66,12 +63,9 @@ GtsTriangleClass* pygts_parent_triangle_class(void);
 
 typedef struct _GtsEdge PygtsParentEdge;
 
-#define PYGTS_PARENT_EDGE(obj) GTS_OBJECT_CAST(obj,\
-						 GtsEdge,\
-						 pygts_parent_edge_class())
+#define PYGTS_PARENT_EDGE(obj) GTS_OBJECT_CAST(obj, GtsEdge, pygts_parent_edge_class())
 
-#define PYGTS_IS_PARENT_EDGE(obj)(gts_object_is_from_class(obj,\
-                                             pygts_parent_edge_class()))
+#define PYGTS_IS_PARENT_EDGE(obj) (gts_object_is_from_class(obj, pygts_parent_edge_class()))
 
 GtsEdgeClass* pygts_parent_edge_class(void);
 

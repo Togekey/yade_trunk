@@ -1,96 +1,90 @@
 #pragma once
 
-#include<core/TimeStepper.hpp>
+#include <core/TimeStepper.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
 class Integrator;
 
-typedef std::vector<Real> stateVector;// Currently, we are unable to use Eigen library within odeint
+typedef std::vector<Real> stateVector; // Currently, we are unable to use Eigen library within odeint
 
 /*Observer used to update the state of the scene*/
-class observer
-{
+class observer {
 	Integrator* integrator;
+
 public:
-	observer(Integrator* _in):integrator(_in){}
-        void operator()( const stateVector& /* x */ , Real /* t */ ) const;
+	observer(Integrator* _in)
+	        : integrator(_in)
+	{
+	}
+	void operator()(const stateVector& /* x */, Real /* t */) const;
 };
 
 //[ ode_wrapper
-template< class Obj , class Mem >
-class ode_wrapper
-{
-    Obj m_obj;
-    Mem m_mem;
+template <class Obj, class Mem> class ode_wrapper {
+	Obj m_obj;
+	Mem m_mem;
 
 public:
+	ode_wrapper(Obj obj, Mem mem)
+	        : m_obj(obj)
+	        , m_mem(mem)
+	{
+	}
 
-    ode_wrapper( Obj obj , Mem mem ) : m_obj( obj ) , m_mem( mem ) { }
-
-    template< class State , class Deriv , class Time >
-    void operator()( const State &x , Deriv &dxdt , Time t )
-    {
-        (m_obj.*m_mem)( x , dxdt , t );
-    }
+	template <class State, class Deriv, class Time> void operator()(const State& x, Deriv& dxdt, Time t) { (m_obj.*m_mem)(x, dxdt, t); }
 };
 
-template< class Obj , class Mem >
-ode_wrapper< Obj , Mem > make_ode_wrapper( Obj obj , Mem mem )
-{
-    return ode_wrapper< Obj , Mem >( obj , mem );
-}
+template <class Obj, class Mem> ode_wrapper<Obj, Mem> make_ode_wrapper(Obj obj, Mem mem) { return ode_wrapper<Obj, Mem>(obj, mem); }
 //]
 
 
+class Integrator : public TimeStepper {
+public:
+	stateVector accumstateofthescene; //pos+vel
 
-class Integrator: public TimeStepper {
+	stateVector accumstatedotofthescene; //only the accelerations
 
-		public:
+	stateVector resetstate; //last state before integration attempt
 
-		stateVector accumstateofthescene;//pos+vel
-		
-		stateVector accumstatedotofthescene;//only the accelerations
+	Real timeresetvalue;
 
-		stateVector resetstate;//last state before integration attempt
-	
-		Real timeresetvalue;
+	inline void evaluateQuaternions(const stateVector&); //evaluate quaternions after integration
 
-		inline void evaluateQuaternions(const stateVector &); //evaluate quaternions after integration
+	typedef vector<vector<shared_ptr<Engine>>> slaveContainer;
 
-		typedef vector<vector<shared_ptr<Engine> > > slaveContainer;
+#ifdef YADE_OPENMP
+	vector<Real> threadMaxVelocitySq;
+#endif
 
-		#ifdef YADE_OPENMP
-			vector<Real> threadMaxVelocitySq;
-		#endif
-	
-		virtual void action();
+	virtual void action();
 
-		virtual void system(const stateVector&, stateVector&, Real); //System function to calculate the derivatives of states
+	virtual void system(const stateVector&, stateVector&, Real); //System function to calculate the derivatives of states
 
-		virtual bool isActivated(){return true;}
-		// py access
-		boost::python::list slaves_get();
+	virtual bool isActivated() { return true; }
+	// py access
+	boost::python::list slaves_get();
 
-		stateVector& getSceneStateDot();
+	stateVector& getSceneStateDot();
 
-		bool saveCurrentState(Scene const* ourscene);//Before any integration attempt state of the scene should be saved. 
+	bool saveCurrentState(Scene const* ourscene); //Before any integration attempt state of the scene should be saved.
 
-		bool resetLastState(void);//Before any integration attempt state of the scene should be saved. 
+	bool resetLastState(void); //Before any integration attempt state of the scene should be saved.
 
-		void slaves_set(const boost::python::list& slaves);
-	
-		stateVector& getCurrentStates(void);
+	void slaves_set(const boost::python::list& slaves);
 
-		bool setCurrentStates(stateVector);	
+	stateVector& getCurrentStates(void);
 
-		Real updatingDispFactor;//(experimental) Displacement factor used to trigger bound update: the bound is updated only if updatingDispFactor*disp>sweepDist when >0, else all bounds are updated.	
+	bool setCurrentStates(stateVector);
 
-		void saveMaximaDisplacement(const shared_ptr<Body>& b);
+	Real updatingDispFactor; //(experimental) Displacement factor used to trigger bound update: the bound is updated only if updatingDispFactor*disp>sweepDist when >0, else all bounds are updated.
 
-		#ifdef YADE_OPENMP
-			void ensureSync(); bool syncEnsured;
-		#endif
+	void saveMaximaDisplacement(const shared_ptr<Body>& b);
+
+#ifdef YADE_OPENMP
+	void ensureSync();
+	bool syncEnsured;
+#endif
 
 
 	// clang-format off
@@ -113,4 +107,3 @@ class Integrator: public TimeStepper {
 REGISTER_SERIALIZABLE(Integrator);
 
 } // namespace yade
-

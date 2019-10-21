@@ -7,16 +7,16 @@ Yade Technical Archive. DOI: 10.5281/zenodo.1202039 */
 
 #pragma once
 
-#include<pkg/common/ElastMat.hpp>
-#include<pkg/common/Dispatching.hpp>
-#include<pkg/common/NormShearPhys.hpp>
-#include<pkg/dem/ScGeom.hpp>
+#include <pkg/common/Dispatching.hpp>
+#include <pkg/common/ElastMat.hpp>
+#include <pkg/common/NormShearPhys.hpp>
+#include <pkg/dem/ScGeom.hpp>
 #include <random>
 
 namespace yade { // Cannot have #include directive inside.
 
 /** This class holds information associated with each body state*/
-class JCFpmState: public State {
+class JCFpmState : public State {
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(JCFpmState,State,"JCFpm state information about each body.",
 		((int,nbInitBonds,0,,"Number of initial bonds. [-]"))
@@ -31,16 +31,16 @@ class JCFpmState: public State {
 		createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(JCFpmState,State);
+	REGISTER_CLASS_INDEX(JCFpmState, State);
 };
 REGISTER_SERIALIZABLE(JCFpmState);
 
 /** This class holds information associated with each body */
-class JCFpmMat: public FrictMat {
-  	public:
-		virtual shared_ptr<State> newAssocState() const { return shared_ptr<State>(new JCFpmState); }
-		virtual bool stateTypeOk(State* s) const { return (bool)dynamic_cast<JCFpmState*>(s); }
-		
+class JCFpmMat : public FrictMat {
+public:
+	virtual shared_ptr<State> newAssocState() const { return shared_ptr<State>(new JCFpmState); }
+	virtual bool              stateTypeOk(State* s) const { return (bool)dynamic_cast<JCFpmState*>(s); }
+
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(JCFpmMat,FrictMat,"Possibly jointed, cohesive frictional material, for use with other JCFpm classes",
 		((int,type,0,,"If particles of two different types interact, it will be with friction only (no cohesion).[-]"))
@@ -57,15 +57,15 @@ class JCFpmMat: public FrictMat {
 		createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(JCFpmMat,FrictMat);
+	REGISTER_CLASS_INDEX(JCFpmMat, FrictMat);
 };
 REGISTER_SERIALIZABLE(JCFpmMat);
 
 /** This class holds information associated with each interaction */
-class JCFpmPhys: public NormShearPhys {
-	public:
-		virtual ~JCFpmPhys();
-		
+class JCFpmPhys : public NormShearPhys {
+public:
+	virtual ~JCFpmPhys();
+
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(JCFpmPhys,NormShearPhys,"Representation of a single interaction of the JCFpm type, storage for relevant parameters",
 			((Real,initD,0.,,"equilibrium distance for interacting particles. Computed as the interparticular distance at first contact detection."))
@@ -111,18 +111,18 @@ class JCFpmPhys: public NormShearPhys {
 			,
 		);
 	// clang-format on
-		DECLARE_LOGGER;
-		REGISTER_CLASS_INDEX(JCFpmPhys,NormShearPhys);
+	DECLARE_LOGGER;
+	REGISTER_CLASS_INDEX(JCFpmPhys, NormShearPhys);
 };
 REGISTER_SERIALIZABLE(JCFpmPhys);
 
 /** 2d functor creating InteractionPhysics (Ip2) taking JCFpmMat and JCFpmMat of 2 bodies, returning type JCFpmPhys */
-class Ip2_JCFpmMat_JCFpmMat_JCFpmPhys: public IPhysFunctor{
-	public:
-		virtual void go(const shared_ptr<Material>& pp1, const shared_ptr<Material>& pp2, const shared_ptr<Interaction>& interaction);
-		void distributeCrossSectionsWeibull(shared_ptr<JCFpmPhys> contactPhysics, Real R1, Real R2);
-		FUNCTOR2D(JCFpmMat,JCFpmMat);
-		DECLARE_LOGGER;
+class Ip2_JCFpmMat_JCFpmMat_JCFpmPhys : public IPhysFunctor {
+public:
+	virtual void go(const shared_ptr<Material>& pp1, const shared_ptr<Material>& pp2, const shared_ptr<Interaction>& interaction);
+	void         distributeCrossSectionsWeibull(shared_ptr<JCFpmPhys> contactPhysics, Real R1, Real R2);
+	FUNCTOR2D(JCFpmMat, JCFpmMat);
+	DECLARE_LOGGER;
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS(Ip2_JCFpmMat_JCFpmMat_JCFpmPhys,IPhysFunctor,"Converts 2 :yref:`JCFpmMat` instances to one :yref:`JCFpmPhys` instance, with corresponding parameters. See :yref:`JCFpmMat` and [Duriez2016]_ for details",                   
 			((int,cohesiveTresholdIteration,1,,"should new contacts be cohesive? If strictly negativ, they will in any case. If positiv, they will before this iter, they won't afterward."))
@@ -132,22 +132,21 @@ class Ip2_JCFpmMat_JCFpmMat_JCFpmPhys: public IPhysFunctor{
 			((Real,weibullCutOffMax,10,,"Factor that cuts off the largest values of the weibull distributed interaction areas."))
 	);
 	// clang-format on
-		
 };
 REGISTER_SERIALIZABLE(Ip2_JCFpmMat_JCFpmMat_JCFpmPhys);
 
 /** 2d functor creating the interaction law (Law2) based on SphereContactGeometry (ScGeom) and JCFpmPhys of 2 bodies, returning type JointedCohesiveFrictionalPM */
-class Law2_ScGeom_JCFpmPhys_JointedCohesiveFrictionalPM: public LawFunctor{
-	public:
-		virtual bool go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I);
-		FUNCTOR2D(ScGeom,JCFpmPhys);
-		void checkForCluster(JCFpmPhys* phys, ScGeom* geom, Body* b1, Body* b2, Interaction* contact);
-		void clusterInteractions(JCFpmPhys* phys, Interaction* contact);
-		void computeClusteredMoment(JCFpmPhys* phys);
-		void computeCentroid(JCFpmPhys* phys);
-		void addUniqueIntsToList(JCFpmPhys* phys, JCFpmPhys* nearbyPhys);
-		void computeKineticEnergy(JCFpmPhys* phys, Body* b1, Body* b2);
-		void computeTemporalWindow(JCFpmPhys* phys, Body* b1, Body* b2);
+class Law2_ScGeom_JCFpmPhys_JointedCohesiveFrictionalPM : public LawFunctor {
+public:
+	virtual bool go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I);
+	FUNCTOR2D(ScGeom, JCFpmPhys);
+	void checkForCluster(JCFpmPhys* phys, ScGeom* geom, Body* b1, Body* b2, Interaction* contact);
+	void clusterInteractions(JCFpmPhys* phys, Interaction* contact);
+	void computeClusteredMoment(JCFpmPhys* phys);
+	void computeCentroid(JCFpmPhys* phys);
+	void addUniqueIntsToList(JCFpmPhys* phys, JCFpmPhys* nearbyPhys);
+	void computeKineticEnergy(JCFpmPhys* phys, Body* b1, Body* b2);
+	void computeTemporalWindow(JCFpmPhys* phys, Body* b1, Body* b2);
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS(Law2_ScGeom_JCFpmPhys_JointedCohesiveFrictionalPM,LawFunctor,"Interaction law for cohesive frictional material, e.g. rock, possibly presenting joint surfaces, that can be mechanically described with a smooth contact logic [Ivars2011]_ (implemented in Yade in [Scholtes2012]_). See examples/jointedCohesiveFrictionalPM for script examples. Joint surface definitions (through stl meshes or direct definition with gts module) are illustrated there.",
@@ -174,9 +173,8 @@ class Law2_ScGeom_JCFpmPhys_JointedCohesiveFrictionalPM: public LawFunctor{
 //			((Real,totalSlipE,0.,,"calculate the overall energy dissipated by interparticle friction."))
 		);
 	// clang-format on
-		DECLARE_LOGGER;	
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(Law2_ScGeom_JCFpmPhys_JointedCohesiveFrictionalPM);
 
 } // namespace yade
-

@@ -5,14 +5,14 @@
 *  This program is free software; it is licensed under the terms of the  *
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
- 
+
 #pragma once
 
+#include <lib/base/Logging.hpp>
+#include <lib/base/Math.hpp>
 #include <core/Body.hpp>
 #include <core/PartialEngine.hpp>
 #include <pkg/fem/DeformableElement.hpp>
-#include <lib/base/Logging.hpp>
-#include <lib/base/Math.hpp>
 
 
 class NewtonIntegrator;
@@ -20,37 +20,35 @@ class NewtonIntegrator;
 namespace yade { // Cannot have #include directive inside.
 
 
-#define VECTOR4_TEMPLATE(Scalar) Eigen::Matrix<Scalar,4,1>
+#define VECTOR4_TEMPLATE(Scalar) Eigen::Matrix<Scalar, 4, 1>
 typedef VECTOR4_TEMPLATE(Real) Vector4r;
 
-class Lin4NodeTetra: public DeformableElement {
-	public:
+class Lin4NodeTetra : public DeformableElement {
+public:
+	friend class If2_Lin4NodeTetra_LinIsoRayleighDampElast;
+	shared_ptr<Matrix> massMatrixInvProductstiffnessMatrix;
+	Matrix             calculateStiffness(Real, Real, Vector3r, Vector3r, Vector3r, Vector3r);
+	Matrix             calculateMassMatrix(Real, Real);
+	virtual ~Lin4NodeTetra();
+	void initialize(void);
+	Real getVolume(void)
+	{
+		NodeMap::iterator i0(localmap.begin());
+		NodeMap::iterator i1(i0);
+		NodeMap::iterator i2(i0);
+		NodeMap::iterator i3(i0);
 
-		friend class If2_Lin4NodeTetra_LinIsoRayleighDampElast;
-		shared_ptr<Matrix> massMatrixInvProductstiffnessMatrix;
-		Matrix calculateStiffness(Real, Real ,Vector3r,Vector3r,Vector3r,Vector3r);
-		Matrix calculateMassMatrix(Real, Real);
-		virtual ~Lin4NodeTetra();
-		void initialize(void);
-		Real getVolume(void){
+		std::advance(i1, 1);
+		std::advance(i2, 2);
+		std::advance(i3, 3);
 
+		Matrix   J(4, 4);
+		Vector3r pos0 = Vector3r(0, 0, 0);
+		Vector3r pos1 = i1->second.position - i0->second.position;
+		Vector3r pos2 = i2->second.position - i0->second.position;
+		Vector3r pos3 = i3->second.position - i0->second.position;
 
-			   NodeMap::iterator i0(localmap.begin());
-			   NodeMap::iterator i1(i0);
-			   NodeMap::iterator i2(i0);
-			   NodeMap::iterator i3(i0);
-
-			   std::advance(i1,1);
-			   std::advance(i2,2);
-			   std::advance(i3,3);
-
-			   Matrix J(4,4);
-			   Vector3r pos0=Vector3r(0,0,0);
-			   Vector3r pos1=i1->second.position-i0->second.position;
-			   Vector3r pos2=i2->second.position-i0->second.position;
-			   Vector3r pos3=i3->second.position-i0->second.position;
-
-         /*
+		/*
 			   Vector3r pos01=-pos1;
 			   Vector3r pos02=-pos2;
 			   Vector3r pos03=-pos3;
@@ -60,12 +58,12 @@ class Lin4NodeTetra: public DeformableElement {
          */
 
 
-	 			  J.col(0)<<1,pos0;
-	 			  J.col(1)<<1,pos1;
-	 			  J.col(2)<<1,pos2;
-	 			  J.col(3)<<1,pos3;
+		J.col(0) << 1, pos0;
+		J.col(1) << 1, pos1;
+		J.col(2) << 1, pos2;
+		J.col(3) << 1, pos3;
 
-          /*
+		/*
 	   		   Real x12=pos01(0), x13=pos02(0), x14=pos03(0), x23= pos12(0), x24=pos13(0), x34= pos23(0);
 
 	   		   Real x21=-x12, x31=-x13, x41=-x14, x32=-x23, x42=-x24, x43=-x34;
@@ -78,11 +76,11 @@ class Lin4NodeTetra: public DeformableElement {
 
 	  		   Real z21=-z12,  z31=-z13,  z41=-z14,  z32=-z23,  z42=-z24,  z43=-z34;
           */
-	  		   Real V=fabs(((0.166666667)*J.determinant()));
+		Real V = fabs(((0.166666667) * J.determinant()));
 
-			   return V;
-		}
-	
+		return V;
+	}
+
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(Lin4NodeTetra,DeformableElement,"Tetrahedral Deformable Element Composed of Nodes",
 		,
@@ -94,13 +92,11 @@ class Lin4NodeTetra: public DeformableElement {
 
 	);
 	// clang-format on
-		DECLARE_LOGGER;
+	DECLARE_LOGGER;
 
-		REGISTER_CLASS_INDEX(Lin4NodeTetra,DeformableElement);
-
+	REGISTER_CLASS_INDEX(Lin4NodeTetra, DeformableElement);
 };
 
 REGISTER_SERIALIZABLE(Lin4NodeTetra);
 
 } // namespace yade
-

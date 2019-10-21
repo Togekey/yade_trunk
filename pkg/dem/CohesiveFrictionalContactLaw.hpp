@@ -11,21 +11,20 @@
 #include <core/GlobalEngine.hpp>
 #include <pkg/common/Dispatching.hpp>
 #include <pkg/common/ElastMat.hpp>
-#include <pkg/dem/ScGeom.hpp>
-#include <boost/tuple/tuple.hpp>
+#include <pkg/common/MatchMaker.hpp>
 #include <pkg/common/NormShearPhys.hpp>
 #include <pkg/dem/FrictPhys.hpp>
-#include <pkg/common/MatchMaker.hpp>
+#include <pkg/dem/ScGeom.hpp>
+#include <boost/tuple/tuple.hpp>
 
 
 namespace yade { // Cannot have #include directive inside.
 
 // The following code was moved from CohFrictMat.hpp
-class CohFrictMat : public FrictMat
-{
-	public :
-		virtual ~CohFrictMat () {};
-/// Serialization
+class CohFrictMat : public FrictMat {
+public:
+	virtual ~CohFrictMat() {};
+	/// Serialization
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(CohFrictMat,FrictMat,"",
 		((bool,isCohesive,true,,""))
@@ -41,19 +40,23 @@ class CohFrictMat : public FrictMat
 		createIndex();
 		);
 	// clang-format on
-/// Indexable
-	REGISTER_CLASS_INDEX(CohFrictMat,FrictMat);
+	/// Indexable
+	REGISTER_CLASS_INDEX(CohFrictMat, FrictMat);
 };
 
 REGISTER_SERIALIZABLE(CohFrictMat);
 
 // The following code was moved from CohFrictPhys.hpp
-class CohFrictPhys : public FrictPhys
-{
-	public :
-		virtual ~CohFrictPhys() {};
-		void SetBreakingState() {cohesionBroken = true; normalAdhesion = 0; shearAdhesion = 0;};
-		virtual Vector3r getRotStiffness();
+class CohFrictPhys : public FrictPhys {
+public:
+	virtual ~CohFrictPhys() {};
+	void SetBreakingState()
+	{
+		cohesionBroken = true;
+		normalAdhesion = 0;
+		shearAdhesion  = 0;
+	};
+	virtual Vector3r getRotStiffness();
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(CohFrictPhys,FrictPhys,"",
@@ -78,23 +81,23 @@ class CohFrictPhys : public FrictPhys
 		createIndex();
 	);
 	// clang-format on
-/// Indexable
-	REGISTER_CLASS_INDEX(CohFrictPhys,FrictPhys);
+	/// Indexable
+	REGISTER_CLASS_INDEX(CohFrictPhys, FrictPhys);
 };
 
 REGISTER_SERIALIZABLE(CohFrictPhys);
 
-class Law2_ScGeom6D_CohFrictPhys_CohesionMoment: public LawFunctor{
-	public:
-		OpenMPAccumulator<Real> plasticDissipation;
-		Real normElastEnergy();
-		Real shearElastEnergy();
-		Real bendingElastEnergy();
-		Real twistElastEnergy();
-		Real totalElastEnergy();
-		Real getPlasticDissipation();
-		void initPlasticDissipation(Real initVal=0);
-	virtual bool go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I);
+class Law2_ScGeom6D_CohFrictPhys_CohesionMoment : public LawFunctor {
+public:
+	OpenMPAccumulator<Real> plasticDissipation;
+	Real                    normElastEnergy();
+	Real                    shearElastEnergy();
+	Real                    bendingElastEnergy();
+	Real                    twistElastEnergy();
+	Real                    totalElastEnergy();
+	Real                    getPlasticDissipation();
+	void                    initPlasticDissipation(Real initVal = 0);
+	virtual bool            go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Law2_ScGeom6D_CohFrictPhys_CohesionMoment,LawFunctor,"Law for linear traction-compression-bending-twisting, with cohesion+friction and Mohr-Coulomb plasticity surface. This law adds adhesion and moments to :yref:`Law2_ScGeom_FrictPhys_CundallStrack`.\n\nThe normal force is (with the convention of positive tensile forces) $F_n=min(k_n*(u_n-u_n^p), a_n)$, with $a_n$ the normal adhesion and $u_n^p$ the plastic part of normal displacement. The shear force is $F_s=k_s*u_s$, the plasticity condition defines the maximum value of the shear force, by default $F_s^{max}=F_n*tan(\\phi)+a_s$, with $\\phi$ the friction angle and $a_s$ the shear adhesion. If :yref:`CohFrictPhys::cohesionDisablesFriction` is True, friction is ignored as long as adhesion is active, and the maximum shear force is only $F_s^{max}=a_s$.\n\nIf the maximum tensile or maximum shear force is reached and :yref:`CohFrictPhys::fragile` =True (default), the cohesive link is broken, and $a_n, a_s$ are set back to zero. If a tensile force is present, the contact is lost, else the shear strength is $F_s^{max}=F_n*tan(\\phi)$. If :yref:`CohFrictPhys::fragile` =False, the behaviour is perfectly plastic, and the shear strength is kept constant.\n\nIf :yref:`Law2_ScGeom6D_CohFrictPhys_CohesionMoment::momentRotationLaw` =True, bending and twisting moments are computed using a linear law with moduli respectively $k_t$ and $k_r$, so that the moments are : $M_b=k_b*\\Theta_b$ and $M_t=k_t*\\Theta_t$, with $\\Theta_{b,t}$ the relative rotations between interacting bodies (details can be found in [Bourrier2013]_). The maximum value of moments can be defined and takes the form of rolling friction. Cohesive -type moment may also be included in the future.\n\nCreep at contact is implemented in this law, as defined in [Hassan2010]_. If activated, there is a viscous behaviour of the shear and twisting components, and the evolution of the elastic parts of shear displacement and relative twist is given by $du_{s,e}/dt=-F_s/\\nu_s$ and $d\\Theta_{t,e}/dt=-M_t/\\nu_t$.",
 		((bool,neverErase,false,,"Keep interactions even if particles go away from each other (only in case another constitutive law is in the scene, e.g. :yref:`Law2_ScGeom_CapillaryPhys_Capillarity`)"))
@@ -117,20 +120,19 @@ class Law2_ScGeom6D_CohFrictPhys_CohesionMoment: public LawFunctor{
 		.def("initPlasticDissipation",&Law2_ScGeom6D_CohFrictPhys_CohesionMoment::initPlasticDissipation,"Initialize cummulated plastic dissipation to a value (0 by default).")
 	);
 	// clang-format on
-	FUNCTOR2D(ScGeom6D,CohFrictPhys);
+	FUNCTOR2D(ScGeom6D, CohFrictPhys);
 	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(Law2_ScGeom6D_CohFrictPhys_CohesionMoment);
 
 
-class CohesiveFrictionalContactLaw : public GlobalEngine
-{
+class CohesiveFrictionalContactLaw : public GlobalEngine {
 	shared_ptr<Law2_ScGeom6D_CohFrictPhys_CohesionMoment> functor;
-	
-	public :		
-		long iter;/// used for checking if new iteration
-		void action();
-		
+
+public:
+	long iter; /// used for checking if new iteration
+	void action();
+
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(CohesiveFrictionalContactLaw,GlobalEngine,"[DEPRECATED] Loop over interactions applying :yref:`Law2_ScGeom6D_CohFrictPhys_CohesionMoment` on all interactions.\n\n.. note::\n  Use :yref:`InteractionLoop` and :yref:`Law2_ScGeom6D_CohFrictPhys_CohesionMoment` instead of this class for performance reasons.",
 		((bool,neverErase,false,,"Keep interactions even if particles go away from each other (only in case another constitutive law is in the scene, e.g. :yref:`Law2_ScGeom_CapillaryPhys_Capillarity`)"))
@@ -145,13 +147,10 @@ class CohesiveFrictionalContactLaw : public GlobalEngine
 REGISTER_SERIALIZABLE(CohesiveFrictionalContactLaw);
 
 // The following code was moved from Ip2_CohFrictMat_CohFrictMat_CohFrictPhys.hpp
-class Ip2_CohFrictMat_CohFrictMat_CohFrictPhys : public IPhysFunctor
-{
-	public :
-		virtual void go(	const shared_ptr<Material>& b1,
-					const shared_ptr<Material>& b2,
-					const shared_ptr<Interaction>& interaction);
-		int cohesionDefinitionIteration;
+class Ip2_CohFrictMat_CohFrictMat_CohFrictPhys : public IPhysFunctor {
+public:
+	virtual void go(const shared_ptr<Material>& b1, const shared_ptr<Material>& b2, const shared_ptr<Interaction>& interaction);
+	int          cohesionDefinitionIteration;
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR(Ip2_CohFrictMat_CohFrictMat_CohFrictPhys,IPhysFunctor,
@@ -165,10 +164,9 @@ class Ip2_CohFrictMat_CohFrictMat_CohFrictPhys : public IPhysFunctor
 		cohesionDefinitionIteration = -1;
 		);
 	// clang-format on
-	FUNCTOR2D(CohFrictMat,CohFrictMat);
+	FUNCTOR2D(CohFrictMat, CohFrictMat);
 };
 
 REGISTER_SERIALIZABLE(Ip2_CohFrictMat_CohFrictMat_CohFrictPhys);
 
 } // namespace yade
-

@@ -3,7 +3,7 @@
 
 namespace yade { // Cannot have #include directive inside.
 
-Node::~Node(){}
+Node::~Node() {}
 YADE_PLUGIN((Node));
 
 } // namespace yade

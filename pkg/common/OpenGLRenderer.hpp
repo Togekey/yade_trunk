@@ -3,14 +3,14 @@
 #pragma once
 
 #include <lib/multimethods/DynLibDispatcher.hpp>
-#include <core/Dispatcher.hpp>
 #include <core/Body.hpp>
+#include <core/Dispatcher.hpp>
 #include <pkg/common/GLDrawFunctors.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
-struct GlExtraDrawer: public Serializable{
-	Scene* scene;
+struct GlExtraDrawer : public Serializable {
+	Scene*       scene;
 	virtual void render();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(GlExtraDrawer,Serializable,"Performing arbitrary OpenGL drawing commands; called from :yref:`OpenGLRenderer` (see :yref:`OpenGLRenderer.extraDrawers`) once regular rendering routines will have finished.\n\nThis class itself does not render anything, derived classes should override the *render* method.",
@@ -20,77 +20,89 @@ struct GlExtraDrawer: public Serializable{
 };
 REGISTER_SERIALIZABLE(GlExtraDrawer);
 
-class OpenGLRenderer : public Serializable
-{
-	public:
-		static const int numClipPlanes=3;
+class OpenGLRenderer : public Serializable {
+public:
+	static const int numClipPlanes = 3;
 
-		bool pointClipped(const Vector3r& p);
-		vector<Vector3r> clipPlaneNormals;
-		void setBodiesDispInfo();
-		static bool initDone;
-		Vector3r viewDirection; // updated from GLViewer regularly
-		GLViewInfo viewInfo; // update from GLView regularly
-		Vector3r highlightEmission0;
-		Vector3r highlightEmission1;
+	bool             pointClipped(const Vector3r& p);
+	vector<Vector3r> clipPlaneNormals;
+	void             setBodiesDispInfo();
+	static bool      initDone;
+	Vector3r         viewDirection; // updated from GLViewer regularly
+	GLViewInfo       viewInfo; // update from GLView regularly
+	Vector3r         highlightEmission0;
+	Vector3r         highlightEmission1;
 
-		// normalized saw signal with given periodicity, with values ∈ 〈0,1〉 */
-		Real normSaw(Real t, Real period){ Real xi=(t-period*((int)(t/period)))/period; /* normalized value, (0-1〉 */ return (xi<.5?2*xi:2-2*xi); }
-		Real normSquare(Real t, Real period){ Real xi=(t-period*((int)(t/period)))/period; /* normalized value, (0-1〉 */ return (xi<.5?0:1); }
+	// normalized saw signal with given periodicity, with values ∈ 〈0,1〉 */
+	Real normSaw(Real t, Real period)
+	{
+		Real xi = (t - period * ((int)(t / period))) / period; /* normalized value, (0-1〉 */
+		return (xi < .5 ? 2 * xi : 2 - 2 * xi);
+	}
+	Real normSquare(Real t, Real period)
+	{
+		Real xi = (t - period * ((int)(t / period))) / period; /* normalized value, (0-1〉 */
+		return (xi < .5 ? 0 : 1);
+	}
 
-		void drawPeriodicCell();
+	void drawPeriodicCell();
 
-		void setBodiesRefSe3();
+	void setBodiesRefSe3();
 
-		struct BodyDisp{
-			Vector3r pos;
-			Quaternionr ori;
-			bool isDisplayed;
-			bool hidden;
-		};
-		//! display data for individual bodies
-		vector<BodyDisp> bodyDisp;
-		void hide(Body::id_t id) {if ((unsigned int) id<bodyDisp.size()) bodyDisp[id].hidden=true; }
-		void show(Body::id_t id) {if ((unsigned int) id<bodyDisp.size()) bodyDisp[id].hidden=false; }
+	struct BodyDisp {
+		Vector3r    pos;
+		Quaternionr ori;
+		bool        isDisplayed;
+		bool        hidden;
+	};
+	//! display data for individual bodies
+	vector<BodyDisp> bodyDisp;
+	void             hide(Body::id_t id)
+	{
+		if ((unsigned int)id < bodyDisp.size())
+			bodyDisp[id].hidden = true;
+	}
+	void show(Body::id_t id)
+	{
+		if ((unsigned int)id < bodyDisp.size())
+			bodyDisp[id].hidden = false;
+	}
 
-		virtual ~OpenGLRenderer();
+	virtual ~OpenGLRenderer();
 
-	private:
-		void resetSpecularEmission();
+private:
+	void resetSpecularEmission();
 
-		GlBoundDispatcher boundDispatcher;
-		GlIGeomDispatcher geomDispatcher;
-		GlIPhysDispatcher physDispatcher;
-		GlShapeDispatcher shapeDispatcher;
-		// GlStateDispatcher stateDispatcher;
+	GlBoundDispatcher boundDispatcher;
+	GlIGeomDispatcher geomDispatcher;
+	GlIPhysDispatcher physDispatcher;
+	GlShapeDispatcher shapeDispatcher;
+	// GlStateDispatcher stateDispatcher;
 
 
-		vector<string>
-			// stateFunctorNames,
-			boundFunctorNames,
-			shapeFunctorNames,
-			geomFunctorNames,
-			physFunctorNames;
+	vector<string>
+	        // stateFunctorNames,
+	        boundFunctorNames, shapeFunctorNames, geomFunctorNames, physFunctorNames;
 
-		DECLARE_LOGGER;
+	DECLARE_LOGGER;
 
-	public :
-		// updated after every call to render
-		shared_ptr<Scene> scene;
+public:
+	// updated after every call to render
+	shared_ptr<Scene> scene;
 
-		void init();
-		void initgl();
-		void render(const shared_ptr<Scene>& scene, Body::id_t selection=Body::id_t(-1));
-		void pyRender(){render(Omega::instance().getScene());}
+	void init();
+	void initgl();
+	void render(const shared_ptr<Scene>& scene, Body::id_t selection = Body::id_t(-1));
+	void pyRender() { render(Omega::instance().getScene()); }
 
-		void renderDOF_ID();
-		void renderIPhys();
-		void renderIGeom();
-		void renderBound();
-		// called also to render selectable entitites;
-		void renderShape();
-		void renderAllInteractionsWire();
-		template<class FunctorType, class DispatcherT> void setupDispatcher(const vector<string> & names, DispatcherT & dispatcher);
+	void renderDOF_ID();
+	void renderIPhys();
+	void renderIGeom();
+	void renderBound();
+	// called also to render selectable entitites;
+	void                                                 renderShape();
+	void                                                 renderAllInteractionsWire();
+	template <class FunctorType, class DispatcherT> void setupDispatcher(const vector<string>& names, DispatcherT& dispatcher);
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(OpenGLRenderer,Serializable,"Class responsible for rendering scene on OpenGL devices.",
@@ -131,4 +143,3 @@ class OpenGLRenderer : public Serializable
 REGISTER_SERIALIZABLE(OpenGLRenderer);
 
 } // namespace yade
-

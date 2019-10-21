@@ -1,5 +1,5 @@
-// 2010 © Chiara Modenese <c.modenese@gmail.com> 
-// 
+// 2010 © Chiara Modenese <c.modenese@gmail.com>
+//
 /*
 === HIGH LEVEL OVERVIEW OF MINDLIN ===
 
@@ -10,23 +10,23 @@ The DMT formulation is also considered (for adhesive particles, rigid and small 
 
 #pragma once
 
-#include<pkg/dem/FrictPhys.hpp>
-#include<pkg/common/ElastMat.hpp>
-#include<pkg/common/Dispatching.hpp>
-#include<pkg/dem/ScGeom.hpp>
-#include<pkg/common/PeriodicEngines.hpp>
-#include<pkg/common/NormShearPhys.hpp>
-#include<pkg/common/MatchMaker.hpp>
+#include <pkg/common/Dispatching.hpp>
+#include <pkg/common/ElastMat.hpp>
+#include <pkg/common/MatchMaker.hpp>
+#include <pkg/common/NormShearPhys.hpp>
+#include <pkg/common/PeriodicEngines.hpp>
+#include <pkg/dem/FrictPhys.hpp>
+#include <pkg/dem/ScGeom.hpp>
 
+#include <lib/base/openmp-accu.hpp>
 #include <boost/tuple/tuple.hpp>
-#include<lib/base/openmp-accu.hpp>
 
 
 namespace yade { // Cannot have #include directive inside.
 
 /******************** MindlinPhys *********************************/
-class MindlinPhys: public FrictPhys{
-	public:
+class MindlinPhys : public FrictPhys {
+public:
 	virtual ~MindlinPhys() {};
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(MindlinPhys,FrictPhys,"Representation of an interaction of the Hertz-Mindlin type.",
@@ -67,18 +67,17 @@ class MindlinPhys: public FrictPhys{
 			,
 			createIndex());
 	// clang-format on
-	REGISTER_CLASS_INDEX(MindlinPhys,FrictPhys);
+	REGISTER_CLASS_INDEX(MindlinPhys, FrictPhys);
 	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(MindlinPhys);
 
 
-
 /******************** Ip2_FrictMat_FrictMat_MindlinPhys *******/
-class Ip2_FrictMat_FrictMat_MindlinPhys: public IPhysFunctor{
-	public :
-	virtual void go(const shared_ptr<Material>& b1,	const shared_ptr<Material>& b2,	const shared_ptr<Interaction>& interaction);
-	FUNCTOR2D(FrictMat,FrictMat);
+class Ip2_FrictMat_FrictMat_MindlinPhys : public IPhysFunctor {
+public:
+	virtual void go(const shared_ptr<Material>& b1, const shared_ptr<Material>& b2, const shared_ptr<Interaction>& interaction);
+	FUNCTOR2D(FrictMat, FrictMat);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(
 			Ip2_FrictMat_FrictMat_MindlinPhys,IPhysFunctor,"Calculate some physical parameters needed to obtain \
@@ -110,10 +109,10 @@ $e_n$ based on combination of parameters.",
 REGISTER_SERIALIZABLE(Ip2_FrictMat_FrictMat_MindlinPhys);
 
 
-class Law2_ScGeom_MindlinPhys_MindlinDeresiewitz: public LawFunctor{
-	public:
-		virtual bool go(shared_ptr<IGeom>&, shared_ptr<IPhys>&, Interaction*);
-		FUNCTOR2D(ScGeom,MindlinPhys);
+class Law2_ScGeom_MindlinPhys_MindlinDeresiewitz : public LawFunctor {
+public:
+	virtual bool go(shared_ptr<IGeom>&, shared_ptr<IPhys>&, Interaction*);
+	FUNCTOR2D(ScGeom, MindlinPhys);
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS(Law2_ScGeom_MindlinPhys_MindlinDeresiewitz,LawFunctor,
 			"Hertz-Mindlin contact law with partial slip solution, as described in [Thornton1991]_.",
@@ -123,10 +122,10 @@ class Law2_ScGeom_MindlinPhys_MindlinDeresiewitz: public LawFunctor{
 };
 REGISTER_SERIALIZABLE(Law2_ScGeom_MindlinPhys_MindlinDeresiewitz);
 
-class Law2_ScGeom_MindlinPhys_HertzWithLinearShear: public LawFunctor{
-	public:
-		virtual bool go(shared_ptr<IGeom>&, shared_ptr<IPhys>&, Interaction*);
-		FUNCTOR2D(ScGeom,MindlinPhys);
+class Law2_ScGeom_MindlinPhys_HertzWithLinearShear : public LawFunctor {
+public:
+	virtual bool go(shared_ptr<IGeom>&, shared_ptr<IPhys>&, Interaction*);
+	FUNCTOR2D(ScGeom, MindlinPhys);
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS(Law2_ScGeom_MindlinPhys_HertzWithLinearShear,LawFunctor,
 			"Constitutive law for the Hertz formulation (using :yref:`MindlinPhys.kno`) and linear beahvior in shear (using :yref:`MindlinPhys.kso` for stiffness and :yref:`FrictPhys.tangensOfFrictionAngle`). \n\n.. note:: No viscosity or damping. If you need those, look at  :yref:`Law2_ScGeom_MindlinPhys_Mindlin`, which also includes non-linear Mindlin shear.",
@@ -139,21 +138,20 @@ REGISTER_SERIALIZABLE(Law2_ScGeom_MindlinPhys_HertzWithLinearShear);
 
 
 /******************** Law2_ScGeom_MindlinPhys_Mindlin *********/
-class Law2_ScGeom_MindlinPhys_Mindlin: public LawFunctor{
-	public:
+class Law2_ScGeom_MindlinPhys_Mindlin : public LawFunctor {
+public:
+	virtual bool go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I);
+	Real         normElastEnergy();
+	Real         adhesionEnergy();
 
-		virtual bool go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I);
-		Real normElastEnergy();
-		Real adhesionEnergy(); 	
-		
-		Real getfrictionDissipation();
-		Real getshearEnergy();
-		Real getnormDampDissip();
-		Real getshearDampDissip();
-		Real contactsAdhesive();
-		Real ratioSlidingContacts();
+	Real getfrictionDissipation();
+	Real getshearEnergy();
+	Real getnormDampDissip();
+	Real getshearDampDissip();
+	Real contactsAdhesive();
+	Real ratioSlidingContacts();
 
-		FUNCTOR2D(ScGeom,MindlinPhys);
+	FUNCTOR2D(ScGeom, MindlinPhys);
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(Law2_ScGeom_MindlinPhys_Mindlin,LawFunctor,"Constitutive law for the Hertz-Mindlin formulation. It includes non linear elasticity in the normal direction as predicted by Hertz for two non-conforming elastic contact bodies. In the shear direction, instead, it reseambles the simplified case without slip discussed in Mindlin's paper, where a linear relationship between shear force and tangential displacement is provided. Finally, the Mohr-Coulomb criterion is employed to established the maximum friction force which can be developed at the contact. Moreover, it is also possible to include the effect of linear viscous damping through the definition of the parameters $\\beta_{n}$ and $\\beta_{s}$.",
 			((bool,preventGranularRatcheting,true,,"bool to avoid granular ratcheting"))
@@ -181,12 +179,11 @@ REGISTER_SERIALIZABLE(Law2_ScGeom_MindlinPhys_Mindlin);
 
 // The following code was moved from Ip2_FrictMat_FrictMat_MindlinCapillaryPhys.hpp
 
-class MindlinCapillaryPhys : public MindlinPhys
-{
-	public :
-		int currentIndexes [4]; // used for faster interpolation (stores previous positions in tables)
-		
-		virtual ~MindlinCapillaryPhys() {};
+class MindlinCapillaryPhys : public MindlinPhys {
+public:
+	int currentIndexes[4]; // used for faster interpolation (stores previous positions in tables)
+
+	virtual ~MindlinCapillaryPhys() {};
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(MindlinCapillaryPhys,MindlinPhys,"Adds capillary physics to Mindlin's interaction physics.",
@@ -202,19 +199,16 @@ class MindlinCapillaryPhys : public MindlinPhys
 				,
 				);
 	// clang-format on
-	REGISTER_CLASS_INDEX(MindlinCapillaryPhys,MindlinPhys);
+	REGISTER_CLASS_INDEX(MindlinCapillaryPhys, MindlinPhys);
 };
 REGISTER_SERIALIZABLE(MindlinCapillaryPhys);
 
 
-class Ip2_FrictMat_FrictMat_MindlinCapillaryPhys : public IPhysFunctor
-{
-	public :
-		virtual void go(	const shared_ptr<Material>& b1,
-					const shared_ptr<Material>& b2,
-					const shared_ptr<Interaction>& interaction);
+class Ip2_FrictMat_FrictMat_MindlinCapillaryPhys : public IPhysFunctor {
+public:
+	virtual void go(const shared_ptr<Material>& b1, const shared_ptr<Material>& b2, const shared_ptr<Interaction>& interaction);
 
-	FUNCTOR2D(FrictMat,FrictMat);
+	FUNCTOR2D(FrictMat, FrictMat);
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(Ip2_FrictMat_FrictMat_MindlinCapillaryPhys,IPhysFunctor, "RelationShips to use with Law2_ScGeom_CapillaryPhys_Capillarity\n\n In these RelationShips all the interaction attributes are computed. \n\n.. warning::\n\tas in the others :yref:`Ip2 functors<IPhysFunctor>`, most of the attributes are computed only once, when the interaction is new.",
 	            ((Real,gamma,0.0,,"Surface energy parameter [J/m^2] per each unit contact surface, to derive DMT formulation from HM"))
@@ -227,9 +221,8 @@ class Ip2_FrictMat_FrictMat_MindlinCapillaryPhys : public IPhysFunctor
 				((shared_ptr<MatchMaker>,betas,,,"Shear viscous damping ratio $\\beta_s$."))
 		);
 	// clang-format on
-		DECLARE_LOGGER;
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(Ip2_FrictMat_FrictMat_MindlinCapillaryPhys);
 
 } // namespace yade
-

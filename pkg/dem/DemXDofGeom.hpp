@@ -1,13 +1,13 @@
 // 2009 © Václav Šmilauer <eudoxos@arcig.cz>
 #pragma once
-#include<core/IGeom.hpp>
+#include <core/IGeom.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
 /*! Abstract class that unites ScGeom and L3Geom,
 	created for the purposes of GlobalStiffnessTimeStepper.
 	It might be removed in the future. */
-class GenericSpheresContact: public IGeom{
+class GenericSpheresContact : public IGeom {
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(GenericSpheresContact,IGeom,
 		"Class uniting :yref:`ScGeom` and :yref:`L3Geom`, for the purposes of :yref:`GlobalStiffnessTimeStepper`. (It might be removed in the future). Do not use this class directly.",
@@ -18,11 +18,10 @@ class GenericSpheresContact: public IGeom{
 		createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(GenericSpheresContact,IGeom);
+	REGISTER_CLASS_INDEX(GenericSpheresContact, IGeom);
 
 	virtual ~GenericSpheresContact() {};
 };
 REGISTER_SERIALIZABLE(GenericSpheresContact);
 
 } // namespace yade
-

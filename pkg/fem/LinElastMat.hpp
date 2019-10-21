@@ -12,8 +12,8 @@
 namespace yade { // Cannot have #include directive inside.
 
 /*! Elastic material */
-class DeformableElementMaterial: public Material{
-	public:
+class DeformableElementMaterial : public Material {
+public:
 	virtual ~DeformableElementMaterial();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(DeformableElementMaterial,Material,"Deformable Element Material.",
@@ -21,12 +21,12 @@ class DeformableElementMaterial: public Material{
 		/*ctor*/ createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(DeformableElementMaterial,Material);
+	REGISTER_CLASS_INDEX(DeformableElementMaterial, Material);
 };
 REGISTER_SERIALIZABLE(DeformableElementMaterial);
 
-class LinIsoElastMat: public DeformableElementMaterial{
-	public:
+class LinIsoElastMat : public DeformableElementMaterial {
+public:
 	virtual ~LinIsoElastMat();
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR(LinIsoElastMat,DeformableElementMaterial,"Linear Isotropic Elastic material",
@@ -35,14 +35,14 @@ class LinIsoElastMat: public DeformableElementMaterial{
 			createIndex();
 		);
 	// clang-format on
-		REGISTER_CLASS_INDEX(LinIsoElastMat,DeformableElementMaterial);
+	REGISTER_CLASS_INDEX(LinIsoElastMat, DeformableElementMaterial);
 };
 REGISTER_SERIALIZABLE(LinIsoElastMat);
 
 
 /*Standard damped linear elastic material*/
-class LinIsoRayleighDampElastMat: public LinIsoElastMat{
-	public:
+class LinIsoRayleighDampElastMat : public LinIsoElastMat {
+public:
 	virtual ~LinIsoRayleighDampElastMat();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(LinIsoRayleighDampElastMat,LinIsoElastMat,"Elastic material with Rayleigh Damping.",
@@ -51,9 +51,8 @@ class LinIsoRayleighDampElastMat: public LinIsoElastMat{
 		createIndex();
 	);
 	// clang-format on
-	REGISTER_CLASS_INDEX(LinIsoRayleighDampElastMat,LinIsoElastMat);
+	REGISTER_CLASS_INDEX(LinIsoRayleighDampElastMat, LinIsoElastMat);
 };
 REGISTER_SERIALIZABLE(LinIsoRayleighDampElastMat);
 
 } // namespace yade
-

@@ -1,37 +1,35 @@
 #ifdef YADE_ODEINT
 #pragma once
 #include <core/Scene.hpp>
-#include<pkg/dem/Integrator.hpp>
-#include<boost/numeric/odeint.hpp>
+#include <pkg/dem/Integrator.hpp>
+#include <boost/numeric/odeint.hpp>
 
 
 namespace yade { // Cannot have #include directive inside.
 
-typedef boost::numeric::odeint::runge_kutta_cash_karp54< stateVector > error_stepper_type; //Runge-Kutta 54 error stepper other steppers can also be used
+typedef boost::numeric::odeint::runge_kutta_cash_karp54<stateVector> error_stepper_type; //Runge-Kutta 54 error stepper other steppers can also be used
 
-typedef boost::numeric::odeint::controlled_runge_kutta< error_stepper_type > controlled_stepper_type;//Controlled Runge Kutta stepper
+typedef boost::numeric::odeint::controlled_runge_kutta<error_stepper_type> controlled_stepper_type; //Controlled Runge Kutta stepper
 
-typedef boost::numeric::odeint::default_error_checker< error_stepper_type::value_type,error_stepper_type::algebra_type ,error_stepper_type::operations_type > error_checker_type; //Error checker type that is redefined for initialization using different tolerance values
+typedef boost::numeric::odeint::default_error_checker<error_stepper_type::value_type, error_stepper_type::algebra_type, error_stepper_type::operations_type>
+        error_checker_type; //Error checker type that is redefined for initialization using different tolerance values
 
 
 shared_ptr<Integrator> RungeKuttaCashKarp54Integrator_ctor_list(const boost::python::list& slaves);
-class RungeKuttaCashKarp54Integrator: public Integrator {
-	
-	public:
-	
-		error_checker_type rungekuttaerrorcontroller;
-	
-		controlled_stepper_type rungekuttastepper;
+class RungeKuttaCashKarp54Integrator : public Integrator {
+public:
+	error_checker_type rungekuttaerrorcontroller;
 
-		void init()
-		{
-			rungekuttaerrorcontroller=error_checker_type(abs_err,rel_err,a_x,a_dxdt);
-			rungekuttastepper=controlled_stepper_type(rungekuttaerrorcontroller);
-		}
+	controlled_stepper_type rungekuttastepper;
+
+	void init()
+	{
+		rungekuttaerrorcontroller = error_checker_type(abs_err, rel_err, a_x, a_dxdt);
+		rungekuttastepper         = controlled_stepper_type(rungekuttaerrorcontroller);
+	}
 
 
-
-		virtual void action();
+	virtual void action();
 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(RungeKuttaCashKarp54Integrator,Integrator,"RungeKuttaCashKarp54Integrator engine.",
@@ -54,4 +52,3 @@ REGISTER_SERIALIZABLE(RungeKuttaCashKarp54Integrator);
 } // namespace yade
 
 #endif
-

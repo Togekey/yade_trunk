@@ -13,12 +13,14 @@
 
 namespace yade { // Cannot have #include directive inside.
 
-class TorqueEngine: public PartialEngine{
-	public:
-		virtual void action() {
-			FOREACH(const Body::id_t id, ids){
+class TorqueEngine : public PartialEngine {
+public:
+	virtual void action()
+	{
+		FOREACH(const Body::id_t id, ids)
+		{
 			// check that body really exists?
-			scene->forces.addTorque(id,moment);
+			scene->forces.addTorque(id, moment);
 		}
 	}
 	// clang-format off
@@ -30,4 +32,3 @@ class TorqueEngine: public PartialEngine{
 REGISTER_SERIALIZABLE(TorqueEngine);
 
 } // namespace yade
-

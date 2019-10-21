@@ -7,44 +7,110 @@
 
 #pragma once
 #include <lib/serialization/Serializable.hpp>
-#include <pkg/dem/PotentialBlock.hpp>
 #include <pkg/common/Dispatching.hpp>
 #include <pkg/common/Sphere.hpp>
-#include <Python.h>
+#include <pkg/dem/PotentialBlock.hpp>
 #include <Eigen/Core>
+#include <Python.h>
 #include <stdio.h>
 
 #include <ClpSimplex.hpp>
-#include <CoinHelperFunctions.hpp>
-#include <CoinTime.hpp>
 #include <CoinBuild.hpp>
+#include <CoinHelperFunctions.hpp>
 #include <CoinModel.hpp>
+#include <CoinTime.hpp>
 
-#include <iomanip>
 #include <cassert>
+#include <iomanip>
 
 namespace yade { // Cannot have #include directive inside.
 
-class Ig2_PB_PB_ScGeom: public IGeomFunctor
-{
+class Ig2_PB_PB_ScGeom : public IGeomFunctor {
 	//protected:
 
-	public :
-		virtual bool go(const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c);
-		virtual bool goReverse(const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& state2, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c);
-		double getSignedArea(const Vector3r pt1,const Vector3r pt2, const Vector3r pt3);
-		double evaluatePB(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, const Vector3r newTrial);
-		void getPtOnParticle2(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, Vector3r previousPt, Vector3r searchDir, Vector3r& newlocalPoint);
-//		void getPtOnParticleArea(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, Vector3r previousPt, Vector3r normal, Vector3r& newlocalPoint);
-		bool getPtOnParticleAreaNormal(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, const Vector3r previousPt, const Vector3r prevDir, const int prevNo, Vector3r& newlocalPoint, Vector3r& newNormal, int& newNo);
-		double getDet(const Eigen::MatrixXd A);
-		bool customSolve(const shared_ptr<Shape>& cm1, const State& state1, const shared_ptr<Shape>& cm2, const State& state2, const Vector3r& shift2, Vector3r &contactPt, bool warmstart);
-		double evaluatePhys(const shared_ptr<Shape>& cm1,  const State& state1, const Vector3r& shift2, const Vector3r newTrial, double& phi_b, double& phi_r, /* double& JRC, double& JSC, */ double& cohesion, /* double& ks, double& kn, */ double& tension, /* double &lambda0, double &heatCapacity, double &hwater, */ bool &intactRock, int &activePlanesNo, int &jointType);
-		Vector3r getNormal(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, const Vector3r newTrial, const bool twoDimension);
-		void BrentZeroSurf(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, const Vector3r bracketA, const Vector3r bracketB, Vector3r& zero);
-		bool startingPointFeasibilityCLP(const shared_ptr<Shape>& cm1, const State& state1, const shared_ptr<Shape>& cm2, const State& state2, const Vector3r& shift2, Vector3r &contactPoint/*, bool &convergeFeasibility*/);
-		bool customSolveAnalyticCentre(const shared_ptr<Shape>& cm1, const State& state1, const shared_ptr<Shape>& cm2, const State& state2, const Vector3r& shift2, Vector3r& contactPt);
-		double getAreaPolygon2(const shared_ptr<Shape>& cm1, const State& state1, const shared_ptr<Shape>& cm2, const State& state2, const Vector3r& shift2, const Vector3r contactPt, const Vector3r contactNormal, int& smaller, bool calJointLength, Vector3r shearDir, double& jointLength, const bool twoDimension);
+public:
+	virtual bool
+	             go(const shared_ptr<Shape>&       cm1,
+	                const shared_ptr<Shape>&       cm2,
+	                const State&                   state1,
+	                const State&                   state2,
+	                const Vector3r&                shift2,
+	                const bool&                    force,
+	                const shared_ptr<Interaction>& c);
+	virtual bool goReverse(
+	        const shared_ptr<Shape>&       cm1,
+	        const shared_ptr<Shape>&       cm2,
+	        const State&                   state1,
+	        const State&                   state2,
+	        const Vector3r&                shift2,
+	        const bool&                    force,
+	        const shared_ptr<Interaction>& c);
+	double getSignedArea(const Vector3r pt1, const Vector3r pt2, const Vector3r pt3);
+	double evaluatePB(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, const Vector3r newTrial);
+	void   getPtOnParticle2(
+	          const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, Vector3r previousPt, Vector3r searchDir, Vector3r& newlocalPoint);
+	//		void getPtOnParticleArea(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, Vector3r previousPt, Vector3r normal, Vector3r& newlocalPoint);
+	bool getPtOnParticleAreaNormal(
+	        const shared_ptr<Shape>& cm1,
+	        const State&             state1,
+	        const Vector3r&          shift2,
+	        const Vector3r           previousPt,
+	        const Vector3r           prevDir,
+	        const int                prevNo,
+	        Vector3r&                newlocalPoint,
+	        Vector3r&                newNormal,
+	        int&                     newNo);
+	double getDet(const Eigen::MatrixXd A);
+	bool   customSolve(
+	          const shared_ptr<Shape>& cm1,
+	          const State&             state1,
+	          const shared_ptr<Shape>& cm2,
+	          const State&             state2,
+	          const Vector3r&          shift2,
+	          Vector3r&                contactPt,
+	          bool                     warmstart);
+	double evaluatePhys(
+	        const shared_ptr<Shape>&                                           cm1,
+	        const State&                                                       state1,
+	        const Vector3r&                                                    shift2,
+	        const Vector3r                                                     newTrial,
+	        double&                                                            phi_b,
+	        double&                                                            phi_r,
+	        /* double& JRC, double& JSC, */ double&                            cohesion,
+	        /* double& ks, double& kn, */ double&                              tension,
+	        /* double &lambda0, double &heatCapacity, double &hwater, */ bool& intactRock,
+	        int&                                                               activePlanesNo,
+	        int&                                                               jointType);
+	Vector3r getNormal(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, const Vector3r newTrial, const bool twoDimension);
+	void     BrentZeroSurf(
+	            const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, const Vector3r bracketA, const Vector3r bracketB, Vector3r& zero);
+	bool startingPointFeasibilityCLP(
+	        const shared_ptr<Shape>& cm1,
+	        const State&             state1,
+	        const shared_ptr<Shape>& cm2,
+	        const State&             state2,
+	        const Vector3r&          shift2,
+	        Vector3r&                contactPoint /*, bool &convergeFeasibility*/);
+	bool customSolveAnalyticCentre(
+	        const shared_ptr<Shape>& cm1,
+	        const State&             state1,
+	        const shared_ptr<Shape>& cm2,
+	        const State&             state2,
+	        const Vector3r&          shift2,
+	        Vector3r&                contactPt);
+	double getAreaPolygon2(
+	        const shared_ptr<Shape>& cm1,
+	        const State&             state1,
+	        const shared_ptr<Shape>& cm2,
+	        const State&             state2,
+	        const Vector3r&          shift2,
+	        const Vector3r           contactPt,
+	        const Vector3r           contactNormal,
+	        int&                     smaller,
+	        bool                     calJointLength,
+	        Vector3r                 shearDir,
+	        double&                  jointLength,
+	        const bool               twoDimension);
 
 
 	// clang-format off
@@ -59,11 +125,10 @@ class Ig2_PB_PB_ScGeom: public IGeomFunctor
 	);
 	// clang-format on
 
-	FUNCTOR2D(PotentialBlock,PotentialBlock);
+	FUNCTOR2D(PotentialBlock, PotentialBlock);
 	// needed for the dispatcher, even if it is symmetric
-	DEFINE_FUNCTOR_ORDER_2D(PotentialBlock,PotentialBlock);
+	DEFINE_FUNCTOR_ORDER_2D(PotentialBlock, PotentialBlock);
 	DECLARE_LOGGER;
-
 };
 
 REGISTER_SERIALIZABLE(Ig2_PB_PB_ScGeom);
@@ -74,35 +139,70 @@ extern "C" {
 #endif
 
 /* LAPACK LU */
-	//int dgesv(int varNo, int varNo2, double *H, int varNo3, int *pivot, double* g, int varNo4, int info){
-	 extern void dgesv_(const int *N, const int *nrhs, double *Hessian, const int *lda, int *ipiv, double *gradient, const int *ldb, int *info);
-	// int ans;
-	// dgesv_(&varNo, &varNo2, H, &varNo3, pivot,g, &varNo4, &ans);
-	// return ans;
-	//}
+//int dgesv(int varNo, int varNo2, double *H, int varNo3, int *pivot, double* g, int varNo4, int info){
+extern void dgesv_(const int* N, const int* nrhs, double* Hessian, const int* lda, int* ipiv, double* gradient, const int* ldb, int* info);
+// int ans;
+// dgesv_(&varNo, &varNo2, H, &varNo3, pivot,g, &varNo4, &ans);
+// return ans;
+//}
 
 /* LAPACK Cholesky */
-	extern void dpbsv_(const char *uplo, const int *n, const int *kd, const int *nrhs, double *AB, const int *ldab, double *B, const int *ldb, int *info);
+extern void dpbsv_(const char* uplo, const int* n, const int* kd, const int* nrhs, double* AB, const int* ldab, double* B, const int* ldb, int* info);
 
 /* LAPACK QR */
-	extern void dgels_(const char *Trans, const int *m, const int *n, const int *nrhs, double *A, const int *lda, double *B, const int *ldb, const double *work, const int *lwork, int *info);
+extern void
+dgels_(const char*   Trans,
+       const int*    m,
+       const int*    n,
+       const int*    nrhs,
+       double*       A,
+       const int*    lda,
+       double*       B,
+       const int*    ldb,
+       const double* work,
+       const int*    lwork,
+       int*          info);
 
 
 /*BLAS */
-	extern void dgemm_(const char *transA, const char *transB, const int *m, const int *n, const int *k, const double *alpha, double *A, const int *lda, double *B, const int *ldb, const double *beta, double *C, const int *ldc);
+extern void
+dgemm_(const char*   transA,
+       const char*   transB,
+       const int*    m,
+       const int*    n,
+       const int*    k,
+       const double* alpha,
+       double*       A,
+       const int*    lda,
+       double*       B,
+       const int*    ldb,
+       const double* beta,
+       double*       C,
+       const int*    ldc);
 
-	extern void dgemv_(const char *trans, const int *m, const int *n, const double *alpha, double *A, const int *lda, double *x, const int *incx, const double *beta, double *y, const int *incy);
+extern void
+dgemv_(const char*   trans,
+       const int*    m,
+       const int*    n,
+       const double* alpha,
+       double*       A,
+       const int*    lda,
+       double*       x,
+       const int*    incx,
+       const double* beta,
+       double*       y,
+       const int*    incy);
 
-	extern void dcopy_(const int *N, double *x, const int *incx, double *y, const int *incy);
+extern void dcopy_(const int* N, double* x, const int* incx, double* y, const int* incy);
 
-	extern double ddot_(const int *N, double *x, const int *incx, double *y, const int *incy);
+extern double ddot_(const int* N, double* x, const int* incx, double* y, const int* incy);
 
-	extern void daxpy_(const int *N, const double *da, double *dx, const int *incx, double *dy, const int *incy);
+extern void daxpy_(const int* N, const double* da, double* dx, const int* incx, double* dy, const int* incy);
 
-	extern void dscal_(const int *N, const double *alpha, double *x, const int *incx);
+extern void dscal_(const int* N, const double* alpha, double* x, const int* incx);
 
 
-	void dsyev_(const char *jobz, const char *uplo, const int *N, double *A, const int *lda, double *W, double *work, int *lwork, int *info);
+void dsyev_(const char* jobz, const char* uplo, const int* N, double* A, const int* lda, double* W, double* work, int* lwork, int* info);
 
 
 #ifdef __cplusplus
@@ -113,4 +213,3 @@ extern "C" {
 } // namespace yade
 
 #endif // YADE_POTENTIAL_BLOCKS
-

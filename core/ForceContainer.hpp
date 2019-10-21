@@ -13,7 +13,7 @@
 namespace yade { // Cannot have #include directive inside.
 
 // make sure that (void*)&vec[0]==(void*)&vec
-BOOST_STATIC_ASSERT(sizeof(Vector3r)==3*sizeof(Real));
+BOOST_STATIC_ASSERT(sizeof(Vector3r) == 3 * sizeof(Real));
 
 
 /*! Container for Body External Variables (forces), typically forces and torques from interactions.
@@ -46,83 +46,83 @@ BOOST_STATIC_ASSERT(sizeof(Vector3r)==3*sizeof(Real));
 
 //! This is the parallel flavor of ForceContainer
 class ForceContainer {
-	private:
-		typedef std::vector<Vector3r> vvector;
+private:
+	typedef std::vector<Vector3r> vvector;
 #ifdef YADE_OPENMP
-		std::vector<vvector> _forceData;
-		std::vector<vvector> _torqueData;
-		std::vector<Body::id_t> _maxId;
-		std::vector<size_t> sizeOfThreads;
-		void ensureSize(Body::id_t id, int threadN);
+	std::vector<vvector>    _forceData;
+	std::vector<vvector>    _torqueData;
+	std::vector<Body::id_t> _maxId;
+	std::vector<size_t>     sizeOfThreads;
+	void                    ensureSize(Body::id_t id, int threadN);
 #else
-		void ensureSize(Body::id_t id);
-		Body::id_t _maxId=0;
+	void       ensureSize(Body::id_t id);
+	Body::id_t _maxId = 0;
 #endif
-		vvector _force, _torque, _permForce, _permTorque;
-		size_t size = 0;
-		bool syncedSizes = true;
-		int nThreads;
-		bool permForceUsed = false;
-		boost::mutex globalMutex;
-		const Vector3r _zero = Vector3r::Zero();
-		
-		void ensureSynced();
-		
-		// dummy function to avoid template resolution failure
-		friend class boost::serialization::access;
-		template<class ArchiveT> void serialize(ArchiveT & ar, unsigned int version){}
-	public:
-		bool synced = true;
-		unsigned long syncCount = 0;
-		long lastReset = 0;
-		ForceContainer();
-		const Vector3r& getForce(Body::id_t id);
-		void  addForce(Body::id_t id, const Vector3r& f);
-		const Vector3r& getTorque(Body::id_t id);
-		void  addTorque(Body::id_t id, const Vector3r& t);
-		void  addMaxId(Body::id_t id);
+	vvector        _force, _torque, _permForce, _permTorque;
+	size_t         size        = 0;
+	bool           syncedSizes = true;
+	int            nThreads;
+	bool           permForceUsed = false;
+	boost::mutex   globalMutex;
+	const Vector3r _zero = Vector3r::Zero();
 
-		void  setPermForce(Body::id_t id, const Vector3r& f);
-		void  setPermTorque(Body::id_t id, const Vector3r& t);
-		const Vector3r& getPermForce(Body::id_t id);
-		const Vector3r& getPermTorque(Body::id_t id);
-		
-		/*! Function to allow friend classes to get force even if not synced. Used for clumps by NewtonIntegrator.
+	void ensureSynced();
+
+	// dummy function to avoid template resolution failure
+	friend class boost::serialization::access;
+	template <class ArchiveT> void serialize(ArchiveT& ar, unsigned int version) {}
+
+public:
+	bool          synced    = true;
+	unsigned long syncCount = 0;
+	long          lastReset = 0;
+	ForceContainer();
+	const Vector3r& getForce(Body::id_t id);
+	void            addForce(Body::id_t id, const Vector3r& f);
+	const Vector3r& getTorque(Body::id_t id);
+	void            addTorque(Body::id_t id, const Vector3r& t);
+	void            addMaxId(Body::id_t id);
+
+	void            setPermForce(Body::id_t id, const Vector3r& f);
+	void            setPermTorque(Body::id_t id, const Vector3r& t);
+	const Vector3r& getPermForce(Body::id_t id);
+	const Vector3r& getPermTorque(Body::id_t id);
+
+	/*! Function to allow friend classes to get force even if not synced. Used for clumps by NewtonIntegrator.
 		* Dangerous! The caller must know what it is doing! (i.e. don't read after write
 		* for a particular body id. */
-		const Vector3r& getForceUnsynced (Body::id_t id);
-		const Vector3r& getTorqueUnsynced(Body::id_t id);
-		void  addForceUnsynced(Body::id_t id, const Vector3r& f);
-		void  addTorqueUnsynced(Body::id_t id, const Vector3r& m);
-		
-		/* To be benchmarked: sum thread data in getForce/getTorque upon request for each body individually instead of by the sync() function globally */
-		// this function is used from python so that running simulation is not slowed down by sync'ing on occasions
-		// since Vector3r writes are not atomic, it might (rarely) return wrong value, if the computation is running meanwhile
-		const Vector3r getForceSingle (Body::id_t id);
-		const Vector3r getTorqueSingle(Body::id_t id);
+	const Vector3r& getForceUnsynced(Body::id_t id);
+	const Vector3r& getTorqueUnsynced(Body::id_t id);
+	void            addForceUnsynced(Body::id_t id, const Vector3r& f);
+	void            addTorqueUnsynced(Body::id_t id, const Vector3r& m);
+
+	/* To be benchmarked: sum thread data in getForce/getTorque upon request for each body individually instead of by the sync() function globally */
+	// this function is used from python so that running simulation is not slowed down by sync'ing on occasions
+	// since Vector3r writes are not atomic, it might (rarely) return wrong value, if the computation is running meanwhile
+	const Vector3r getForceSingle(Body::id_t id);
+	const Vector3r getTorqueSingle(Body::id_t id);
 
 #ifdef YADE_OPENMP
-		void syncSizesOfContainers();
-		void resize(size_t newSize, int threadN);
+	void syncSizesOfContainers();
+	void resize(size_t newSize, int threadN);
 #else
-		void resize(size_t newSize);
+	void       resize(size_t newSize);
 #endif
-		/* Sum contributions from all threads, save to _force&_torque.
+	/* Sum contributions from all threads, save to _force&_torque.
 		 * Locks globalMutex, since one thread modifies common data (_force&_torque).
 		 * Must be called before get* methods are used. Exception is thrown otherwise, since data are not consistent. */
-		void sync();
+	void sync();
 
-		void resizePerm(size_t newSize);
-		/*! Reset all resetable data, also reset summary forces/torques and mark the container clean.
+	void resizePerm(size_t newSize);
+	/*! Reset all resetable data, also reset summary forces/torques and mark the container clean.
 		If resetAll, reset also user defined forces and torques*/
-		// perhaps should be private and friend Scene or whatever the only caller should be
-		void reset(long iter, bool resetAll=false);
-		//! say for how many threads we have allocated space
-		int getNumAllocatedThreads() const;
-		bool getPermForceUsed() const;
+	// perhaps should be private and friend Scene or whatever the only caller should be
+	void reset(long iter, bool resetAll = false);
+	//! say for how many threads we have allocated space
+	int  getNumAllocatedThreads() const;
+	bool getPermForceUsed() const;
 
 	DECLARE_LOGGER;
 };
 
 } // namespace yade
-

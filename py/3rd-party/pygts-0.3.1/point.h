@@ -30,21 +30,19 @@
 
 typedef struct _PygtsObject PygtsPoint;
 
-#define PYGTS_POINT(o) ( PyObject_TypeCheck((PyObject*)o, &PygtsPointType) ? \
-			 (PygtsPoint*)o :				\
-			 pygts_point_from_sequence((PyObject*)o) )
+#define PYGTS_POINT(o) (PyObject_TypeCheck((PyObject*)o, &PygtsPointType) ? (PygtsPoint*)o : pygts_point_from_sequence((PyObject*)o))
 
 #define PYGTS_POINT_AS_GTS_POINT(o) (GTS_POINT(PYGTS_OBJECT(o)->gtsobj))
 
 extern PyTypeObject PygtsPointType;
 
 gboolean pygts_point_check(PyObject* o);
-gboolean pygts_point_is_ok(PygtsPoint *o);
+gboolean pygts_point_is_ok(PygtsPoint* o);
 
-PygtsPoint* pygts_point_from_sequence(PyObject *tuple);
-int pygts_point_compare(GtsPoint* p1,GtsPoint* p2);
+PygtsPoint* pygts_point_from_sequence(PyObject* tuple);
+int         pygts_point_compare(GtsPoint* p1, GtsPoint* p2);
 
-gint pygts_point_rotate(GtsPoint* p,gdouble dx,gdouble dy,gdouble dz,gdouble a);
+gint pygts_point_rotate(GtsPoint* p, gdouble dx, gdouble dy, gdouble dz, gdouble a);
 gint pygts_point_scale(GtsPoint* p, gdouble dx, gdouble dy, gdouble dz);
 gint pygts_point_translate(GtsPoint* p, gdouble dx, gdouble dy, gdouble dz);
 

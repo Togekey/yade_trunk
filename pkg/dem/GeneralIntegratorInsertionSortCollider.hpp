@@ -1,7 +1,7 @@
-// 2014 Burak ER <burak.er@btu.edu.tr> 
+// 2014 Burak ER <burak.er@btu.edu.tr>
 
 #pragma once
-#include<pkg/common/InsertionSortCollider.hpp>
+#include <pkg/common/InsertionSortCollider.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -13,23 +13,20 @@ namespace yade { // Cannot have #include directive inside.
 */
 
 
-
 #ifdef ISC_TIMING
-	#define ISC_CHECKPOINT(cpt) timingDeltas->checkpoint(cpt)
+#define ISC_CHECKPOINT(cpt) timingDeltas->checkpoint(cpt)
 #else
-	#define ISC_CHECKPOINT(cpt)
+#define ISC_CHECKPOINT(cpt)
 #endif
 
 class Integrator;
 
-class GeneralIntegratorInsertionSortCollider: public InsertionSortCollider{
-
+class GeneralIntegratorInsertionSortCollider : public InsertionSortCollider {
 	// we need this to find out about current maxVelocitySq
 	shared_ptr<Integrator> integrator;
 	// if False, no type of striding is used
 
-	public:
-
+public:
 	virtual bool isActivated(); //override this function to change NewtonIntegrator dependency.
 
 	virtual void action(); //override this function to change behaviour with the NewtonIntegrator dependency.
@@ -42,4 +39,3 @@ class GeneralIntegratorInsertionSortCollider: public InsertionSortCollider{
 REGISTER_SERIALIZABLE(GeneralIntegratorInsertionSortCollider);
 
 } // namespace yade
-

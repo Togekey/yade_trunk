@@ -8,8 +8,8 @@
 #pragma once
 
 
-#include<core/Shape.hpp>
-#include<core/Body.hpp>
+#include <core/Body.hpp>
+#include <core/Shape.hpp>
 
 // define this to have topology information about facets enabled;
 // it is necessary for FacetTopologyAnalyzer
@@ -18,26 +18,31 @@
 namespace yade { // Cannot have #include directive inside.
 
 class Facet : public Shape {
-    public:
-	
+public:
 	virtual ~Facet();
-	
-	// Postprocessed attributes 
+
+	// Postprocessed attributes
 
 	/// Facet's normal
-	//Vector3r nf; 
-	/// Normals of edges 
+	//Vector3r nf;
+	/// Normals of edges
 	Vector3r ne[3];
 	/// Inscribing cirle radius
 	Real icr;
-	/// Length of the vertice vectors 
+	/// Length of the vertice vectors
 	Real vl[3];
 	/// Unit vertice vectors
 	Vector3r vu[3];
 
 	void postLoad(Facet&);
 
-	void setVertices(const Vector3r& v0, const Vector3r& v1, const Vector3r& v2) { vertices[0]=v0; vertices[1]=v1; vertices[2]=v2; postLoad(*this); }
+	void setVertices(const Vector3r& v0, const Vector3r& v1, const Vector3r& v2)
+	{
+		vertices[0] = v0;
+		vertices[1] = v1;
+		vertices[2] = v2;
+		postLoad(*this);
+	}
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Facet,Shape,"Facet (triangular particle) geometry.",
@@ -54,9 +59,8 @@ class Facet : public Shape {
 	);
 	// clang-format on
 	DECLARE_LOGGER;
-	REGISTER_CLASS_INDEX(Facet,Shape);
+	REGISTER_CLASS_INDEX(Facet, Shape);
 };
 REGISTER_SERIALIZABLE(Facet);
 
 } // namespace yade
-

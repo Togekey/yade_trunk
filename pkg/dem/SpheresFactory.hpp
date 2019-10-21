@@ -1,26 +1,32 @@
 // Kovthanan …
-#include<lib/base/Math.hpp>
-#include<core/GlobalEngine.hpp>
-#include<pkg/common/Collider.hpp>
+#include <lib/base/Math.hpp>
+#include <core/GlobalEngine.hpp>
+#include <pkg/common/Collider.hpp>
 
 
 namespace yade { // Cannot have #include directive inside.
 
-class SpheresFactory: public GlobalEngine {
+class SpheresFactory : public GlobalEngine {
 	shared_ptr<Collider> collider;
-	protected:
-		// Pick random position of a sphere. Should be override in derived engine.
-		virtual void pickRandomPosition(Vector3r&/*picked position*/, Real/*sphere's radius*/);
-		vector<Real> PSDCurMean;  //Current value of material in each bin
-		vector<Real> PSDCurProc;  //Current value of material in each bin, in procents
-		vector<Real> PSDNeedProc; //Need value of procent in each bin
-		bool PSDuse;        //PSD or not
-	public:
-		virtual void action();
-		struct SpherCoord{
-			Vector3r c; Real r;
-			SpherCoord(const Vector3r& _c, Real _r){ c=_c; r=_r;}
-		};
+
+protected:
+	// Pick random position of a sphere. Should be override in derived engine.
+	virtual void pickRandomPosition(Vector3r& /*picked position*/, Real /*sphere's radius*/);
+	vector<Real> PSDCurMean; //Current value of material in each bin
+	vector<Real> PSDCurProc; //Current value of material in each bin, in procents
+	vector<Real> PSDNeedProc; //Need value of procent in each bin
+	bool         PSDuse; //PSD or not
+public:
+	virtual void action();
+	struct SpherCoord {
+		Vector3r c;
+		Real     r;
+		SpherCoord(const Vector3r& _c, Real _r)
+		{
+			c = _c;
+			r = _r;
+		}
+	};
 	DECLARE_LOGGER;
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(SpheresFactory,GlobalEngine,"Engine for spitting spheres based on mass flow rate, particle size distribution etc. Initial velocity of particles is given by *vMin*, *vMax*, the *massFlowRate* determines how many particles to generate at each step. When *goalMass* is attained or positive *maxParticles* is reached, the engine does not produce particles anymore. Geometry of the region should be defined in a derived engine by overridden SpheresFactory::pickRandomPosition(). \n\nA sample script for this engine is in :ysrc:`scripts/spheresFactory.py`.",
@@ -56,12 +62,13 @@ class SpheresFactory: public GlobalEngine {
 };
 REGISTER_SERIALIZABLE(SpheresFactory);
 
-class CircularFactory: public SpheresFactory {
-	protected:
-		virtual void pickRandomPosition(Vector3r&, Real);
-	public:
-		virtual ~CircularFactory(){};
-		DECLARE_LOGGER;
+class CircularFactory : public SpheresFactory {
+protected:
+	virtual void pickRandomPosition(Vector3r&, Real);
+
+public:
+	virtual ~CircularFactory() {};
+	DECLARE_LOGGER;
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS(CircularFactory,SpheresFactory,"Circular geometry of the SpheresFactory region. It can be disk (given by radius and center), or cylinder (given by radius, length and center).",
 		((Real,radius,NaN,,"Radius of the region"))
@@ -72,12 +79,13 @@ class CircularFactory: public SpheresFactory {
 };
 REGISTER_SERIALIZABLE(CircularFactory);
 
-class BoxFactory: public SpheresFactory {
-	protected:
-		virtual void pickRandomPosition(Vector3r&, Real);
-	public:
-		virtual ~BoxFactory(){};
-		DECLARE_LOGGER;
+class BoxFactory : public SpheresFactory {
+protected:
+	virtual void pickRandomPosition(Vector3r&, Real);
+
+public:
+	virtual ~BoxFactory() {};
+	DECLARE_LOGGER;
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS(BoxFactory,SpheresFactory,"Box geometry of the SpheresFactory region, given by extents and center",
 		((Vector3r,extents,Vector3r(NaN,NaN,NaN),,"Extents of the region"))
@@ -88,4 +96,3 @@ class BoxFactory: public SpheresFactory {
 REGISTER_SERIALIZABLE(BoxFactory);
 
 } // namespace yade
-

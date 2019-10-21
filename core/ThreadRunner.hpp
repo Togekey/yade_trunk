@@ -45,38 +45,39 @@ namespace yade { // Cannot have #include directive inside.
 
 class ThreadWorker;
 
-class ThreadRunner
-{
-	private :
-		ThreadWorker*	m_thread_worker;
-		bool		m_looping;
-		boost::mutex	m_boolmutex;
-		boost::mutex	m_callmutex;
-		boost::mutex	m_runmutex;
-		void		run();
-		void		call();
+class ThreadRunner {
+private:
+	ThreadWorker* m_thread_worker;
+	bool          m_looping;
+	boost::mutex  m_boolmutex;
+	boost::mutex  m_callmutex;
+	boost::mutex  m_runmutex;
+	void          run();
+	void          call();
 
-		DECLARE_LOGGER;
+	DECLARE_LOGGER;
 
-	public :
-		ThreadRunner(ThreadWorker* c) : m_thread_worker(c), m_looping(false), workerThrew(false) {};
-		~ThreadRunner();
+public:
+	ThreadRunner(ThreadWorker* c)
+	        : m_thread_worker(c)
+	        , m_looping(false)
+	        , workerThrew(false) {};
+	~ThreadRunner();
 
-		/// perform ThreadWorker::singleAction() in separate thread
-		void spawnSingleAction();
-		/// start doing singleAction() in a loop in separate thread
-		void start();
-		/// stop the loop (changes the flag checked by looping() )
-		void stop();
-		/// kindly ask the separate thread to terminate
-		void pleaseTerminate();
-		/// precondition for the loop started with start().
-		bool looping();
-		//! if true, workerException is copy of the exception thrown by the worker
-		bool workerThrew;
-		//! last exception thrown by the worker, if any
-		std::exception workerException;
+	/// perform ThreadWorker::singleAction() in separate thread
+	void spawnSingleAction();
+	/// start doing singleAction() in a loop in separate thread
+	void start();
+	/// stop the loop (changes the flag checked by looping() )
+	void stop();
+	/// kindly ask the separate thread to terminate
+	void pleaseTerminate();
+	/// precondition for the loop started with start().
+	bool looping();
+	//! if true, workerException is copy of the exception thrown by the worker
+	bool workerThrew;
+	//! last exception thrown by the worker, if any
+	std::exception workerException;
 };
 
 } // namespace yade
-

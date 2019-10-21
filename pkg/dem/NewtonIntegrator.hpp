@@ -7,14 +7,14 @@
 *************************************************************************/
 #pragma once
 
-#include<pkg/common/FieldApplier.hpp>
-#include<core/Interaction.hpp>
-#include<lib/base/Math.hpp>
-#include<pkg/common/Callbacks.hpp>
-#include<pkg/dem/GlobalStiffnessTimeStepper.hpp>
+#include <lib/base/Math.hpp>
+#include <core/Interaction.hpp>
+#include <pkg/common/Callbacks.hpp>
+#include <pkg/common/FieldApplier.hpp>
+#include <pkg/dem/GlobalStiffnessTimeStepper.hpp>
 
 #ifdef YADE_OPENMP
-	#include<omp.h>
+#include <omp.h>
 #endif
 
 namespace yade { // Cannot have #include directive inside.
@@ -24,7 +24,7 @@ namespace yade { // Cannot have #include directive inside.
  */
 class State;
 
-class NewtonIntegrator : public FieldApplier{
+class NewtonIntegrator : public FieldApplier {
 	inline void cundallDamp1st(Vector3r& force, const Vector3r& vel);
 	inline void cundallDamp2nd(const Real& dt, const Vector3r& vel, Vector3r& accel);
 	inline void leapfrogTranslate(State*, const Real& dt); // leap-frog translate
@@ -36,32 +36,33 @@ class NewtonIntegrator : public FieldApplier{
 	Vector3r computeAccel(const Vector3r& force, const Real& mass, int blockedDOFs);
 	Vector3r computeAngAccel(const Vector3r& torque, const Vector3r& inertia, int blockedDOFs);
 
-	void updateEnergy(const shared_ptr<Body>&b, const State* state, const Vector3r& fluctVel, const Vector3r& f, const Vector3r& m);
-	#ifdef YADE_OPENMP
-	void ensureSync(); bool syncEnsured;
-	#endif
+	void updateEnergy(const shared_ptr<Body>& b, const State* state, const Vector3r& fluctVel, const Vector3r& f, const Vector3r& m);
+#ifdef YADE_OPENMP
+	void ensureSync();
+	bool syncEnsured;
+#endif
 	// whether the cell has changed from the previous step
 	bool cellChanged;
-	int homoDeform;
-	
+	int  homoDeform;
+
 	// wether a body has been selected in Qt view
-	bool bodySelected;
+	bool     bodySelected;
 	Matrix3r dVelGrad;
 	Vector3r dSpin;
 
-	public:
-		bool densityScaling;// internal for density scaling
-		Real updatingDispFactor;//(experimental) Displacement factor used to trigger bound update: the bound is updated only if updatingDispFactor*disp>sweepDist when >0, else all bounds are updated.
-		// function to save maximum velocity, for the verlet-distance optimization
-		void saveMaximaVelocity(const Body::id_t& id, State* state);
-		void saveMaximaDisplacement(const shared_ptr<Body>& b);
-		bool get_densityScaling ();
-		void set_densityScaling (bool dsc);
+public:
+	bool densityScaling; // internal for density scaling
+	Real updatingDispFactor; //(experimental) Displacement factor used to trigger bound update: the bound is updated only if updatingDispFactor*disp>sweepDist when >0, else all bounds are updated.
+	// function to save maximum velocity, for the verlet-distance optimization
+	void saveMaximaVelocity(const Body::id_t& id, State* state);
+	void saveMaximaDisplacement(const shared_ptr<Body>& b);
+	bool get_densityScaling();
+	void set_densityScaling(bool dsc);
 
-		#ifdef YADE_OPENMP
-			vector<Real> threadMaxVelocitySq;
-		#endif
-		virtual void action();
+#ifdef YADE_OPENMP
+	vector<Real> threadMaxVelocitySq;
+#endif
+	virtual void action();
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(NewtonIntegrator,GlobalEngine,"Engine integrating newtonian motion equations.",
 		((Real,damping,0.2,,"damping coefficient for Cundall's non viscous damping (see :ref:`NumericalDamping` and [Chareyre2005]_)"))
@@ -97,4 +98,3 @@ class NewtonIntegrator : public FieldApplier{
 REGISTER_SERIALIZABLE(NewtonIntegrator);
 
 } // namespace yade
-

@@ -1,9 +1,9 @@
-// 2009 © Václav Šmilauer <eudoxos@arcig.cz> 
+// 2009 © Václav Šmilauer <eudoxos@arcig.cz>
 // 2013 © Bruno Chareyre <bruno.chareyre@hmg.inpg.fr>
 #pragma once
-#include<pkg/common/Collider.hpp>
-#include<core/Scene.hpp>
-#include<pkg/dem/NewtonIntegrator.hpp>
+#include <core/Scene.hpp>
+#include <pkg/common/Collider.hpp>
+#include <pkg/dem/NewtonIntegrator.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -69,17 +69,17 @@ Possible performance improvements & bugs
 // #define ISC_TIMING
 
 #ifdef ISC_TIMING
-	#define ISC_CHECKPOINT(cpt) timingDeltas->checkpoint(cpt)
+#define ISC_CHECKPOINT(cpt) timingDeltas->checkpoint(cpt)
 #else
-	#define ISC_CHECKPOINT(cpt)
+#define ISC_CHECKPOINT(cpt)
 #endif
 
-class GeneralIntegratorInsertionSortCollider;// Forward decleration of child to decleare it as friend
+class GeneralIntegratorInsertionSortCollider; // Forward decleration of child to decleare it as friend
 
-class InsertionSortCollider: public Collider{
+class InsertionSortCollider : public Collider {
 	friend class GeneralIntegratorInsertionSortCollider;
 	//! struct for storing bounds of bodies
-	struct Bounds{
+	struct Bounds {
 		//! coordinate along the given sortAxis
 		Real coord;
 		//! id of the body this bound belongs to
@@ -87,102 +87,158 @@ class InsertionSortCollider: public Collider{
 		//! periodic cell coordinate
 		int period;
 		//! is it the minimum (true) or maximum (false) bound?
-		struct {bool hasBB:true, isMin:true;} flags;
-		Bounds(Real coord_, Body::id_t id_, bool isMin): coord(coord_), id(id_), period(0){ flags.isMin=isMin; }
-		bool operator<(const Bounds& b) const {
-			/* handle special case of zero-width bodies, which could otherwise get min/max swapped in the unstable std::sort */
-			if(id==b.id && coord==b.coord) return flags.isMin;
-			return coord<b.coord;
+		struct {
+			bool hasBB : true, isMin : true;
+		} flags;
+		Bounds(Real coord_, Body::id_t id_, bool isMin)
+		        : coord(coord_)
+		        , id(id_)
+		        , period(0)
+		{
+			flags.isMin = isMin;
 		}
-		bool operator>(const Bounds& b) const {
-			if(id==b.id && coord==b.coord) return !flags.isMin;
-			return coord>b.coord;
+		bool operator<(const Bounds& b) const
+		{
+			/* handle special case of zero-width bodies, which could otherwise get min/max swapped in the unstable std::sort */
+			if (id == b.id && coord == b.coord)
+				return flags.isMin;
+			return coord < b.coord;
+		}
+		bool operator>(const Bounds& b) const
+		{
+			if (id == b.id && coord == b.coord)
+				return !flags.isMin;
+			return coord > b.coord;
 		}
 	};
-		
-		// if False, no type of striding is used
-		// if True, then either verletDist XOR nBins is set
-		bool strideActive;
-	struct VecBounds{
+
+	// if False, no type of striding is used
+	// if True, then either verletDist XOR nBins is set
+	bool strideActive;
+	struct VecBounds {
 		// axis set in the ctor
-		int axis;
+		int  axis;
 		Real cellDim;
 		// index of the lowest coordinate element, before which the container wraps
 		size_t loIdx;
 
-		Bounds& operator[](long idx){ assert(idx<long(size()) && idx>=0); return vec[idx]; }
-		const Bounds& operator[](long idx) const { assert(idx<long(size()) && idx>=0); return vec[idx]; }
+		Bounds& operator[](long idx)
+		{
+			assert(idx < long(size()) && idx >= 0);
+			return vec[idx];
+		}
+		const Bounds& operator[](long idx) const
+		{
+			assert(idx < long(size()) && idx >= 0);
+			return vec[idx];
+		}
 
 		// update number of bodies, periodic properties and size from Scene
-		void updatePeriodicity(Scene* );
+		void updatePeriodicity(Scene*);
 		// normalize given index to the right range (wraps around)
-		size_t norm(long i) const { if(i<0) i+=size(); assert(i>=0); size_t ret=i%size(); assert(ret<size()); return ret;}
-		VecBounds(): axis(-1), loIdx(0) {}
-		void dump(ostream& os){ string ret; for(size_t i=0; i<vec.size(); i++) os<<(i==loIdx?"@@ ":"")<<vec[i].coord<<"(id="<<vec[i].id<<","<<(vec[i].flags.isMin?"min":"max")<<",p"<<vec[i].period<<") "; os<<endl;}
+		size_t norm(long i) const
+		{
+			if (i < 0)
+				i += size();
+			assert(i >= 0);
+			size_t ret = i % size();
+			assert(ret < size());
+			return ret;
+		}
+		VecBounds()
+		        : axis(-1)
+		        , loIdx(0)
+		{
+		}
+		void dump(ostream& os)
+		{
+			string ret;
+			for (size_t i = 0; i < vec.size(); i++)
+				os << (i == loIdx ? "@@ " : "") << vec[i].coord << "(id=" << vec[i].id << "," << (vec[i].flags.isMin ? "min" : "max") << ",p"
+				   << vec[i].period << ") ";
+			os << endl;
+		}
 
 		size_t size() const { return vec.size(); };
-		
-		void clear()                      { vec.clear();                   }
-		void reserve(size_t n)            { vec.reserve(n);                }
-		void resize(size_t n)             { if (n>vec.size()) LOG_ERROR("not supposed to increase size - shrink only"); vec.resize(n,Bounds(0,0,true));                 }
-		void push_back(const Bounds&  bb) { vec.push_back(bb);             }
-		// if the line below does not compile on older ubuntu 14.04, then I should add #ifdef guards to check compiler version. This line will make push_back faster when a newer compiler supports it.
-		void push_back(      Bounds&& bb) { vec.push_back(bb);             }
-		void sort()                       { std::sort(vec.begin(),vec.end()); }
-		std::vector<Bounds>::const_iterator cbegin() const { return vec.cbegin();}
-		std::vector<Bounds>::const_iterator cend  () const { return vec.cend  ();}
 
-		private:
-			std::vector<Bounds> vec;
-	};
+		void clear() { vec.clear(); }
+		void reserve(size_t n) { vec.reserve(n); }
+		void resize(size_t n)
+		{
+			if (n > vec.size())
+				LOG_ERROR("not supposed to increase size - shrink only");
+			vec.resize(n, Bounds(0, 0, true));
+		}
+		void push_back(const Bounds& bb) { vec.push_back(bb); }
+		// if the line below does not compile on older ubuntu 14.04, then I should add #ifdef guards to check compiler version. This line will make push_back faster when a newer compiler supports it.
+		void                                push_back(Bounds&& bb) { vec.push_back(bb); }
+		void                                sort() { std::sort(vec.begin(), vec.end()); }
+		std::vector<Bounds>::const_iterator cbegin() const { return vec.cbegin(); }
+		std::vector<Bounds>::const_iterator cend() const { return vec.cend(); }
+
 	private:
+		std::vector<Bounds> vec;
+	};
+
+private:
 	//! storage for bounds
 	VecBounds BB[3];
 	//! storage for bb maxima and minima
 	std::vector<Real> maxima, minima;
 	//! Whether the Scene was periodic (to detect the change, which shouldn't happen, but shouldn't crash us either)
 	bool periodic;
-	//! Store inverse sizes to avoid repeated divisions within loops 
+	//! Store inverse sizes to avoid repeated divisions within loops
 	Vector3r invSizes;
 	// return python representation of the BB struct, as ([...],[...],[...]).
-  boost::python::tuple dumpBounds();
+	boost::python::tuple dumpBounds();
 
 	/*! sorting routine; insertion sort is very fast for strongly pre-sorted lists, which is our case
   	    http://en.wikipedia.org/wiki/Insertion_sort has the algorithm and other details
 	*/
-	void insertionSort(VecBounds& v,InteractionContainer*,Scene*,bool doCollide=true);
-	#ifdef YADE_OPENMP
-	void insertionSortParallel(VecBounds& v,InteractionContainer*,Scene*,bool doCollide=true);
-	#endif
-	void handleBoundInversion(Body::id_t,Body::id_t,InteractionContainer*,Scene*);
+	void insertionSort(VecBounds& v, InteractionContainer*, Scene*, bool doCollide = true);
+#ifdef YADE_OPENMP
+	void insertionSortParallel(VecBounds& v, InteractionContainer*, Scene*, bool doCollide = true);
+#endif
+	void handleBoundInversion(Body::id_t, Body::id_t, InteractionContainer*, Scene*);
 
 	// periodic variants
-	void insertionSortPeri(VecBounds& v,InteractionContainer*,Scene*,bool doCollide=true);
-	void handleBoundInversionPeri(Body::id_t,Body::id_t,InteractionContainer*,Scene*);
-	void handleBoundSplit(Body::id_t,Body::id_t,InteractionContainer*,Scene*);
-	
-	bool spatialOverlapPeri(Body::id_t,Body::id_t,Scene*,Vector3i&) const;
-	inline bool spatialOverlap(const Body::id_t& id1, const Body::id_t& id2) const {
-	assert(!periodic);
-	return	(minima[3*id1+0]<=maxima[3*id2+0]) && (maxima[3*id1+0]>=minima[3*id2+0]) &&
-		(minima[3*id1+1]<=maxima[3*id2+1]) && (maxima[3*id1+1]>=minima[3*id2+1]) &&
-		(minima[3*id1+2]<=maxima[3*id2+2]) && (maxima[3*id1+2]>=minima[3*id2+2]);
+	void insertionSortPeri(VecBounds& v, InteractionContainer*, Scene*, bool doCollide = true);
+	void handleBoundInversionPeri(Body::id_t, Body::id_t, InteractionContainer*, Scene*);
+	void handleBoundSplit(Body::id_t, Body::id_t, InteractionContainer*, Scene*);
+
+	bool        spatialOverlapPeri(Body::id_t, Body::id_t, Scene*, Vector3i&) const;
+	inline bool spatialOverlap(const Body::id_t& id1, const Body::id_t& id2) const
+	{
+		assert(!periodic);
+		return (minima[3 * id1 + 0] <= maxima[3 * id2 + 0]) && (maxima[3 * id1 + 0] >= minima[3 * id2 + 0])
+		        && (minima[3 * id1 + 1] <= maxima[3 * id2 + 1]) && (maxima[3 * id1 + 1] >= minima[3 * id2 + 1])
+		        && (minima[3 * id1 + 2] <= maxima[3 * id2 + 2]) && (maxima[3 * id1 + 2] >= minima[3 * id2 + 2]);
 	}
-	
+
 	static Real cellWrap(const Real, const Real, const Real, int&);
 	static Real cellWrapRel(const Real, const Real, const Real);
 
 
-	public:
+public:
 	//! Predicate called from loop within InteractionContainer::erasePending
-	bool shouldBeErased(Body::id_t id1, Body::id_t id2, Scene* rb) const {
-		if(!periodic) return !spatialOverlap(id1,id2);
-		else { Vector3i periods; return !spatialOverlapPeri(id1,id2,rb,periods); }
+	bool shouldBeErased(Body::id_t id1, Body::id_t id2, Scene* rb) const
+	{
+		if (!periodic)
+			return !spatialOverlap(id1, id2);
+		else {
+			Vector3i periods;
+			return !spatialOverlapPeri(id1, id2, rb, periods);
+		}
 	}
 	virtual bool isActivated();
 
 	// force reinitialization at next run
-	virtual void invalidatePersistentData(){ for(int i=0; i<3; i++){ BB[i].clear(); }}
+	virtual void invalidatePersistentData()
+	{
+		for (int i = 0; i < 3; i++) {
+			BB[i].clear();
+		}
+	}
 
 	vector<Body::id_t> probeBoundingVolume(const Bound&);
 
@@ -244,4 +300,3 @@ class InsertionSortCollider: public Collider{
 REGISTER_SERIALIZABLE(InsertionSortCollider);
 
 } // namespace yade
-

@@ -40,242 +40,228 @@
 /*-------------------------------------------------------------------------*/
 /* Methods exported to python */
 
-static PyObject*
-is_unattached(PygtsObject *self, PyObject *args, PyObject *kwds)
+static PyObject* is_unattached(PygtsObject* self, PyObject* args, PyObject* kwds)
 {
-  /* Objects are unattached by default */
-  Py_INCREF(Py_False);
-  return Py_False;
+	/* Objects are unattached by default */
+	Py_INCREF(Py_False);
+	return Py_False;
 }
 
 
 /* Methods table */
 static PyMethodDef methods[] = {
-  {"is_unattached", (PyCFunction)is_unattached,
-   METH_NOARGS,
-   "True if this Object o is not attached to another Object.\n"
-   "Otherwise False.\n"
-   "\n"
-   "Trace: o.is_unattached().\n"
-  }, 
+	{ "is_unattached",
+	  (PyCFunction)is_unattached,
+	  METH_NOARGS,
+	  "True if this Object o is not attached to another Object.\n"
+	  "Otherwise False.\n"
+	  "\n"
+	  "Trace: o.is_unattached().\n" },
 
-  {NULL}  /* Sentinel */
+	{ NULL } /* Sentinel */
 };
 
 
 /*-------------------------------------------------------------------------*/
 /* Attributes exported to python */
 
-static PyObject *
-id(PygtsObject *self, void *closure)
+static PyObject* id(PygtsObject* self, void* closure)
 {
-  if( self->gtsobj == NULL) {
-    PyErr_SetString(PyExc_RuntimeError, "GTS object does not exist!");
-    return NULL;
-  }
-  /* Use the pointer of the gtsobj */
-  return PyLong_FromVoidPtr((void*)(self->gtsobj));
+	if (self->gtsobj == NULL) {
+		PyErr_SetString(PyExc_RuntimeError, "GTS object does not exist!");
+		return NULL;
+	}
+	/* Use the pointer of the gtsobj */
+	return PyLong_FromVoidPtr((void*)(self->gtsobj));
 }
 
 
 /* Methods table */
 static PyGetSetDef getset[] = {
-    {"id", (getter)id, NULL, "GTS object id", NULL},
-    {NULL}  /* Sentinel */
+	{ "id", (getter)id, NULL, "GTS object id", NULL }, { NULL } /* Sentinel */
 };
 
 
 /*-------------------------------------------------------------------------*/
 /* Python type methods */
 
-static void
-dealloc(PygtsObject* self)
+static void dealloc(PygtsObject* self)
 {
-  /* De-register entry from the object table */
-  pygts_object_deregister(self);
+	/* De-register entry from the object table */
+	pygts_object_deregister(self);
 
-  if(self->gtsobj_parent!=NULL) {
-    /* Free the parent; GTS will free the child unless it is attached
+	if (self->gtsobj_parent != NULL) {
+		/* Free the parent; GTS will free the child unless it is attached
      * to something else.
      */
-    gts_object_destroy(self->gtsobj_parent);
-    self->gtsobj_parent=NULL;
-  }
-  else {
-    /* We have the only reference, and so it is safe to destroy the gtsobj 
+		gts_object_destroy(self->gtsobj_parent);
+		self->gtsobj_parent = NULL;
+	} else {
+		/* We have the only reference, and so it is safe to destroy the gtsobj 
      * (unless it was never created in the first place).
      */
-    if(self->gtsobj!=NULL) {
-      gts_object_destroy(self->gtsobj);
-      self->gtsobj=NULL;
-    }
-  }
-  Py_TYPE(self)->tp_free((PyObject*)self);
+		if (self->gtsobj != NULL) {
+			gts_object_destroy(self->gtsobj);
+			self->gtsobj = NULL;
+		}
+	}
+	Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 
-static PyObject *
-new_(PyTypeObject *type, PyObject *args, PyObject *kwds)
+static PyObject* new_(PyTypeObject* type, PyObject* args, PyObject* kwds)
 {
-  PygtsObject *self;
+	PygtsObject* self;
 
-  /* Chain up object allocation */
-  self = PYGTS_OBJECT(type->tp_alloc(type, 0));
-  if( self == NULL ) return NULL;
+	/* Chain up object allocation */
+	self = PYGTS_OBJECT(type->tp_alloc(type, 0));
+	if (self == NULL)
+		return NULL;
 
-  /* Object initialization */
-  self->gtsobj = NULL;
-  self->gtsobj_parent = NULL;
+	/* Object initialization */
+	self->gtsobj        = NULL;
+	self->gtsobj_parent = NULL;
 
-  return (PyObject *)self;
+	return (PyObject*)self;
 }
 
 
-static int
-init(PygtsObject *self, PyObject *args, PyObject *kwds)
+static int init(PygtsObject* self, PyObject* args, PyObject* kwds)
 {
-  if( self->gtsobj == NULL ) {
-    PyErr_SetString(PyExc_RuntimeError, "Cannot create abstract Object");
-    return -1;
-  }
-  
-  return 0;
+	if (self->gtsobj == NULL) {
+		PyErr_SetString(PyExc_RuntimeError, "Cannot create abstract Object");
+		return -1;
+	}
+
+	return 0;
 }
 
 
 /* replace with rich comparison: https://docs.python.org/2/c-api/typeobj.html#PyTypeObject.tp_richcompare */
 #if PY_MAJOR_VERSION >= 3
-  static PyObject* rich_compare(PygtsObject *o1, PygtsObject *o2, int op){
-    int ret=0;
-    switch(op){
-      case Py_LT: ret=(o1->gtsobj <  o2->gtsobj); break;
-      case Py_LE: ret=(o1->gtsobj <= o2->gtsobj); break;
-      case Py_EQ: ret=(o1->gtsobj == o2->gtsobj); break;
-      case Py_NE: ret=(o1->gtsobj != o2->gtsobj); break;
-      case Py_GT: ret=(o1->gtsobj >  o2->gtsobj); break;
-      case Py_GE: ret=(o1->gtsobj >= o2->gtsobj); break;
-     default: Py_RETURN_NOTIMPLEMENTED;
-    }
-    if(ret) Py_RETURN_TRUE;
-    Py_RETURN_FALSE;
-  };
+static PyObject* rich_compare(PygtsObject* o1, PygtsObject* o2, int op)
+{
+	int ret = 0;
+	switch (op) {
+		case Py_LT: ret = (o1->gtsobj < o2->gtsobj); break;
+		case Py_LE: ret = (o1->gtsobj <= o2->gtsobj); break;
+		case Py_EQ: ret = (o1->gtsobj == o2->gtsobj); break;
+		case Py_NE: ret = (o1->gtsobj != o2->gtsobj); break;
+		case Py_GT: ret = (o1->gtsobj > o2->gtsobj); break;
+		case Py_GE: ret = (o1->gtsobj >= o2->gtsobj); break;
+		default: Py_RETURN_NOTIMPLEMENTED;
+	}
+	if (ret)
+		Py_RETURN_TRUE;
+	Py_RETURN_FALSE;
+};
 #else
-  static int 
-  compare(PygtsObject *o1, PygtsObject *o2)
-  {
-    if(o1->gtsobj==o2->gtsobj) {
-      return 0;
-    }
-    else {
-      return -1;
-    }
-  }
+static int compare(PygtsObject* o1, PygtsObject* o2)
+{
+	if (o1->gtsobj == o2->gtsobj) {
+		return 0;
+	} else {
+		return -1;
+	}
+}
 #endif
 
 
 /* Methods table */
 PyTypeObject PygtsObjectType = {
-  PyVarObject_HEAD_INIT(NULL,0)
-  "gts.Object"  ,            /* tp_name */
-  sizeof(PygtsObject),       /* tp_basicsize */
-  0,                         /* tp_itemsize */
-  (destructor)dealloc,       /* tp_dealloc */
-  0,                         /* tp_print */
-  0,                         /* tp_getattr */
-  0,                         /* tp_setattr */
-  #if PY_MAJOR_VERSION >= 3
-    0,                         /* tp_compare */
-  #else
-    (cmpfunc)compare,          /* tp_compare */
-  #endif
-  0,                         /* tp_repr */
-  0,                         /* tp_as_number */
-  0,                         /* tp_as_sequence */
-  0,                         /* tp_as_mapping */
-  0,                         /* tp_hash */
-  0,                         /* tp_call */
-  0,                         /* tp_str */
-  0,                         /* tp_getattro */
-  0,                         /* tp_setattro */
-  0,                         /* tp_as_buffer */
-  Py_TPFLAGS_DEFAULT |
-    Py_TPFLAGS_BASETYPE,     /* tp_flags */
-  "Base object",             /* tp_doc */
-  0,                         /* tp_traverse */
-  0,                         /* tp_clear */
-  #if PY_MAJOR_VERSION >= 3
-    (richcmpfunc)rich_compare, /* tp_richcompare */
-  #else
-    0,                         /* tp_richcompare */
-  #endif
-  0,                         /* tp_weaklistoffset */
-  0,                         /* tp_iter */
-  0,                         /* tp_iternext */
-  methods,                   /* tp_methods */
-  0,                         /* tp_members */
-  getset,                    /* tp_getset */
-  0,                         /* tp_base: attached in pygts.c */
-  0,                         /* tp_dict */
-  0,                         /* tp_descr_get */
-  0,                         /* tp_descr_set */
-  0,                         /* tp_dictoffset */
-  (initproc)init,            /* tp_init */
-  0,                         /* tp_alloc */
-  (newfunc)new_               /* tp_new */
+	PyVarObject_HEAD_INIT(NULL, 0) "gts.Object", /* tp_name */
+	sizeof(PygtsObject), /* tp_basicsize */
+	0, /* tp_itemsize */
+	(destructor)dealloc, /* tp_dealloc */
+	0, /* tp_print */
+	0, /* tp_getattr */
+	0, /* tp_setattr */
+#if PY_MAJOR_VERSION >= 3
+	0, /* tp_compare */
+#else
+	(cmpfunc)compare, /* tp_compare */
+#endif
+	0, /* tp_repr */
+	0, /* tp_as_number */
+	0, /* tp_as_sequence */
+	0, /* tp_as_mapping */
+	0, /* tp_hash */
+	0, /* tp_call */
+	0, /* tp_str */
+	0, /* tp_getattro */
+	0, /* tp_setattro */
+	0, /* tp_as_buffer */
+	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
+	"Base object", /* tp_doc */
+	0, /* tp_traverse */
+	0, /* tp_clear */
+#if PY_MAJOR_VERSION >= 3
+	(richcmpfunc)rich_compare, /* tp_richcompare */
+#else
+	0, /* tp_richcompare */
+#endif
+	0, /* tp_weaklistoffset */
+	0, /* tp_iter */
+	0, /* tp_iternext */
+	methods, /* tp_methods */
+	0, /* tp_members */
+	getset, /* tp_getset */
+	0, /* tp_base: attached in pygts.c */
+	0, /* tp_dict */
+	0, /* tp_descr_get */
+	0, /* tp_descr_set */
+	0, /* tp_dictoffset */
+	(initproc)init, /* tp_init */
+	0, /* tp_alloc */
+	(newfunc)new_ /* tp_new */
 };
 
 
 /*-------------------------------------------------------------------------*/
 /* Pygts functions */
 
-gboolean 
-pygts_object_check(PyObject* o)
+gboolean pygts_object_check(PyObject* o)
 {
-  if(! PyObject_TypeCheck(o, &PygtsObjectType)) {
-    return FALSE;
-  }
-  else {
+	if (!PyObject_TypeCheck(o, &PygtsObjectType)) {
+		return FALSE;
+	} else {
 #if PYGTS_DEBUG
-    return pygts_object_is_ok(PYGTS_OBJECT(o));
+		return pygts_object_is_ok(PYGTS_OBJECT(o));
 #else
-    return TRUE;
+		return TRUE;
 #endif
-  }
+	}
 }
 
 
-gboolean 
-pygts_object_is_ok(PygtsObject *o)
+gboolean pygts_object_is_ok(PygtsObject* o)
 {
-  g_return_val_if_fail(o->gtsobj!=NULL,FALSE);
-  g_return_val_if_fail(g_hash_table_lookup(obj_table,o->gtsobj)!=NULL,FALSE);
-  return TRUE;
+	g_return_val_if_fail(o->gtsobj != NULL, FALSE);
+	g_return_val_if_fail(g_hash_table_lookup(obj_table, o->gtsobj) != NULL, FALSE);
+	return TRUE;
 }
 
 
 /*-------------------------------------------------------------------------*/
 /* Object table functions */
 
-GHashTable *obj_table; /* GtsObject key, associated PyObject value */
+GHashTable* obj_table; /* GtsObject key, associated PyObject value */
 
-void
-pygts_object_register(PygtsObject *o)
+void pygts_object_register(PygtsObject* o)
 {
-  if( g_hash_table_lookup(obj_table,o->gtsobj) == NULL ) {
-    g_hash_table_insert(obj_table,o->gtsobj,o);
-  }
+	if (g_hash_table_lookup(obj_table, o->gtsobj) == NULL) {
+		g_hash_table_insert(obj_table, o->gtsobj, o);
+	}
 }
 
 
-void
-pygts_object_deregister(PygtsObject *o)
+void pygts_object_deregister(PygtsObject* o)
 {
-  if(o->gtsobj!=NULL) {
-    if(g_hash_table_lookup(obj_table,o->gtsobj)==o) {
-      g_hash_table_remove(obj_table,o->gtsobj);
-    }
-  }
+	if (o->gtsobj != NULL) {
+		if (g_hash_table_lookup(obj_table, o->gtsobj) == o) {
+			g_hash_table_remove(obj_table, o->gtsobj);
+		}
+	}
 }
 
 #pragma GCC diagnostic pop
-
