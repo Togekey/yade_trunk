@@ -102,7 +102,6 @@ _GET_CONNEXION_= 22
 #local vars
 _REALLOC_COUNT=0
 
-
 # for coloring processes outputs differently
 bcolors=['\033[95m','\033[94m','\033[93m','\033[92m','\033[91m','\033[90m','\033[95m','\033[93m','\033[91m','\033[1m','\033[4m','\033[0m']
 

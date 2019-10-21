@@ -504,6 +504,104 @@ Real Subdomain::boundOnAxis(Bound& b, const Vector3r& direction, bool min) const
 }
 
 
+// just for testing.
+Real Subdomain::boundOnAxisCpp(const shared_ptr<Bound>& b, Vector3r direction, bool min){
+	Vector3r size = b->max-b->min;
+	Real extremum = 0;
+	for (unsigned k=0; k<3; k++) extremum += std::abs(size[k]*direction[k]);// this is equivalent to taking the vertex maximizing projected length
+	if (min) extremum = -extremum; 
+	extremum+= (b->max+b->min).dot(direction);// should be *0.5 to be center of the box, but since we use 'size' instead of half-size everything is doubled, neutral in terms of ordering the boxes
+	return 0.5*extremum;
+	
+}
+
+
+/* Migrate bodies, translation of python functions  */ 
+
+
+std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const Vector3r& otherSubDCM, bool useAABB){
+	
+	std::vector<projectedBoundElem> pos; 
+	
+	const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
+	const shared_ptr<Body>& otherSubdomainBody = (*scene->bodies)[subdomains[otherSD-1]]; 
+	if (! otherSubdomainBody) {LOG_ERROR("invalid subdomain id, perhaps not in intersection?, other subd =  " << otherSD); return pos; }
+	const shared_ptr<Subdomain>& otherSubD = YADE_PTR_CAST<Subdomain>(otherSubdomainBody->shape);  
+	const shared_ptr<Bound>& otherSubDBound = otherSubdomainBody->bound; 
+	const shared_ptr<Bound>& thisSubDBound = (*scene->bodies)[subdomains[subdomainRank-1]]->bound; 
+	Vector3r pt1, pt2, axis; 
+	
+	if (useAABB) {
+		pt1 = 0.5*(thisSubDBound->min + thisSubDBound->max); 
+		pt2 = 0.5*(otherSubDBound->min + otherSubDBound->max); 
+	} else {
+		pt1 = centerOfMass(); 
+		pt2 = otherSubDCM; 
+	}
+	
+	axis = pt1-pt2; axis.normalize(); 
+	
+	// from intersections (bodies in this subdomain which has intersections with the other sd) 
+	for (auto bId : intersections[otherSD-1]){
+		const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
+		if (!b || b->getIsSubdomain()){continue; } 
+		Real ps = boundOnAxisCpp(b->bound, axis, true);
+		projectedBoundElem pElem(ps, std::make_pair(subdomainRank, bId)); 
+		pos.push_back(pElem); 
+	}
+	
+	// from mirror intersections (bodies from other subdomain which has intersections with this sd) 
+	for (auto bId : mirrorIntersections[otherSD-1]){
+		const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
+		if (!b || b->getIsSubdomain()){continue; } 
+		Real ps = boundOnAxisCpp(b->bound, axis, false);
+		projectedBoundElem pElem(ps, std::make_pair(otherSD, bId)); 
+		pos.push_back(pElem); 
+	}
+	
+	// sort 
+	std::sort(pos.begin(), pos.end(),_compareProjectedBoundElem()); 
+	return pos; 
+}
+
+std::vector<Body::id_t> Subdomain::medianFilterCPP(boost::python::list& idsToRecv, int otherSD, const Vector3r& otherSubDCM, bool useAABB ){
+
+	std::vector<Body::id_t> idsToSend;  
+	std::vector<projectedBoundElem> pos = projectedBoundsCPP(otherSD, otherSubDCM, useAABB); 
+	if (! pos.size()) {LOG_WARN("ERROR IN CALCULATING PROJECTED BOUNDS WITH SUBDOMAIN = " << otherSD << "  from Subdomain = "  <<  subdomainRank); }
+	int xminus = 0; int xplus = (int) pos.size() - 1; 
+	
+	do{
+		do {++xminus; } while (( pos[xminus].second.first == subdomainRank) && (xminus < xplus) ); 
+		do {--xplus; } while  (( pos[xplus].second.first == otherSD) && (xminus < xplus) ); 
+		if (xminus < xplus) {
+			idsToSend.push_back(pos[xplus].second.second);
+			idsToRecv.append(pos[xminus].second.second); 
+			++xminus; --xplus; 
+		}
+	  
+	} while (xminus < xplus); 
+	
+// 	const shared_ptr<Scene> scene = Omega::instance().getScene(); 
+	
+	// change the subdomain param of idsToSend to destination  subdomain
+// 	for (const auto& bId : idsToSend){
+// 		shared_ptr<Body>& b = (*scene->bodies)[bId]; 
+// 		b->subdomain = otherSD; 
+// 	}
+	
+	return idsToSend; 
+}
+
+
+// void Subdomain::reallocateBodiesPairWiseBlocking(int otherSubD) {
+// 	if (otherSubD == master) {LOG_WARN("ignoring reallocating bodies with master"); }
+// 	
+// 	
+// 	
+// }
+
+
 } // namespace yade
 
 #endif
