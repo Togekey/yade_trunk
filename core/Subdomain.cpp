@@ -586,30 +586,58 @@ std::vector<Body::id_t> Subdomain::medianFilterCPP(boost::python::list& idsToRec
 
 void Subdomain::migrateBodiesSend(const std::vector<Body::id_t>& sendIds,  int destination){
 	const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
-	Body::id_t thisSubd = subdomains[subdomainRank-1]; 
-	for (auto bId : sendIds){
+	Body::id_t& thisSubd = subdomains[subdomainRank-1]; 
+	for (auto& bId : sendIds){
 		shared_ptr<Body>& bdy = (*scene->bodies)[bId]; 
 		if (!bdy) {LOG_ERROR("reassignBodies failed " << bId << "  is not in subdomain " << subdomainRank << std::endl); }
 		bdy->subdomain = destination; 
-		yade::Shop::createExplicitInteraction(thisSubd, bId, true); 
+		yade::Shop::createExplicitInteraction(thisSubd, bId, false, true); 
 	}
-	sendBodies(sendIds, destination); 
+	sendBodies(destination, sendIds); 
 }
 
 void Subdomain::updateLocalIds(bool eraseRemoteMaster){
 	/* in case of the master proc and not eraseRemoteMaster  the worker ids are updated */ 
 	if (subdomainRank != master){
-		ids.clear(); 
 		const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
-		for (cont auto&  b : (*scene->bodies)){
+		ids.clear(); 
+		for (const auto&  b : (*scene->bodies)){
 			if (b->subdomain == subdomainRank){ids.push_back(b->id); }
 			  
 		}
 	}
 	
 	if (subdomainRank != master &&  !eraseRemoteMaster) {
-		MPI_Send(&ids.front(), (int)ids.size(), MPI_INT, master, )
+		MPI_Send(&ids.front(), (int)ids.size(), MPI_INT, master, 500, selfComm()); 
 	} 
+	
+	if (subdomainRank == master && eraseRemoteMaster) {
+		std::vector<std::vector<Body::id_t> > workerIdsVec; 
+		workerIdsVec.resize(commSize-1); 
+		int worker = 1; 
+		for (auto& workerId : workerIdsVec ){
+			MPI_Status status;
+			MPI_Probe(worker, 500, selfComm(), &status);
+			int sz; 
+			MPI_Get_count(&status, MPI_INT, &sz);
+			workerId.resize(sz); 
+			MPI_Recv(&workerId.front(), sz, MPI_INT, worker, 500, selfComm(), &status ); 
+			++worker; 
+
+		}
+		// in master
+		const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
+		
+		
+		int workerSubD = 1; 
+		for (const auto& workerIds : workerIdsVec){
+			for (const auto& bId : workerIds){
+				(*scene->bodies)[bId]->subdomain = workerSubD; 
+			}
+			++workerSubD; 
+		}
+		
+	}
 	
 }
 
