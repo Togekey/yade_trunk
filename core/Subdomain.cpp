@@ -578,6 +578,7 @@ std::vector<Body::id_t> Subdomain::medianFilterCPP(boost::python::list& idsToRec
 		if (xminus < xplus) {
 			idsToSend.push_back(pos[xplus].second.second);
 			idsToRecv.append(pos[xminus].second.second); 
+			pos[xminus].second.first = subdomainRank; pos[xplus].second.first = otherSD; 
 			++xminus; --xplus; 
 		}
 	  
@@ -604,41 +605,48 @@ void Subdomain::updateLocalIds(bool eraseRemoteMaster){
 		const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
 		ids.clear(); 
 		for (const auto&  b : (*scene->bodies)){
-			if (b->subdomain == subdomainRank){ids.push_back(b->id); }
+			if ((b->subdomain == subdomainRank) && (!(b->getIsSubdomain()))){ids.push_back(b->id); }
 			  
 		}
 	}
-	
-	if (subdomainRank != master &&  !eraseRemoteMaster) {
-		MPI_Send(&ids.front(), (int)ids.size(), MPI_INT, master, 500, selfComm()); 
-	} 
-	
-	if (subdomainRank == master && eraseRemoteMaster) {
-		std::vector<std::vector<Body::id_t> > workerIdsVec; 
-		workerIdsVec.resize(commSize-1); 
-		int worker = 1; 
-		for (auto& workerId : workerIdsVec ){
-			MPI_Status status;
-			MPI_Probe(worker, 500, selfComm(), &status);
-			int sz; 
-			MPI_Get_count(&status, MPI_INT, &sz);
-			workerId.resize(sz); 
-			MPI_Recv(&workerId.front(), sz, MPI_INT, worker, 500, selfComm(), &status ); 
-			++worker; 
+	if (!eraseRemoteMaster){
+		MPI_Status iSendstat; MPI_Request iSendReq; 
+		if (subdomainRank != master) { 
+			MPI_Isend(&ids.front(), (int)ids.size(), MPI_INT, master, 500, selfComm(), &iSendReq); 
+		} 
+		
+		if (subdomainRank == master) {
+			std::vector<std::vector<Body::id_t> > workerIdsVec; 
+			workerIdsVec.resize(commSize-1); 
+			int worker = 1; 
+			for (auto& workerId : workerIdsVec ){
+				MPI_Status status;
+				MPI_Probe(worker, 500, selfComm(), &status);
+				int sz; 
+				MPI_Get_count(&status, MPI_INT, &sz);
+				workerId.resize(sz); 
+				MPI_Recv(&workerId.front(), sz, MPI_INT, worker, 500, selfComm(), &status ); 
+				++worker; 
 
-		}
-		// in master
-		const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
-		
-		
-		int workerSubD = 1; 
-		for (const auto& workerIds : workerIdsVec){
-			for (const auto& bId : workerIds){
-				(*scene->bodies)[bId]->subdomain = workerSubD; 
 			}
-			++workerSubD; 
+			// in master
+			const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
+			worker = 1; 
+			for (const auto& workerIds : workerIdsVec){
+				for (const auto& bId : workerIds){
+					(*scene->bodies)[bId]->subdomain = worker; 
+				}
+				
+				const auto& workerSubD  = YADE_PTR_CAST<Subdomain>((*scene->bodies)[subdomains[worker-1]]->shape); 
+				workerSubD->ids = workerIds; 
+				++worker; 
+			}
+			
 		}
 		
+		if (subdomainRank != master) {
+			MPI_Wait(&iSendReq, &iSendstat); 
+		}
 	}
 	
 }

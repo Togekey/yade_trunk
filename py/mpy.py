@@ -1177,7 +1177,6 @@ def projectedBounds(i,j):
 	axis=pt2-pt1
 	axis.normalize()
 	pos = [[O.subD.boundOnAxis(O.bodies[k].bound,axis,True),i,k] for k in O.subD.intersections[j]]+[[O.subD.boundOnAxis(O.bodies[k].bound,axis,False),j,k] for k in O.subD.mirrorIntersections[j]]
-	mprint("pos shape = ", pos[0])
 	pos.sort(key= lambda x: x[0])
 	
 	
@@ -1191,9 +1190,10 @@ def medianFilter(i,j):
 	bodiesToRecv=[]
 	
 	if USE_CPP_MEDIAN: 
-		useAABB = False; 
-		otherSubDCM = O.subD._centers_of_mass[j]
-		bodiesToSend= O.subD.medianFilterCPP(bodiesToRecv,j, otherSubDCM, useAABB)
+		if rank == i : 
+			useAABB = False; 
+			otherSubDCM = O.subD._centers_of_mass[j]
+			bodiesToSend= O.subD.medianFilterCPP(bodiesToRecv,j, otherSubDCM, useAABB)
 		
 	else:
 		pos = projectedBounds(i,j)
@@ -1239,22 +1239,30 @@ def reallocateBodiesToSubdomains(_filter=medianFilter,blocking=True):
 				migrateBodies(None,worker,rank)       #recv
 				
 	O.subD.completeSendBodies()
-	O.subD.ids = [b.id for b in O.bodies if (b.subdomain==rank and not b.isSubdomain)] #update local ids
 	
-	if not ERASE_REMOTE_MASTER:
-		# update remote ids in master, for display only (waste of time but this is degraded mode anyway if ERASE_REMOTE_MASTER=False)
-		if rank>0: req = comm.isend(O.subD.ids,dest=0,tag=_ASSIGNED_IDS_)
-		else: #master will update subdomains for correct display (besides, keeping 'ids' updated for remote subdomains may not be a strict requirement)
-			for k in range(1,numThreads):
-				ids=timing_comm.recv("reallocateBodiesToSubdomains",source=k,tag=_ASSIGNED_IDS_)
-				O.bodies[O.subD.subdomains[k-1]].shape.ids=ids
-				for i in ids: O.bodies[i].subdomain=k
-			if (AUTO_COLOR): colorDomains()
-		if rank>0: req.wait()
-	# update intersections and mirror
-	updateAllIntersections() #triggers communication
-	
-		
+	if USE_CPP_MEDIAN:
+		O.subD.updateLocalIds(ERASE_REMOTE_MASTER)
+		if not ERASE_REMOTE_MASTER:
+			if rank == 0 : 
+				if (AUTO_COLOR) : colorDomains()
+			updateAllIntersections()
+			
+	else:
+		O.subD.ids = [b.id for b in O.bodies if (b.subdomain==rank and not b.isSubdomain)] #update local ids
+
+		if not ERASE_REMOTE_MASTER:
+			# update remote ids in master
+			if rank>0: req = comm.isend(O.subD.ids,dest=0,tag=_ASSIGNED_IDS_)
+			else: #master will update subdomains for correct display (besides, keeping 'ids' updated for remote subdomains may not be a strict requirement)
+				for k in range(1,numThreads):
+					ids=comm.recv(source=k,tag=_ASSIGNED_IDS_)
+					O.bodies[O.subD.subdomains[k-1]].shape.ids=ids
+					for i in ids: O.bodies[i].subdomain=k
+				if (AUTO_COLOR): colorDomains()
+			# update intersections and mirror
+			updateAllIntersections() #triggers communication
+			if rank>0: req.wait()
+
 def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 	'''
 	Re-assign bodies from/to otherDomain based on '_filter' argument.
@@ -1263,6 +1271,10 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 	#if rank==0: return
 	
 	if True: #clean intersections, remove bodies already moved to other domain
+	  
+		#if USE_CPP_MEDIAN: 
+			
+		#else: 
 		ints = [ii for ii in O.subD.intersections[otherDomain] if O.bodies[ii].subdomain==rank] #make sure we don't send ids of already moved bodies
 		O.subD.intersections=O.subD.intersections[:otherDomain]+[ints]+O.subD.intersections[otherDomain+1:]
 	

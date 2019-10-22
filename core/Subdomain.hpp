@@ -24,7 +24,7 @@ class _compareProjectedBoundElem{
 	public: 
 		_compareProjectedBoundElem(){}; 
 		bool operator() (const projectedBoundElem& p1, const projectedBoundElem& p2){
-			return p1.first < p2.first; 
+			return p1.first > p2.first; 
 		}
 		~_compareProjectedBoundElem(){}; 
 }; 
