@@ -328,7 +328,7 @@ class Subdomain: public Shape {
 	 std::vector<Body::id_t> medianFilterCPP(boost::python::list& , int otherSD, const Vector3r& , bool ); 
 	 
 	 void migrateBodiesSend(const std::vector<Body::id_t>&  , int );
-	 void updateLocalIds(); 
+	 void updateLocalIds(bool); 
 
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Subdomain,Shape,"The bounding box of a mpi subdomain. Stores internals and provides optimized functions for communications between workers. This class may not be used directly. Instead, Subdomains are appended automatically to the scene bodies when using :yref:`mpy.mpirun`",
 // 		((testType, testArray,testType({0,0}),,""))
@@ -375,6 +375,8 @@ class Subdomain: public Shape {
 		.def("centerOfMass", &Subdomain::centerOfMass, "returns center of mass of assigned bodies")
 		.def("medianFilterCPP", &Subdomain::medianFilterCPP, (boost::python::arg("bodiesToRecv"), boost::python::arg("otherSubdomain"), boost::python::arg("oterSubdomainCenterofMass"), boost::python::arg("useAABB")), "cpp version of median filter, used for body reallocation operations. ")
 		.def("migrateBodiesSend", &Subdomain::migrateBodiesSend, (boost::python::arg("bodiesToSend"), boost::python::arg("destination")), "ids of body to be sent have their subdomain parameter reassigned, followed by sendBodies")
+		.def("updateLocalIds", &Subdomain::updateLocalIds, (boost::python::arg("eraseRemoteMastrer")), "updates the ids in the subdomain id vector, if not eraseRemoteMastrer, body->subdomain in master are updated.")
+		
 	);
 	// clang-format on
 	DECLARE_LOGGER;
