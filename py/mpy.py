@@ -663,7 +663,7 @@ def mergeScene():
 			sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = collisionChecker.dead = True
 			O.splitted=False
 			collider.doSort = True
-			#if (AUTO_COLOR): colorDomains()
+			if (AUTO_COLOR): colorDomains()
 			global NUM_MERGES; NUM_MERGES +=1; 
 		else:
 			if rank>0:
