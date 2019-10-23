@@ -663,6 +663,7 @@ def mergeScene():
 			sendRecvStatesRunner.dead = isendRecvForcesRunner.dead = waitForcesRunner.dead = collisionChecker.dead = True
 			O.splitted=False
 			collider.doSort = True
+			#if (AUTO_COLOR): colorDomains()
 			global NUM_MERGES; NUM_MERGES +=1; 
 		else:
 			if rank>0:
@@ -1029,7 +1030,7 @@ def mpirun(nSteps,np=None,withMerge=False):
 		O.run(nSteps,True)
 		return
 	stack=inspect.stack()
-	global userScriptInCheckList, LOAD_SIM
+	global userScriptInCheckList
 	if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
 		userScriptInCheckList=stack[1][1]
 	caller_name = stack[2][3]
@@ -1150,16 +1151,21 @@ def migrateBodies(ids,origin,destination):
 	Note: subD.completeSendBodies() will have to be called after a series of reassignement since subD.sendBodies() is non-blocking
 	'''
 	if rank==origin:
-		thisSubD = O.subD.subdomains[rank-1]
-		for id in ids:
-			if not O.bodies[id]: mprint("reassignBodies failed,",id," is not in subdomain ",rank)
-			O.bodies[id].subdomain = destination
-			createInteraction(thisSubD,id,virtualI=True) # link translated body to subdomain, since there is initially no interaction with local bodies
-			#for k in O.subD.intersections[rank]:  # commented out since we run updateIntersections at the end of the process anyway
-				#if k==0: continue
-				#if id in O.subD.intersections[k]:
-					#O.subD.intersections[k].remove(id) # so we don't send the same body to multiple domains...
-		O.subD.sendBodies(destination,ids)
+		if USE_CPP_MEDIAN: 
+			O.subD.migrateBodiesSend(ids, destination)
+	  
+		else:
+			thisSubD = O.subD.subdomains[rank-1]
+			for id in ids:
+				if not O.bodies[id]: mprint("reassignBodies failed,",id," is not in subdomain ",rank)
+				O.bodies[id].subdomain = destination
+				createInteraction(thisSubD,id,virtualI=True) # link translated body to subdomain, since there is initially no interaction with local bodies
+				#for k in O.subD.intersections[rank]:
+					#if k==0: continue
+					#if id in O.subD.intersections[k]:
+						#O.subD.intersections[k].remove(id) # so we don't send the same body to multiple domains...
+			O.subD.sendBodies(destination,ids)
+
 	elif rank==destination:
 		O.subD.receiveBodies(origin)
 
@@ -1272,16 +1278,20 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 	
 	if True: #clean intersections, remove bodies already moved to other domain
 	  
-		#if USE_CPP_MEDIAN: 
-			
-		#else: 
-		ints = [ii for ii in O.subD.intersections[otherDomain] if O.bodies[ii].subdomain==rank] #make sure we don't send ids of already moved bodies
-		O.subD.intersections=O.subD.intersections[:otherDomain]+[ints]+O.subD.intersections[otherDomain+1:]
-	
+		if USE_CPP_MEDIAN: 
+			O.subD.cleanIntersections(otherDomain)
+		else: 
+			ints = [ii for ii in O.subD.intersections[otherDomain] if O.bodies[ii].subdomain==rank] #make sure we don't send ids of already moved bodies
+			O.subD.intersections=O.subD.intersections[:otherDomain]+[ints]+O.subD.intersections[otherDomain+1:]
+
+
 	req = comm.irecv(None,otherDomain,tag=_MIRROR_INTERSECTIONS_)
 	timing_comm.send("reallocateBodiesPairWiseBlocking",[O.subD.intersections[otherDomain],O.subD._centers_of_mass[rank]],dest=otherDomain,tag=_MIRROR_INTERSECTIONS_)
 	newMirror = req.wait()
-	O.subD.mirrorIntersections=O.subD.mirrorIntersections[:otherDomain]+[newMirror[0]]+O.subD.mirrorIntersections[otherDomain+1:]
+	if USE_CPP_MEDIAN:
+		O.subD.updateNewMirrorIntrs(otherDomain, newMirror[0])
+	else:
+		O.subD.mirrorIntersections=O.subD.mirrorIntersections[:otherDomain]+[newMirror[0]]+O.subD.mirrorIntersections[otherDomain+1:]
 	O.subD._centers_of_mass[otherDomain]=newMirror[1]
 	
 	candidates,mirror = _filter(rank,otherDomain)
