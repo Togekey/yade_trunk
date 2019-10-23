@@ -649,7 +649,19 @@ void Subdomain::updateLocalIds(bool eraseRemoteMaster){
 	
 }
 
+void Subdomain::cleanIntersections(int otherDomain){
+	std::vector<Body::id_t> ints; 
+	const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
+	for (auto bId : intersections[otherDomain]){
+		const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
+		if (b && (b->subdomain==subdomainRank)) ints.push_back(bId); 
+	}
+	intersections[otherDomain] = ints; 
+}
 
+void Subdomain::updateNewMirrorIntrs(int otherDomain, const std::vector<Body::id_t>& newMirror){
+	mirrorIntersections[otherDomain] = newMirror; 
+}
 
 } // namespace yade
 

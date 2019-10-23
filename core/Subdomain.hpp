@@ -298,9 +298,10 @@ class Subdomain: public Shape {
 	 std::vector<Body::id_t> medianFilterCPP(boost::python::list& , int otherSD, const Vector3r& , bool );
 	 void migrateBodiesSend(const std::vector<Body::id_t>&  , int );
 	 void updateLocalIds(bool); 
-	 //void reallocateBodiesPairWiseBlocking(int);  
-	 // testing only! 
 	 Real boundOnAxisCpp(const shared_ptr<Bound>&, Vector3r, bool); 
+	 void cleanIntersections(int);
+	 void updateNewMirrorIntrs(int, const std::vector<Body::id_t>& ); 
+	 
 
 
 >>>>>>> projected bounds and median filter in CPP
@@ -347,6 +348,8 @@ class Subdomain: public Shape {
 		.def("medianFilterCPP", &Subdomain::medianFilterCPP, (boost::python::arg("bodiesToRecv"), boost::python::arg("otherSubdomain"), boost::python::arg("oterSubdomainCenterofMass"), boost::python::arg("useAABB")), "cpp version of median filter, used for body reallocation operations. ")
 		.def("migrateBodiesSend", &Subdomain::migrateBodiesSend, (boost::python::arg("bodiesToSend"), boost::python::arg("destination")), "ids of body to be sent have their subdomain parameter reassigned, followed by sendBodies")
 		.def("updateLocalIds", &Subdomain::updateLocalIds, (boost::python::arg("eraseRemoteMastrer")), "updates the ids in the subdomain id vector, if not eraseRemoteMastrer, body->subdomain in master are updated.")
+		.def("cleanIntersections",&Subdomain::cleanIntersections, (boost::python::arg("otherDomain")), "makes sure that the ids in the current subdomain belong to the current subdomain")
+		.def("updateNewMirrorIntrs", &Subdomain::updateNewMirrorIntrs, (boost::python::arg("otherdomain"), boost::python::arg("newMirrorList")), "update the mirrorIntersections of a specific subdomain")
 		
 	);
 	// clang-format on
