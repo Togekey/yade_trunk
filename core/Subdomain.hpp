@@ -327,6 +327,8 @@ class Subdomain: public Shape {
 	 std::vector<yade::projectedBoundElem> projectedBoundsCPP(int , const Vector3r&, bool  ); 
 	 std::vector<Body::id_t> medianFilterCPP(boost::python::list& , int otherSD, const Vector3r& , bool ); 
 	 
+	 // body reallocation 
+	 
 	 void migrateBodiesSend(const std::vector<Body::id_t>&  , int );
 	 void updateLocalIds(bool); 
 

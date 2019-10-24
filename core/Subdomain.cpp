@@ -520,7 +520,7 @@ Real Subdomain::boundOnAxisCpp(const shared_ptr<Bound>& b, Vector3r direction, b
 /* Migrate bodies, translation of python functions  */ 
 
 
-std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const Vector3r& otherSubDCM, bool useAABB){
+std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const Vector3r& otherSubDCM, const Vector3r& subDCM,  bool useAABB){
 	
 	std::vector<projectedBoundElem> pos; 
 	
@@ -536,7 +536,7 @@ std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const
 		pt1 = 0.5*(thisSubDBound->min + thisSubDBound->max); 
 		pt2 = 0.5*(otherSubDBound->min + otherSubDBound->max); 
 	} else {
-		pt1 = centerOfMass(); 
+		pt1 = subDCM; 
 		pt2 = otherSubDCM; 
 	}
 	
@@ -545,7 +545,7 @@ std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const
 	// from intersections (bodies in this subdomain which has intersections with the other sd) 
 	for (auto bId : intersections[otherSD]){
 		const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
-		if (!b or b->getIsSubdomain()){continue; } 
+		//if (!b or b->getIsSubdomain()){continue; } 
 		Real ps = boundOnAxisCpp(b->bound, axis, true); 
 		projectedBoundElem pElem(ps, std::make_pair(subdomainRank, bId)); 
 		pos.push_back(pElem); 
@@ -554,7 +554,7 @@ std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const
 	// from mirror intersections (bodies from other subdomain which has intersections with this sd) 
 	for (auto bId : mirrorIntersections[otherSD]){
 		const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
-		if (!b or b->getIsSubdomain()){continue; } 
+		//if (!b or b->getIsSubdomain()){continue; } 
 		Real ps = boundOnAxisCpp(b->bound, axis, false);
 		projectedBoundElem pElem(ps, std::make_pair(otherSD, bId)); 
 		pos.push_back(pElem); 
@@ -565,25 +565,39 @@ std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const
 	return pos; 
 }
 
-std::vector<Body::id_t> Subdomain::medianFilterCPP(boost::python::list& idsToRecv, int otherSD, const Vector3r& otherSubDCM, bool useAABB ){
+std::vector<Body::id_t> Subdomain::medianFilterCPP(boost::python::list& idsToRecv, int otherSD, const Vector3r& otherSubDCM, const Vector3r& subDCM , bool useAABB ){
 
 	std::vector<Body::id_t> idsToSend;  
-	std::vector<projectedBoundElem> pos = projectedBoundsCPP(otherSD, otherSubDCM, useAABB); 
+	std::vector<projectedBoundElem> pos = projectedBoundsCPP(otherSD, otherSubDCM, subDCM, useAABB); 
 	if (! pos.size()) {LOG_ERROR("ERROR IN CALCULATING PROJECTED BOUNDS WITH SUBDOMAIN = " << otherSD << "  from Subdomain = "  <<  subdomainRank); }
 	int xminus = 0; int xplus = (int) pos.size() - 1; 
 	
-	do{
-		do {++xminus; } while (( pos[xminus].second.first == subdomainRank) && (xminus < xplus) ); 
-		do {--xplus; } while  (( pos[xplus].second.first == otherSD) && (xminus < xplus) ); 
-		if (xminus < xplus) {
+	
+	while (xminus < xplus){
+		while ((pos[xminus].second.first == subdomainRank) && (xminus < xplus)) ++xminus; 
+		while ((pos[xplus].second.first == otherSD) && (xminus < xplus)) --xplus;
+		if (xminus < xplus){
 			idsToSend.push_back(pos[xplus].second.second);
 			idsToRecv.append(pos[xminus].second.second); 
 			pos[xminus].second.first = subdomainRank; pos[xplus].second.first = otherSD; 
 			++xminus; --xplus; 
 		}
-	  
-	} while (xminus < xplus); 
+	}
 	return idsToSend; 
+	
+	
+// 	do{
+// 		do {++xminus; } while (( pos[xminus].second.first == subdomainRank) && (xminus < xplus) ); 
+// 		do {--xplus; } while  (( pos[xplus].second.first == otherSD) && (xminus < xplus) ); 
+// 		if (xminus < xplus) {
+// 			idsToSend.push_back(pos[xplus].second.second);
+// 			idsToRecv.append(pos[xminus].second.second); 
+// 			pos[xminus].second.first = subdomainRank; pos[xplus].second.first = otherSD; 
+// 			++xminus; --xplus; 
+// 		}
+// 	  
+// 	} while (xminus < xplus); 
+// 	return idsToSend; 
 }
 
 
