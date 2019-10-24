@@ -790,12 +790,10 @@ def splitScene():
 		O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 		
 		O.subD.init() 
-		
-		
 		if FLUID_COUPLING:
 			fluidCoupling = utils.typedEngine("FoamCoupling") 
 			fluidCoupling.comm = comm 
-			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes from all yales2 procs. 
+			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes from all fluid procs. 
 			fluidCoupling.setIdList(fluidBodies) 
 			
 		parallelCollide()
