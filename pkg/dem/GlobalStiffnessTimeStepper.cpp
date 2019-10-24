@@ -135,6 +135,7 @@ void GlobalStiffnessTimeStepper::computeTimeStep(Scene* ncb)
 	newDt = Mathr::MAX_REAL;
 	computedSomething=false;
 	for (const auto &b : *bodies) {
+		if (!b) {continue; } 
 		if (b->isDynamic() && !b->isClumpMember()) findTimeStepFromBody(b, ncb);
 	}
 	if(densityScaling) (newDt=targetDt);
@@ -147,8 +148,6 @@ void GlobalStiffnessTimeStepper::computeTimeStep(Scene* ncb)
 #ifdef YADE_MPI
 	int rnk; 
 	if (parallelMode){
-	  
-		//const shared_ptr<Subdomain> & subD = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); 
 		MPI_Comm_rank(scene->getComm() ,& rnk); 
 		if (scene->iter % timeStepUpdateInterval == 0){
 			Real recvDt; Real myDt = scene->dt; 
