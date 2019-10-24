@@ -605,6 +605,7 @@ void Subdomain::updateLocalIds(bool eraseRemoteMaster){
 		const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
 		ids.clear(); 
 		for (const auto&  b : (*scene->bodies)){
+			if (!b){continue; }
 			if ((b->subdomain == subdomainRank) && (!(b->getIsSubdomain()))){ids.push_back(b->id); }
 			  
 		}
