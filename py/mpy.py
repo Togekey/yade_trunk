@@ -1197,7 +1197,8 @@ def medianFilter(i,j):
 		if rank == i : 
 			useAABB = False; 
 			otherSubDCM = O.subD._centers_of_mass[j]
-			bodiesToSend= O.subD.medianFilterCPP(bodiesToRecv,j, otherSubDCM, useAABB)
+			subDCM = O.subD._centers_of_mass[i]
+			bodiesToSend= O.subD.medianFilterCPP(bodiesToRecv,j, otherSubDCM, subDCM, useAABB)
 		
 	else:
 		pos = projectedBounds(i,j)
