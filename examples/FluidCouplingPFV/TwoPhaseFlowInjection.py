@@ -86,7 +86,11 @@ press=1000.
 O.run(10,1)
 
 flow.dead=0
-flow.meshUpdateInterval=-1
+
+flow.meshUpdateInterval=10
+#flow.defTolerance=0.0000000001
+flow.doInterpolate=True
+
 flow.useSolver=3
 flow.permeabilityFactor=1
 flow.viscosity=0.1
@@ -240,7 +244,7 @@ def pressureImbibition():
 		ints=c0.getInterfaces()
 		for ll in invadedPores:
 			if delta[ll]!=0.0:
-				intfs=c0.getInterfaces(cellId=ll)
+				intfs=c0.getInterfaces(ll)
 				for ii in intfs:
 					if flow.getCellLabel(ii[1])==0:
 						neighK[ll]+=c0.getConductivity(ii[3])
@@ -280,7 +284,7 @@ def pressureImbibition():
 			ints=c0.getInterfaces()
 			for ll in invadedPores:
 				if delta[ll]!=0.0:
-					intfs=c0.getInterfaces(cellId=ll)
+					intfs=c0.getInterfaces(ll)
 					for ii in intfs:
 						if flow.getCellLabel(ii[1])==0:
 							neighK[ll]+=c0.getConductivity(ii[3])
@@ -422,4 +426,4 @@ O.timingEnabled=True
 #file.close()
 #plot.saveDataTxt('plots.txt',vars=('i1','t','Fupper','Fbottom','Q','T'))
 
-#O.run(1,1)
+O.run(30,1)
