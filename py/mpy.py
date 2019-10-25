@@ -79,7 +79,8 @@ REALLOCATE_FREQUENCY = 0  # if >0 checkAndCollide() will automatically reallocat
 REALLOCATE_FILTER = None # pointer to filtering function, will be set to 'medianFilter' hereafter, could point to other ones if implemented
 AUTO_COLOR = True
 
-USE_CPP_MEDIAN = True
+USE_CPP_REALLOC = True
+
 MINIMAL_INTERSECTIONS = False # Reduces the size of position/velocity comms (at the end of the colliding phase, we can exclude those bodies with no interactions besides body<->subdomain from intersections). 
 REALLOCATE_MINIMAL = False # if true, intersections are minimized before reallocations, hence minimizing the number of reallocated bodies
 fibreList = []
@@ -1153,7 +1154,7 @@ def migrateBodies(ids,origin,destination):
 	ts = time.time() 
 	
 	if rank==origin:
-		if USE_CPP_MEDIAN: 
+		if USE_CPP_REALLOC: 
 			O.subD.migrateBodiesSend(ids, destination)
 	  
 		else:
@@ -1202,7 +1203,7 @@ def medianFilter(i,j):
 	
 	ts = time.time()
 	
-	if USE_CPP_MEDIAN: 
+	if USE_CPP_REALLOC: 
 		useAABB = False; 
 		otherSubDCM = O.subD._centers_of_mass[j]
 		subDCM = O.subD._centers_of_mass[i]
@@ -1257,7 +1258,7 @@ def reallocateBodiesToSubdomains(_filter=medianFilter,blocking=True):
 	O.subD.completeSendBodies()
 	
 	ts = time.time()
-	if USE_CPP_MEDIAN:
+	if USE_CPP_REALLOC:
 		O.subD.updateLocalIds(ERASE_REMOTE_MASTER)
 		if not ERASE_REMOTE_MASTER:
 			if rank == 0 : 
@@ -1289,7 +1290,7 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 	ts = time.time()
 	if True: #clean intersections, remove bodies already moved to other domain
 	  
-		if USE_CPP_MEDIAN: 
+		if USE_CPP_REALLOC: 
 			O.subD.cleanIntersections(otherDomain)
 		else: 
 			ints = [ii for ii in O.subD.intersections[otherDomain] if O.bodies[ii].subdomain==rank] #make sure we don't send ids of already moved bodies
@@ -1305,7 +1306,7 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 	
 	ts = time.time() 
 	
-	if USE_CPP_MEDIAN:
+	if USE_CPP_REALLOC:
 		O.subD.updateNewMirrorIntrs(otherDomain, newMirror[0])
 	else:
 		O.subD.mirrorIntersections=O.subD.mirrorIntersections[:otherDomain]+[newMirror[0]]+O.subD.mirrorIntersections[otherDomain+1:]
