@@ -1,4 +1,15 @@
-// 2009 © Václav Šmilauer <eudoxos@arcig.cz>
+/*************************************************************************
+*  2009 Václav Šmilauer                                                  *
+*  2010 Bruno Chareyre                                                   *
+*  2010 Chiara Modenese                                                  *
+*  2014 Anton Gladky                                                     *
+*  2014 Jan Stránský                                                     *
+*  2019 François Kneib                                                   *
+*  2019 Janek Kozicki                                                    *
+*                                                                        *
+*  This program is free software; it is licensed under the terms of the  *
+*  GNU General Public License v2 or later. See file LICENSE for details. *
+*************************************************************************/
 
 // for some reading about these conversions, see e.g. https://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters/ (except the latter advocates using some "borrowed()" in the from-Python construc(), which is not done here)
 
@@ -32,6 +43,50 @@ CREATE_CPP_LOCAL_LOGGER("customConverters.cpp");
 #include <type_traits>
 
 namespace yade { // Cannot have #include directive inside.
+
+template <typename ArbitraryReal> struct ArbitraryReal_to_python {
+	static PyObject* convert(const ArbitraryReal& val)
+	{
+		std::stringstream ss {};
+		ss << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << val;
+		std::string cmd = "mpmath.mpf('" + ss.str() + "')";
+		std::cerr << "→" << cmd << "\n" << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << "   HAVE val= " << val << "\n";
+		py::object result = py::eval(cmd.c_str());
+		return boost::python::incref(result.ptr());
+	}
+};
+
+template <typename ArbitraryReal> struct ArbitraryReal_from_python {
+	ArbitraryReal_from_python() { boost::python::converter::registry::push_back(&convertible, &construct, boost::python::type_id<ArbitraryReal>()); }
+	static void* convertible(PyObject* obj_ptr)
+	{
+		// accept whatever python is able to convert into float
+		PyFloat_AsDouble(obj_ptr);
+		return (PyErr_Occurred() == nullptr) ? obj_ptr : nullptr;
+	}
+	static void construct(PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
+	{
+		std::cerr << "PyObject* pointer is: " << obj_ptr << "\n";
+		PyObject* pyStr = PyObject_Str(obj_ptr);
+		if (not pyStr) {
+			throw std::runtime_error(__FILE__ ", ArbitraryReal_from_python: failed to turn into string.");
+		}
+
+		std::istringstream ss { boost::python::extract<std::string>(pyStr) };
+		Py_DECREF(pyStr);
+
+		void* storage = ((boost::python::converter::rvalue_from_python_storage<ArbitraryReal>*)(data))->storage.bytes;
+		new (storage) ArbitraryReal;
+		ArbitraryReal* val = (ArbitraryReal*)storage;
+		ss >> *val;
+		if (ss.fail()) {
+			throw std::runtime_error(__FILE__ ", ArbitraryReal_from_python: failed to parse.");
+		} else {
+			data->convertible = storage;
+			std::cerr << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << "   READ val= " << *val << "\n";
+		}
+	}
+};
 
 // move this to the miniEigen wrapper later
 
@@ -263,6 +318,16 @@ try {
 
 	y::custom_Se3r_from_seq();
 	boost::python::to_python_converter<y::Se3r, y::custom_se3_to_tuple>();
+	y::ArbitraryReal_from_python<boost::float128_t>();
+	boost::python::to_python_converter<boost::float128_t, y::ArbitraryReal_to_python<boost::float128_t>>();
+	y::ArbitraryReal_from_python<yade::bmp::number<yade::bmp::mpfr_float_backend<YADE_REAL_DEC>>>();
+	boost::python::to_python_converter<
+	        yade::bmp::number<yade::bmp::mpfr_float_backend<YADE_REAL_DEC>>,
+	        y::ArbitraryReal_to_python<yade::bmp::number<yade::bmp::mpfr_float_backend<YADE_REAL_DEC>>>>();
+	y::ArbitraryReal_from_python<yade::bmp::number<yade::bmp::mpfr_float_backend<500>>>();
+	boost::python::to_python_converter<
+	        yade::bmp::number<yade::bmp::mpfr_float_backend<500>>,
+	        y::ArbitraryReal_to_python<yade::bmp::number<yade::bmp::mpfr_float_backend<500>>>>();
 
 	y::custom_OpenMPAccumulator_from_float();
 	boost::python::to_python_converter<y::OpenMPAccumulator<Real>, y::custom_OpenMPAccumulator_to_float>();
