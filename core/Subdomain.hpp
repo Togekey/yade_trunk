@@ -16,19 +16,38 @@
 #include <core/Scene.hpp>
 namespace yade { // Cannot have #include directive inside.
 
-  //  pos shape = [-98.86741845752853, 3, 140];
-typedef std::pair<double, std::pair<int, int> > projectedBoundElem;  // position, subdomain, bodyid 
+typedef std::pair<double, std::pair<int, int> > projectedBoundElem;  // [position, subdomain, bodyid] this seems to be faster than struct. 
   
   // functor for comparison pos 
 class _compareProjectedBoundElem{
 	public: 
 		_compareProjectedBoundElem(){}; 
 		bool operator() (const projectedBoundElem& p1, const projectedBoundElem& p2){
-			return p1.first > p2.first; 
+			return p1.first < p2.first; 
 		}
 		~_compareProjectedBoundElem(){}; 
 }; 
-  
+
+
+
+/* struct */ 
+
+// typedef struct {
+// 	double _dist; 
+// 	int _subd; 
+// 	int _id; 
+// } projectedBoundElemSt;
+// 
+// 
+// class _compareProjectedBoundElemSt{
+// 	public: 
+// 		_compareProjectedBoundElemSt(){}; 
+// 		bool operator()(const projectedBoundElemSt& p1, const projectedBoundElemSt& p2) {
+// 			return p1._dist < p2._dist; 
+// 		}
+//   
+// }; 
+
   
  
 class Subdomain: public Shape {

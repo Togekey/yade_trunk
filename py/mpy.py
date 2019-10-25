@@ -785,7 +785,8 @@ def splitScene():
 				O._sceneObj.subD = domainBody.shape
 				O.subD = O._sceneObj.subD
 				O.subD.subdomains = subdomains
-				
+				subD = O.subD
+
 		O._sceneObj.subdomain = rank
 		O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 		
@@ -1148,6 +1149,9 @@ def migrateBodies(ids,origin,destination):
 	Reassign bodies from origin to destination. The function has to be called by both origin (send) and destination (recv).
 	Note: subD.completeSendBodies() will have to be called after a series of reassignement since subD.sendBodies() is non-blocking
 	'''
+	
+	ts = time.time() 
+	
 	if rank==origin:
 		if USE_CPP_MEDIAN: 
 			O.subD.migrateBodiesSend(ids, destination)
@@ -1166,6 +1170,10 @@ def migrateBodies(ids,origin,destination):
 
 	elif rank==destination:
 		O.subD.receiveBodies(origin)
+	te = time.time() 
+	
+	mprint("time in migrateBodies-->  ", te-ts, "  rank = ", rank)
+	
 
 def projectedBounds(i,j):
 	'''
@@ -1181,9 +1189,8 @@ def projectedBounds(i,j):
 	axis=pt2-pt1
 	axis.normalize()
 	pos = [[O.subD.boundOnAxis(O.bodies[k].bound,axis,True),i,k] for k in O.subD.intersections[j]]+[[O.subD.boundOnAxis(O.bodies[k].bound,axis,False),j,k] for k in O.subD.mirrorIntersections[j]]
+	
 	pos.sort(key= lambda x: x[0])
-	
-	
 	return pos
 
 def medianFilter(i,j):
@@ -1193,12 +1200,13 @@ def medianFilter(i,j):
 	bodiesToSend=[]
 	bodiesToRecv=[]
 	
+	ts = time.time()
+	
 	if USE_CPP_MEDIAN: 
-		if rank == i : 
-			useAABB = False; 
-			otherSubDCM = O.subD._centers_of_mass[j]
-			subDCM = O.subD._centers_of_mass[i]
-			bodiesToSend= O.subD.medianFilterCPP(bodiesToRecv,j, otherSubDCM, subDCM, useAABB)
+		useAABB = False; 
+		otherSubDCM = O.subD._centers_of_mass[j]
+		subDCM = O.subD._centers_of_mass[i]
+		bodiesToSend= O.subD.medianFilterCPP(bodiesToRecv,j, otherSubDCM, subDCM, useAABB)
 		
 	else:
 		pos = projectedBounds(i,j)
@@ -1214,6 +1222,9 @@ def medianFilter(i,j):
 				pos[xplus][1]=j
 				xminus+=1; xplus-=1
 	#if len(bodiesToSend)>0: mprint("will send ",len(bodiesToSend)," to ",j," (and recv ",len(bodiesToRecv),")")
+	te = time.time() 
+	
+	mprint("time in median filter -->  ", te-ts, "  rank = ", rank)
 	
 	return bodiesToSend,bodiesToRecv
 
@@ -1245,6 +1256,7 @@ def reallocateBodiesToSubdomains(_filter=medianFilter,blocking=True):
 				
 	O.subD.completeSendBodies()
 	
+	ts = time.time()
 	if USE_CPP_MEDIAN:
 		O.subD.updateLocalIds(ERASE_REMOTE_MASTER)
 		if not ERASE_REMOTE_MASTER:
@@ -1274,7 +1286,7 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 	Requirement: '_filter' is a function taking ranks of origin and destination and returning the list of bodies (by index) to be moved. That's where the decomposition strategy is defined. See example medianFilter (used by default).
 	'''
 	#if rank==0: return
-	
+	ts = time.time()
 	if True: #clean intersections, remove bodies already moved to other domain
 	  
 		if USE_CPP_MEDIAN: 
@@ -1282,18 +1294,29 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 		else: 
 			ints = [ii for ii in O.subD.intersections[otherDomain] if O.bodies[ii].subdomain==rank] #make sure we don't send ids of already moved bodies
 			O.subD.intersections=O.subD.intersections[:otherDomain]+[ints]+O.subD.intersections[otherDomain+1:]
-
-
+	
+	te = time.time() 
+	
+	mprint("time in clear intrs -->  ", te-ts, "  rank = ", rank)
+	
 	req = comm.irecv(None,otherDomain,tag=_MIRROR_INTERSECTIONS_)
 	timing_comm.send("reallocateBodiesPairWiseBlocking",[O.subD.intersections[otherDomain],O.subD._centers_of_mass[rank]],dest=otherDomain,tag=_MIRROR_INTERSECTIONS_)
 	newMirror = req.wait()
+	
+	ts = time.time() 
+	
 	if USE_CPP_MEDIAN:
 		O.subD.updateNewMirrorIntrs(otherDomain, newMirror[0])
 	else:
 		O.subD.mirrorIntersections=O.subD.mirrorIntersections[:otherDomain]+[newMirror[0]]+O.subD.mirrorIntersections[otherDomain+1:]
+	te = time.time() 
+	
+	mprint("time in mirrorUpdate  ", te-ts, "  rank = ", rank)
+	
 	O.subD._centers_of_mass[otherDomain]=newMirror[1]
 	
 	candidates,mirror = _filter(rank,otherDomain)
+	
 	#mprint("Will send ",candidates)
 	#req2=comm.irecv(None,otherDomain,tag=_MIRROR_INTERSECTIONS_)
 	#comm.send(candidates,dest=otherDomain,tag=_MIRROR_INTERSECTIONS_)

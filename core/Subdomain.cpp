@@ -540,12 +540,12 @@ std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const
 		pt2 = otherSubDCM; 
 	}
 	
-	axis = pt1-pt2; axis.normalize(); 
+	axis = pt2-pt1; axis.normalize(); 
 	
 	// from intersections (bodies in this subdomain which has intersections with the other sd) 
 	for (auto bId : intersections[otherSD]){
 		const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
-		//if (!b or b->getIsSubdomain()){continue; } 
+		if (!b or b->getIsSubdomain()){continue; } 
 		Real ps = boundOnAxisCpp(b->bound, axis, true); 
 		projectedBoundElem pElem(ps, std::make_pair(subdomainRank, bId)); 
 		pos.push_back(pElem); 
@@ -554,7 +554,7 @@ std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const
 	// from mirror intersections (bodies from other subdomain which has intersections with this sd) 
 	for (auto bId : mirrorIntersections[otherSD]){
 		const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
-		//if (!b or b->getIsSubdomain()){continue; } 
+		if (!b or b->getIsSubdomain()){continue; } 
 		Real ps = boundOnAxisCpp(b->bound, axis, false);
 		projectedBoundElem pElem(ps, std::make_pair(otherSD, bId)); 
 		pos.push_back(pElem); 
@@ -585,19 +585,19 @@ std::vector<Body::id_t> Subdomain::medianFilterCPP(boost::python::list& idsToRec
 	}
 	return idsToSend; 
 	
-	
-// 	do{
-// 		do {++xminus; } while (( pos[xminus].second.first == subdomainRank) && (xminus < xplus) ); 
-// 		do {--xplus; } while  (( pos[xplus].second.first == otherSD) && (xminus < xplus) ); 
-// 		if (xminus < xplus) {
-// 			idsToSend.push_back(pos[xplus].second.second);
-// 			idsToRecv.append(pos[xminus].second.second); 
-// 			pos[xminus].second.first = subdomainRank; pos[xplus].second.first = otherSD; 
-// 			++xminus; --xplus; 
-// 		}
-// 	  
-// 	} while (xminus < xplus); 
-// 	return idsToSend; 
+/*	
+	do{
+		do {++xminus; } while (( pos[xminus].second.first == subdomainRank) && (xminus < xplus) ); 
+		do {--xplus; } while  (( pos[xplus].second.first == otherSD) && (xminus < xplus) ); 
+		if (xminus < xplus) {
+			idsToSend.push_back(pos[xplus].second.second);
+			idsToRecv.append(pos[xminus].second.second); 
+			pos[xminus].second.first = subdomainRank; pos[xplus].second.first = otherSD; 
+			++xminus; --xplus; 
+		}
+	  
+	} while (xminus < xplus); 
+	return idsToSend; */
 }
 
 
@@ -605,13 +605,16 @@ void Subdomain::migrateBodiesSend(const std::vector<Body::id_t>& sendIds,  int d
 	const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
 	Body::id_t& thisSubd = subdomains[subdomainRank-1]; 
 	for (auto& bId : sendIds){
-		shared_ptr<Body>& bdy = (*scene->bodies)[bId]; 
+		const shared_ptr<Body>& bdy = (*scene->bodies)[bId]; 
 		if (!bdy) {LOG_ERROR("reassignBodies failed " << bId << "  is not in subdomain " << subdomainRank << std::endl); }
 		bdy->subdomain = destination; 
 		yade::Shop::createExplicitInteraction(thisSubd, bId, false, true); 
 	}
 	sendBodies(destination, sendIds); 
+	 
 }
+
+// void Subdomain::migrateBodiesRecv() 
 
 void Subdomain::updateLocalIds(bool eraseRemoteMaster){
 	/* in case of the master proc and not eraseRemoteMaster  the worker ids are updated */ 
@@ -625,9 +628,9 @@ void Subdomain::updateLocalIds(bool eraseRemoteMaster){
 		}
 	}
 	if (!eraseRemoteMaster){
-		MPI_Status iSendstat; MPI_Request iSendReq; 
+		//MPI_Status iSendstat; MPI_Request iSendReq; 
 		if (subdomainRank != master) { 
-			MPI_Isend(&ids.front(), (int)ids.size(), MPI_INT, master, 500, selfComm(), &iSendReq); 
+			MPI_Send(&ids.front(), (int)ids.size(), MPI_INT, master, 500, selfComm()); 
 		} 
 		
 		if (subdomainRank == master) {
@@ -659,9 +662,9 @@ void Subdomain::updateLocalIds(bool eraseRemoteMaster){
 			
 		}
 		
-		if (subdomainRank != master) {
-			MPI_Wait(&iSendReq, &iSendstat); 
-		}
+// 		if (subdomainRank != master) {
+// 			MPI_Wait(&iSendReq, &iSendstat); 
+// 		}
 	}
 	
 }
@@ -669,7 +672,7 @@ void Subdomain::updateLocalIds(bool eraseRemoteMaster){
 void Subdomain::cleanIntersections(int otherDomain){
 	std::vector<Body::id_t> ints; 
 	const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
-	for (auto bId : intersections[otherDomain]){
+	for (const auto& bId : intersections[otherDomain]){
 		const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
 		if (b && (b->subdomain==subdomainRank)) ints.push_back(bId); 
 	}
