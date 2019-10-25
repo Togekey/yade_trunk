@@ -16,6 +16,12 @@ logging.basicConfig(level=logging.INFO)
 
 from yade import *
 import yade.qt
+import yade.config
+
+checkMpmath = next((check for check in yade.config.features if "mpmath" in check), None)
+if checkMpmath:
+	import mpmath
+	mpmath.mp.dps=(int(checkMpmath[6:])+1)
 
 from minieigen import *
 
@@ -130,6 +136,22 @@ class AttrEditor_Float(AttrEditor,QLineEdit):
 			self.home(False)
 	def update(self):
 		try: self.trySetter(float(self.text()))
+		except ValueError: self.refresh()
+
+class AttrEditor_Mpmath(AttrEditor,QLineEdit):
+	def __init__(self,parent,getter,setter):
+		AttrEditor.__init__(self,getter,setter)
+		QLineEdit.__init__(self,parent)
+		self.textEdited.connect(self.isHot)
+		self.selectionChanged.connect(self.isHot)
+		self.editingFinished.connect(self.update)
+	def refresh(self):
+		#if True or not self.hasFocus(): self.home(False)
+		if (not self.hasFocus()):
+			self.setText(str(self.getter()));
+			self.home(False)
+	def update(self):
+		try: self.trySetter(mpmath.mpf(self.text()))
 		except ValueError: self.refresh()
 
 class AttrEditor_Complex(AttrEditor,QLineEdit):
@@ -339,8 +361,40 @@ class AttrEditor_Matrix3(AttrEditor_MatrixX):
 
 class Se3FakeType(object): pass
 
-_fundamentalEditorMap={bool:AttrEditor_Bool,str:AttrEditor_Str,int:AttrEditor_Int,float:AttrEditor_Float,complex:AttrEditor_Complex,Quaternion:AttrEditor_Quaternion,Vector2:AttrEditor_Vector2,Vector3:AttrEditor_Vector3,Vector6:AttrEditor_Vector6,Matrix3:AttrEditor_Matrix3,Vector6i:AttrEditor_Vector6i,Vector3i:AttrEditor_Vector3i,Vector2i:AttrEditor_Vector2i,Se3FakeType:AttrEditor_Se3}
-_fundamentalInitValues={bool:True,str:'',int:0,float:0.0,complex:0.0j,Quaternion:Quaternion((0,1,0),0.0),Vector3:Vector3.Zero,Matrix3:Matrix3.Zero,Vector6:Vector6.Zero,Vector6i:Vector6i.Zero,Vector3i:Vector3i.Zero,Vector2i:Vector2i.Zero,Vector2:Vector2.Zero,Se3FakeType:(Vector3.Zero,Quaternion((0,1,0),0.0))}
+_fundamentalEditorMap={
+	 bool:AttrEditor_Bool
+	,str:AttrEditor_Str
+	,int:AttrEditor_Int
+	,float:AttrEditor_Float
+	,complex:AttrEditor_Complex
+	,Quaternion:AttrEditor_Quaternion
+	,Vector2:AttrEditor_Vector2
+	,Vector3:AttrEditor_Vector3
+	,Vector6:AttrEditor_Vector6
+	,Matrix3:AttrEditor_Matrix3
+	,Vector6i:AttrEditor_Vector6i
+	,Vector3i:AttrEditor_Vector3i
+	,Vector2i:AttrEditor_Vector2i
+	,Se3FakeType:AttrEditor_Se3
+	,mpmath.ctx_mp_python.mpf:AttrEditor_Mpmath
+}
+_fundamentalInitValues={
+	 bool:True
+	,str:''
+	,int:0
+	,float:0.0
+	,complex:0.0j
+	,Quaternion:Quaternion((0,1,0),0.0)
+	,Vector3:Vector3.Zero
+	,Matrix3:Matrix3.Zero
+	,Vector6:Vector6.Zero
+	,Vector6i:Vector6i.Zero
+	,Vector3i:Vector3i.Zero
+	,Vector2i:Vector2i.Zero
+	,Vector2:Vector2.Zero
+	,Se3FakeType:(Vector3.Zero,Quaternion((0,1,0),0.0))
+	,mpmath.ctx_mp_python.mpf:(mpmath.mpf(0))
+}
 
 class SerQLabel(QLabel):
 	def __init__(self,parent,label,tooltip,path):
@@ -402,7 +456,7 @@ class SerializableEditor(QFrame):
 			return m
 		vecMap={
 			'bool':bool,'int':int,'long':int,'Body::id_t':int,'size_t':int,
-			'Real':float,'float':float,'double':float,'complex':complex,'std::complex<Real>':complex,
+			'Real':float,'float':float,'double':float,'complex':complex,'std::complex<Real>':complex,'mpf':mpmath.ctx_mp_python.mpf,
 			'Vector6r':Vector6,'Vector6i':Vector6i,'Vector3i':Vector3i,'Vector2r':Vector2,'Vector2i':Vector2i,
 			'Vector3r':Vector3,'Matrix3r':Matrix3,'Se3r':Se3FakeType,
 			'string':str,
