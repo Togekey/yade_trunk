@@ -49,9 +49,8 @@ template <typename ArbitraryReal> struct ArbitraryReal_to_python {
 	{
 		std::stringstream ss {};
 		ss << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << val;
-		std::string cmd = "mpmath.mpf('" + ss.str() + "')";
-		std::cerr << "→" << cmd << "\n" << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << "   HAVE val= " << val << "\n";
-		py::object result = py::eval(cmd.c_str());
+		std::string cmd    = "mpmath.mpf('" + ss.str() + "')";
+		py::object  result = py::eval(cmd.c_str());
 		return boost::python::incref(result.ptr());
 	}
 };
@@ -66,7 +65,6 @@ template <typename ArbitraryReal> struct ArbitraryReal_from_python {
 	}
 	static void construct(PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
 	{
-		std::cerr << "PyObject* pointer is: " << obj_ptr << "\n";
 		PyObject* pyStr = PyObject_Str(obj_ptr);
 		if (not pyStr) {
 			throw std::runtime_error(__FILE__ ", ArbitraryReal_from_python: failed to turn into string.");
@@ -83,7 +81,6 @@ template <typename ArbitraryReal> struct ArbitraryReal_from_python {
 			throw std::runtime_error(__FILE__ ", ArbitraryReal_from_python: failed to parse.");
 		} else {
 			data->convertible = storage;
-			std::cerr << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << "   READ val= " << *val << "\n";
 		}
 	}
 };
