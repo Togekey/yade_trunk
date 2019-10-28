@@ -1173,7 +1173,7 @@ def migrateBodies(ids,origin,destination):
 		O.subD.receiveBodies(origin)
 	te = time.time() 
 	
-	mprint("time in migrateBodies-->  ", te-ts, "  rank = ", rank)
+	#mprint("time in migrateBodies-->  ", te-ts, "  rank = ", rank)
 	
 
 def projectedBounds(i,j):
@@ -1225,7 +1225,7 @@ def medianFilter(i,j):
 	#if len(bodiesToSend)>0: mprint("will send ",len(bodiesToSend)," to ",j," (and recv ",len(bodiesToRecv),")")
 	te = time.time() 
 	
-	mprint("time in median filter -->  ", te-ts, "  rank = ", rank)
+	#mprint("time in median filter -->  ", te-ts, "  rank = ", rank)
 	
 	return bodiesToSend,bodiesToRecv
 
@@ -1281,6 +1281,7 @@ def reallocateBodiesToSubdomains(_filter=medianFilter,blocking=True):
 			updateAllIntersections() #triggers communication
 			if rank>0: req.wait()
 
+	
 def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 	'''
 	Re-assign bodies from/to otherDomain based on '_filter' argument.
@@ -1298,7 +1299,7 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 	
 	te = time.time() 
 	
-	mprint("time in clear intrs -->  ", te-ts, "  rank = ", rank)
+	#mprint("time in clear intrs -->  ", te-ts, "  rank = ", rank)
 	
 	req = comm.irecv(None,otherDomain,tag=_MIRROR_INTERSECTIONS_)
 	timing_comm.send("reallocateBodiesPairWiseBlocking",[O.subD.intersections[otherDomain],O.subD._centers_of_mass[rank]],dest=otherDomain,tag=_MIRROR_INTERSECTIONS_)
@@ -1312,7 +1313,7 @@ def reallocateBodiesPairWiseBlocking(_filter,otherDomain):
 		O.subD.mirrorIntersections=O.subD.mirrorIntersections[:otherDomain]+[newMirror[0]]+O.subD.mirrorIntersections[otherDomain+1:]
 	te = time.time() 
 	
-	mprint("time in mirrorUpdate  ", te-ts, "  rank = ", rank)
+	#mprint("time in mirrorUpdate  ", te-ts, "  rank = ", rank)
 	
 	O.subD._centers_of_mass[otherDomain]=newMirror[1]
 	
