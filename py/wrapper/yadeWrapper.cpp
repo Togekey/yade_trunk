@@ -629,23 +629,23 @@ class pyOmega{
 	}
 	
 	
-#ifdef YADE_MPI 
-	Body::id_t getSubdomainId(){
-		return OMEGA.getScene()->thisSubdomainId; 
-	}
-	
-	void setSubdomainId(Body::id_t subdId){
-		OMEGA.getScene()->thisSubdomainId = subdId; 
-	}
-	
-	void setSubD(shared_ptr<Subdomain> subD){
-		OMEGA.getScene()->subD = subD; 
-	}
-	
-	shared_ptr<Subdomain> getSubD() {
-		return YADE_PTR_DYN_CAST<Subdomain>(OMEGA.getScene()->subD); 
-	}
-#endif 
+// #ifdef YADE_MPI 
+// 	Body::id_t getSubdomainId(){
+// 		return OMEGA.getScene()->thisSubdomainId; 
+// 	}
+// 	
+// 	void setSubdomainId(Body::id_t subdId){
+// 		OMEGA.getScene()->thisSubdomainId = subdId; 
+// 	}
+// 	
+// 	void setSubD(shared_ptr<Subdomain> subD){
+// 		OMEGA.getScene()->subD = subD; 
+// 	}
+// 	
+// 	shared_ptr<Subdomain> getSubD() {
+// 		return YADE_PTR_DYN_CAST<Subdomain>(OMEGA.getScene()->subD); 
+// 	}
+// #endif 
 	bool dynDt_get(){return OMEGA.getScene()->timeStepperActive();}
 	bool dynDt_set(bool activate){if(not OMEGA.getScene()->timeStepperActivate(activate) and activate) /* not activated despite passed value */ throw runtime_error("No TimeStepper found in O.engines."); return true;}
 	bool dynDtAvailable_get(){ return OMEGA.getScene()->timeStepperPresent(); }
@@ -940,10 +940,10 @@ BOOST_PYTHON_MODULE(wrapper)
 		.add_property("dt",&pyOmega::dt_get,&pyOmega::dt_set,"Current timestep (Δt) value.")
 		.add_property("dynDt",&pyOmega::dynDt_get,&pyOmega::dynDt_set,"Whether a :yref:`TimeStepper` is used for dynamic Δt control. See :yref:`dt<Omega.dt>` on how to enable/disable :yref:`TimeStepper`.")
 		.add_property("dynDtAvailable",&pyOmega::dynDtAvailable_get,"Whether a :yref:`TimeStepper` is amongst :yref:`O.engines<Omega.engines>`, activated or not.")
-#ifdef YADE_MPI
-		.add_property("thisSubdomainId",&pyOmega::getSubdomainId, &pyOmega::setSubdomainId,"body id of the subdomain of the current proc.")
-		.add_property("subD", &pyOmega::getSubD, &pyOmega::setSubD," Ids of subdomain bodies including other procs. " )
-#endif 
+// #ifdef YADE_MPI
+// 		.add_property("thisSubdomainId",&pyOmega::getSubdomainId, &pyOmega::setSubdomainId,"body id of the subdomain of the current proc.")
+// 		.add_property("subD", &pyOmega::getSubD, &pyOmega::setSubD," Ids of subdomain bodies including other procs. " )
+// #endif 
 
 		.def("load",&pyOmega::load,(py::arg("file"),py::arg("quiet")=false),"Load simulation from file. The file should be :yref:`saved<Omega.save>` in the same version of Yade, otherwise compatibility is not guaranteed.")
 		.def("reload",&pyOmega::reload,(py::arg("quiet")=false),"Reload current simulation")
