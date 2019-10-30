@@ -88,7 +88,7 @@ if (vertices.empty() and (not a.empty())) { // i.e. if the particle is not initi
 	}
 
 /* ------------------------------------------------------------------------------------------------------------------------------ */
-	if ( std::abs(Ixy) + std::abs(Iyz) + std::abs(Iyz)<1e-15 ) {
+	if ( std::abs(Ixy) + std::abs(Ixz) + std::abs(Iyz)<1e-15 ) {
 		inertia = Vector3r(Ixx,Iyy,Izz);
 	} else { //rotate the planes to the principal axes if they are not already rotated
 		if( fabs(Ixx) < pow(10,-15) ){Ixx = 0.0;} //TODO: Check whether I should keep/modify these or if there is a case where they introduce bugs
