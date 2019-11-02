@@ -1,6 +1,11 @@
-// © 2010 Václav Šmilauer <eudoxos@arcig.cz>
-//   2012 Anton Gladky
-//   2019 Janek Kozicki
+/*************************************************************************
+*  2010 Václav Šmilauer                                                  *
+*  2012 Anton Gladky                                                     *
+*  2019 Janek Kozicki                                                    *
+*                                                                        *
+*  This program is free software; it is licensed under the terms of the  *
+*  GNU General Public License v2 or later. See file LICENSE for details. *
+*************************************************************************/
 
 #pragma once
 
@@ -91,8 +96,6 @@ using std::list;
 using std::logic_error;
 using std::make_pair;
 using std::map;
-using std::max;
-using std::min;
 using std::ofstream;
 using std::ostream;
 using std::ostringstream;
@@ -107,6 +110,27 @@ using std::swap;
 using std::type_info;
 using std::vector;
 using boost::shared_ptr;
+
+// the math functions in yade:: must work correctly for Real as:
+// * double
+// * long double
+// * boost::float128_t
+// * boost::multiprecision::mpfr_float_backend<N>
+// https://www.boost.org/doc/libs/1_71_0/libs/multiprecision/doc/html/index.html
+// https://www.boost.org/doc/libs/1_71_0/libs/multiprecision/doc/html/boost_multiprecision/tut/floats/fp_eg/aos.html
+// Math functions must have different name in yade than in std:: namespace because some of them are in :: instead of ::std namespace.
+// * https://stackoverflow.com/questions/11085916/why-are-some-functions-in-cmath-not-in-the-std-namespace
+//   "Implementations of the C++ standard library are permitted to declare C library functions in the global namespace as well as in std."
+//   "In the C++ standard library, however, the declarations (except for names which are defined as macros in C) are within namespace scope (3.3.6)
+//    of the namespace std. It is unspecified whether these names are first declared within the global namespace scope and are then
+// →→ injected into namespace
+//    std by explicit using-declarations (7.3.3)."
+// So th chosen "different" name is to capitalize them.
+using std::max;
+using std::min;
+inline Real Max(const Real& a, const Real& b) { return std::max(a,b); }
+inline Real Min(const Real& a, const Real& b) { return std::min(a,b); }
+inline Real Abs(const Real& a               ) { return std::abs(a  ); }
 
 template<typename Scalar> using Vector2 = Eigen::Matrix<Scalar,2,1>;
 using Vector2i = Vector2<int>;
