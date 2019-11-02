@@ -14,6 +14,7 @@
 #include <limits>
 #include <sstream>
 
+// FIXME - move these headers into single place. Current duplicates: customConverters, _testCppPy
 #if YADE_REAL_BIT>=128
 #include <boost/cstdfloat.hpp>
 #include <boost/math/cstdfloat/cstdfloat_types.hpp>

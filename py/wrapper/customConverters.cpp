@@ -1,4 +1,15 @@
-// 2009 © Václav Šmilauer <eudoxos@arcig.cz>
+/*************************************************************************
+*  2009 Václav Šmilauer                                                  *
+*  2010 Bruno Chareyre                                                   *
+*  2010 Chiara Modenese                                                  *
+*  2014 Anton Gladky                                                     *
+*  2014 Jan Stránský                                                     *
+*  2019 François Kneib                                                   *
+*  2019 Janek Kozicki                                                    *
+*                                                                        *
+*  This program is free software; it is licensed under the terms of the  *
+*  GNU General Public License v2 or later. See file LICENSE for details. *
+*************************************************************************/
 
 // for some reading about these conversions, see e.g. https://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters/ (except the latter advocates using some "borrowed()" in the from-Python construc(), which is not done here)
 
