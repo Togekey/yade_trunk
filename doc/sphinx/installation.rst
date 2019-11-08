@@ -451,6 +451,43 @@ GPU Acceleration
 
 The FlowEngine can be accelerated with CHOLMOD's GPU accelerated solver. The specific hardware and software requirements are outlined in the section :ref:`GPUacceleration`.
 
+Special builds
+------------
+
+The software can be compiled by a special way to find some specific bugs and problems in it: memory corruptions, data races, undefined behaviour etc.
+
+
+The listed sanitizers are runtime-detectors. They can only find the problems in the code, if the particular part of the code
+is executed. If you have written a new C++ class (constitutive law, engine etc.) try to run your python script with
+the sanitized software to check, whether the problem in your code exist.
+
+AddressSanitizer
+^^^^^^^^^^^^^^^^^^^^^
+
+`AddressSanitizer <https://clang.llvm.org/docs/AddressSanitizer.html>`_ is a memory error detector, which helps to find heap corruptions,
+out-of-bounds errors and many other memory errors, leading to crashes and even wrong results.
+
+To compile Yade with this type of sanitizer, use ENABLE_ASAN option::
+
+	cmake -DENABLE_ASAN=1
+
+The compilation time, memory consumption during build and the size of build-files are much higher than during the normall build.
+Monitor RAM and disk usage during compilation to prevent out-of-RAM problems.
+
+Yade requires LD_PRELOAD to be run with the AddressSanitizer. For example for Debian 10 Buster the libasan.5.0 should be preloaded::
+
+	LD_PRELOAD=/lib/x86_64-linux-gnu/libasan.so.5 yade --test
+
+To find the proper libasan library in your particular distribution, use the "find" command.
+
+By default the leak detector is enabled in the asan build. Yade is producing a lot of leak warnings at the moment.
+To mute those warnings and concentrate on other memory errors, one can to use detect_leaks=0 option. The full command
+to run tests with the AddressSanitized-Yade on Debian 10 Buster is::
+
+	LD_PRELOAD=/lib/x86_64-linux-gnu/libasan.so.5 ASAN_OPTIONS=detect_leaks=0 yade --test
+
+If you add a new check script, it is being run automatically through the AddressSanitizer in the CI-pipeline.
+
 Yubuntu
 ------------
 
