@@ -421,9 +421,7 @@ When spliting the compilation on many cores (``make -jN``), ``N`` is limited by 
 
 In addition, and independently of distcc, caching previous compilations with `ccache <https://ccache.samba.org/>`_ can speed up re-compilation::
 
-	export CC="ccache gcc"
-	export CXX="ccache g++"
-	cmake [options as usual]
+	cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache [options as usual]
 
 The two tools can be combined very simply, adding to the above exports::
 
