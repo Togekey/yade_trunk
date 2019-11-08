@@ -148,7 +148,8 @@ IF(DEBUG)
   ADD_DEFINITIONS("-DYADE_DEBUG")
 ELSE (DEBUG)
   IF (NOT(CMAKE_BUILD_TYPE))
-  SET(CMAKE_BUILD_TYPE Release)
+    # If no build_type set, we use Release profile
+    SET(CMAKE_BUILD_TYPE Release)
   ENDIF (NOT(CMAKE_BUILD_TYPE))
 ENDIF (DEBUG)
 
