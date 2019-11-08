@@ -153,12 +153,14 @@ ENDIF()
 
 FIND_PACKAGE(Eigen3 REQUIRED)
 
-IF (DEBUG)
+IF(DEBUG)
   SET(CMAKE_VERBOSE_MAKEFILE 1)
   SET(CMAKE_BUILD_TYPE Debug)
-  ADD_DEFINITIONS("-DYADE_DEBUG -g")
+  ADD_DEFINITIONS("-DYADE_DEBUG")
 ELSE (DEBUG)
-  ADD_DEFINITIONS("-DNDEBUG")
+  IF (NOT(CMAKE_BUILD_TYPE))
+  SET(CMAKE_BUILD_TYPE Release)
+  ENDIF (NOT(CMAKE_BUILD_TYPE))
 ENDIF (DEBUG)
 
 IF(ENABLE_LOGGER)
@@ -301,7 +303,7 @@ if(ENABLE_USEFUL_ERRORS)
     SET(WORKAROUND_LIBRARY_WARNINGS "${WORKAROUND_LIBRARY_WARNINGS} -Wno-unused-function")
   ENDIF()
   SET(ALL_ENABLED_USEFUL_ERRORS " -Werror -Wformat -Wformat-security -Wformat-nonliteral -Wall -Wextra -Wnarrowing -Wreturn-type -Wuninitialized -Wfloat-conversion -Wcast-align -Wdisabled-optimization -Wtrampolines -Wpointer-arith -Wswitch-bool -Wwrite-strings -Wnon-virtual-dtor")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 ${ALL_ENABLED_USEFUL_ERRORS} ${WORKAROUND_LIBRARY_WARNINGS} -Wno-error=cpp -fdce")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ALL_ENABLED_USEFUL_ERRORS} ${WORKAROUND_LIBRARY_WARNINGS} -Wno-error=cpp -fdce")
 
 #  -Wcast-qual      is useful, but too many warnings in libeigen
 #  -Wlogical-op     (1 unfixable warning in /usr/include/vtk-6.3/vtkVariantInlineOperators.h: logical ‘or’ of equal expressions )
@@ -314,7 +316,7 @@ if(ENABLE_USEFUL_ERRORS)
 # -Wmaybe-uninitialized (  10) -Wcomment          (   3) -Wcpp         (   2) -Wcast-function-type (   2) -Wlogical-op     (   1)
 
 ELSE(ENABLE_USEFUL_ERRORS)
-  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -O2 --param=ssp-buffer-size=4 -Wformat -Wformat-security -Werror=format-security -Wall")
+  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wformat -Wformat-security -Werror=format-security -Wall")
 ENDIF(ENABLE_USEFUL_ERRORS)
 #===========================================================
 MESSAGE(STATUS   "${Esc}[36mChosen compiler flags are: CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS} ${Esc}[0m")
