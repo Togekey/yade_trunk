@@ -83,6 +83,7 @@ OPTION(ENABLE_DEFORM "Enable Deformation Engine" OFF)
 OPTION(ENABLE_FEMLIKE "Enable deformable solids" ON)
 OPTION(CHOLMOD_GPU "Enable GPU acceleration flow engine direct solver" OFF)
 OPTION(ENABLE_THERMAL "Enable thermal engine (experimental)" ON)
+OPTION(ENABLE_ASAN "Enable AddressSanitizer build, please see documentation" OFF)
 #Set -DPYTHON_VERSION numeric option below:
 set(PYTHON_VERSION -1 CACHE STRING "Force python version to the given one. Defaults to -DPYTHON_VERSION=-1 which automatically uses the newest available python version on the system.")
 #===========================================================
@@ -141,6 +142,13 @@ ENDIF()
 #===========================================================
 
 FIND_PACKAGE(Eigen3 REQUIRED)
+
+# AddressSanitizer build
+IF(ENABLE_ASAN)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1 -g -fsanitize=address -fno-omit-frame-pointer")
+  SET(CMAKE_BUILD_TYPE Debug)
+  SET(CMAKE_VERBOSE_MAKEFILE 1)
+ENDIF(ENABLE_ASAN)
 
 IF(DEBUG)
   SET(CMAKE_VERBOSE_MAKEFILE 1)
@@ -737,14 +745,11 @@ ELSE(ENABLE_POTENTIAL_BLOCKS)
 ENDIF(ENABLE_POTENTIAL_BLOCKS)
 #===========================================================
 
-
 #===========================================================
 #= Forced detection of library versions for libVersions ====
 #===========================================================
 INCLUDE(FindMissingVersions)
 #===========================================================
-
-
 
 IF (INSTALL_PREFIX)
   SET(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
@@ -904,22 +909,27 @@ INSTALL(TARGETS yade DESTINATION ${YADE_LIB_PATH})
 
 #===========================================================
 MESSAGE(STATUS "===========================================================")
-MESSAGE(STATUS "Yade configured with following features:${CONFIGURED_FEATS}")
-MESSAGE(STATUS "Disabled features:${DISABLED_FEATS}")
+MESSAGE(STATUS "Yade configured with following features:${Esc}[36m${CONFIGURED_FEATS}${Esc}[0m")
+MESSAGE(STATUS "Disabled features:${Esc}[33m${DISABLED_FEATS}${Esc}[0m")
 IF(ENABLE_LOGGER)
   MESSAGE(STATUS "${Esc}[36mUsing MAX_LOG_LEVEL=${MAX_LOG_LEVEL}, ENABLE_LOGGER=ON${Esc}[0m")
 ELSE(ENABLE_LOGGER)
   MESSAGE(STATUS "${Esc}[36mUsing MAX_LOG_LEVEL=${MAX_LOG_LEVEL}, ENABLE_LOGGER=OFF${Esc}[0m")
 ENDIF(ENABLE_LOGGER)
 IF (DEBUG)
-  MESSAGE(STATUS "Debug build")
+  MESSAGE(STATUS "${Esc}[33mDebug build${Esc}[0m")
   SET (debugbuild " (debug build)")
 ELSE (DEBUG)
-  MESSAGE(STATUS "Optimized build")
+  IF (ENABLE_ASAN)
+    MESSAGE(STATUS "${Esc}[33mAddressSanitizer build! Check documentation how to run${Esc}[0m")
+  ELSE (ENABLE_ASAN)
+    MESSAGE(STATUS "${Esc}[32mOptimized build${Esc}[0m")
+  ENDIF (ENABLE_ASAN)
 ENDIF (DEBUG)
 IF (CHUNKSIZE)
   MESSAGE(STATUS "CHUNKSIZE is set to " ${CHUNKSIZE})
 ENDIF (CHUNKSIZE)
+
 MESSAGE(STATUS "===========================================================")
 #===========================================================
 #Building doc
