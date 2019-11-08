@@ -40,6 +40,19 @@ void Subdomain::setMinMax()
 	}
 }
 
+
+void Subdomain::setPos(){
+	const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
+	if (ids.size()==0){LOG_WARN("empty subdomain!"); }
+	if (ids.size()>0 and Body::byId(ids[0],scene)->subdomain != scene->subdomain) LOG_WARN("setMinMax executed with deprecated data (body->subdomain != scene->subdomain)");
+	Vector3r pos(Vector3r::Zero()); 
+	for (const auto& bId : ids){
+		pos += scene->cell->wrapPt((*scene->bodies)[bId]->state->pos); 
+		
+	}
+	meanPos = pos/int(ids.size()); 
+}
+
 // inspired by Integrator::slaves_set (Integrator.hpp)
 void Subdomain::intrs_set(const boost::python::list& source){
 	int len=boost::python::len(source);
@@ -100,6 +113,7 @@ void Subdomain::appendList(const boost::python::list&  lst) {
 
 void Bo1_Subdomain_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& /*se3*/, const Body* /*b*/){
 // 	LOG_WARN("Bo1_Subdomain_Aabb::go()")
+	scene = Omega::instance().getScene().get(); 
 	Subdomain* domain = static_cast<Subdomain*>(cm.get());
 	if(!bv){ bv=shared_ptr<Bound>(new Aabb);}
 	Aabb* aabb=static_cast<Aabb*>(bv.get());
@@ -107,8 +121,17 @@ void Bo1_Subdomain_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, 
 	if(!scene->isPeriodic){
 		aabb->min=domain->boundsMin; aabb->max=domain->boundsMax;
 		return;
-	} else {LOG_ERROR("to be implemented")}
-	LOG_WARN("Bo1_Subdomain_Aabb::go not implemented for periodic boundaries");
+	}  
+	else {
+		//Vector3r halfSize(Vector3r::Zero()); 
+		const Vector3r& mPos = domain->meanPos; 
+		Vector3r halfSize ((domain->boundsMax - domain->boundsMin)); 
+		if (scene->cell->hasShear() && scene->isPeriodic){ LOG_ERROR ("sheared cell not implememented yet"); } 
+		aabb->min = mPos-halfSize; 
+		aabb->max = mPos+halfSize; 
+		return; 
+		
+	}
 }
 
 /********************dpk********************/

@@ -458,6 +458,20 @@ def updateDomainBounds(subdomains): #subdomains is the list of subdomains by bod
 		O.bodies[subdomains[r-1]].shape.boundsMax = recv_buff[3+6*r:6+6*r]
 		#if(VERBOSE_OUTPUT):#condition here to avoid concatenation overhead
 			#mprint("Updated ", O.bodies[subdomains[r-1]].subdomain, " with min=", O.bodies[subdomains[r-1]].shape.boundsMin," and max=", O.bodies[subdomains[r-1]].shape.boundsMax)
+	if O.periodic: 
+		# get 'position' of other subdomains. 
+		wprint( "Updating domain pos: "+str(subdomains))
+		if(rank==0):
+			send_buff=np.zeros(3)*np.nan
+		else:
+			subD=O.bodies[subdomains[rank-1]].shape #shorthand to shape of current subdomain
+			send_buff=np.array([subD.meanPos[0], subD.meanPos[1], subD.meanPos[2]])
+		recv_buff = np.empty(3*numThreads)
+		timing_comm.Allgather("updateDomainPos",send_buff,recv_buff)
+
+		for r in range(1,numThreads):
+			O.bodies[subdomains[r-1]].shape.meanPos = recv_buff[3*r:3*r+3]
+		
 
 def maskedPFacet(pf, boolArray):
 	'''

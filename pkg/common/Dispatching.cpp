@@ -41,6 +41,7 @@ void BoundDispatcher::action()
 	}
 	if (subdomainId!=0) {
 		YADE_PTR_CAST<Subdomain>((*bodies)[subdomainId]->shape)->setMinMax();
+		if (scene->isPeriodic) YADE_PTR_CAST<Subdomain>((*bodies)[subdomainId]->shape)->setPos();
 		processBody((*bodies)[subdomainId]);}
 	#endif
 }
