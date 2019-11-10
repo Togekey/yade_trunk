@@ -50,7 +50,7 @@ mkdir -p screenshots
 #        currently these names are written manually inside:
 #          *  scripts/checks-and-tests/gui/testGuiEmpty.py
 #          *  scripts/checks-and-tests/gui/testGuiSimple.py
-declare -a TESTS=( "Empty" "Simple" )
+declare -a TESTS=( "Empty" "Simple" "RandomPosition" )
 
 for TestFile in ${TESTS[@]}; do
 
