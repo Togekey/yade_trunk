@@ -123,10 +123,13 @@ void Bo1_Subdomain_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, 
 		return;
 	}  
 	else {
-		//Vector3r halfSize(Vector3r::Zero()); 
+		Vector3r halfSize(Vector3r::Zero()); 
 		const Vector3r& mPos = domain->meanPos; 
-		Vector3r halfSize ((domain->boundsMax - domain->boundsMin)); 
-		if (scene->cell->hasShear() && scene->isPeriodic){ LOG_ERROR ("sheared cell not implememented yet"); } 
+		for (int i=0; i <3; i++){
+			halfSize[i] = std::abs(0.5*(domain->boundsMax[i]-domain->boundsMin[i])); 
+		}
+		
+		if (scene->cell->hasShear() && scene->isPeriodic){ LOG_ERROR ("sheared cell for Subdomains not implememented yet"); } 
 		aabb->min = mPos-halfSize; 
 		aabb->max = mPos+halfSize; 
 		return; 
