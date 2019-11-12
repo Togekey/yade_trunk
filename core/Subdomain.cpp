@@ -32,11 +32,21 @@ void Subdomain::setMinMax()
 	boundsMin=Vector3r(inf,inf,inf); boundsMax=Vector3r(-inf,-inf,-inf);
 	if (ids.size()==0) LOG_WARN("empty subdomain!");
 	if (ids.size()>0 and Body::byId(ids[0],scene)->subdomain != scene->subdomain) LOG_WARN("setMinMax executed with deprecated data (body->subdomain != scene->subdomain)");
+
 	for (const auto & id : ids){
 		const shared_ptr<Body>& b = Body::byId(id,scene);
 		if(!b or !b->bound) continue;
-		boundsMax=boundsMax.cwiseMax(b->bound->max);
-		boundsMin=boundsMin.cwiseMin(b->bound->min);
+			if (!scene->isPeriodic){
+				boundsMax=boundsMax.cwiseMax(b->bound->max);
+				boundsMin=boundsMin.cwiseMin(b->bound->min);
+			} else { 
+				//wrap bounds
+				const Vector3r& wMax = scene->cell->wrapPt(b->bound->max); 
+				const Vector3r& wMin = scene->cell->wrapPt(b->bound->min);
+				boundsMax=boundsMax.cwiseMax(wMax);
+				boundsMin=boundsMin.cwiseMin(wMin);
+			}
+
 	}
 }
 
@@ -44,13 +54,20 @@ void Subdomain::setMinMax()
 void Subdomain::setPos(){
 	const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
 	if (ids.size()==0){LOG_WARN("empty subdomain!"); }
-	if (ids.size()>0 and Body::byId(ids[0],scene)->subdomain != scene->subdomain) LOG_WARN("setMinMax executed with deprecated data (body->subdomain != scene->subdomain)");
-	Vector3r pos(Vector3r::Zero()); 
+	if (ids.size()>0 and Body::byId(ids[0],scene)->subdomain != scene->subdomain) LOG_WARN("setMinMax executed with deprecated data (body->subdomain != scene->subdomain)"); 
+
+	Real inf=std::numeric_limits<Real>::infinity();
+	Vector3r minPos(Vector3r(inf, inf, inf)); 
+	Vector3r maxPos(Vector3r(-inf, -inf, -inf)); 
+	assert(scene->isPeriodic); 
 	for (const auto& bId : ids){
-		pos += scene->cell->wrapPt((*scene->bodies)[bId]->state->pos); 
-		
+		const shared_ptr<Body>& b = Body::byId(bId, scene); 
+		const Vector3r& wrapPos = scene->cell->wrapPt(b->state->pos); 
+		minPos = minPos.cwiseMin(wrapPos); 
+		maxPos = maxPos.cwiseMax(wrapPos); 
+ 
 	}
-	meanPos = pos/int(ids.size()); 
+	meanPos = 0.5*(minPos+maxPos); 
 }
 
 // inspired by Integrator::slaves_set (Integrator.hpp)
@@ -117,24 +134,9 @@ void Bo1_Subdomain_Aabb::go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, 
 	Subdomain* domain = static_cast<Subdomain*>(cm.get());
 	if(!bv){ bv=shared_ptr<Bound>(new Aabb);}
 	Aabb* aabb=static_cast<Aabb*>(bv.get());
-
-	if(!scene->isPeriodic){
-		aabb->min=domain->boundsMin; aabb->max=domain->boundsMax;
-		return;
-	}  
-	else {
-		Vector3r halfSize(Vector3r::Zero()); 
-		const Vector3r& mPos = domain->meanPos; 
-		for (int i=0; i <3; i++){
-			halfSize[i] = std::abs(0.5*(domain->boundsMax[i]-domain->boundsMin[i])); 
-		}
-		
-		if (scene->cell->hasShear() && scene->isPeriodic){ LOG_ERROR ("sheared cell for Subdomains not implememented yet"); } 
-		aabb->min = mPos-halfSize; 
-		aabb->max = mPos+halfSize; 
-		return; 
-		
-	}
+	aabb->min=domain->boundsMin; aabb->max=domain->boundsMax;
+	return;
+	
 }
 
 /********************dpk********************/
