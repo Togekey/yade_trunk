@@ -16,7 +16,7 @@
 #include <core/Scene.hpp>
 namespace yade { // Cannot have #include directive inside.
 
-typedef std::pair<double, std::pair<int, int> > projectedBoundElem;  // [position, subdomain, bodyid] this seems to be faster than struct. 
+typedef std::pair<double, std::pair<int, int> > projectedBoundElem;  // [dist, subdomain, bodyid] this seems to be faster than struct. 
   
   // functor for comparison pos 
 class _compareProjectedBoundElem{
@@ -28,27 +28,6 @@ class _compareProjectedBoundElem{
 		~_compareProjectedBoundElem(){}; 
 }; 
 
-
-
-/* struct */ 
-
-// typedef struct {
-// 	double _dist; 
-// 	int _subd; 
-// 	int _id; 
-// } projectedBoundElemSt;
-// 
-// 
-// class _compareProjectedBoundElemSt{
-// 	public: 
-// 		_compareProjectedBoundElemSt(){}; 
-// 		bool operator()(const projectedBoundElemSt& p1, const projectedBoundElemSt& p2) {
-// 			return p1._dist < p2._dist; 
-// 		}
-//   
-// }; 
-
-  
  
 class Subdomain: public Shape {
 	public:
@@ -361,7 +340,6 @@ class Subdomain: public Shape {
 		((Real,extraLength,0,,"verlet dist for the subdomain, added to bodies verletDist"))
 		((Vector3r,boundsMin,Vector3r(NaN,NaN,NaN),,"min corner of all bboxes of members; differs from effective domain bounds by the extra length (sweepLength)"))
 		((Vector3r,boundsMax,Vector3r(NaN,NaN,NaN),,"max corner of all bboxes of members; differs from effective domain bounds by the extra length (sweepLength)"))
-		((Vector3r,meanPos,Vector3r(NaN,NaN,NaN),,"mean position of all members, mean of all owned body positions."))
 		((IntersectionMap,intersections,IntersectionMap(),Attr::hidden,"[will be overridden below]"))
 		((IntersectionMap,mirrorIntersections,IntersectionMap(),Attr::hidden,"[will be overridden below]"))
 		((vector<Body::id_t>,ids,vector<Body::id_t>(),,"Ids of owned particles."))
@@ -405,7 +383,6 @@ class Subdomain: public Shape {
 		.def("updateLocalIds", &Subdomain::updateLocalIds, (boost::python::arg("eraseRemoteMastrer")), "updates the ids in the subdomain id vector, if not eraseRemoteMastrer, body->subdomain in master are updated.")
 		.def("cleanIntersections",&Subdomain::cleanIntersections, (boost::python::arg("otherDomain")), "makes sure that the ids in the current subdomain belong to the current subdomain")
 		.def("updateNewMirrorIntrs", &Subdomain::updateNewMirrorIntrs, (boost::python::arg("otherdomain"), boost::python::arg("newMirrorList")), "update the mirrorIntersections of a specific subdomain")
-		.def("setPos", &Subdomain::setPos, "sets the meanPos/ mean position of the subdomain, obtained from the positions of the owned bodies. (used for periodic BCs )")
 		
 	);
 	// clang-format on

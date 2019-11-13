@@ -744,9 +744,11 @@ def splitScene():
 			for k in range(1,numThreads):
 				domainBody=Body(shape=Subdomain(ids=[b.id for b in O.bodies if b.subdomain==k]),subdomain=k) #note: not clear yet how shape.subDomainIndex and body.subdomain should interact, currently equal values
 				domainBody.isSubdomain=True
-				if rank==k: O.subD=domainBody.shape
+				if rank==k: O._sceneObj.subD=domainBody.shape
 				subdomains.append(O.bodies.insertAtId(domainBody,maxid+k))
-			O._sceneObj.subD = Subdomain()  # make sure it's initialized here
+			if rank == 0: 
+				O._sceneObj.subD = Subdomain()  # make sure it's initialized here
+			
 			O.subD = O._sceneObj.subD
 			O.subD.subdomains = subdomains
 			subD= O.subD #alias
