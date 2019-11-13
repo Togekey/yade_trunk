@@ -459,25 +459,7 @@ def updateDomainBounds(subdomains): #subdomains is the list of subdomains by bod
 		#if(VERBOSE_OUTPUT):#condition here to avoid concatenation overhead
 			#mprint("Updated ", O.bodies[subdomains[r-1]].subdomain, " with min=", O.bodies[subdomains[r-1]].shape.boundsMin," and max=", O.bodies[subdomains[r-1]].shape.boundsMax)
 
-def updateDomainPos(subdomains): 
-	'''
-	Update mean positions  of current subdomain, broadcast, and receive updated domain positions
-	from other subdomains, Precondition : collider.boundDispatcher.__call__() & periodic 
-	''' 
-	wprint( "Updating subdomain positions: "+str(subdomains))
-	if(rank==0):
-		send_buff=np.zeros(3)*np.nan
-	else:
-		subD=O.bodies[subdomains[rank-1]].shape #shorthand to shape of current subdomain
-		send_buff=np.array([subD.meanPos[0], subD.meanPos[1], subD.meanPos[2]])
-	recv_buff = np.empty(3*numThreads)
-	timing_comm.Allgather("updateDomainPos",send_buff,recv_buff)
-	
-	for r in range(1,numThreads):
-		O.bodies[subdomains[r-1]].shape.meanPos = recv_buff[3*r:3*r+3]
-		wprint("domain pos from r = ",r , " " , O.bodies[subdomains[r-1]].shape.meanPos)
-      
-      
+            
 def maskedPFacet(pf, boolArray):
 	'''
 	List bodies within a facet selectively, the ones marked 'True' in boolArray (i.e. already selected from another facet) are discarded
@@ -917,7 +899,6 @@ def parallelCollide():
 		
 	collider.boundDispatcher.__call__()
 	updateDomainBounds(subD.subdomains) #triggers communications
-	if O.periodic : updateDomainPos(subD.subdomains)
 	collider.__call__() #see [1]
 	unboundRemoteBodies() #in splitted stage we exploit bounds to detect bodies which are no longer part of intersections (they will be left with no bounds after what follows)
 	updateAllIntersections()  #triggers communications
