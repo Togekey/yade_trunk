@@ -146,14 +146,12 @@ void GlobalStiffnessTimeStepper::computeTimeStep(Scene* ncb)
 	else if (!computedOnce) scene->dt=defaultDt;
 	
 #ifdef YADE_MPI
-	int rnk; 
 	if (parallelMode){
-		MPI_Comm_rank(scene->getComm() ,& rnk); 
 		if (scene->iter % timeStepUpdateInterval == 0){
 			Real recvDt; Real myDt = scene->dt; 
 			MPI_Allreduce(&myDt,&recvDt,1, MPI_DOUBLE,MPI_MIN,scene->getComm()); 
 			scene->dt = recvDt;  
-		}	
+		}
 	}
 #endif 
  
