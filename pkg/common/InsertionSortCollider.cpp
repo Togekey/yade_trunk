@@ -438,7 +438,8 @@ void InsertionSortCollider::action(){
 					}
 				#endif
 			} else { // periodic case: see comments above
-				for(size_t i=0; i<2*nBodies; i++){
+				size_t numBodies = keepListsShort ? 0.5*V.size() : nBodies; 
+				for(size_t i=0; i<2*numBodies; i++){
 					if(!(V[i].flags.isMin && V[i].flags.hasBB)) continue;
 					const Body::id_t& iid=V[i].id;
 					// we might wrap over the periodic boundary here; that's why the condition is different from the aperiodic case
@@ -523,7 +524,7 @@ void InsertionSortCollider::insertionSortPeri(VecBounds& v, InteractionContainer
 // called by the insertion sort if 2 bodies swapped their bounds
 void InsertionSortCollider::handleBoundInversionPeri(Body::id_t id1, Body::id_t id2, InteractionContainer* interactions, Scene*){
 	assert(periodic);
-	if (interactions->found(id1,id2)) return;// we want to _create_ new ones, we don't care about existing ones
+	if (interactions->found(id1,id2)) return;// we want to _create_ new ones, we don't care about existing ones	
 	Vector3i periods(Vector3i::Zero());
 	bool overlap=spatialOverlapPeri(id1,id2,scene,periods);
 	if (overlap && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get()
