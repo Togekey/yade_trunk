@@ -196,7 +196,6 @@ class Subdomain: public Shape {
 
 	//WARNING: precondition: the members bounds have been dispatched already, else we re-use old values. Carefull if subdomain is not at the end of O.bodies
 	void setMinMax();
-	void setPos(); 
         
         // Functions dpk   
         
@@ -330,8 +329,6 @@ class Subdomain: public Shape {
 	 
 	 void migrateBodiesSend(const std::vector<Body::id_t>&  , int );
 	 void updateLocalIds(bool); 
-
-	 Real boundOnAxisCpp(const shared_ptr<Bound>&, Vector3r, bool); 
 	 void cleanIntersections(int);
 	 void updateNewMirrorIntrs(int, const std::vector<Body::id_t>& ); 
 
