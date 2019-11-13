@@ -438,7 +438,7 @@ void InsertionSortCollider::action(){
 					}
 				#endif
 			} else { // periodic case: see comments above
-				size_t numBodies = keepListsShort ? 0.5*V.size() : nBodies; 
+				size_t numBodies = keepListsShort ? (size_t) 0.5*V.size() : nBodies; 
 				for(size_t i=0; i<2*numBodies; i++){
 					if(!(V[i].flags.isMin && V[i].flags.hasBB)) continue;
 					const Body::id_t& iid=V[i].id;
