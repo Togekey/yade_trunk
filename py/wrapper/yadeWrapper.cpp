@@ -29,7 +29,7 @@
 #include <core/Clump.hpp>
 #include <pkg/common/Sphere.hpp>
 #include <boost/math/special_functions/nonfinite_num_facets.hpp>
-#include <core/Subdomain.hpp>
+
 
 #include <locale>
 #include <boost/random/linear_congruential.hpp>
