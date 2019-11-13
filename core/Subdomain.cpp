@@ -40,7 +40,7 @@ void Subdomain::setMinMax()
 				boundsMax=boundsMax.cwiseMax(b->bound->max);
 				boundsMin=boundsMin.cwiseMin(b->bound->min);
 			} else { 
-				//wrap bounds
+				//if periodic wrap bounds
 				const Vector3r& wMax = scene->cell->wrapPt(b->bound->max); 
 				const Vector3r& wMin = scene->cell->wrapPt(b->bound->min);
 				boundsMax=boundsMax.cwiseMax(wMax);
@@ -48,26 +48,6 @@ void Subdomain::setMinMax()
 			}
 
 	}
-}
-
-
-void Subdomain::setPos(){
-	const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
-	if (ids.size()==0){LOG_WARN("empty subdomain!"); }
-	if (ids.size()>0 and Body::byId(ids[0],scene)->subdomain != scene->subdomain) LOG_WARN("setMinMax executed with deprecated data (body->subdomain != scene->subdomain)"); 
-
-	Real inf=std::numeric_limits<Real>::infinity();
-	Vector3r minPos(Vector3r(inf, inf, inf)); 
-	Vector3r maxPos(Vector3r(-inf, -inf, -inf)); 
-	assert(scene->isPeriodic); 
-	for (const auto& bId : ids){
-		const shared_ptr<Body>& b = Body::byId(bId, scene); 
-		const Vector3r& wrapPos = scene->cell->wrapPt(b->state->pos); 
-		minPos = minPos.cwiseMin(wrapPos); 
-		maxPos = maxPos.cwiseMax(wrapPos); 
- 
-	}
-	meanPos = 0.5*(minPos+maxPos); 
 }
 
 // inspired by Integrator::slaves_set (Integrator.hpp)
@@ -531,18 +511,6 @@ Real Subdomain::boundOnAxis(Bound& b, const Vector3r& direction, bool min) const
 }
 
 
-// just for testing.
-Real Subdomain::boundOnAxisCpp(const shared_ptr<Bound>& b, Vector3r direction, bool min){
-	Vector3r size = b->max-b->min;
-	Real extremum = 0;
-	for (unsigned k=0; k<3; k++) extremum += std::abs(size[k]*direction[k]);// this is equivalent to taking the vertex maximizing projected length
-	if (min) extremum = -extremum; 
-	extremum+= (b->max+b->min).dot(direction);// should be *0.5 to be center of the box, but since we use 'size' instead of half-size everything is doubled, neutral in terms of ordering the boxes
-	return 0.5*extremum;
-	
-}
-
-
 /* Migrate bodies, translation of python functions  */ 
 
 
@@ -572,7 +540,7 @@ std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const
 	for (auto bId : intersections[otherSD]){
 		const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
 		if (!b or b->getIsSubdomain()){continue; } 
-		Real ps = boundOnAxisCpp(b->bound, axis, true); 
+		Real ps = boundOnAxis((*b->bound), axis, true); 
 		projectedBoundElem pElem(ps, std::make_pair(subdomainRank, bId)); 
 		pos.push_back(pElem); 
 	}
@@ -581,7 +549,7 @@ std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const
 	for (auto bId : mirrorIntersections[otherSD]){
 		const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
 		if (!b or b->getIsSubdomain()){continue; } 
-		Real ps = boundOnAxisCpp(b->bound, axis, false);
+		Real ps = boundOnAxis((*b->bound), axis, false);
 		projectedBoundElem pElem(ps, std::make_pair(otherSD, bId)); 
 		pos.push_back(pElem); 
 	}
