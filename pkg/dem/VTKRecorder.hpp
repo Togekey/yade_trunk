@@ -3,7 +3,6 @@
 #include<pkg/common/PeriodicEngines.hpp>
 #include<vtkQuad.h>
 #include<vtkSmartPointer.h>
-
 // multiblock features don't seem to exist prioor to 5.2
 #if (VTK_MAJOR_VERSION==5 && VTK_MINOR_VERSION>=2) || (VTK_MAJOR_VERSION > 5)
 	#define YADE_VTK_MULTIBLOCK
@@ -12,8 +11,13 @@
 namespace yade { // Cannot have #include directive inside.
 
 class VTKRecorder: public PeriodicEngine {
+	private: 
+	#ifdef YADE_MPI 
+		int rank, commSize; 
+		bool sceneRefreshed = false; 
+	#endif 
 	public:
-  enum {REC_SPHERES=0,REC_FACETS,REC_BOXES,REC_COLORS,REC_MASS,REC_TEMP,REC_CPM,REC_INTR,REC_VELOCITY,REC_ID,REC_CLUMPID,REC_SENTINEL,REC_MATERIALID,REC_STRESS,REC_MASK,REC_RPM,REC_JCFPM,REC_CRACKS,REC_MOMENTS,REC_WPM,REC_PERICELL,REC_LIQ,REC_BSTRESS,REC_FORCE,REC_COORDNUMBER,REC_SPH,REC_DEFORM,REC_LUBRICATION};
+  enum {REC_SPHERES=0,REC_FACETS,REC_BOXES,REC_COLORS,REC_MASS,REC_TEMP,REC_CPM,REC_INTR,REC_VELOCITY,REC_ID,REC_CLUMPID,REC_SENTINEL,REC_MATERIALID,REC_STRESS,REC_MASK,REC_RPM,REC_JCFPM,REC_CRACKS,REC_MOMENTS,REC_WPM,REC_PERICELL,REC_LIQ,REC_BSTRESS,REC_FORCE,REC_COORDNUMBER,REC_SPH,REC_DEFORM,REC_LUBRICATION, REC_SUBDOMAIN};
 		virtual void action();
 		void addWallVTK (vtkSmartPointer<vtkQuad>& boxes, vtkSmartPointer<vtkPoints>& boxesPos, Vector3r& W1, Vector3r& W2, Vector3r& W3, Vector3r& W4);
 	// clang-format off
@@ -24,6 +28,9 @@ class VTKRecorder: public PeriodicEngine {
 		((bool,skipNondynamic,false,,"Skip non-dynamic spheres (but not facets)."))
 		#ifdef YADE_VTK_MULTIBLOCK
 			((bool,multiblock,false,,"Use multi-block (``.vtm``) files to store data, rather than separate ``.vtu`` files."))
+		#endif
+		#ifdef YADE_MPI 
+			((bool,parallelMode,false,,"For MPI parallel runs, each proc writes their own vtu/vtp files. Master proc writes a pvtu/pvtp file containing metadata about worker vtu files. load the pvtu/pvtp in paraview for visualization."))
 		#endif
 		((string,fileName,"",,"Base file name; it will be appended with {spheres,intrs,facets}-243100.vtu (unless *multiblock* is ``True``) depending on active recorders and step number (243100 in this case). It can contain slashes, but the directory must exist already."))
 		((vector<string>,recorders,vector<string>(1,string("all")),,R"""(List of active recorders (as strings). ``all`` (the default value) enables all base and generic recorders.

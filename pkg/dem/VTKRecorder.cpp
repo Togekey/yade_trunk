@@ -15,6 +15,13 @@
 #include<vtkXMLPolyDataWriter.h>
 #include<vtkZLibDataCompressor.h>
 
+#ifdef YADE_MPI 
+	#include <vtkXMLPPolyDataWriter.h>
+	#include<vtkXMLPUnstructuredGridWriter.h>
+	#include<mpi.h>
+	#include<core/Subdomain.hpp>
+#endif 
+
 // https://codeyarns.com/2014/03/11/how-to-selectively-ignore-a-gcc-warning/
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpragmas"
@@ -62,6 +69,16 @@ CREATE_LOGGER(VTKRecorder);
 #endif
 
 void VTKRecorder::action(){
+  
+	#ifdef YADE_MPI 
+		if (parallelMode and !sceneRefreshed){
+			// update scene pointer (to avoid issues after scene broadcast in mpi case init)
+			scene = Omega::instance().getScene().get(); 
+			MPI_Comm_size(scene->getComm(), &commSize); 
+			MPI_Comm_rank(scene->getComm(), &rank); 
+			sceneRefreshed = true; 
+		}
+	#endif 
 	vector<bool> recActive(REC_SENTINEL,false);
 	FOREACH(string& rec, recorders){
 		if(rec=="all"){
@@ -79,10 +96,15 @@ void VTKRecorder::action(){
 			recActive[REC_STRESS]=true;
 			recActive[REC_FORCE]=true;
 			recActive[REC_COORDNUMBER]=true;
+#ifdef YADE_MPI
+		if (parallelMode) {recActive[REC_SUBDOMAIN] = true; }
+#endif 
+			
 			if (scene->isPeriodic) { recActive[REC_PERICELL]=true; }
 			recActive[REC_BSTRESS]=true;
 		}
-		else if(rec=="spheres") recActive[REC_SPHERES]=true;
+		else if(rec=="spheres") {recActive[REC_SPHERES]=true; 
+		} 
 		else if(rec=="velocity") recActive[REC_VELOCITY]=true;
 		else if(rec=="facets") recActive[REC_FACETS]=true;
 		else if(rec=="boxes") recActive[REC_BOXES]=true;
@@ -105,6 +127,7 @@ void VTKRecorder::action(){
 		else if(rec=="liquidcontrol") recActive[REC_LIQ]=true;
 		else if(rec=="bstresses") recActive[REC_BSTRESS]=true;
 		else if(rec=="coordNumber") recActive[REC_COORDNUMBER]=true;
+		
         else if(rec=="SPH") recActive[REC_SPH]=true;
         else if(rec=="deform") recActive[REC_DEFORM]=true;
         else if(rec=="lubrication") recActive[REC_LUBRICATION]=true;
@@ -326,6 +349,13 @@ void VTKRecorder::action(){
 	vtkSmartPointer<vtkDoubleArray> facetsCoordNumb = vtkSmartPointer<vtkDoubleArray>::New();
 	facetsCoordNumb->SetNumberOfComponents(1);
 	facetsCoordNumb->SetName("coordNumber");
+	
+#ifdef YADE_MPI 
+	vtkSmartPointer<vtkDoubleArray> spheresSubdomain = vtkSmartPointer<vtkDoubleArray>::New(); 
+	spheresSubdomain->SetNumberOfComponents(1);
+	spheresSubdomain->SetName("subdomain");
+#endif
+	
 
 	// boxes
 	vtkSmartPointer<vtkPoints> boxesPos = vtkSmartPointer<vtkPoints>::New();
@@ -601,8 +631,16 @@ void VTKRecorder::action(){
     if(recActive[REC_LUBRICATION]) {
         Law2_ScGeom_ImplicitLubricationPhys::getStressForEachBody(NCStresses, SCStresses, NLStresses, SLStresses,NPStresses);
     }
-    
-	for(const auto & b :  *scene->bodies){
+
+
+#ifdef YADE_MPI
+	const auto& subD = YADE_PTR_CAST<Subdomain>(scene->subD); 
+	const auto& sz = parallelMode ? subD->ids.size() : scene->bodies->size(); 
+	for (unsigned bId = 0; bId != sz; ++bId){
+		const auto& b = parallelMode ? (*scene->bodies)[subD->ids[bId]] : (*scene->bodies)[bId]; 
+#else 
+	for (const auto& b : *scene->bodies ){
+#endif
 		if (!b) continue;
 		if(mask!=0 && !b->maskCompatible(mask)) continue;
 		if (recActive[REC_SPHERES]){
@@ -631,10 +669,13 @@ void VTKRecorder::action(){
 				spheresDirII->INSERT_NEXT_TUPLE(dirII);
 				spheresDirIII->INSERT_NEXT_TUPLE(dirIII);
                 }
-                
 				if (recActive[REC_ID]) spheresId->InsertNextValue(b->getId());
 				if (recActive[REC_MASK]) spheresMask->InsertNextValue(GET_MASK(b));
 				if (recActive[REC_MASS]) spheresMass->InsertNextValue(b->state->mass);
+			#ifdef YADE_MPI
+				if (recActive[REC_SUBDOMAIN]) spheresSubdomain->InsertNextValue(b->subdomain); 
+			#endif 
+				
 			#ifdef THERMAL
 				if (recActive[REC_TEMP]) {
 					auto* thState = b->state.get();
@@ -877,7 +918,11 @@ void VTKRecorder::action(){
 		}
 	}
 
+#ifdef YADE_MPI 
+	if ( (!parallelMode and recActive[REC_PERICELL]) or (scene->subdomain==0 and recActive[REC_PERICELL])){    
+#else
 	if (recActive[REC_PERICELL]) {
+#endif 
 		const Matrix3r& hSize = scene->cell->hSize;
 		Vector3r v0 = hSize*Vector3r(0,0,1);
 		Vector3r v1 = hSize*Vector3r(0,1,1);
@@ -907,8 +952,15 @@ void VTKRecorder::action(){
 	vtkSmartPointer<vtkDataCompressor> compressor;
 	if(compress) compressor=vtkSmartPointer<vtkZLibDataCompressor>::New();
 
+	
+/* In mpiruns, spheres and other types of bodies are held by workers */ 
+#ifdef YADE_MPI 
+	vtkSmartPointer<vtkUnstructuredGrid> spheresUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
+	if (recActive[REC_SPHERES] and scene->subdomain != 0 ){
+#else 
 	vtkSmartPointer<vtkUnstructuredGrid> spheresUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	if (recActive[REC_SPHERES]){
+#endif 
 		spheresUg->SetPoints(spheresPos);
 		spheresUg->SetCells(VTK_VERTEX, spheresCells);
 		spheresUg->GetPointData()->AddArray(radii);
@@ -924,6 +976,9 @@ void VTKRecorder::action(){
 			spheresUg->GetPointData()->AddArray(spheresLinVelLen);
 			spheresUg->GetPointData()->AddArray(spheresAngVelLen);
 		}
+#ifdef YADE_MPI 
+		if (recActive[REC_SUBDOMAIN]) spheresUg->GetPointData()->AddArray(spheresSubdomain); 
+#endif 
 #ifdef YADE_SPH
                 if (recActive[REC_SPH]){
 		spheresUg->GetPointData()->AddArray(spheresRhoSPH);
@@ -951,12 +1006,12 @@ void VTKRecorder::action(){
 			spheresUg->GetPointData()->AddArray(spheresNormalStressNorm);
 		}
 		if(recActive[REC_LUBRICATION]){
-            spheresUg->GetPointData()->AddArray(spheresLubricationNormalContactStress);
-            spheresUg->GetPointData()->AddArray(spheresLubricationShearContactStress);
-            spheresUg->GetPointData()->AddArray(spheresLubricationNormalLubricationStress);
-            spheresUg->GetPointData()->AddArray(spheresLubricationShearLubricationStress);
-            spheresUg->GetPointData()->AddArray(spheresLubricationNormalPotentialStress);
-        }		
+			spheresUg->GetPointData()->AddArray(spheresLubricationNormalContactStress);
+			spheresUg->GetPointData()->AddArray(spheresLubricationShearContactStress);
+			spheresUg->GetPointData()->AddArray(spheresLubricationNormalLubricationStress);
+			spheresUg->GetPointData()->AddArray(spheresLubricationShearLubricationStress);
+			spheresUg->GetPointData()->AddArray(spheresLubricationNormalPotentialStress);
+		}
 		if (recActive[REC_FORCE]){
 			spheresUg->GetPointData()->AddArray(spheresForceVec);
 			spheresUg->GetPointData()->AddArray(spheresForceLen);
@@ -987,7 +1042,46 @@ void VTKRecorder::action(){
 		#ifdef YADE_VTK_MULTIBLOCK
 		if(!multiblock)
 		#endif
-			{
+		
+		#ifdef YADE_MPI 
+		{ 
+			vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+			if(compress) writer->SetCompressor(compressor);
+			if(ascii) writer->SetDataModeToAscii();
+			std::string fn; 
+			if (!parallelMode){
+				  fn=fileName+"spheres."+boost::lexical_cast<string>(scene->iter)+".vtu";
+			} else {
+				fn=fileName+"spheres_"+boost::lexical_cast<string>(scene->iter)+"_"+boost::lexical_cast<string>(rank-1)+".vtu";
+			}
+			writer->SetFileName(fn.c_str());
+			#ifdef YADE_VTK6
+				writer->SetInputData(spheresUg);
+			#else
+				writer->SetInput(spheresUg);
+			#endif
+			writer->Write();
+			
+			if (rank == 1 && parallelMode){
+				vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriter = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New(); 
+				string pfn = fileName+"spheres_"+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
+				pwriter->EncodeAppendedDataOff(); 
+				pwriter->SetFileName(pfn.c_str());
+				pwriter->SetNumberOfPieces(commSize-1);
+				pwriter->SetStartPiece(0); 
+				
+				#ifdef YADE_VTK6 
+					pwriter->SetInputData(spheresUg); 
+				#else 
+					pwriter->SetInput(spheresUg);  
+				#endif  
+				pwriter->Update(); 
+				pwriter->Write(); 
+			} 
+			
+		}  
+		#else 
+		{
 			vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
 			if(compress) writer->SetCompressor(compressor);
 			if(ascii) writer->SetDataModeToAscii();
@@ -1000,7 +1094,12 @@ void VTKRecorder::action(){
 			#endif
 			writer->Write();
 		}
+		#endif 
 	}
+	
+
+	
+	/* facet bodies can be held by workers or master (like a wall body) */
 	vtkSmartPointer<vtkUnstructuredGrid> facetsUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	if (recActive[REC_FACETS]){
 		facetsUg->SetPoints(facetsPos);
@@ -1020,9 +1119,47 @@ void VTKRecorder::action(){
 		if (recActive[REC_MASK]) facetsUg->GetCellData()->AddArray(facetsMask);
 		if (recActive[REC_COORDNUMBER]) facetsUg->GetCellData()->AddArray(facetsCoordNumb);
 		#ifdef YADE_VTK_MULTIBLOCK
-			if(!multiblock)
+			if(!multiblock) 
 		#endif
-			{
+		#ifdef YADE_MPI 
+		{ 
+			vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+			if(compress) writer->SetCompressor(compressor);
+			if(ascii) writer->SetDataModeToAscii();
+			std::string fn; 
+			if (!parallelMode){
+				  fn=fileName+"facets."+boost::lexical_cast<string>(scene->iter)+".vtu";
+			} else {
+				fn=fileName+"facets_"+boost::lexical_cast<string>(scene->iter)+"_"+boost::lexical_cast<string>(rank)+".vtu";
+			}
+			writer->SetFileName(fn.c_str());
+			#ifdef YADE_VTK6
+				writer->SetInputData(facetsUg);
+			#else
+				writer->SetInput(facetsUg);
+			#endif
+			writer->Write();
+			
+			if (rank == 0 && parallelMode){
+				vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriter = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New(); 
+				string pfn = fileName+"facets_"+boost::lexical_cast<string>(scene->iter)+".pvtu"; 
+				pwriter->EncodeAppendedDataOff(); 
+				pwriter->SetFileName(pfn.c_str());
+				pwriter->SetNumberOfPieces(commSize);
+				pwriter->SetStartPiece(0); 
+				
+				#ifdef YADE_VTK6 
+					pwriter->SetInputData(facetsUg); 
+				#else 
+					pwriter->SetInput(facetsUg);  
+				#endif  
+				pwriter->Update(); 
+				pwriter->Write(); 
+			} 
+			
+		}  
+		#else 
+		{
 			vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
 			if(compress) writer->SetCompressor(compressor);
 			if(ascii) writer->SetDataModeToAscii();
@@ -1035,9 +1172,17 @@ void VTKRecorder::action(){
 			#endif
 			writer->Write();
 		}
+		#endif 
+
 	}
+	
+	/* mpi case : assuming box bodies  are held by master  */ 
 	vtkSmartPointer<vtkUnstructuredGrid> boxesUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
+#ifdef YADE_MPI 
+	if ( (!parallelMode and recActive[REC_BOXES]) or (scene->subdomain==0 and recActive[REC_BOXES])){    
+#else
 	if (recActive[REC_BOXES]){
+#endif
 		boxesUg->SetPoints(boxesPos);
 		boxesUg->SetCells(VTK_QUAD, boxesCells);
 		if (recActive[REC_COLORS]) boxesUg->GetCellData()->AddArray(boxesColors);
@@ -1056,7 +1201,7 @@ void VTKRecorder::action(){
 		#ifdef YADE_VTK_MULTIBLOCK
 			if(!multiblock)
 		#endif
-			{
+		{
 			vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
 			if(compress) writer->SetCompressor(compressor);
 			if(ascii) writer->SetDataModeToAscii();
@@ -1070,6 +1215,9 @@ void VTKRecorder::action(){
 			writer->Write();
 		}
 	}
+ 
+
+	/* all subdomains have interactions in mpi case */
 	vtkSmartPointer<vtkPolyData> intrPd = vtkSmartPointer<vtkPolyData>::New();
 	if (recActive[REC_INTR]){
 		intrPd->SetPoints(intrBodyPos);
@@ -1094,7 +1242,46 @@ void VTKRecorder::action(){
 		#ifdef YADE_VTK_MULTIBLOCK
 			if(!multiblock)
 		#endif
-			{
+			  
+		#ifdef YADE_MPI 
+		{
+			vtkSmartPointer<vtkXMLPolyDataWriter> writer = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
+			if(compress) writer->SetCompressor(compressor);
+			if(ascii) writer->SetDataModeToAscii();
+			std::string fn; 
+			if(!parallelMode){
+				fn=fileName+"intrs."+boost::lexical_cast<string>(scene->iter)+".vtp";
+			} else {
+				fn=fileName+"intrs_"+boost::lexical_cast<string>(scene->iter)+"_"+boost::lexical_cast<string>(rank)+".vtp";
+			}
+			writer->SetFileName(fn.c_str());
+			#ifdef YADE_VTK6
+				writer->SetInputData(intrPd);
+			#else
+				writer->SetInput(intrPd);
+			#endif
+			writer->Write();
+			
+			if (rank ==0){
+				vtkSmartPointer<vtkXMLPPolyDataWriter> pwriter = vtkSmartPointer<vtkXMLPPolyDataWriter>::New(); 
+				string pfn = fileName+"intrs_"+boost::lexical_cast<string>(scene->iter)+".pvtp"; 
+				pwriter->EncodeAppendedDataOff(); 
+				pwriter->SetFileName(pfn.c_str());
+				pwriter->SetNumberOfPieces(commSize);
+				pwriter->SetStartPiece(0); 
+				
+				#ifdef YADE_VTK6 
+					pwriter->SetInputData(intrPd); 
+				#else 
+					pwriter->SetInput(intrPd);  
+				#endif  
+				pwriter->Update(); 
+				pwriter->Write(); 
+			}
+		}
+		
+		#else
+		{
 			vtkSmartPointer<vtkXMLPolyDataWriter> writer = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
 			if(compress) writer->SetCompressor(compressor);
 			if(ascii) writer->SetDataModeToAscii();
@@ -1107,7 +1294,10 @@ void VTKRecorder::action(){
 			#endif
 			writer->Write();
 		}
+		#endif
 	}
+	
+	
 	vtkSmartPointer<vtkUnstructuredGrid> pericellUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	if (recActive[REC_PERICELL]){
 		pericellUg->SetPoints(pericellPoints);
@@ -1129,8 +1319,14 @@ void VTKRecorder::action(){
 			writer->Write();
 		}
 	}
-
+	
+	
+	/* in mpi case, just use master to do this */ 
+#ifdef YADE_MPI 
+	if ( (!parallelMode && recActive[REC_CRACKS]) || (scene->subdomain==0 && recActive[REC_CRACKS])) {
+#else
 	if (recActive[REC_CRACKS]) {
+#endif 
 		string fileCracks = "cracks_"+Key+".txt";
 		std::ifstream file (fileCracks.c_str(),std::ios::in);
 		vtkSmartPointer<vtkUnstructuredGrid> crackUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
@@ -1177,10 +1373,15 @@ void VTKRecorder::action(){
 		#else
 			writer->SetInput(crackUg);
 		#endif
-		writer->Write(); }
+		writer->Write(); 
+	}
 
 // doing same thing for moments that we did for cracks:
+#ifdef YADE_MPI 
+	if ( (!parallelMode && recActive[REC_MOMENTS]) || (scene->subdomain==0 && recActive[REC_MOMENTS])) {
+#else
 	if (recActive[REC_MOMENTS]) {
+#endif
 		string fileMoments = "moments_"+Key+".txt";
 		std::ifstream file (fileMoments.c_str(),std::ios::in);
 		vtkSmartPointer<vtkUnstructuredGrid> momentUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
@@ -1222,7 +1423,8 @@ void VTKRecorder::action(){
 		#else
 			writer->SetInput(momentUg);
 		#endif
-		writer->Write(); }
+		writer->Write(); 
+	}
 
 	#ifdef YADE_VTK_MULTIBLOCK
 		if(multiblock){
