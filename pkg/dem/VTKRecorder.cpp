@@ -97,10 +97,6 @@ void VTKRecorder::action(){
 			recActive[REC_STRESS]=true;
 			recActive[REC_FORCE]=true;
 			recActive[REC_COORDNUMBER]=true;
-#ifdef YADE_MPI
-		if (parallelMode) {recActive[REC_SUBDOMAIN] = true; }
-#endif 
-			
 			if (scene->isPeriodic) { recActive[REC_PERICELL]=true; }
 			recActive[REC_BSTRESS]=true;
 		}
@@ -134,6 +130,9 @@ void VTKRecorder::action(){
         else if(rec=="lubrication") recActive[REC_LUBRICATION]=true;
 		else LOG_ERROR("Unknown recorder named `"<<rec<<"' (supported are: all, spheres, velocity, facets, boxes, color, stress, cpm, wpm, intr, id, clumpId, materialId, jcfpm, cracks, moments, pericell, liquidcontrol, bstresses). Ignored.");
 	}
+#ifdef YADE_MPI
+	if (parallelMode) {recActive[REC_SUBDOMAIN] = true; }
+#endif 
 	// cpm needs interactions
 	if(recActive[REC_CPM]) recActive[REC_INTR]=true;
 
@@ -584,7 +583,6 @@ void VTKRecorder::action(){
 			// add the value once for each interaction object that we created (might be 2 for the periodic boundary)
 			for(int i=0; i<numAddValues; i++){
 				intrAbsForceT->INSERT_NEXT_TUPLE(fs);
-
 				if(recActive[REC_WPM]) {
 					const WirePhys* wirephys = dynamic_cast<WirePhys*>(I->phys.get());
 					if (wirephys!=NULL && wirephys->isLinked) {
