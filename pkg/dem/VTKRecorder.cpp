@@ -16,9 +16,10 @@
 #include<vtkZLibDataCompressor.h>
 
 #ifdef YADE_MPI 
+	#include<mpi.h>
 	#include <vtkXMLPPolyDataWriter.h>
 	#include<vtkXMLPUnstructuredGridWriter.h>
-	#include<mpi.h>
+	#include<vtkXMLPMultiBlockDataWriter.h>
 	#include<core/Subdomain.hpp>
 #endif 
 
@@ -647,28 +648,26 @@ void VTKRecorder::action(){
 			const Sphere* sphere = dynamic_cast<Sphere*>(b->shape.get());
 			if (sphere){
 				if(skipNondynamic && b->state->blockedDOFs==State::DOF_ALL) continue;
-				vtkIdType pid[1];
-				Vector3r pos(scene->isPeriodic ? scene->cell->wrapShearedPt(b->state->pos) : b->state->pos);
-				pid[0] = spheresPos->InsertNextPoint(pos[0], pos[1], pos[2]);
-				spheresCells->InsertNextCell(1,pid);
-				radii->InsertNextValue(sphere->radius);
-
+					vtkIdType pid[1];
+					Vector3r pos(scene->isPeriodic ? scene->cell->wrapShearedPt(b->state->pos) : b->state->pos);
+					pid[0] = spheresPos->InsertNextPoint(pos[0], pos[1], pos[2]);
+					spheresCells->InsertNextCell(1,pid);
+					radii->InsertNextValue(sphere->radius);
 				if (recActive[REC_BSTRESS]) {
-				  const Matrix3r& bStress = bStresses[b->getId()];
-				  Eigen::SelfAdjointEigenSolver<Matrix3r> solver(bStress); // bStress is probably not symmetric (= self-adjoint for real matrices), but the solver still works, considering only one half of bStress. Which is good since existence of (real) eigenvalues is not sure for not symmetric bStress..
-				  Matrix3r dirAll = solver.eigenvectors();
-				  Vector3r eigenVal = solver.eigenvalues(); // cf http://eigen.tuxfamily.org/dox/classEigen_1_1SelfAdjointEigenSolver.html#a30caf3c3884a7f4a46b8ec94efd23c5e to be sure that eigenVal[i] * dirAll.col(i) = bStress * dirAll.col(i) and that eigenVal[0] <= eigenVal[1] <= eigenVal[2]
-
-				  spheresSigI->InsertNextValue(eigenVal[2]);
-				  spheresSigII->InsertNextValue(eigenVal[1]);
-				  spheresSigIII->InsertNextValue(eigenVal[0]);
-				  Real dirI[3] { (Real) dirAll(0,2), (Real) dirAll(1,2), (Real) dirAll(2,2) };
-				  Real dirII[3] { (Real) dirAll(0,1), (Real) dirAll(1,1), (Real) dirAll(2,1) };
-				   Real dirIII[3] { (Real) dirAll(0,0), (Real) dirAll(1,0), (Real) dirAll(2,0) };
-				spheresDirI->INSERT_NEXT_TUPLE(dirI);
-				spheresDirII->INSERT_NEXT_TUPLE(dirII);
-				spheresDirIII->INSERT_NEXT_TUPLE(dirIII);
-                }
+					const Matrix3r& bStress = bStresses[b->getId()];
+					Eigen::SelfAdjointEigenSolver<Matrix3r> solver(bStress); // bStress is probably not symmetric (= self-adjoint for real matrices), but the solver still works, considering only one half of bStress. Which is good since existence of (real) eigenvalues is not sure for not symmetric bStress..
+					Matrix3r dirAll = solver.eigenvectors();
+					Vector3r eigenVal = solver.eigenvalues(); // cf http://eigen.tuxfamily.org/dox/classEigen_1_1SelfAdjointEigenSolver.html#a30caf3c3884a7f4a46b8ec94efd23c5e to be sure that eigenVal[i] * dirAll.col(i) = bStress * dirAll.col(i) and that eigenVal[0] <= eigenVal[1] <= eigenVal[2]
+					spheresSigI->InsertNextValue(eigenVal[2]);
+					spheresSigII->InsertNextValue(eigenVal[1]);
+					spheresSigIII->InsertNextValue(eigenVal[0]);
+					Real dirI[3] { (Real) dirAll(0,2), (Real) dirAll(1,2), (Real) dirAll(2,2) };
+					Real dirII[3] { (Real) dirAll(0,1), (Real) dirAll(1,1), (Real) dirAll(2,1) };
+					Real dirIII[3] { (Real) dirAll(0,0), (Real) dirAll(1,0), (Real) dirAll(2,0) };
+					spheresDirI->INSERT_NEXT_TUPLE(dirI);
+					spheresDirII->INSERT_NEXT_TUPLE(dirII);
+					spheresDirIII->INSERT_NEXT_TUPLE(dirIII);
+				}
 				if (recActive[REC_ID]) spheresId->InsertNextValue(b->getId());
 				if (recActive[REC_MASK]) spheresMask->InsertNextValue(GET_MASK(b));
 				if (recActive[REC_MASS]) spheresMass->InsertNextValue(b->state->mass);
@@ -690,20 +689,17 @@ void VTKRecorder::action(){
 				}
 				if(recActive[REC_VELOCITY]){
 					Vector3r vel = Vector3r::Zero();
-                    
-                    if(scene->isPeriodic) { // Take care of cell deformation
-                        vel = scene->cell->bodyFluctuationVel(b->state->pos, b->state->vel, scene->cell->prevVelGrad) + scene->cell->prevVelGrad*scene->cell->wrapShearedPt(b->state->pos);
-                    } else {
-                        vel = b->state->vel;
-                    }
-                    
+					if(scene->isPeriodic) { // Take care of cell deformation
+						vel = scene->cell->bodyFluctuationVel(b->state->pos, b->state->vel, scene->cell->prevVelGrad) + scene->cell->prevVelGrad*scene->cell->wrapShearedPt(b->state->pos);
+					} else {
+						vel = b->state->vel;
+					}
 					Real v[3] = { (Real) vel[0], (Real) vel[1], (Real) vel[2] };
-				spheresLinVelVec->INSERT_NEXT_TUPLE(v);
+					spheresLinVelVec->INSERT_NEXT_TUPLE(v);
 					spheresLinVelLen->InsertNextValue(vel.norm());
-
 					const Vector3r& angVel = b->state->angVel;
 					Real av[3] = { (Real) angVel[0], (Real) angVel[1], (Real) angVel[2] };
-				 spheresAngVelVec->INSERT_NEXT_TUPLE(av);
+					spheresAngVelVec->INSERT_NEXT_TUPLE(av);
 					spheresAngVelLen->InsertNextValue(angVel.norm());
 				}
 				if(recActive[REC_STRESS]){
@@ -711,29 +707,29 @@ void VTKRecorder::action(){
 					const Vector3r& shear = bodyStates[b->getId()].shearStress;
 					Real n[3] = { (Real)  stress[0], (Real) stress[1], (Real) stress[2] };
 					Real s[3] = { (Real)  shear [0], (Real) shear [1], (Real) shear [2] };
-                    spheresNormalStressVec->INSERT_NEXT_TUPLE(n);
-                    spheresShearStressVec->INSERT_NEXT_TUPLE(s);
+					spheresNormalStressVec->INSERT_NEXT_TUPLE(n);
+					spheresShearStressVec->INSERT_NEXT_TUPLE(s);
 					spheresNormalStressNorm->InsertNextValue(stress.norm());
 				}
 				if(recActive[REC_LUBRICATION]){
-                    const Matrix3r& ncs = NCStresses[b->getId()];
-                    const Matrix3r& scs = SCStresses[b->getId()];
-                    const Matrix3r& nls = NLStresses[b->getId()];
-                    const Matrix3r& sls = SLStresses[b->getId()];
-                    const Matrix3r& nps = NPStresses[b->getId()];
-                    
-                    Real nc[9]={ (Real) ncs(0,0), (Real) ncs(0,1), (Real) ncs(0,2), (Real) ncs(1,0), (Real) ncs(1,1), (Real) ncs(1,2), (Real) ncs(2,0), (Real) ncs(2,1), (Real) ncs(2,2)};
-                    Real sc[9]={ (Real) scs(0,0), (Real) scs(0,1), (Real) scs(0,2), (Real) scs(1,0), (Real) scs(1,1), (Real) scs(1,2), (Real) scs(2,0), (Real) scs(2,1), (Real) scs(2,2)};
-                    Real nl[9]={ (Real) nls(0,0), (Real) nls(0,1), (Real) nls(0,2), (Real) nls(1,0), (Real) nls(1,1), (Real) nls(1,2), (Real) nls(2,0), (Real) nls(2,1), (Real) nls(2,2)};
-                    Real sl[9]={ (Real) sls(0,0), (Real) sls(0,1), (Real) sls(0,2), (Real) sls(1,0), (Real) sls(1,1), (Real) sls(1,2), (Real) sls(2,0), (Real) sls(2,1), (Real) sls(2,2)};
-                    Real np[9]={ (Real) nps(0,0), (Real) nps(0,1), (Real) nps(0,2), (Real) nps(1,0), (Real) nps(1,1), (Real) nps(1,2), (Real) nps(2,0), (Real) nps(2,1), (Real) nps(2,2)};
-                    
-                    spheresLubricationNormalContactStress->INSERT_NEXT_TUPLE(nc);
-                    spheresLubricationShearContactStress->INSERT_NEXT_TUPLE(sc);
-                    spheresLubricationNormalLubricationStress->INSERT_NEXT_TUPLE(nl);
-                    spheresLubricationShearLubricationStress->INSERT_NEXT_TUPLE(sl);
-                    spheresLubricationNormalPotentialStress->INSERT_NEXT_TUPLE(np);
-                }				
+					const Matrix3r& ncs = NCStresses[b->getId()];
+					const Matrix3r& scs = SCStresses[b->getId()];
+					const Matrix3r& nls = NLStresses[b->getId()];
+					const Matrix3r& sls = SLStresses[b->getId()];
+					const Matrix3r& nps = NPStresses[b->getId()];
+					
+					Real nc[9]={ (Real) ncs(0,0), (Real) ncs(0,1), (Real) ncs(0,2), (Real) ncs(1,0), (Real) ncs(1,1), (Real) ncs(1,2), (Real) ncs(2,0), (Real) ncs(2,1), (Real) ncs(2,2)};
+					Real sc[9]={ (Real) scs(0,0), (Real) scs(0,1), (Real) scs(0,2), (Real) scs(1,0), (Real) scs(1,1), (Real) scs(1,2), (Real) scs(2,0), (Real) scs(2,1), (Real) scs(2,2)};
+					Real nl[9]={ (Real) nls(0,0), (Real) nls(0,1), (Real) nls(0,2), (Real) nls(1,0), (Real) nls(1,1), (Real) nls(1,2), (Real) nls(2,0), (Real) nls(2,1), (Real) nls(2,2)};
+					Real sl[9]={ (Real) sls(0,0), (Real) sls(0,1), (Real) sls(0,2), (Real) sls(1,0), (Real) sls(1,1), (Real) sls(1,2), (Real) sls(2,0), (Real) sls(2,1), (Real) sls(2,2)};
+					Real np[9]={ (Real) nps(0,0), (Real) nps(0,1), (Real) nps(0,2), (Real) nps(1,0), (Real) nps(1,1), (Real) nps(1,2), (Real) nps(2,0), (Real) nps(2,1), (Real) nps(2,2)};
+					
+					spheresLubricationNormalContactStress->INSERT_NEXT_TUPLE(nc);
+					spheresLubricationShearContactStress->INSERT_NEXT_TUPLE(sc);
+					spheresLubricationNormalLubricationStress->INSERT_NEXT_TUPLE(nl);
+					spheresLubricationShearLubricationStress->INSERT_NEXT_TUPLE(sl);
+					spheresLubricationNormalPotentialStress->INSERT_NEXT_TUPLE(np);
+				}
 				if(recActive[REC_FORCE]){
 					scene->forces.sync();
 					const Vector3r& f = scene->forces.getForce(b->getId());
@@ -744,9 +740,8 @@ void VTKRecorder::action(){
 					Real tn = t.norm();
 					spheresForceLen->InsertNextValue(fn);
 					spheresTorqueLen->InsertNextValue(tn);
-				spheresForceVec->INSERT_NEXT_TUPLE(ff);
-				spheresTorqueVec->INSERT_NEXT_TUPLE(tt);
-
+					spheresForceVec->INSERT_NEXT_TUPLE(ff);
+					spheresTorqueVec->INSERT_NEXT_TUPLE(tt);
 				}
 
 				if (recActive[REC_CPM]){
@@ -754,28 +749,29 @@ void VTKRecorder::action(){
 					const Matrix3r& ss=YADE_PTR_CAST<CpmState>(b->state)->stress;
 					//Real s[3]={ss[0],ss[1],ss[2]};
 					Real s[9]={ (Real) ss(0,0), (Real) ss(0,1), (Real) ss(0,2), (Real) ss(1,0), (Real) ss(1,1), (Real) ss(1,2), (Real) ss(2,0), (Real) ss(2,1), (Real) ss(2,2)};
-				cpmStress->INSERT_NEXT_TUPLE(s);
+					cpmStress->INSERT_NEXT_TUPLE(s);
 				}
 
 				if (recActive[REC_JCFPM]){
 					nbCracks->InsertNextValue(YADE_PTR_CAST<JCFpmState>(b->state)->nbBrokenBonds);
 					jcfpmDamage->InsertNextValue(YADE_PTR_CAST<JCFpmState>(b->state)->damageIndex);
 				}
+				
 				if (recActive[REC_COORDNUMBER]){
 					spheresCoordNumb->InsertNextValue(b->coordNumber());
 				}
 #ifdef YADE_SPH
                                 if (recActive[REC_SPH]){
-				spheresRhoSPH->InsertNextValue(b->state->rho);
-				spheresPressSPH->InsertNextValue(b->state->press);
-				spheresCoordNumbSPH->InsertNextValue(b->coordNumber());
+					spheresRhoSPH->InsertNextValue(b->state->rho);
+					spheresPressSPH->InsertNextValue(b->state->press);
+					spheresCoordNumbSPH->InsertNextValue(b->coordNumber());
                                 }
 #endif
 
 #ifdef YADE_DEFORM
                                 if (recActive[REC_DEFORM]){
-				const Sphere* sphere = dynamic_cast<Sphere*>(b->shape.get());
-				spheresRealRad->InsertNextValue(b->state->dR + sphere->radius);
+					const Sphere* sphere = dynamic_cast<Sphere*>(b->shape.get());
+					spheresRealRad->InsertNextValue(b->state->dR + sphere->radius);
                                 }
 #endif
 
@@ -790,7 +786,7 @@ void VTKRecorder::action(){
 				if (recActive[REC_MATERIALID]) spheresMaterialId->InsertNextValue(b->material->id);
 				continue;
 			}
-		}
+		} // end rec sphere.
 		if (recActive[REC_FACETS]){
 			const Facet* facet = dynamic_cast<Facet*>(b->shape.get());
 			if (facet){
@@ -813,7 +809,7 @@ void VTKRecorder::action(){
 				if(recActive[REC_STRESS]){
 					const Vector3r& stress = bodyStates[b->getId()].normStress+bodyStates[b->getId()].shearStress;
 					Real s[3] = { (Real) stress[0], (Real) stress[1], (Real) stress[2] };
-				 facetsStressVec->INSERT_NEXT_TUPLE(s);
+					facetsStressVec->INSERT_NEXT_TUPLE(s);
 					facetsStressLen->InsertNextValue(stress.norm());
 				}
 				if(recActive[REC_FORCE]){
@@ -824,12 +820,12 @@ void VTKRecorder::action(){
 					Real tt[3] = { (Real)  t[0], (Real) t[1], (Real) t[2] };
 					Real fn = f.norm();
 					Real tn = t.norm();
-
-				facetsForceLen->InsertNextValue(fn);
-				facetsTorqueLen->InsertNextValue(tn);
-				facetsForceVec->INSERT_NEXT_TUPLE(ff);
-				facetsTorqueVec->INSERT_NEXT_TUPLE(tt);
+					facetsForceLen->InsertNextValue(fn);
+					facetsTorqueLen->InsertNextValue(tn);
+					facetsForceVec->INSERT_NEXT_TUPLE(ff);
+					facetsTorqueVec->INSERT_NEXT_TUPLE(tt);
 				}
+				
 				if (recActive[REC_MATERIALID]) facetsMaterialId->InsertNextValue(b->material->id);
 				if (recActive[REC_MASK]) facetsMask->InsertNextValue(GET_MASK(b));
 				if (recActive[REC_COORDNUMBER]){
@@ -841,12 +837,10 @@ void VTKRecorder::action(){
 		if (recActive[REC_BOXES]){
 			const Box* box = dynamic_cast<Box*>(b->shape.get());
 			if (box){
-
 				Vector3r pos(scene->isPeriodic ? scene->cell->wrapShearedPt(b->state->pos) : b->state->pos);
 				Quaternionr ori(b->state->ori);
 				Vector3r ext(box->extents);
 				vtkSmartPointer<vtkQuad> boxes = vtkSmartPointer<vtkQuad>::New();
-
 				Vector3r A = Vector3r(-ext[0], -ext[1], -ext[2]);
 				Vector3r B = Vector3r(-ext[0], +ext[1], -ext[2]);
 				Vector3r C = Vector3r(+ext[0], +ext[1], -ext[2]);
@@ -888,13 +882,13 @@ void VTKRecorder::action(){
 					if (recActive[REC_COLORS]){
 						const Vector3r& color = box->color;
 						Real c[3] = { (Real) color[0], (Real) color[1], (Real) color[2]};
-				boxesColors->INSERT_NEXT_TUPLE(c);
+						boxesColors->INSERT_NEXT_TUPLE(c);
 					}
 					if(recActive[REC_STRESS]){
 						const Vector3r& stress = bodyStates[b->getId()].normStress+bodyStates[b->getId()].shearStress;
 						Real s[3] = { (Real) stress[0], (Real) stress[1], (Real) stress[2] };
-				boxesStressVec->INSERT_NEXT_TUPLE(s);
-					boxesStressLen->InsertNextValue(stress.norm());
+						boxesStressVec->INSERT_NEXT_TUPLE(s);
+						boxesStressLen->InsertNextValue(stress.norm());
 					}
 					if(recActive[REC_FORCE]){
 						scene->forces.sync();
@@ -904,9 +898,8 @@ void VTKRecorder::action(){
 						Real tt[3] = { (Real) t[0], (Real) t[1], (Real) t[2] };
 						Real fn = f.norm();
 						Real tn = t.norm();
-					boxesForceVec->INSERT_NEXT_TUPLE(ff);
-					boxesTorqueVec->INSERT_NEXT_TUPLE(tt);
-
+						boxesForceVec->INSERT_NEXT_TUPLE(ff);
+						boxesTorqueVec->INSERT_NEXT_TUPLE(tt);
 						boxesForceLen->InsertNextValue(fn);
 						boxesTorqueLen->InsertNextValue(tn);
 					}
@@ -916,7 +909,7 @@ void VTKRecorder::action(){
 				continue;
 			}
 		}
-	}
+	} // end bodies loop.
 
 #ifdef YADE_MPI 
 	if ( (!parallelMode and recActive[REC_PERICELL]) or (scene->subdomain==0 and recActive[REC_PERICELL])){    
@@ -956,7 +949,7 @@ void VTKRecorder::action(){
 /* In mpiruns, spheres and other types of bodies are held by workers */ 
 #ifdef YADE_MPI 
 	vtkSmartPointer<vtkUnstructuredGrid> spheresUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
-	if (recActive[REC_SPHERES] and scene->subdomain != 0 ){
+	if ((recActive[REC_SPHERES] and scene->subdomain != 0) or (!parallelMode and recActive[REC_SPHERES]) ){
 #else 
 	vtkSmartPointer<vtkUnstructuredGrid> spheresUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
 	if (recActive[REC_SPHERES]){
@@ -1078,7 +1071,6 @@ void VTKRecorder::action(){
 				pwriter->Update(); 
 				pwriter->Write(); 
 			} 
-			
 		}  
 		#else 
 		{
@@ -1279,7 +1271,6 @@ void VTKRecorder::action(){
 				pwriter->Write(); 
 			}
 		}
-		
 		#else
 		{
 			vtkSmartPointer<vtkXMLPolyDataWriter> writer = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
@@ -1427,6 +1418,46 @@ void VTKRecorder::action(){
 	}
 
 	#ifdef YADE_VTK_MULTIBLOCK
+		#ifdef YADE_MPI 
+			if (multiblock){
+				if (parallelMode) {LOG_WARN("Multiblock feature in MPI case untested."); }
+				vtkSmartPointer<vtkMultiBlockDataSet> multiblockDataset = vtkSmartPointer<vtkMultiBlockDataSet>::New();
+				int i=0;
+				if(recActive[REC_SPHERES]) multiblockDataset->SetBlock(i++,spheresUg);
+				if(recActive[REC_FACETS]) multiblockDataset->SetBlock(i++,facetsUg);
+				if(recActive[REC_INTR]) multiblockDataset->SetBlock(i++,intrPd);
+				if(recActive[REC_PERICELL]) multiblockDataset->SetBlock(i++,pericellUg);
+				vtkSmartPointer<vtkXMLMultiBlockDataWriter> writer = vtkSmartPointer<vtkXMLMultiBlockDataWriter>::New();
+				if(ascii) writer->SetDataModeToAscii();
+				std::string fn; 
+				if (!parallelMode){fn=fileName+boost::lexical_cast<string>(scene->iter)+".vtm"; }
+				else {fn=fileName+boost::lexical_cast<string>(scene->iter)+"_"+boost::lexical_cast<string>(rank)+".vtm";}
+				writer->SetFileName(fn.c_str());
+				#ifdef YADE_VTK6
+					writer->SetInputData(multiblockDataset);
+				#else
+					writer->SetInput(multiblockDataset);
+				#endif
+				writer->Write();
+				
+				if (parallelMode and rank==0){
+					// use vtkController ; controller->GetProcessCount(); 
+// 					vtkSmartPointer<vtkXMLPMultiBlockDataWriter> parWriter = vtkXMLPMultiBlockDataWriter::New()
+// 					std::string pfn = fileName+boost::lexical_cast<string>(scene->iter+d)+".pvtm"; 
+// 					parWriter->EncodeAppendedDataOff();
+// 					parWriter->SetFileName(pfn.c_str());
+// 					#ifdef YADE_VTK6 
+// 						parWriter->SetInputData(multiblockDataset); 
+// 					#else 
+// 						parWriter->SetInput(multiblockDataset);  
+// 					#endif  
+// 					parWriter->SetWriteMetaFile(commSize); 
+// 					parWriter->Update(); 
+					LOG_ERROR("PARALLEL MULTIBLOCKDATA NOT IMPLEMENTED. "); 
+					
+				}
+			}
+		#else
 		if(multiblock){
 			vtkSmartPointer<vtkMultiBlockDataSet> multiblockDataset = vtkSmartPointer<vtkMultiBlockDataSet>::New();
 			int i=0;
@@ -1445,6 +1476,8 @@ void VTKRecorder::action(){
 			#endif
 			writer->Write();
 		}
+		#endif
+		
 	#endif
 };
 
