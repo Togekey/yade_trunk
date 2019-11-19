@@ -165,11 +165,11 @@ void Subdomain::setIDstoSubdomain(boost::python::list& idList ){//Remark: probab
 }
 
 void Subdomain::getRankSize() {
-	  if (!ranksSet){
-	    MPI_Comm_rank(selfComm(), &subdomainRank);
-	    MPI_Comm_size(selfComm(), &commSize); 
-	    ranksSet = true; 
-	  } else {return; }
+	if (!ranksSet){
+		MPI_Comm_rank(selfComm(), &subdomainRank);
+		MPI_Comm_size(selfComm(), &commSize); 
+		ranksSet = true; 
+	} else {return; }
 }
 
 // driver function for merge operation // workers send bodies, master recieves, sets the bodies into bodycontainer, sets interactions in interactionContainer.
@@ -181,14 +181,13 @@ void Subdomain::mergeOp() {
 	sendAllBodiesToMaster();
 	recvBodyContainersFromWorkers();
 	if (subdomainRank==master){
-	  Scene* scene = Omega::instance().getScene().get();
-	  bool ifMerge = true; bool overWriteBodies = true; 
-	  processContainerStrings();
-	  setBodiesToBodyContainer(scene, recvdBodyContainers, ifMerge, overWriteBodies); 
-	  recvdBodyContainers.clear(); 
-	  bodiesSet = false; // reset flag for next merge op.
-	  containersRecvd = false;
-	  
+		Scene* scene = Omega::instance().getScene().get();
+		bool ifMerge = true; bool overWriteBodies = true; 
+		processContainerStrings();
+		setBodiesToBodyContainer(scene, recvdBodyContainers, ifMerge, overWriteBodies); 
+		recvdBodyContainers.clear(); 
+		bodiesSet = false; // reset flag for next merge op.
+		containersRecvd = false;
 	}
 }
 
@@ -441,7 +440,6 @@ void Subdomain::recvBuffBlocking(char* cbuf, int cbufSz, int tag, int sourceRank
 }
 
 
-
 //non-blocking calls  --> Isend, Iprobe, Irecv, Waitall();  (we will use mpi_isend + mpi_wait and then mpi_probe followed by mpi_recv)
 
 void Subdomain::sendString(std::string& s, int destRank, int tag,  MPI_Request& request){
@@ -525,8 +523,8 @@ std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const
 	Vector3r pt1, pt2, axis; 
 	
 	if (useAABB) {
-		const shared_ptr<Bound>& otherSubDBound = otherSubdomainBody->bound; 
-		const shared_ptr<Bound>& thisSubDBound = (*scene->bodies)[subdomains[subdomainRank-1]]->bound; 
+		const auto& otherSubDBound = otherSubdomainBody->bound; 
+		const auto& thisSubDBound = (*scene->bodies)[subdomains[subdomainRank-1]]->bound; 
 		pt1 = 0.5*(thisSubDBound->min + thisSubDBound->max); 
 		pt2 = 0.5*(otherSubDBound->min + otherSubDBound->max); 
 	} else {
@@ -537,7 +535,7 @@ std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const
 	axis = pt2-pt1; axis.normalize(); 
 	
 	// from intersections (bodies in this subdomain which has intersections with the other sd) 
-	for (auto bId : intersections[otherSD]){
+	for (const auto& bId : intersections[otherSD]){
 		const shared_ptr<Body>& b = (*scene->bodies)[bId]; 
 		if (!b or b->getIsSubdomain()){continue; } 
 		Real ps = boundOnAxis((*b->bound), axis, true); 
@@ -555,7 +553,7 @@ std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const
 	}
 	
 	// sort 
-	std::sort(pos.begin(), pos.end(),_compareProjectedBoundElem()); 
+	std::sort(pos.begin(), pos.end(),[] (const auto& p1, const auto& p2) {return p1.first < p2.first;}); 
 	return pos; 
 }
 
@@ -566,20 +564,6 @@ std::vector<Body::id_t> Subdomain::medianFilterCPP(boost::python::list& idsToRec
 	if (! pos.size()) {LOG_ERROR("ERROR IN CALCULATING PROJECTED BOUNDS WITH SUBDOMAIN = " << otherSD << "  from Subdomain = "  <<  subdomainRank); }
 	int xminus = 0; int xplus = (int) pos.size() - 1; 
 	
-	
-	while (xminus < xplus){
-		while ((pos[xminus].second.first == subdomainRank) && (xminus < xplus)) ++xminus; 
-		while ((pos[xplus].second.first == otherSD) && (xminus < xplus)) --xplus;
-		if (xminus < xplus){
-			idsToSend.push_back(pos[xplus].second.second);
-			idsToRecv.append(pos[xminus].second.second); 
-			pos[xminus].second.first = subdomainRank; pos[xplus].second.first = otherSD; 
-			++xminus; --xplus; 
-		}
-	}
-	return idsToSend; 
-	
-/*	
 	do{
 		do {++xminus; } while (( pos[xminus].second.first == subdomainRank) && (xminus < xplus) ); 
 		do {--xplus; } while  (( pos[xplus].second.first == otherSD) && (xminus < xplus) ); 
@@ -591,13 +575,13 @@ std::vector<Body::id_t> Subdomain::medianFilterCPP(boost::python::list& idsToRec
 		}
 	  
 	} while (xminus < xplus); 
-	return idsToSend; */
+	return idsToSend; 
 }
 
 
 void Subdomain::migrateBodiesSend(const std::vector<Body::id_t>& sendIds,  int destination){
 	const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
-	Body::id_t& thisSubd = subdomains[subdomainRank-1]; 
+	const auto& thisSubd = subdomains[subdomainRank-1]; 
 	for (auto& bId : sendIds){
 		const shared_ptr<Body>& bdy = (*scene->bodies)[bId]; 
 		if (!bdy) {LOG_ERROR("reassignBodies failed " << bId << "  is not in subdomain " << subdomainRank << std::endl); }
@@ -639,7 +623,6 @@ void Subdomain::updateLocalIds(bool eraseRemoteMaster){
 				workerId.resize(sz); 
 				MPI_Recv(&workerId.front(), sz, MPI_INT, worker, 500, selfComm(), &status ); 
 				++worker; 
-
 			}
 			// in master
 			const shared_ptr<Scene>& scene = Omega::instance().getScene(); 
