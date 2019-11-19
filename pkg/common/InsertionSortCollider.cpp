@@ -554,25 +554,24 @@ bool InsertionSortCollider::spatialOverlapPeri(Body::id_t id1, Body::id_t id2,Sc
 		Real dim=scene->cell->getSize()[axis];
 		// LOG_DEBUG("dim["<<axis<<"]="<<dim);
 		// too big bodies
-		#ifdef YADE_MPI
-		bool subDoverlap = (Body::byId(id1, scene)->getIsSubdomain() || Body::byId(id2, scene)->getIsSubdomain()); 
-		if (!allowBiggerThanPeriod || !subDoverlap) { assert(maxima[3*id1+axis]-minima[3*id1+axis]<.99*dim); assert(maxima[3*id2+axis]-minima[3*id2+axis]<.99*dim);}
-		#else
 		if (!allowBiggerThanPeriod) { assert(maxima[3*id1+axis]-minima[3*id1+axis]<.99*dim); assert(maxima[3*id2+axis]-minima[3*id2+axis]<.99*dim);}
-		#endif
 		// define normalized positions relative to id1->max, and with +1 shift for id1->min so that body1's bounds cover an interval [shiftedMin; 1] at the end of a b1-centric period 
 		Real lmin = (minima[3*id2+axis]-maxima[3*id1+axis])*invSizes[axis];
 		Real lmax = (maxima[3*id2+axis]-maxima[3*id1+axis])*invSizes[axis];
 		Real shiftedMin = (minima[3*id1+axis]-maxima[3*id1+axis])*invSizes[axis]+1.;
 		if((lmax-lmin)>0.5 || shiftedMin<0){
 			#ifdef YADE_MPI
-			if (allowBiggerThanPeriod || subDoverlap) {periods[axis]=0; continue;}
-			#else
-			if (allowBiggerThanPeriod) {periods[axis]=0; continue;}
-			#endif 
-			else {
-				LOG_FATAL("Body #"<<((lmax-lmin)>0.5?id2:id1)<<" spans over half of the cell size "<<dim<<" (axis="<<axis<<", see flag allowBiggerThanPeriod)");
+				bool subDoverlap = (Body::byId(id1, scene)->getIsSubdomain() || Body::byId(id2, scene)->getIsSubdomain()); 
+				if (allowBiggerThanPeriod) {periods[axis]=0; continue;}
+				else if (subDoverlap) {periods[axis]=0; continue;}
+				else {	LOG_FATAL("Body #"<<((lmax-lmin)>0.5?id2:id1)<<" spans over half of the cell size "<<dim<<" (axis="<<axis<<", see flag allowBiggerThanPeriod)");
 				throw runtime_error(__FILE__ ": Body larger than half of the cell size encountered.");}
+			#else
+				if (allowBiggerThanPeriod) {periods[axis]=0; continue;}
+				else {	LOG_FATAL("Body #"<<((lmax-lmin)>0.5?id2:id1)<<" spans over half of the cell size "<<dim<<" (axis="<<axis<<", see flag allowBiggerThanPeriod)");
+				throw runtime_error(__FILE__ ": Body larger than half of the cell size encountered.");}
+			#endif 
+
 		}
 		int period1 = int(std::floor(lmax));
 		//overlap around zero, on the "+" side
