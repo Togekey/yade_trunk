@@ -7,7 +7,7 @@ cd ..
 rm -rf Yade-OpenFOAM-coupling
 git clone https://github.com/dpkn31/Yade-OpenFOAM-coupling.git
 cd Yade-OpenFOAM-coupling
-git checkout yadetest
+git checkout yadeTestPar
 ./Allclean
 ./Allwmake
 
