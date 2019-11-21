@@ -562,9 +562,10 @@ bool InsertionSortCollider::spatialOverlapPeri(Body::id_t id1, Body::id_t id2,Sc
 		if((lmax-lmin)>0.5 || shiftedMin<0){
 			#ifdef YADE_MPI
 				bool subDoverlap = (Body::byId(id1, scene)->getIsSubdomain() || Body::byId(id2, scene)->getIsSubdomain()); 
+				bool fluidBodyOverLap = (Body::byId(id1, scene)->getIsFluidDomainBbox() || Body::byId(id2, scene)->getIsFluidDomainBbox()); 
 				if (allowBiggerThanPeriod) {periods[axis]=0; continue;}
-				else if (subDoverlap) {periods[axis]=0; continue;}
-				else {	LOG_FATAL("Body #"<<((lmax-lmin)>0.5?id2:id1)<<" spans over half of the cell size "<<dim<<" (axis="<<axis<<", see flag allowBiggerThanPeriod)");
+				else if (subDoverlap || fluidBodyOverLap) {periods[axis]=0; continue;}
+				else { LOG_FATAL("Body #"<<((lmax-lmin)>0.5?id2:id1)<<" spans over half of the cell size "<<dim<<" (axis="<<axis<<", see flag allowBiggerThanPeriod)");
 				throw runtime_error(__FILE__ ": Body larger than half of the cell size encountered.");}
 			#else
 				if (allowBiggerThanPeriod) {periods[axis]=0; continue;}
