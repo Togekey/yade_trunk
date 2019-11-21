@@ -87,6 +87,7 @@ class FoamCoupling : public GlobalEngine {
 		int getNumBodies(); 
 		std::vector<int> getIdList(); 
 		MPI_Comm *myComm_p; 
+		bool bodyListModified; 
     
 		MPI_Comm selfComm() {if (myComm_p) return *myComm_p; else return MPI_COMM_WORLD;}
 	

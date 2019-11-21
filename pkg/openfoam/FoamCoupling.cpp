@@ -52,7 +52,6 @@ void FoamCoupling::getRank() {
 void FoamCoupling::setNumParticles(int np){
 	getRank(); 
 	numParticles = np;
-	castNumParticle(numParticles); 
 	initDone = true; 
 }
 
@@ -61,6 +60,7 @@ void FoamCoupling::setIdList(const std::vector<int>& alist) {
 	for (unsigned int i=0; i != bodyList.size(); ++i){
 		bodyList[i] = alist[i];
 	}
+	bodyListModified = true; 
 }
 
 
@@ -92,10 +92,12 @@ void FoamCoupling::castParticle() {
   
 	int sz = bodyList.size(); 
 	MPI_Bcast(&sz, 1, MPI_INT, rank, MPI_COMM_WORLD);
+	
 	procList.resize(sz); hydroForce.resize(sz*6); 
 	particleData.resize(10*sz); 
+	
 	std::fill(procList.begin(), procList.end(), -1); 
-	std::fill(hydroForce.begin(), hydroForce.end(), 1e-50); 
+	std::fill(hydroForce.begin(), hydroForce.end(), 0.0); 
 
 	#ifdef YADE_OPENMP
 	#pragma omp parallel  for collapse (1)
@@ -123,6 +125,7 @@ void FoamCoupling::castParticle() {
 		shared_ptr<Sphere> s = YADE_PTR_DYN_CAST<Sphere>(b->shape);
 		particleData[i*10+9] = s->radius;
 	}
+
 	MPI_Bcast(&particleData.front(), particleData.size(), MPI_DOUBLE, rank, MPI_COMM_WORLD);
 	// clear array after bcast
 	particleData.clear(); 
@@ -145,15 +148,19 @@ void FoamCoupling::updateProcList(){
 	for (unsigned int i=0; i != bodyList.size(); ++i){
 		int dummy_val = -5;
 		MPI_Allreduce(&dummy_val,&procList[i],1,MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-		if (procList[i] < 0 )  std::cout << "Particle not found in FOAM " << std::endl;
+		if (procList[i] < 0 )  LOG_WARN("particle id" << i << "not found in FOAM" << std::endl); 
 	}
 }
 
 void FoamCoupling::recvHydroForce() {
-	 for (unsigned int i=0; i!= procList.size(); ++i) {
+
+	std::fill(hydroForce.begin(), hydroForce.end(), 0.0); 
+	for (unsigned int i=0; i!= procList.size(); ++i) {
 		int recvFrom = procList[i];
+		std::vector<double> fBuff(6,0.0); 
+		MPI_Recv(&fBuff.front(),6,MPI_DOUBLE,recvFrom,TAG_FORCE,MPI_COMM_WORLD,&status); 
 		for (unsigned int j=0; j != 6; ++j) {
-			MPI_Recv(&hydroForce[6*i+j],1,MPI_DOUBLE,recvFrom,sendTag,MPI_COMM_WORLD,&status); 
+			hydroForce[6*i+j] = fBuff[j]; 
 		}
 	} 
 }
@@ -195,7 +202,7 @@ void FoamCoupling::resetProcList() {
 void FoamCoupling::exchangeDeltaT() {
 
 	// Recv foamdt  first and broadcast;
-	MPI_Recv(&foamDeltaT,1,MPI_DOUBLE,1,sendTag,MPI_COMM_WORLD,&status);
+	MPI_Recv(&foamDeltaT,1,MPI_DOUBLE,1,TAG_FLUID_DT,MPI_COMM_WORLD,&status);
 	//bcast yadedt to others.
 	Real  yadeDt = scene-> dt;
 	MPI_Bcast(&yadeDt,1,MPI_DOUBLE, rank, MPI_COMM_WORLD);
@@ -768,7 +775,6 @@ bool FoamCoupling::exchangeData(){
 void FoamCoupling::killMPI() { 
 	castTerminate(); 
 	MPI_Finalize();
-
 }
 } // namespace yade
 
