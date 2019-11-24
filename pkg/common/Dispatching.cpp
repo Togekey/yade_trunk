@@ -68,6 +68,8 @@ void BoundDispatcher::processBody(const shared_ptr<Body>& b)
 		} else sweepLength=sweepDist;
 		#ifdef YADE_MPI
 		if (b->getIsSubdomain()) sweepLength=0;
+		// skip fluid mesh bounding box from being extended
+		if (b->getIsFluidDomainBbox()) sweepLength = 0; 
 		#endif
 		b->bound->refPos=b->state->pos;
 		b->bound->lastUpdateIter=scene->iter;
