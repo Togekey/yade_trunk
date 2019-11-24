@@ -54,7 +54,6 @@ void Collider::pyHandleCustomCtorArgs(boost::python::tuple& t, boost::python::di
 bool Collider::handleFluidDomainCollision(const Body* b1, const Body*b2) const  {
 	if (b1 == NULL && b2 == NULL) {return false;} 
 	// skip interactions between the fluid solvers mesh bounds (openfoam coupling) and yade subdomains. 
-	else if  ((b1->getIsSubdomain() && b2->getIsFluidDomainBbox()) or (b2->getIsSubdomain() && b1->getIsFluidDomainBbox())) {return false; }
 	else if  (b1->getIsFluidDomainBbox() && b2->getIsFluidDomainBbox()) {return false; } 
 	else {return true;} 
 }
