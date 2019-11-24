@@ -29,6 +29,11 @@ class Collider: public GlobalEngine {
 		,Body::id_t subdomain
 		#endif 
 		);
+		
+		#ifdef YADE_MPI 
+			bool handleFluidDomainCollision(const Body*, const Body*) const; 
+		#endif
+		
 		/*! Invalidate all persistent data (if the collider has any), forcing reinitialization at next run.
 		The default implementation does nothing, colliders should override it if it is applicable.
 
