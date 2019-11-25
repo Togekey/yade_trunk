@@ -28,7 +28,6 @@ import yade.coloring as col
 
 class decompBodiesSerial: 
 
-
 	
 	def __init__(self, mpiComm): 
 		
@@ -166,21 +165,27 @@ class decompBodiesSerial:
 		
 		return splitPlaneIndex
 		
-		
-	
-	def partitionDomain(self, fibreList = None):
-	  
+
+
+	def checkIfMasterBody(self,b): 
+		''' check if the body is a boundary body or bodies that would be typically be in master. '''
+		if (isinstance(b.shape, Wall)) : return True 
+		elif (isinstance(b.shape, Box)) : return True 
+		elif (isinstance(b.shape, FluidDomainBbox)) : return True 
+		elif (isinstance(b.shape, Facet)) : return True 
+		elif (isinstance(b.shape, Subdomain)) : return True 
+		else : return False 
+
+      
+	def partitionDomain(self, fibreList = None): 
 		''' The main driver function  '''
 		
 		blst = []
 		if not fibreList: 
-			blst = [(b.state.pos, b.id) for b in O.bodies if not (isinstance(b.shape, Wall) or isinstance(b.shape, Box) or b.isSubdomain)]
+			blst = [(b.state.pos, b.id) for b in O.bodies if not self.checkIfDomainBody(b)]
 		else : 
-			
 			blst = [(O.bodies[j.cntrId].state.pos, j.cntrId) for j in fibreList]
-			
-			
-		
+	
 		if self.ifPw2(self.numWorkers) : 
 			self._partitionDomain(blst, self.numWorkers, strideRank = 0)
 		else : 
