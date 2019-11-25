@@ -1,5 +1,5 @@
 // (c) 2018 Bruno Chareyre <bruno.chareyre@grenoble-inp.fr>
-
+// (c) 2019 Deepak Kunhappan, <deepak.kunhappan@3sr-grenoble.fr> <deepak.kn1990@gmail.com>
 #ifdef YADE_MPI
 
 #include "Subdomain.hpp"
@@ -498,6 +498,91 @@ void Subdomain::clearRecvdCharBuff(std::vector<char*>& rcharBuff) {
 	if (subdomainRank != master){ rcharBuff.clear(); } // assuming master alwasy recieves from workers, hence the size of this vector for master is fixed.
 }
 
+
+void Subdomain::getMirrorIntersections(){
+	/* to be used after calling genLocalIntersections in mpy.py */ 
+	std::vector<MPI_Request> interReqs;  
+	mirrorIntersections.clear(); 
+	mirrorIntersections.resize(commSize);
+	
+	//workers exchange their intersections. 
+	if (subdomainRank != master) {
+		//get procs to communicate. 
+		const auto& interProcs = intersections[subdomainRank]; 
+		for (const auto& proc : interProcs){
+			if (proc == master) continue; 
+			const auto& interVec = intersections[proc]; 
+			MPI_Request req; 
+			//send the intersections
+			MPI_Isend(&interVec.front(), (int) interVec.size(), MPI_INT, proc, TAG_INTERSECTIONS, selfComm(), &req); 
+			interReqs.push_back(req); 
+		}
+		
+		// probe size of incoming intersections : 
+		for (const auto& proc : interProcs){
+			if (proc == master) continue; 
+			MPI_Status status; 
+			MPI_Probe(proc, TAG_INTERSECTIONS, selfComm(), &status);
+			int sz;
+			MPI_Get_count(&status, MPI_INT, &sz);
+			auto& mirrorVec = mirrorIntersections[proc]; 
+			mirrorVec.resize(sz); 
+		}
+		
+		// recv intersections.. 
+		for (const auto& proc : interProcs){
+			if (proc == master) continue; 
+			auto& mirrorVec = mirrorIntersections[proc]; 
+			MPI_Status stat; 
+			MPI_Recv(&mirrorVec.front(), (int) mirrorVec.size(), MPI_INT, proc, TAG_INTERSECTIONS, selfComm(), &stat);
+		}
+		//complete the interactive send. 
+		processReqs(interReqs); 
+	}
+	
+	//get intesections from master
+	std::vector<int> intrSzMaster; 
+	if (subdomainRank == master) {
+		for (auto& vec : intersections) {
+			intrSzMaster.push_back( (int) vec.size()); 
+		}
+	} else {intrSzMaster.resize(commSize); } 
+	
+	//master bcasts it's size of intersections 
+	MPI_Bcast(&intrSzMaster.front(), commSize, MPI_INT, master, selfComm()); 
+
+	// master sends intersections to those procs with size 
+	if (subdomainRank == master) {
+		interReqs.clear(); 
+		int prc = 0; 
+		for (auto& inters : intersections) {
+			if (inters.size() and prc != subdomainRank){
+				MPI_Request req; 
+				MPI_Isend(&inters.front(), (int) inters.size(), MPI_INT, prc, TAG_INTERSECTIONS, selfComm(), &req); 
+				interReqs.push_back(req); 
+			}
+			++prc; 
+		}
+	}
+	// workers with intersection with master receives. 
+	if (subdomainRank != master) {
+		if (intrSzMaster[subdomainRank] > 0 ) {
+			const auto& it = std::find(intersections[subdomainRank].begin(), intersections[subdomainRank].end(), master); 
+			if (it == intersections[subdomainRank].end()) intersections[subdomainRank].push_back(master); 
+			auto& vecMaster = mirrorIntersections[0]; 
+			vecMaster.clear(); vecMaster.resize(intrSzMaster[subdomainRank]); 
+			// recv 
+			MPI_Status stat; 
+			MPI_Recv(&vecMaster.front(), (int) vecMaster.size(), MPI_INT, master, TAG_INTERSECTIONS, selfComm(), &stat); 
+		}
+	}
+	//complete the interactive send in master's side. 
+	if (subdomainRank == master) {processReqs(interReqs);}
+}
+
+
+/* Migrate bodies, translation of python functions  */ 
+
 Real Subdomain::boundOnAxis(Bound& b, const Vector3r& direction, bool min) const //return projected extremum of an AABB in a particular direction (in the the '+' or '-' sign depending on 'min' )
 {
 	Vector3r size = b.max-b.min;
@@ -508,8 +593,6 @@ Real Subdomain::boundOnAxis(Bound& b, const Vector3r& direction, bool min) const
 	return 0.5*extremum;
 }
 
-
-/* Migrate bodies, translation of python functions  */ 
 
 
 std::vector<projectedBoundElem> Subdomain::projectedBoundsCPP(int otherSD, const Vector3r& otherSubDCM, const Vector3r& subDCM,  bool useAABB){
@@ -563,19 +646,17 @@ std::vector<Body::id_t> Subdomain::medianFilterCPP(boost::python::list& idsToRec
 	std::vector<projectedBoundElem> pos = projectedBoundsCPP(otherSD, otherSubDCM, subDCM, useAABB); 
 	if (! pos.size()) {LOG_ERROR("ERROR IN CALCULATING PROJECTED BOUNDS WITH SUBDOMAIN = " << otherSD << "  from Subdomain = "  <<  subdomainRank); }
 	int xminus = 0; int xplus = (int) pos.size() - 1; 
-	
-	do{
-		do {++xminus; } while (( pos[xminus].second.first == subdomainRank) && (xminus < xplus) ); 
-		do {--xplus; } while  (( pos[xplus].second.first == otherSD) && (xminus < xplus) ); 
-		if (xminus < xplus) {
+	while (xminus < xplus){
+		while ((pos[xminus].second.first == subdomainRank) && (xminus < xplus)) ++xminus; 
+		while ((pos[xplus].second.first == otherSD) && (xminus < xplus)) --xplus;
+		if (xminus < xplus){
 			idsToSend.push_back(pos[xplus].second.second);
 			idsToRecv.append(pos[xminus].second.second); 
 			pos[xminus].second.first = subdomainRank; pos[xplus].second.first = otherSD; 
 			++xminus; --xplus; 
 		}
-	  
-	} while (xminus < xplus); 
-	return idsToSend; 
+	} return idsToSend; 
+	
 }
 
 
@@ -631,7 +712,6 @@ void Subdomain::updateLocalIds(bool eraseRemoteMaster){
 				for (const auto& bId : workerIds){
 					(*scene->bodies)[bId]->subdomain = worker; 
 				}
-				
 				const auto& workerSubD  = YADE_PTR_CAST<Subdomain>((*scene->bodies)[subdomains[worker-1]]->shape); 
 				workerSubD->ids = workerIds; 
 				++worker; 

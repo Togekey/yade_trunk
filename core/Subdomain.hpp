@@ -1,5 +1,5 @@
 // (c) 2018 Bruno Chareyre <bruno.chareyre@grenoble-inp.fr>
-//  deepak, 03/05/19 --> added some helper functions. 
+// (c) 2019 Deepak Kunhappan, <deepak.kunhappan@3sr-grenoble.fr> <deepak.kn1990@gmail.com>
 //  francois kneib
 
 #pragma once
@@ -246,7 +246,7 @@ class Subdomain: public Shape {
 	vector<MPI_Status>  mpiStatus; 
 	std::vector<std::pair<std::string, int> > sendContainer;  // list containing the serialized data (string) to be sent with the destination rank.
 	int subdomainRank, commSize;  //NOTE: subdomainRank is redundant with scene->subdomain, would be better to avoid to be sure they don't diverge
-	int TAG_STRING = 420, TAG_COUNT = 20, TAG_WALL_INTR=100, TAG_FORCE=200, TAG_BODY=111; 
+	int TAG_STRING = 420, TAG_COUNT = 20, TAG_WALL_INTR=100, TAG_FORCE=200, TAG_BODY=111, TAG_INTERSECTIONS=112; 
 	bool commContainer=false; 
 	bool containersRecvd = false; 
 	std::vector<shared_ptr<MPIBodyContainer> > recvdBodyContainers; 
@@ -320,6 +320,8 @@ class Subdomain: public Shape {
 	 void updateLocalIds(bool); 
 	 void cleanIntersections(int);
 	 void updateNewMirrorIntrs(int, const std::vector<Body::id_t>& ); 
+	 void getMirrorIntersections();
+	 
 
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Subdomain,Shape,"The bounding box of a mpi subdomain. Stores internals and provides optimized functions for communications between workers. This class may not be used directly. Instead, Subdomains are appended automatically to the scene bodies when using :yref:`mpy.mpirun`",
 // 		((testType, testArray,testType({0,0}),,""))
@@ -369,7 +371,7 @@ class Subdomain: public Shape {
 		.def("updateLocalIds", &Subdomain::updateLocalIds, (boost::python::arg("eraseRemoteMastrer")), "updates the ids in the subdomain id vector, if not eraseRemoteMastrer, body->subdomain in master are updated.")
 		.def("cleanIntersections",&Subdomain::cleanIntersections, (boost::python::arg("otherDomain")), "makes sure that the ids in the current subdomain belong to the current subdomain")
 		.def("updateNewMirrorIntrs", &Subdomain::updateNewMirrorIntrs, (boost::python::arg("otherdomain"), boost::python::arg("newMirrorList")), "update the mirrorIntersections of a specific subdomain")
-		
+		.def("getMirrorIntrs", &Subdomain::getMirrorIntersections,"get mirrorIntersections from other subdomains")
 	);
 	// clang-format on
 	DECLARE_LOGGER;
