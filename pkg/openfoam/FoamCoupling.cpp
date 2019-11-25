@@ -251,16 +251,7 @@ void FoamCoupling::getFluidDomainBbox() {
 	commSzdff = abs(localCommSize-worldCommSize); 
 	
 	stride = localCommSize; 
-/*
-	if (localRank == 0) {
 
-		if (worldRank >  0) {stride = 0 ;}  else {stride = localCommSize; }
-	}	
-
-	MPI_Bcast(&stride, 1, MPI_INT, yadeMaster, selfComm()); */
-
-	//if (worldRank-localCommSize < 0 ) {stride = localCommSize; } else { stride = 0; }
-	// vector to hold the minMax buff 
 	std::vector<std::vector<double> > minMaxBuff; 
 	
 	//alloc memory 
@@ -283,9 +274,7 @@ void FoamCoupling::getFluidDomainBbox() {
 	fluidDomains.resize(commSzdff); 	
 	//create fluidDomainBbox bodies and get their ids. 
 	for (int fd = 0; fd != commSzdff; ++fd){
-	  
 		shared_ptr<Body>  flBody(shared_ptr<Body> (new Body()));
-		
 		shared_ptr<FluidDomainBbox> flBodyshape(shared_ptr<FluidDomainBbox>  (new FluidDomainBbox())); 
 		flBodyshape->setMinMax(minMaxBuff[fd]); 
 		flBodyshape->domainRank = stride+fd; 
@@ -296,9 +285,7 @@ void FoamCoupling::getFluidDomainBbox() {
 		fluidDomains[fd] = scene->bodies->insert(flBody); 
 		
 	}
-	
 	minMaxBuff.clear(); // dealloc the recvd minMaxBuff; 
-	std::cout << "got fluid bodies, rank = " << worldRank << std::endl; 
 }
 
 
@@ -416,33 +403,6 @@ void FoamCoupling::buildLocalIds(){
 	
 }
 
-
-// void FoamCoupling::findIntersections(){
-// 	
-// 	/*find bodies intersecting with the fluid domain bbox, get their ids and ranks of the intersecting fluid processes.  */
-// 		
-// 	for (unsigned f = 0; f != fluidDomains.size(); ++f){
-// 		shared_ptr<Body>& fdomain = (*scene->bodies)[fluidDomains[f]]; 
-// 		if (fdomain){
-// 			for (const auto& fIntrs : fdomain->intrs){
-// 				Body::id_t otherId; 
-// 				const shared_ptr<Interaction>& intr = fIntrs.second;
-// 				if (fdomain->id == intr->getId1()){otherId = intr->getId2(); } else { otherId = intr->getId1(); }
-// 				const shared_ptr<Body>& testBody = (*scene->bodies)[otherId]; 
-// 				if (testBody) {
-// 					if (testBody->subdomain==scene->subdomain){
-// 						if (!ifDomainBodies(testBody)){
-// 							const shared_ptr<FluidDomainBbox>& flBox = YADE_PTR_CAST<FluidDomainBbox>(fdomain->shape); 
-// 							flBox->bIds.push_back(testBody->id); 
-// 							flBox->hasIntersection = true; 
-// 						}
-// 					}
-// 				} 
-// 			}
-// 		
-// 	}
-// 	}
-// }
 
 bool FoamCoupling::ifDomainBodies(const shared_ptr<Body>& b) {
 	// check if body is subdomain, wall, facet, or other fluidDomainBbox 
