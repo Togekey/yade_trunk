@@ -108,7 +108,7 @@ class FoamCoupling : public GlobalEngine {
 		std::vector<double> hydroForce; 
 		std::vector<double> particleData;
 		std::vector<int>  procList; 
-		std::vector<Body::id_t> fluidDomains; 
+		//std::vector<Body::id_t> fluidDomains; 
 		std::vector<std::pair<Body::id_t, std::vector<Body::id_t> > > sharedIds; 
 		std::vector<std::pair<int, std::map<int, int> > > sharedIdsMapIndx; 
 		std::vector<std::pair<int, std::vector<double>> > hForce; 
@@ -131,7 +131,7 @@ class FoamCoupling : public GlobalEngine {
 		int otherCommSz; 
 		void buildSharedIdsMap(); 
 		int ifSharedIdMap(const Body::id_t& ); 
-		bool commSizeSet;
+		bool commSizeSet=false;
 		//bool couplingModeParallel = false; 
 		bool getCouplingMode(){return couplingModeParallel; }
 		void setCouplingMode(bool val){couplingModeParallel = val; } 
@@ -148,6 +148,7 @@ class FoamCoupling : public GlobalEngine {
     ((double,particleDensity,1, , "particle Density")) //not needed  as this is set in foam  
     ((double,fluidDensity,1, ,"fluidDensity")) //not needed  as this is set in foam  
     ((bool,couplingModeParallel,false, ,"set true if Yade-MPI is being used. ")) 
+    ((std::vector<Body::id_t>,fluidDomains, std::vector<Body::id_t>(),,"list of fluid domain bounding fictitious fluid bodies that has the fluid mesh bounds")) 
     ,
     ,
     ,
