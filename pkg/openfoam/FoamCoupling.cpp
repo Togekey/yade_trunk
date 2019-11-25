@@ -1,4 +1,4 @@
-// // *  Deepak kn : deepak.kunhappan@3sr-grenoble.fr; deepak.kn1990@gmail.com
+// (c) 2019  Deepak kunhappan : deepak.kunhappan@3sr-grenoble.fr; deepak.kn1990@gmail.com
 
 #ifdef YADE_MPI
 
@@ -47,8 +47,9 @@ void FoamCoupling::getRank() {
 		stride = localCommSize; 
 		commSzdff = abs(localCommSize-worldCommSize);
 	} else {
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	MPI_Comm_size(MPI_COMM_WORLD, &commSize);
+		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+		MPI_Comm_size(MPI_COMM_WORLD, &commSize);
+		commSizeSet = true; 
 	}
 
 }
@@ -326,14 +327,14 @@ void FoamCoupling::buildSharedIdsMap(){
 	inCommunicationProc.clear(); 
 	
 	// const shared_ptr<Subdomain>& subd = YADE_PTR_CAST<Subdomain>((*scene->bodies)[scene->thisSubdomainId]->shape); //not needed as we have localIds list. 
-	for (int bodyId : localIds){
+	for (const auto& bodyId : localIds){
 		std::map<int, int> testMap; 
 		const auto& bIntrs = (*scene->bodies)[bodyId]->intrs; 
 		for (const auto& itIntr : bIntrs){
 			const shared_ptr<Interaction>& intr = itIntr.second; 
 			Body::id_t otherId; 
 			if (bodyId  == intr->getId1()){otherId = intr->getId2(); } else {otherId = intr->getId1(); } 
-			const auto& otherBody =Body::byId(otherId);  
+			const auto& otherBody =Body::byId(otherId, scene);  
 			if (otherBody->getIsFluidDomainBbox()){
 				const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox> (otherBody->shape); 
 				flbox->bIds.push_back(bodyId); 
@@ -351,7 +352,7 @@ void FoamCoupling::buildSharedIdsMap(){
 	//for quickly identifying fluid procs. 
 	for (const auto& fluidId : fluidDomains){
 		const shared_ptr<Body>& flb = (*scene->bodies)[fluidId]; 
-		if (fluidId) {
+		if (flb) {
 			const shared_ptr<FluidDomainBbox>& flBox = YADE_PTR_CAST<FluidDomainBbox>(flb->shape); 
 			if ( flBox->bIds.size() > 0) {
 				inCommunicationProc.push_back(std::make_pair(flBox->domainRank, flBox->bIds.size()));
@@ -404,8 +405,8 @@ bool FoamCoupling::ifFluidDomain(const Body::id_t&  testId ){
 void FoamCoupling::buildLocalIds(){
 	if (localRank == yadeMaster) { return; }  // master has no bodies. 
 	if (bodyList.size() == 0) { LOG_ERROR("Ids for coupling has no been set, FAIL!"); return;   } 
-	const shared_ptr<Subdomain> subD =  YADE_PTR_CAST<Subdomain>(scene->subD); 
-	if (! subD) {LOG_ERROR("subdomain not found for local rank/ world rank  = "  << localRank << "   " << worldRank); return; }  
+	const shared_ptr<Subdomain>& subD =  YADE_PTR_CAST<Subdomain>(scene->subD); 
+	if (!subD) {LOG_ERROR("subdomain not found for local rank/ world rank  = "  << localRank << "   " << worldRank); return; }  
 	for (const auto& testId : bodyList) {
 		std::vector<Body::id_t>::iterator iter = std::find(subD->ids.begin(), subD->ids.end(), testId);  // can subD have ids sorted? 
 		if (iter != subD->ids.end()){

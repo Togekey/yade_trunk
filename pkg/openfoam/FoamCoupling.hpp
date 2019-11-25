@@ -1,4 +1,5 @@
-// YADE-OpenFOAM coupling module, Deepak kn  deepak.kunhappan@3sr-grenoble.fr/deepak.kn1990@gmail.com
+// YADE-OpenFOAM coupling module
+// (c) 2019  Deepak kunhappan : deepak.kunhappan@3sr-grenoble.fr; deepak.kn1990@gmail.com
 #ifdef YADE_MPI
 
 #pragma once 
@@ -24,14 +25,6 @@ class Scene;
 class Subdomain; 
 class Interaction; 
 class BodyContainer; 
-// class particleContainer{
-// 	public: 
-// 		std::vector<double> particleData;
-// 		int fluidRank;  
-// }; 
-
-
-
 
 class FoamCoupling : public GlobalEngine {
 	private:
