@@ -252,10 +252,6 @@ void Subdomain::sendAllBodiesToMaster() {
 }
 
 void Subdomain::sendBodies(const int receiver, const vector<Body::id_t >& idsToSend) {
-  // FIXME:BLABLABLA
-// 	cout<<"sending from "<<subdomainRank<<" to "<<receiver<<" ids [";
-// 	for(auto const& i: idsToSend) cout<<i<<" ";
-// 	cout<<"]"<<endl;
 	shared_ptr<MPIBodyContainer> container(shared_ptr<MPIBodyContainer> (new MPIBodyContainer()));
 	std::string s = idsToSerializedMPIBodyContainer(idsToSend);
 	stringBuff[receiver]=s;
@@ -673,7 +669,6 @@ void Subdomain::migrateBodiesSend(const std::vector<Body::id_t>& sendIds,  int d
 	 
 }
 
-// void Subdomain::migrateBodiesRecv() 
 
 void Subdomain::updateLocalIds(bool eraseRemoteMaster){
 	/* in case of the master proc and not eraseRemoteMaster  the worker ids are updated */ 
