@@ -182,7 +182,7 @@ class decompBodiesSerial:
 		
 		blst = []
 		if not fibreList: 
-			blst = [(b.state.pos, b.id) for b in O.bodies if not self.checkIfDomainBody(b)]
+			blst = [(b.state.pos, b.id) for b in O.bodies if not self.checkIfMasterBody(b)]
 		else : 
 			blst = [(O.bodies[j.cntrId].state.pos, j.cntrId) for j in fibreList]
 	
