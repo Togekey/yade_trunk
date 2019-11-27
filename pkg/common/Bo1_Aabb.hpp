@@ -24,7 +24,7 @@ class Bo1_Sphere_Aabb : public BoundFunctor
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(Bo1_Sphere_Aabb,BoundFunctor,"Functor creating :yref:`Aabb` from :yref:`Sphere`.",
 		((Real,aabbEnlargeFactor,((void)"deactivated",-1),,"Relative enlargement of the bounding box; deactivated if negative.\n\n.. note::\n\tThis attribute is used to create distant interaction, but is only meaningful with an :yref:`IGeomFunctor` which will not simply discard such interactions: :yref:`Ig2_Sphere_Sphere_ScGeom::interactionDetectionFactor` should have the same value as :yref:`aabbEnlargeFactor<Bo1_Sphere_Aabb::aabbEnlargeFactor>`."))
-                ((Real,aabbbOXEnlargeFactor,((void)"deactivated",-1),,"Relative enlargement of the bounding box for box objects only; deactivated if negative.\n\n.. note::\n\tThis attribute is used to create distant interaction, but is only meaningful with an :yref:`IGeomFunctor` which will not simply discard such interactions: :yref:`Ig2_Box_Sphere_ScGeom::interactionDetectionFactor` should have the same value as :yref:`aabbBoxEnlargeFactor<Bo1_Box_Aabb::aabbBoxEnlargeFactor>`."))
+                ((Real,aabbBoxEnlargeFactor,((void)"deactivated",-1),,"Relative enlargement of the bounding box for box objects only; deactivated if negative.\n\n.. note::\n\tThis attribute is used to create distant interaction, but is only meaningful with an :yref:`IGeomFunctor` which will not simply discard such interactions: :yref:`Ig2_Box_Sphere_ScGeom::interactionDetectionFactor` should have the same value as :yref:`aabbBoxEnlargeFactor<Bo1_Box_Aabb::aabbBoxEnlargeFactor>`."))
         );
 	// clang-format on
 };
