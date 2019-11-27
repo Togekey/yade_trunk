@@ -84,7 +84,7 @@ void Bo1_Box_Aabb::go(	const shared_ptr<Shape>& cm,
 		for( int j=0; j<3; ++j )
 			halfSize[i] += std::abs( r(i,j) * box->extents[j] );
 
-        halfSize*=(aabbBoxEnlargeFactor>0?aabbBoxEnlargeFactor:1.);
+        halfSize*=(aabbEnlargeFactor>0?aabbEnlargeFactor:1.);
 
 	aabb->min = se3.position-halfSize;
 	aabb->max = se3.position+halfSize;

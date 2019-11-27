@@ -24,7 +24,6 @@ class Bo1_Sphere_Aabb : public BoundFunctor
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(Bo1_Sphere_Aabb,BoundFunctor,"Functor creating :yref:`Aabb` from :yref:`Sphere`.",
 		((Real,aabbEnlargeFactor,((void)"deactivated",-1),,"Relative enlargement of the bounding box; deactivated if negative.\n\n.. note::\n\tThis attribute is used to create distant interaction, but is only meaningful with an :yref:`IGeomFunctor` which will not simply discard such interactions: :yref:`Ig2_Sphere_Sphere_ScGeom::interactionDetectionFactor` should have the same value as :yref:`aabbEnlargeFactor<Bo1_Sphere_Aabb::aabbEnlargeFactor>`."))
-                ((Real,aabbBoxEnlargeFactor,((void)"deactivated",-1),,"Relative enlargement of the bounding box for box objects only; deactivated if negative.\n\n.. note::\n\tThis attribute is used to create distant interaction, but is only meaningful with an :yref:`IGeomFunctor` which will not simply discard such interactions: :yref:`Ig2_Box_Sphere_ScGeom::interactionDetectionFactor` should have the same value as :yref:`aabbBoxEnlargeFactor<Bo1_Box_Aabb::aabbBoxEnlargeFactor>`."))
         );
 	// clang-format on
 };
@@ -65,7 +64,9 @@ class Bo1_Box_Aabb : public BoundFunctor{
 		void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body*);
 	FUNCTOR1D(Box);
 	// clang-format off
-	YADE_CLASS_BASE_DOC(Bo1_Box_Aabb,BoundFunctor,"Create/update an :yref:`Aabb` of a :yref:`Box`.");
+	YADE_CLASS_BASE_DOC_ATTRS(Bo1_Box_Aabb,BoundFunctor,"Create/update an :yref:`Aabb` of a :yref:`Box`.",
+		((Real,aabbEnlargeFactor,((void)"deactivated",-1),,"Relative enlargement of the bounding box; deactivated if negative.\n\n.. note::\n\tThis attribute is used to create distant interaction, but is only meaningful with an :yref:`IGeomFunctor` which will not simply discard such interactions: :yref:`Ig2_Sphere_Sphere_ScGeom::interactionDetectionFactor` should have the same value as :yref:`aabbEnlargeFactor<Bo1_Sphere_Aabb::aabbEnlargeFactor>`."))
+        );
 	// clang-format on
 };
 
