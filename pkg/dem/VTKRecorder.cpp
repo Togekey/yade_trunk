@@ -1288,13 +1288,18 @@ void VTKRecorder::action(){
 	
 	
 	vtkSmartPointer<vtkUnstructuredGrid> pericellUg = vtkSmartPointer<vtkUnstructuredGrid>::New();
+#ifdef YADE_MPI
+	if ( (!parallelMode and recActive[REC_PERICELL]) or (scene->subdomain==0 and recActive[REC_PERICELL])){    
+#else
 	if (recActive[REC_PERICELL]){
+#endif
 		pericellUg->SetPoints(pericellPoints);
 		pericellUg->SetCells(12,pericellHexa);
 		#ifdef YADE_VTK_MULTIBLOCK
 			if(!multiblock)
 		#endif
 			{
+			std::cout << "writing peri cell " <<  "  rank = " << scene->subdomain << std::endl;  
 			vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
 			if(compress) writer->SetCompressor(compressor);
 			if(ascii) writer->SetDataModeToAscii();
