@@ -41,7 +41,6 @@ import yade.bisectionDecomposition as dd
 this = sys.modules[__name__]
 sys.stderr.write=sys.stdout.write #so we see error messages from workers
 
-commSplit = False
 worldComm = MPI.COMM_WORLD
 color = 3; key =0; 
 comm = worldComm.Split(color, key)
@@ -50,6 +49,8 @@ if parent!=MPI.COMM_NULL:
 	comm=parent.Merge()
 rank = comm.Get_rank()
 numThreads = comm.Get_size()
+print("rank = ", rank) 
+print("size = ", numThreads)
 
 waitingCommands=False #are workers currently interactive?
 userScriptInCheckList=""	# detect if mpy is executed by checkList.py
@@ -807,15 +808,15 @@ def splitScene():
 				O.subD.subdomains = subdomains
 				subD = O.subD
 
+		O._sceneObj.subdomain = rank
+		O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
+		O.subD.init() 
+		
 		if FLUID_COUPLING: 
 			fluidCoupling = utils.typedEngine("FoamCoupling")
 			fluidCoupling.comm = comm
 			fluidCoupling.setIdList(fluidBodies)
 			fluidCoupling.couplingModeParallel = True
-
-
-		O._sceneObj.subdomain = rank
-		O.subD.comm=comm #make sure the c++ uses the merged intracommunicator
 		
 		O.subD.init() 
 		if FLUID_COUPLING:
