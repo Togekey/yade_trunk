@@ -84,7 +84,7 @@ MINIMAL_INTERSECTIONS = False # Reduces the size of position/velocity comms (at 
 REALLOCATE_MINIMAL = False # if true, intersections are minimized before reallocations, hence minimizing the number of reallocated bodies
 fibreList = []
 FLUID_COUPLING = False
-USE_CPP_INTERS = False #sending intersections using mpi4py sometimes fails (dependent on mpi4py version, needs confirmation) 
+USE_CPP_INTERS = False #sending intersections using mpi4py sometimes fails : MPI_ERR_TRUNCATE (dependent on mpi4py version, needs confirmation) 
 fluidBodies = [] 
 
 
@@ -735,8 +735,8 @@ def mergeScene():
 		if (AUTO_COLOR): colorDomains()
 		if rank==0: O.engines = O.initialEngines
 			
-def splitScene(): 
 
+def splitScene(): 
 	'''
 	Split a monolithic scene into distributed scenes on threads
 	precondition: the bodies have subdomain no. set in user script
@@ -1076,6 +1076,8 @@ def mpirun(nSteps,np=None,withMerge=False):
 		time.sleep((numThreads-rank)*0.002) #avoid mixing the final output, timing.stats() is independent of the sleep
 		mprint( "#####  Worker "+str(rank)+"  ######")
 		timing.stats() #specific numbers for -n4 and gabion.py
+
+
 #######################################
 #######  Bodies re-allocation  ########
 #######################################
@@ -1153,7 +1155,6 @@ def migrateBodies(ids,origin,destination):
 	Reassign bodies from origin to destination. The function has to be called by both origin (send) and destination (recv).
 	Note: subD.completeSendBodies() will have to be called after a series of reassignement since subD.sendBodies() is non-blocking
 	'''
-
 	if rank==origin:
 		if USE_CPP_REALLOC: 
 			O.subD.migrateBodiesSend(ids, destination)
@@ -1203,7 +1204,7 @@ def medianFilter(i,j):
 		useAABB = False; 
 		otherSubDCM = O.subD._centers_of_mass[j]
 		subDCM = O.subD._centers_of_mass[i]
-		bodiesToSend= O.subD.medianFilterCPP(bodiesToRecv,j, otherSubDCM, subDCM, useAABB)
+		bodiesToSend= O.subD.medianFilterCPP(bodiesToRecv,j, otherSubDCM, subDCM, useAABB) #this calls the cpp version of projectedBounds
 		
 	else:
 		pos = projectedBounds(i,j)
