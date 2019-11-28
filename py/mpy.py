@@ -49,8 +49,6 @@ if parent!=MPI.COMM_NULL:
 	comm=parent.Merge()
 rank = comm.Get_rank()
 numThreads = comm.Get_size()
-print("rank = ", rank) 
-print("size = ", numThreads)
 
 waitingCommands=False #are workers currently interactive?
 userScriptInCheckList=""	# detect if mpy is executed by checkList.py
