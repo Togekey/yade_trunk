@@ -541,7 +541,7 @@ void Subdomain::getMirrorIntersections(){
 	//get intesections from master
 	std::vector<int> intrSzMaster; 
 	if (subdomainRank == master) {
-		for (auto& vec : intersections) {
+		for (const auto& vec : intersections) {
 			intrSzMaster.push_back( (int) vec.size()); 
 		}
 	} else {intrSzMaster.resize(commSize); } 
