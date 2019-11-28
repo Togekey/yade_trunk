@@ -1299,7 +1299,6 @@ void VTKRecorder::action(){
 			if(!multiblock)
 		#endif
 			{
-			std::cout << "writing peri cell " <<  "  rank = " << scene->subdomain << std::endl;  
 			vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
 			if(compress) writer->SetCompressor(compressor);
 			if(ascii) writer->SetDataModeToAscii();
