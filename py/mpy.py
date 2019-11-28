@@ -774,6 +774,7 @@ def splitScene():
 			if rank == 0:
 				masterBodies = [b.id for b in O.bodies if b.subdomain==0] 
 				subD.setIDstoSubdomain(masterBodies)
+			
 			#tell the collider how to handle this new thing
 			collider = utils.typedEngine("InsertionSortCollider")
 			if FLUID_COUPLING: 
@@ -817,13 +818,7 @@ def splitScene():
 			fluidCoupling.comm = comm
 			fluidCoupling.setIdList(fluidBodies)
 			fluidCoupling.couplingModeParallel = True
-		
-		O.subD.init() 
-		if FLUID_COUPLING:
-			fluidCoupling = utils.typedEngine("FoamCoupling") 
-			fluidCoupling.comm = comm 
-			fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes from all fluid procs. 
-			fluidCoupling.setIdList(fluidBodies) 
+
 			
 		parallelCollide()
 		# insert states communicator after newton 
@@ -1010,35 +1005,6 @@ def eraseRemote():
 						if c.bounded: connected = True
 				if not connected:
 					O.bodies.erase(b.id)
-
-#def migrateBodies(ids,origin,destination):
-	#'''
-	#Note: subD.completeSendBodies() will have to be called after a series of reassignement since subD.sendBodies() is non-blocking
-	#'''
-	#if rank==origin:
-		#for id in ids:
-			#if not O.bodies[id]: mprint("reassignBodies failed,",id," is not in subdomain ",rank)
-			#O.bodies[id].subdomain = destination
-		#O.subD.sendBodies(destination,ids)
-	#elif rank==destination:
-		#O.subD.receiveBodies(origin)
-	
-	
-#def reassignBodies():
-	#for worker in [2]:
-		#candidates = O.subD.intersections[worker]
-		#migrateBodies(candidates,1,worker)
-	#O.subD.completeSendBodies()
-	#O.subD.ids = [b.id for b in O.bodies if (b.subdomain==rank and not b.isSubdomain)]
-	
-	#reqs=[]
-		
-	#if rank>0: req = comm.send(O.subD.ids,dest=0,tag=_ASSIGNED_IDS_)
-	#else: #master will update subdomains for correct display (besides, keeping 'ids' updated for remote subdomains may not be a strict requirement)
-		#for k in range(1,numThreads):
-			#ids=comm.recv(source=k,tag=_ASSIGNED_IDS_)
-			#O.bodies[O.subD.subdomains[k-1]].shape.ids=ids
-			#for i in ids: O.bodies[i].subdomain=k
 
 
 ##### RUN MPI #########
@@ -1287,7 +1253,6 @@ def reallocateBodiesToSubdomains(_filter=medianFilter,blocking=True):
 				
 	O.subD.completeSendBodies()
 	
-	ts = time.time()
 	if USE_CPP_REALLOC:
 		O.subD.updateLocalIds(ERASE_REMOTE_MASTER)
 		if not ERASE_REMOTE_MASTER:
