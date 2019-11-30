@@ -95,6 +95,7 @@ def yadesrccommit_role(role,rawtext,lineno,inliner,options={},content=[]):
 moduleMap={
 	  'yade._libVersions'       :'yade.libVersions'
 	, 'yade._log'               :'yade.log'
+	, 'yade._testCppPy'         :'yade.testCppPy'
 	, 'yade._packPredicates'    :'yade.pack'
 	, 'yade._packSpheres'       :'yade.pack'
 	, 'yade._packObb'           :'yade.pack'
