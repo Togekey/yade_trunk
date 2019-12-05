@@ -29,7 +29,7 @@ py::dict getEigenFlags()
 	ret["Matrix6r"]  = getEigenFlagTemplate<Matrix6r>();
 	ret["MatrixXr"]  = getEigenFlagTemplate<MatrixXr>();
 	ret["VectorXr"]  = getEigenFlagTemplate<VectorXr>();
-	// /*
+	/*
 	ret["Vector2rDA"]    = getEigenFlagTemplate<Vector2rDA>();
 	ret["Vector3rDA"]    = getEigenFlagTemplate<Vector3rDA>();
 	ret["Vector4rDA"]    = getEigenFlagTemplate<Vector4rDA>();
@@ -39,7 +39,7 @@ py::dict getEigenFlags()
 	ret["MatrixXrDA"]    = getEigenFlagTemplate<MatrixXrDA>();
 	ret["VectorXrDA"]    = getEigenFlagTemplate<VectorXrDA>();
 	ret["QuaternionrAL"] = getEigenFlagTemplate<QuaternionrAL>();
-	// */
+	 */
 	ret["Quaternionr"]  = getEigenFlagTemplate<Quaternionr>();
 	ret["AngleAxisr"]   = getEigenFlagTemplate<AngleAxisr::VectorType::Base>();
 	ret["AlignedBox3r"] = getEigenFlagTemplate<AlignedBox3r::VectorType::Base>();
@@ -75,7 +75,7 @@ py::dict getEigenStorageOrders()
 	ret["Matrix6r"]  = getEigenStorageOrderTemplate<Matrix6r>();
 	ret["MatrixXr"]  = getEigenStorageOrderTemplate<MatrixXr>();
 	ret["VectorXr"]  = getEigenStorageOrderTemplate<VectorXr>();
-	// /*
+	/*
 	ret["Vector2rDA"]    = getEigenStorageOrderTemplate<Vector2rDA>();
 	ret["Vector3rDA"]    = getEigenStorageOrderTemplate<Vector3rDA>();
 	ret["Vector4rDA"]    = getEigenStorageOrderTemplate<Vector4rDA>();
@@ -85,7 +85,7 @@ py::dict getEigenStorageOrders()
 	ret["MatrixXrDA"]    = getEigenStorageOrderTemplate<MatrixXrDA>();
 	ret["VectorXrDA"]    = getEigenStorageOrderTemplate<VectorXrDA>();
 	ret["QuaternionrAL"] = getEigenStorageOrderTemplate<QuaternionrAL::Coefficients>();
-	// */
+	*/
 	ret["Quaternionr"]  = getEigenStorageOrderTemplate<Quaternionr::Coefficients>();
 	ret["AngleAxisr"]   = getEigenStorageOrderTemplate<AngleAxisr::VectorType>();
 	ret["AlignedBox3r"] = getEigenStorageOrderTemplate<AlignedBox3r::VectorType>();

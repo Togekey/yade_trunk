@@ -119,6 +119,7 @@ using UnderlyingReal = ::mpfr::mpreal;
 
 using Real = UnderlyingReal;
 
+#include "ExposedTypes.hpp"
 
 /*************************************************************************/
 /*************************  Some sanity checks  **************************/
