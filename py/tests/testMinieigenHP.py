@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # autopkgtest check for minieigen
 # (C) 2015 Anton Gladky <gladk@debian.org>
 # (C) 2019 Janek Kozicki
@@ -129,8 +129,15 @@ if __name__ == '__main__':
 		unittest.main(testRunner=unittest.TextTestRunner(stream=sys.stdout, verbosity=2))
 EOF
 
+function handle_error() {
+	ls -la
+	gdb --batch -ex "bt full" `which python3` ./core
+	exit 1
+}
+
 echo 'Test Python3'
-python3 minieigentest.py
+ulimit -c unlimited
+python3 minieigentest.py || handle_error
 echo "Python3 run: OK"
 
 cd
