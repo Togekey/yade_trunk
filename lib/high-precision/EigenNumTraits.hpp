@@ -5,8 +5,8 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
-#ifndef EIGEN_NUM_TRAITS_HPP
-#define EIGEN_NUM_TRAITS_HPP
+#ifndef YADE_EIGEN_NUM_TRAITS_HPP
+#define YADE_EIGEN_NUM_TRAITS_HPP
 
 // compare this file with /usr/include/eigen3/Eigen/src/Core/NumTraits.h
 // http://eigen.tuxfamily.org/dox/TopicCustomizing_CustomScalar.html
@@ -20,7 +20,7 @@ namespace Eigen {
 // NOTE: Don't include this file for float, double, long double. Otherwise you will get errors like:
 // error: redefinition of ‘struct Eigen::NumTraits<long double>’
 // note: previous definition of ‘struct Eigen::NumTraits<long double>’ in /usr/include/eigen3/Eigen/src/Core/NumTraits.h
-template <> struct NumTraits<UnderlyingReal> : GenericNumTraits<UnderlyingReal> { // NOTE: Don't include this file for float, double, long double.
+template <> struct NumTraits<EigenTraitsReal> : GenericNumTraits<EigenTraitsReal> { // NOTE: Don't include this file for float, double, long double.
 	// /\<ReadCost.*=\|\<MulCost.*=\|\<AddCost.*=
 	enum { IsInteger             = 0,
 	       IsSigned              = 1,
@@ -30,9 +30,9 @@ template <> struct NumTraits<UnderlyingReal> : GenericNumTraits<UnderlyingReal> 
 	       AddCost               = ::EigenCostReal::AddCost,
 	       MulCost               = ::EigenCostReal::MulCost };
 
-	typedef UnderlyingReal UR;
-	typedef UnderlyingReal Real;
-	typedef UnderlyingReal NonInteger;
+	typedef EigenTraitsReal UR;
+	typedef EigenTraitsReal Real;
+	typedef EigenTraitsReal NonInteger;
 
 	static constexpr long get_default_prec = std::numeric_limits<UR>::digits;
 
@@ -47,7 +47,8 @@ template <> struct NumTraits<UnderlyingReal> : GenericNumTraits<UnderlyingReal> 
 	static inline Real Log2(long = get_default_prec)
 	{
 		using namespace boost::multiprecision;
-		return log(Real(2)); /* mpfr::const_log2(Precision); */
+		using namespace std;
+		return log(EigenTraitsReal(2));
 	}
 	static inline Real Catalan(long = get_default_prec) { return boost::math::constants::catalan<UR>(); }
 
@@ -69,61 +70,62 @@ template <> struct NumTraits<UnderlyingReal> : GenericNumTraits<UnderlyingReal> 
 namespace internal {
 	namespace supportDetail {
 		// random number [0,1)
-		static inline UnderlyingReal random01()
+		static inline EigenTraitsReal random01()
 		{
-			using namespace boost::multiprecision;
-			using namespace boost::random;
-			static mt19937 gen;
-			return generate_canonical<UnderlyingReal, std::numeric_limits<UnderlyingReal>::digits>(gen);
+			static boost::random::mt19937 gen;
+			return boost::random::generate_canonical<EigenTraitsReal, std::numeric_limits<EigenTraitsReal>::digits>(gen);
 		}
 	}
-	template <> inline UnderlyingReal random<UnderlyingReal>() { return supportDetail::random01() * 2 - 1; }
+	template <> inline EigenTraitsReal random<EigenTraitsReal>() { return supportDetail::random01() * 2 - 1; }
 
-	template <> inline UnderlyingReal random<UnderlyingReal>(const UnderlyingReal& a, const UnderlyingReal& b)
+	template <> inline EigenTraitsReal random<EigenTraitsReal>(const EigenTraitsReal& a, const EigenTraitsReal& b)
 	{
 		return a + (b - a) * supportDetail::random01();
 	}
 
-	inline bool isMuchSmallerThan(const UnderlyingReal& a, const UnderlyingReal& b, const UnderlyingReal& eps)
+	inline bool isMuchSmallerThan(const EigenTraitsReal& a, const EigenTraitsReal& b, const EigenTraitsReal& eps)
 	{
 		using namespace boost::multiprecision;
+		using namespace std;
 		return abs(a) <= abs(b) * eps;
 	}
 
-	inline bool isEqualFuzzy(const UnderlyingReal& a, const UnderlyingReal& b, const UnderlyingReal& eps)
+	inline bool isEqualFuzzy(const EigenTraitsReal& a, const EigenTraitsReal& b, const EigenTraitsReal& eps)
 	{
 		using namespace boost::multiprecision;
+		using namespace std;
 		return abs(a - b) <= eps;
 	}
-	inline bool isApprox(const UnderlyingReal& a, const UnderlyingReal& b, const UnderlyingReal& eps) { return isEqualFuzzy(a, b, eps); }
+	inline bool isApprox(const EigenTraitsReal& a, const EigenTraitsReal& b, const EigenTraitsReal& eps) { return isEqualFuzzy(a, b, eps); }
 
-	inline bool isApproxOrLessThan(const UnderlyingReal& a, const UnderlyingReal& b, const UnderlyingReal& eps)
+	inline bool isApproxOrLessThan(const EigenTraitsReal& a, const EigenTraitsReal& b, const EigenTraitsReal& eps)
 	{
 		return a <= b || isEqualFuzzy(a, b, eps);
 	}
 
-	template <> inline long double cast<UnderlyingReal, long double>(const UnderlyingReal& x) { return (long double)(x); /* x.toLDouble(); */ }
+	template <> inline long double cast<EigenTraitsReal, long double>(const EigenTraitsReal& x) { return (long double)(x); /* x.toLDouble(); */ }
 
-	template <> inline double cast<UnderlyingReal, double>(const UnderlyingReal& x) { return double(x); /* x.toDouble(); */ }
+	template <> inline double cast<EigenTraitsReal, double>(const EigenTraitsReal& x) { return double(x); /* x.toDouble(); */ }
 
-	template <> inline long cast<UnderlyingReal, long>(const UnderlyingReal& x) { return long(x); /* x.toLong(); */ }
+	template <> inline long cast<EigenTraitsReal, long>(const EigenTraitsReal& x) { return long(x); /* x.toLong(); */ }
 
-	template <> inline int cast<UnderlyingReal, int>(const UnderlyingReal& x) { return int(x); /* int(x.toLong()); */ }
+	template <> inline int cast<EigenTraitsReal, int>(const EigenTraitsReal& x) { return int(x); /* int(x.toLong()); */ }
 } // end namespace internal
 }
 
 /*
 //namespace yade::Math { // maybe add this later
 
-inline const UnderlyingReal& conj(const UnderlyingReal& x) { return x; }
-inline const UnderlyingReal& real(const UnderlyingReal& x) { return x; }
-inline UnderlyingReal        imag(const UnderlyingReal&) { return 0.; }
-inline UnderlyingReal        abs(const UnderlyingReal& x)
+inline const EigenTraitsReal& conj(const EigenTraitsReal& x) { return x; }
+inline const EigenTraitsReal& real(const EigenTraitsReal& x) { return x; }
+inline EigenTraitsReal        imag(const EigenTraitsReal&) { return 0.; }
+inline EigenTraitsReal        abs(const EigenTraitsReal& x)
 {
 	using namespace boost::multiprecision;
+	using namespace std;
 	return abs(x);
 }
-inline UnderlyingReal abs2(const UnderlyingReal& x) { return x * x; }
+inline EigenTraitsReal abs2(const EigenTraitsReal& x) { return x * x; }
 
 //}
 */

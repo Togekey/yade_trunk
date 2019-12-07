@@ -5,8 +5,8 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
-#ifndef REAL_HPP
-#define REAL_HPP
+#ifndef YADE_REAL_DETECTION_HPP
+#define YADE_REAL_DETECTION_HPP
 
 /* This file takes following defines as inputs:
  *
@@ -50,9 +50,22 @@
  *   et_off         → slower calculations, faster compilation
  */
 
-#include <Eigen/Core>
-#include <boost/cstdfloat.hpp>
+#include <boost/cstdfloat.hpp> // Must be the first include https://www.boost.org/doc/libs/1_71_0/libs/math/doc/html/math_toolkit/rationale.html
+
+#include <boost/config.hpp>
 #include <boost/math/constants/constants.hpp>
+#include <boost/math/special_functions.hpp>
+#include <boost/math/tools/config.hpp>
+#include <cmath>
+#include <limits>
+
+#include <Eigen/Core>
+
+// TODO: https://www.boost.org/doc/libs/1_71_0/libs/math/doc/html/math_toolkit/overview_tr1.html
+// TODO: They suggest to use this -lboost_math_tr1               boost::math::acosh(x) ↔ boost::math::tr1::acosh(x)
+//      ↓ …… for large scale software development where compile times are significant …… difference in performance …… as much as 20 times,
+//#include <boost/math/tr1.hpp>
+
 
 /*************************************************************************/
 /*************************    float 32 bits     **************************/
@@ -81,6 +94,7 @@ using UnderlyingReal = boost::multiprecision::float128;
 namespace EigenCostReal {
 enum { ReadCost = 1, AddCost = 2, MulCost = 2 };
 }
+using EigenTraitsReal = UnderlyingReal;
 #include "EigenNumTraits.hpp"
 
 /*************************************************************************/
@@ -94,6 +108,7 @@ using UnderlyingReal        = boost::multiprecision::number<UnderlyingRealBacken
 namespace EigenCostReal {
 enum { ReadCost = Eigen::HugeCost, AddCost = Eigen::HugeCost, MulCost = Eigen::HugeCost };
 }
+using EigenTraitsReal = UnderlyingReal;
 #include "EigenNumTraits.hpp"
 
 /*************************************************************************/
@@ -106,6 +121,7 @@ using UnderlyingReal = boost::multiprecision::number<UnderlyingRealBackend<YADE_
 namespace EigenCostReal {
 enum { ReadCost = Eigen::HugeCost, AddCost = Eigen::HugeCost, MulCost = Eigen::HugeCost };
 }
+using EigenTraitsReal = UnderlyingReal;
 #include "EigenNumTraits.hpp"
 
 

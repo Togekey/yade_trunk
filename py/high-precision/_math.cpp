@@ -45,7 +45,7 @@ double someFunction()
 	return ret;
 }
 
-#if not (defined(EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H) or defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this))
+#if not (defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H) or defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this))
 namespace boost {
 namespace multiprecision {
 }
@@ -107,7 +107,7 @@ try {
 	py::scope().attr("AddCost")               = int(Eigen::NumTraits<Real>::AddCost);
 	py::scope().attr("MulCost")               = int(Eigen::NumTraits<Real>::MulCost);
 
-#if defined(EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H) or defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
+#if defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H) or defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
 	py::def("highest", Eigen::NumTraits<Real>::highest, (py::arg("Precision") = defprec));
 	py::def("lowest", Eigen::NumTraits<Real>::lowest, (py::arg("Precision") = defprec));
 
