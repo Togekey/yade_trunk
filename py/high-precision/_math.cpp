@@ -12,6 +12,7 @@
 #include <limits>
 #include <sstream>
 #include <Eigen/Core>
+#include <Eigen/src/Core/MathFunctions.h>
 
 //#define ARBITRARY_REAL_DEBUG
 #include "Real/ToFromPythonConverter.hpp"
@@ -141,6 +142,8 @@ try {
 
 	py::def("random", static_cast<Real (*)()>(&Eigen::internal::random<Real>));
 	py::def("random", static_cast<Real (*)(const Real&, const Real&)>(&Eigen::internal::random<Real>), (py::arg("a"), "b"));
+
+#if ((EIGEN_MAJOR_VERSION > 2) and (EIGEN_WORLD_VERSION>=3)) or defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H) or defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
 	py::def("isMuchSmallerThan",
 	        static_cast<bool (*)(const Real&, const Real&, const Real&)>(&Eigen::internal::isMuchSmallerThan),
 	        (py::arg("a"), "b", "eps"));
@@ -148,6 +151,16 @@ try {
 	py::def("isApproxOrLessThan",
 	        static_cast<bool (*)(const Real&, const Real&, const Real&)>(&Eigen::internal::isApproxOrLessThan),
 	        (py::arg("a"), "b", "eps"));
+#else
+	// older eigen 3.2 didn't use `const Real&` but was copying third argument by value `Real`
+	py::def("isMuchSmallerThan",
+	        static_cast<bool (*)(const Real&, const Real&, Real)>(&Eigen::internal::isMuchSmallerThan<Real,Real>),
+	        (py::arg("a"), "b", "eps"));
+	py::def("isApprox", static_cast<bool (*)(const Real&, const Real&, Real)>(&Eigen::internal::isApprox<Real>), (py::arg("a"), "b", "eps"));
+	py::def("isApproxOrLessThan",
+	        static_cast<bool (*)(const Real&, const Real&, Real)>(&Eigen::internal::isApproxOrLessThan<Real>),
+	        (py::arg("a"), "b", "eps"));
+#endif
 
 	py::def("toLongDouble", static_cast<long double (*)(const Real&)>(&Eigen::internal::cast<Real, long double>), (py::arg("x")));
 	py::def("toDouble", static_cast<double (*)(const Real&)>(&Eigen::internal::cast<Real, double>), (py::arg("x")));
