@@ -90,11 +90,27 @@
 		{                                                                                                                                              \
 		}                                                                                                                                              \
 		/* This is for floating point literals without suffix, e.g. 0.5 to be automatically promoted to Real  */                                       \
-		template <typename OtherType>                                                                                                                  \
-		inline StrongReal(const OtherType& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<UnderlyingStrongReal>::value)                \
-		        : val(initVal)                                                                                                                         \
-		{                                                                                                                                              \
-		}                                                                                                                                              \
+		/* FIXME Zamiast tego może jakiś trait if_is_numerical_type */                                                                               \
+		/*inline StrongReal(const double& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<UnderlyingStrongReal>::value)            */       \
+		/*        : val(initVal)                                                                                                                  */       \
+		/*{                                                                                                                                       */       \
+		/*}                                                                                                                                       */       \
+		/*inline StrongReal(const long unsigned int& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<UnderlyingStrongReal>::value) */       \
+		/*        : val(initVal)                                                                                                                  */       \
+		/*{                                                                                                                                       */       \
+		/*}                                                                                                                                       */       \
+		/*inline StrongReal(const long signed int& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<UnderlyingStrongReal>::value)   */       \
+		/*        : val(initVal)                                                                                                                  */       \
+		/*{                                                                                                                                       */       \
+		/*}                                                                                                                                       */       \
+		/*inline StrongReal(const unsigned int& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<UnderlyingStrongReal>::value)      */       \
+		/*        : val(initVal)                                                                                                                  */       \
+		/*{                                                                                                                                       */       \
+		/*}                                                                                                                                       */       \
+		/* inline StrongReal(const signed int& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<UnderlyingStrongReal>::value)       */        \
+		/*         : val(initVal)                                                                                                                 */        \
+		/* {                                                                                                                                      */        \
+		/* }                                                                                                                                      */        \
 		inline StrongReal() BOOST_NOEXCEPT_IF(boost::has_nothrow_default_constructor<UnderlyingStrongReal>::value)                                     \
 		        : val()                                                                                                                                \
 		{                                                                                                                                              \
@@ -138,10 +154,16 @@
                                                                                                                                                                \
 		bool                               operator==(const StrongReal& rhs) const { return val == rhs.val; }                                          \
 		bool                               operator<(const StrongReal& rhs) const { return val < rhs.val; }                                            \
-		bool                               operator>(const StrongReal& rhs) const { return val > rhs.val; }                                            \
+		/* bool                               operator>(const StrongReal& rhs) const { return val > rhs.val; }   */                                         \
 		template <typename OtherType> bool operator==(const OtherType& rhs) const { return val == rhs; }                                               \
 		template <typename OtherType> bool operator<(const OtherType& rhs) const { return val < rhs; }                                                 \
-		template <typename OtherType> bool operator>(const OtherType& rhs) const { return val > rhs; }                                                 \
+		/* FIXME Zamiast tego może jakiś trait if_is_numerical_type */                                                                               \
+		/* bool operator>(const UnderlyingStrongReal& rhs) const { return val > rhs; }      */                                                              \
+		/* bool operator>(const double& rhs) const { return val > rhs; }                    */                                                              \
+		/* bool operator>(const long unsigned int& rhs) const { return val > rhs; }         */                                                              \
+		/* bool operator>(const long signed int& rhs) const { return val > rhs; }           */                                                              \
+		/* bool operator>(const unsigned int& rhs) const { return val > rhs; }              */                                                              \
+		bool operator>(const signed int& rhs) const { return val > rhs; }                                                                              \
                                                                                                                                                                \
 		inline StrongReal& operator+=(const StrongReal& x)                                                                                             \
 		{                                                                                                                                              \
