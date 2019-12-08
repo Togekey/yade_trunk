@@ -85,46 +85,14 @@ private:
 public:
 	// default constructor
 	inline ThinRealWrapper() BOOST_NOEXCEPT_IF(boost::has_nothrow_default_constructor<WrappedReal>::value) = default;
-	// default constructor
-	//inline ThinRealWrapper() BOOST_NOEXCEPT_IF(boost::has_nothrow_default_constructor<WrappedReal>::value)
-	//        : val()
-	//{
-	//}
-
 	// copy constructor
 	inline ThinRealWrapper(const ThinRealWrapper& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<WrappedReal>::value) = default;
-	// copy constructor
-	//inline ThinRealWrapper(const ThinRealWrapper& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<WrappedReal>::value)
-	//        : val(initVal.val)
-	//{
-	//}
-
 	// copy assignment operator
 	inline ThinRealWrapper& operator=(const ThinRealWrapper& rhs) BOOST_NOEXCEPT_IF(boost::has_nothrow_assign<WrappedReal>::value) = default;
-	// copy assignment operator
-	//inline ThinRealWrapper& operator=(const ThinRealWrapper& rhs) BOOST_NOEXCEPT_IF(boost::has_nothrow_assign<WrappedReal>::value)
-	//{
-	//	val = rhs.val;
-	//	return *this;
-	//}
-
 	// move constructor
 	inline ThinRealWrapper(ThinRealWrapper&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value) = default;
-	// move constructor
-	//inline ThinRealWrapper(ThinRealWrapper&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
-	//        : val(std::move(moveVal.val))
-	//{
-	//}
-
 	// move assignment operator
 	inline ThinRealWrapper& operator=(ThinRealWrapper&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value) = default;
-	// move assignment operator
-	//inline ThinRealWrapper& operator=(ThinRealWrapper&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
-	//{
-	//	val = std::move(moveVal.val);
-	//	return *this;
-	//}
-
 	// destructor
 	inline ~ThinRealWrapper() noexcept = default;
 
