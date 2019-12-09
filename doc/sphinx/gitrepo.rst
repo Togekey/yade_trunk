@@ -46,15 +46,16 @@ Setup
    ::
 
       git clone git@gitlab.com:username/trunk.git
+   
    This creates a new folder, named trunk, that contains the whole code (make sure username is replaced by your GitLab name).
 
 6. Configure remotes
 
    ::
 
-    cd to/newly/created/folder
-    git remote add upstream git@gitlab.com:yade-dev/trunk.git
-    git remote update
+      cd to/newly/created/folder
+      git remote add upstream git@gitlab.com:yade-dev/trunk.git
+      git remote update
     
    Now, your "trunk" folder is linked with two remote repositories both hosted on gitlab.com, the original trunk from yade-dev (called "upstream" after the last command) and the fork which resides in your personal account (called "origin" and always configured by default). Through appropriate commands explained below, you will be able to update your code to include changes commited by others, or to commit yourself changes that others can get.
    
