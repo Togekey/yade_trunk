@@ -19,11 +19,12 @@ if mp.rank==0:
 
 	print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) )
 
+	# b.subdomain is defined for all bodies; 'for ...' loops are awkward in a one-liner hence 'map' is used instead
 	mp.sendCommand(executors=[1,2],command= "list(map(lambda b: setattr(b,'subdomain',rank),O.bodies))", wait=True)
 
 	print("Assigned bodies:", mp.sendCommand([1,2], "len([b for b in O.bodies if b.subdomain==rank])", True) )
 	
-mp.DISTRIBUTED_INSERT=True
+#mp.DISTRIBUTED_INSERT=True
 mp.MERGE_W_INTERACTIONS=True
 mp.ERASE_REMOTE_MASTER=False
 

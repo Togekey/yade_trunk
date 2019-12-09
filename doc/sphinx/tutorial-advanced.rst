@@ -50,7 +50,7 @@ Mandatory:
 * inconsistent use of tabs and spaces in indentation is prohibited, for this reason all scripts in yade use tabs for indentation.
 
 Should be checked, but not always mandatory:
-.....................................
+............................................
 * (euclidian) division of two integers: ``i1/i2`` becomes ``i1//i2``,
 * ``myDict.keys()``, ``myDict.values()``, ``myDict.items()`` becomes sometimes ``list(myDict.keys())``, ``list(myDict.values())``, ``list(myDict.items())`` (depending on your usage),
 * ``map()``, ``filter()``, ``zip()`` becomes sometimes ``list(map())``, ``list(filter())``, ``list(zip())`` (depending on your usage),

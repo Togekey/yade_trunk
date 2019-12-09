@@ -78,11 +78,12 @@ Performance enhancements
 
   GPUacceleration.rst
 
+  mpy.rst
+
   amazonEC2.rst
 
   HighPrecisionReal.rst
-..  
-  mpy.rst
+
 
 ######################################
 Literature
