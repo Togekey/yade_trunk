@@ -135,9 +135,9 @@ using UnderlyingReal = ::mpfr::mpreal;
 
 // `long double` needs special consideration to workaround boost::python losing 3 digits precision
 #if (YADE_REAL_BIT <= 80) and (YADE_REAL_BIT > 64)
-#include "RealStrongTypedef.hpp"
+#include "ThinRealWrapper.hpp"
 using Real = ThinRealWrapper<UnderlyingReal>;
-YADE_REAL_NUMERIC_LIMITS(UnderlyingReal, Real);
+#include "ThinRealWrapperNumericLimits.hpp"
 using EigenTraitsReal = Real;
 namespace EigenCostReal {
 enum { ReadCost = 1, AddCost = 1, MulCost = 1 };

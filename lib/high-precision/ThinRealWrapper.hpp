@@ -171,7 +171,7 @@ public:
 	}
 
 	/** FIXME - this should work */
-	// perfect forwarding / accessors
+	// perfect forwarding of && / accessors
 	//	template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType() { return std::forward<OtherType>(val); }
 	//	template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator const OtherType() const { return std::forward<OtherType>(val); }
 
@@ -219,61 +219,6 @@ namespace boost {
 namespace multiprecision {
 }
 }
-
-#define YADE_REAL_NUMERIC_LIMITS(WrappedReal, ThinRealWrapper)                                                                                                   \
-	namespace std {                                                                                                                                          \
-		template <> struct numeric_limits<ThinRealWrapper> {                                                                                             \
-			constexpr static const auto& is_specialized    = std::numeric_limits<WrappedReal>::is_specialized;                                       \
-			constexpr static const auto& is_signed         = std::numeric_limits<WrappedReal>::is_signed;                                            \
-			constexpr static const auto& is_integer        = std::numeric_limits<WrappedReal>::is_integer;                                           \
-			constexpr static const auto& is_exact          = std::numeric_limits<WrappedReal>::is_exact;                                             \
-			constexpr static const auto& has_infinity      = std::numeric_limits<WrappedReal>::has_infinity;                                         \
-			constexpr static const auto& has_quiet_NaN     = std::numeric_limits<WrappedReal>::has_quiet_NaN;                                        \
-			constexpr static const auto& has_signaling_NaN = std::numeric_limits<WrappedReal>::has_signaling_NaN;                                    \
-			constexpr static const auto& has_denorm        = std::numeric_limits<WrappedReal>::has_denorm;                                           \
-			constexpr static const auto& has_denorm_loss   = std::numeric_limits<WrappedReal>::has_denorm_loss;                                      \
-			constexpr static const auto& round_style       = std::numeric_limits<WrappedReal>::round_style;                                          \
-			constexpr static const auto& is_iec559         = std::numeric_limits<WrappedReal>::is_iec559;                                            \
-			constexpr static const auto& is_bounded        = std::numeric_limits<WrappedReal>::is_bounded;                                           \
-			constexpr static const auto& is_modulo         = std::numeric_limits<WrappedReal>::is_modulo;                                            \
-			constexpr static const auto& digits            = std::numeric_limits<WrappedReal>::digits;                                               \
-			constexpr static const auto& digits10          = std::numeric_limits<WrappedReal>::digits10;                                             \
-			constexpr static const auto& max_digits10      = std::numeric_limits<WrappedReal>::max_digits10;                                         \
-			constexpr static const auto& radix             = std::numeric_limits<WrappedReal>::radix;                                                \
-			constexpr static const auto& min_exponent      = std::numeric_limits<WrappedReal>::min_exponent;                                         \
-			constexpr static const auto& min_exponent10    = std::numeric_limits<WrappedReal>::min_exponent10;                                       \
-			constexpr static const auto& max_exponent      = std::numeric_limits<WrappedReal>::max_exponent;                                         \
-			constexpr static const auto& max_exponent10    = std::numeric_limits<WrappedReal>::max_exponent10;                                       \
-			constexpr static const auto& traps             = std::numeric_limits<WrappedReal>::traps;                                                \
-			constexpr static const auto& tinyness_before   = std::numeric_limits<WrappedReal>::tinyness_before;                                      \
-			static inline auto           min() { return static_cast<ThinRealWrapper>(std::numeric_limits<WrappedReal>::min()); }                     \
-			static inline auto           lowest() { return static_cast<ThinRealWrapper>(std::numeric_limits<WrappedReal>::lowest()); }               \
-			static inline auto           max() { return static_cast<ThinRealWrapper>(std::numeric_limits<WrappedReal>::max()); }                     \
-			static inline auto           epsilon() { return static_cast<ThinRealWrapper>(std::numeric_limits<WrappedReal>::epsilon()); }             \
-			static inline auto           round_error() { return static_cast<ThinRealWrapper>(std::numeric_limits<WrappedReal>::round_error()); }     \
-			static inline auto           infinity() { return static_cast<ThinRealWrapper>(std::numeric_limits<WrappedReal>::infinity()); }           \
-			static inline auto           quiet_NaN() { return static_cast<ThinRealWrapper>(std::numeric_limits<WrappedReal>::quiet_NaN()); }         \
-			static inline auto           signaling_NaN() { return static_cast<ThinRealWrapper>(std::numeric_limits<WrappedReal>::signaling_NaN()); } \
-			static inline auto           denorm_min() { return static_cast<ThinRealWrapper>(std::numeric_limits<WrappedReal>::denorm_min()); }       \
-			/* constexpr static auto float_round_style = std::numeric_limits<WrappedReal>::float_round_style ; */                                    \
-			/* constexpr static auto float_denorm_style= std::numeric_limits<WrappedReal>::float_denorm_style; */                                    \
-		};                                                                                                                                               \
-	}
-
-#if 0
-inline ThinRealWrapper abs(const ThinRealWrapper& x)
-{
-	using namespace boost::multiprecision;
-	using namespace std;
-	return abs(x);
-}
-static inline ThinRealWrapper sqrt(const ThinRealWrapper& a)
-{
-	using namespace boost::multiprecision;
-	using namespace std;
-	return ThinRealWrapper(sqrt(ThinRealWrapper(a)));
-};
-#endif
 
 #endif
 
