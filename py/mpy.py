@@ -3,6 +3,13 @@
 '''
 This module defines mpirun(), a parallel implementation of run() using a distributed memory approach. Message passing is done with mpi4py mainly, however some messages are also handled in c++ (with openmpi).
 
+.. note:: Many internals of the mpy module listed on this page are not helpful to the user. Instead, please find :ref:`introductory material on mpy module<mpy>` in user manual.
+
+Notes to developpers:
+_____________________
+
+Logic:
+------
 
 The distribution logic is as follows:
 
@@ -22,13 +29,15 @@ The distribution logic is as follows:
 	- execute Newton on assigned bodies (modified Newton skips other domains)
 	- send updated positions to other workers and partial force on floor to master
 
-#RULES:
+Rules:
+------
 
 	#- intersections[0] has 0-bodies (to which we need to send force)
 	#- intersections[thisDomain] has ids of the other domains overlapping the current ones
 	#- intersections[otherDomain] has ids of bodies in _current_ domain which are overlapping with other domain (for which we need to send updated pos/vel)
 
-#HINTS:
+Hints:
+------
 
 	#- handle subD.intersections with care (same for mirrorIntersections). subD.intersections.append() will not reach the c++ object. subD.intersections can only be assigned (a list of list of int)
 
