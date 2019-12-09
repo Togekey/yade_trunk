@@ -78,22 +78,24 @@
 // If we need ordering or field operators for other types than those listed below (double, long int, etc…), just add them.
 // I skip float for now. See what will happen.
 
-template <typename WrappedReal> class ThinRealWrapper /* FIXME : boost::partially_ordered1<ThinRealWrapper<WrappedReal>>*/ {
+template <typename WrappedReal>
+class ThinRealWrapper /* FIXME : boost::partially_ordered1<ThinRealWrapper<WrappedReal>, boost::field_operators1<ThinRealWrapper<WrappedReal>>>*/ {
 private:
 	WrappedReal val;
 
 	// detect types which are convertible to WrappedReal
 	template <typename OtherType> using EnableIfConvertible = std::enable_if_t<std::is_convertible<OtherType, WrappedReal>::value>;
 
-	// detect types which are either WrappedReal or ThinRealWrapper
-	// accept all variants: const, &&, const &, etc. In C++20 it will be std::remove_cv_t
-	// now it is based on https://en.cppreference.com/w/cpp/types/decay, which may be a little too generous
-	// in case of problems we might need to switch to std::remove_cv + std::remove_reference
+
+	// detect types which are either WrappedReal or ThinRealWrapper accept all type variants: const, &&, const &, etc. In C++20 it will be std::remove_cv_t
 	template <typename OtherType>
 	using EnableIfAnyOfThoseTwo = std::enable_if_t<
 	        std::is_same<typename std::decay_t<OtherType>, WrappedReal>::value or std::is_same<typename std::decay_t<OtherType>, ThinRealWrapper>::value>;
+	// now it is based on https://en.cppreference.com/w/cpp/types/decay, which may be a little too generous
+	// in case of problems we might need to switch to std::remove_cv + std::remove_reference
 
-	// detect if types are the same, exactly, to the const, volative and &, && qualifiers.
+
+	// detect if types are the same, exactly, to the const, volatile and &, && qualifiers.
 	template <typename OtherType>
 	using EnableIfEitherOfThem = std::enable_if_t<std::is_same<OtherType, WrappedReal>::value or std::is_same<OtherType, ThinRealWrapper>::value>;
 
@@ -135,7 +137,7 @@ public:
 	        : val(std::move(moveVal))
 	{
 	}
-	// move constructor from const WrappedReal - is it necessary?
+	// move constructor from const WrappedReal&&  FIXME: is it necessary?
 	inline ThinRealWrapper(const WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
 	        : val(std::move(moveVal))
 	{
@@ -155,7 +157,7 @@ public:
 		return *this;
 	}
 
-	// move assignment from const WrappedReal - is it necessary?
+	// move assignment from const WrappedReal&&  FIXME: is it necessary?
 	inline ThinRealWrapper& operator=(const WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
 	{
 		val = std::move(moveVal);
@@ -171,20 +173,22 @@ public:
 	}
 
 	/** FIXME - this should work */
-	// perfect forwarding of && / accessors
+	// accessors / perfect forwarding of &&
 	//	template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType() { return std::forward<OtherType>(val); }
 	//	template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator const OtherType() const { return std::forward<OtherType>(val); }
 
-
-	/** FIXME - this almost works */
-	// perfect forwarding
-	template <typename OtherType, typename = EnableIfEitherOfThem<OtherType>> operator OtherType &&() { return std::forward<OtherType>(val); }
-	template <typename OtherType, typename = EnableIfEitherOfThem<OtherType>> operator const OtherType &&() { return std::forward<OtherType>(val); }
 	// accessors
 	operator const ThinRealWrapper&() const { return val; }
 	operator ThinRealWrapper&() { return val; }
 	operator const WrappedReal&() const { return val; }
 	operator WrappedReal&() { return val; }
+
+	// perfect forwarding
+	operator ThinRealWrapper &&() { return std::move(*this); }
+	//operator WrappedReal &&() { return std::move(val); }
+	/** FIXME - this almost works */
+	//template <typename OtherType, typename = EnableIfEitherOfThem<OtherType>> operator OtherType &&() { return std::forward<OtherType>(val); }
+	//template <typename OtherType, typename = EnableIfEitherOfThem<OtherType>> operator const OtherType &&() { return std::forward<OtherType>(val); }
 
 
 	/** FIXME - these are experiments */
@@ -215,8 +219,8 @@ public:
 	//template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType() { return val; }
 
 	// ordering operators
-//FIXME	bool operator==(const ThinRealWrapper& rhs) const { return val == rhs.val; }
-//FIXME	bool operator<(const ThinRealWrapper& rhs) const { return val < rhs.val; }
+	//FIXME	bool operator==(const ThinRealWrapper& rhs) const { return val == rhs.val; }
+	//FIXME	bool operator<(const ThinRealWrapper& rhs) const { return val < rhs.val; }
 
 	//template <typename OtherType, typename = EnableIfConvertible<OtherType>> bool operator==(OtherType&& rhs) const { return val == rhs.val; }
 	//template <typename OtherType, typename = EnableIfConvertible<OtherType>> bool operator<(OtherType&& rhs) const { return val < rhs.val; }
