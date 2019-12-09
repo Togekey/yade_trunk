@@ -133,7 +133,19 @@ using UnderlyingReal = ::mpfr::mpreal;
 #error "Real precision is unspecified, there must be a mistake in CMakeLists.txt, the requested #defines should have been provided."
 #endif
 
+// `long double` needs special consideration to workaround boost::python losing 3 digits precision
+#if (YADE_REAL_BIT <= 80) and (YADE_REAL_BIT > 64)
+#include "RealStrongTypedef.hpp"
+YADE_REAL_STRONG_TYPEDEF(UnderlyingReal, Real);
+YADE_REAL_NUMERIC_LIMITS(UnderlyingReal, Real);
+using EigenTraitsReal = Real;
+namespace EigenCostReal {
+enum { ReadCost = 1, AddCost = 1, MulCost = 1 };
+}
+#include "EigenNumTraits.hpp"
+#else
 using Real = UnderlyingReal;
+#endif
 
 #include "ExposedTypes.hpp"
 
