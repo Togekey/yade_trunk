@@ -23,6 +23,10 @@
 //             conversion of first argument to `const Real&&` would be ill-formed
 //             cannot bind rvalue reference of type ‘const Real&&’ {aka ‘const ThinRealWrapper<long double>&&’} to lvalue of type ‘ThinRealWrapper<long double>’
 
+// NOTE, these using are necessary so that a correct overload will be used regardless of what actually is Real
+//		using namespace boost::multiprecision;                                                                                                         \
+//		using namespace std;                                                                                                                           \
+
 #define YADE_WRAP_FUNC_1(func)                                                                                                                                 \
 	inline const Real func(const Real& a)                                                                                                                  \
 	{                                                                                                                                                      \
