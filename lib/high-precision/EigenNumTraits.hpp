@@ -38,24 +38,24 @@ template <> struct NumTraits<UnderlyingReal> : GenericNumTraits<UnderlyingReal> 
 
 	// http://cs.swan.ac.uk/~csoliver/ok-sat-library/internet_html/doc/doc/Mpfr/3.0.0/mpfr.html/Exception-Related-Functions.html
 	// https://tspiteri.gitlab.io/gmp-mpfr-sys/mpfr/MPFR-Interface.html
-	static inline Real highest(long Precision = get_default_prec) { return std::numeric_limits<UR>::max(); }
-	static inline Real lowest(long Precision = get_default_prec) { return std::numeric_limits<UR>::lowest(); }
+	static inline Real highest(long = get_default_prec) { return std::numeric_limits<UR>::max(); }
+	static inline Real lowest(long = get_default_prec) { return std::numeric_limits<UR>::lowest(); }
 
 	// Constants
-	static inline Real Pi(long Precision = get_default_prec) { return boost::math::constants::pi<UR>(); }
-	static inline Real Euler(long Precision = get_default_prec) { return boost::math::constants::euler<UR>(); }
-	static inline Real Log2(long Precision = get_default_prec)
+	static inline Real Pi(long = get_default_prec) { return boost::math::constants::pi<UR>(); }
+	static inline Real Euler(long = get_default_prec) { return boost::math::constants::euler<UR>(); }
+	static inline Real Log2(long = get_default_prec)
 	{
 		using namespace boost::multiprecision;
 		return log(Real(2)); /* mpfr::const_log2(Precision); */
 	}
-	static inline Real Catalan(long Precision = get_default_prec) { return boost::math::constants::catalan<UR>(); }
+	static inline Real Catalan(long = get_default_prec) { return boost::math::constants::catalan<UR>(); }
 
-	static inline Real epsilon(long Precision = get_default_prec) { return std::numeric_limits<UR>::epsilon(); }
-	static inline Real epsilon(const Real& x) { return std::numeric_limits<UR>::epsilon(); }
+	static inline Real epsilon(long = get_default_prec) { return std::numeric_limits<UR>::epsilon(); }
+	static inline Real epsilon(const Real&) { return std::numeric_limits<UR>::epsilon(); }
 
 	//#ifdef MPREAL_HAVE_DYNAMIC_STD_NUMERIC_LIMITS
-	static inline int digits10(long Precision = get_default_prec) { return std::numeric_limits<UR>::digits10; }
+	static inline int digits10(long = get_default_prec) { return std::numeric_limits<UR>::digits10; }
 	static inline int digits10(const Real&) { return std::numeric_limits<UR>::digits10; }
 	//#endif
 
@@ -129,3 +129,4 @@ inline UnderlyingReal abs2(const UnderlyingReal& x) { return x * x; }
 */
 
 #endif
+

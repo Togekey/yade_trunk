@@ -53,20 +53,20 @@ namespace multiprecision {
 
 namespace Substitute {
 static constexpr long get_default_prec = std::numeric_limits<Real>::digits;
-static inline Real    highest(long Precision = get_default_prec) { return std::numeric_limits<Real>::max(); }
-static inline Real    lowest(long Precision = get_default_prec) { return std::numeric_limits<Real>::lowest(); }
-static inline Real    Pi(long Precision = get_default_prec) { return boost::math::constants::pi<Real>(); }
-static inline Real    Euler(long Precision = get_default_prec) { return boost::math::constants::euler<Real>(); }
-static inline Real    Log2(long Precision = get_default_prec)
+static inline Real    highest(long = get_default_prec) { return std::numeric_limits<Real>::max(); }
+static inline Real    lowest(long = get_default_prec) { return std::numeric_limits<Real>::lowest(); }
+static inline Real    Pi(long = get_default_prec) { return boost::math::constants::pi<Real>(); }
+static inline Real    Euler(long = get_default_prec) { return boost::math::constants::euler<Real>(); }
+static inline Real    Log2(long = get_default_prec)
 {
 	using namespace boost::multiprecision;
 	using namespace std;
 	return log(Real(2));
 }
-static inline Real Catalan(long Precision = get_default_prec) { return boost::math::constants::catalan<Real>(); }
+static inline Real Catalan(long = get_default_prec) { return boost::math::constants::catalan<Real>(); }
 
-static inline Real epsilon(long Precision = get_default_prec) { return std::numeric_limits<Real>::epsilon(); }
-static inline Real epsilon(const Real& x) { return std::numeric_limits<Real>::epsilon(); }
+static inline Real epsilon(long = get_default_prec) { return std::numeric_limits<Real>::epsilon(); }
+static inline Real epsilon(const Real&) { return std::numeric_limits<Real>::epsilon(); }
 inline bool        isEqualFuzzy(const Real& a, const Real& b, const Real& eps)
 {
 	using namespace boost::multiprecision;
