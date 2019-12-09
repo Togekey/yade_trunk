@@ -5,27 +5,32 @@ This module defines mpirun(), a parallel implementation of run() using a distrib
 
 
 The distribution logic is as follows:
+
 1. Instanciate a complete, ordinary, yade scene
 2. Insert subdomains as special yade bodies. This is somehow similar to adding a clump body on the top of clump members
 3. Broadcast this scene to all workers. In the initialization phase the workers will:
+
 	- define the bounding box of their assigned bodies and return it to other workers
 	- detect which assigned bodies are virtually in interaction with other domains (based on their bounding boxes) and communicate the lists to the relevant workers
 	- erase the bodies which are neither assigned nor virtually interacting with the subdomain
+
 4. Run a number of 'regular' iterations without re-running collision detection (verlet dist mechanism)
+
 5. In each regular iteration the workers will:
+
 	- calculate internal and cross-domains interactions
 	- execute Newton on assigned bodies (modified Newton skips other domains)
 	- send updated positions to other workers and partial force on floor to master
 
-Yet to be implemented is the global update of domain bounds and new collision detection. It could be simply achieved by importing all bodies back in master process and re-running an initialization/distribution but there are certainly mmore efficient techniques to find.
-
 #RULES:
+
 	#- intersections[0] has 0-bodies (to which we need to send force)
 	#- intersections[thisDomain] has ids of the other domains overlapping the current ones
 	#- intersections[otherDomain] has ids of bodies in _current_ domain which are overlapping with other domain (for which we need to send updated pos/vel)
 
 #HINTS:
-- handle subD.intersections with care (same for mirrorIntersections). subD.intersections.append() will not reach the c++ object. subD.intersections can only be assigned (a list of list of int)
+
+	#- handle subD.intersections with care (same for mirrorIntersections). subD.intersections.append() will not reach the c++ object. subD.intersections can only be assigned (a list of list of int)
 
 '''
 
@@ -38,18 +43,19 @@ import yade.bisectionDecomposition as dd
 ##  Initialization
 
 this = sys.modules[__name__]
-sys.stderr.write=sys.stdout.write #so we see error messages from workers
+sys.stderr.write=sys.stdout.write # so we see error messages from workers
 
 worldComm = MPI.COMM_WORLD
-color = 3; key =0; 
-comm = worldComm.Split(color, key)
+color = 3; key =0;
+comm = worldComm.Split(color, key)  # if OFOAM coupled, split communicator
+
 parent = comm.Get_parent()
-if parent!=MPI.COMM_NULL:
+if parent!=MPI.COMM_NULL: 	# if executor is a spawned worker merge comm with master 
 	comm=parent.Merge()
 
-rank = comm.Get_rank()
+rank = comm.Get_rank()		# set rank and numThreads
 numThreads = comm.Get_size()
-waitingCommands=False #are workers currently interactive?
+waitingCommands=False		# are workers currently interactive?
 userScriptInCheckList=""	# detect if mpy is executed by checkList.py
 
 ## Config flags
@@ -57,7 +63,7 @@ userScriptInCheckList=""	# detect if mpy is executed by checkList.py
 ACCUMULATE_FORCES=True #control force summation on master's body. FIXME: if false master goes out of sync since nothing is blocking rank=0 thread
 VERBOSE_OUTPUT=False
 NO_OUTPUT=False
-MAX_RANK_OUTPUT=5 #larger ranks will be skipped in mprint
+MAX_RANK_OUTPUT=5 #: larger ranks will be skipped in mprint
 SEND_SHAPES=False #if false only bodies' states are communicated between threads, else shapes as well (to be implemented)
 ERASE_REMOTE = True # True is MANDATORY. Erase bodies not interacting wit a given subdomain? else keep dead clones of all bodies in each scene
 ERASE_REMOTE_MASTER = True # erase remotes on master or keep them for fast merge (updating just b.state)
@@ -108,6 +114,9 @@ bcolors=['\033[95m','\033[94m','\033[93m','\033[92m','\033[91m','\033[90m','\033
 
 
 def mprint(*args): #this one will print regardless of VERBOSE_OUTPUT
+	"""
+	Print with rank-reflecting color regardless of mpy.VERBOSE_OUTPUT, still limited to rank<=mpy.MAX_RANK_OUTPUT
+	"""
 	if NO_OUTPUT or rank>MAX_RANK_OUTPUT: return
 	m=bcolors[min(rank,len(bcolors)-2)]
 	resetFont='\033[0m'
@@ -120,10 +129,13 @@ def mprint(*args): #this one will print regardless of VERBOSE_OUTPUT
 	print (m+resetFont)
 
 def wprint(*args):
+	"""
+	Print with rank-reflecting color, *only if* mpy.VERBOSE_OUTPUT=True (else see :yref:`yade.mpy.mprint`), limited to rank<=mpy.MAX_RANK_OUTPUT
+	"""
 	if not VERBOSE_OUTPUT: return
 	mprint(*args)
 
-from yade import *
+#from yade import *
 from yade.utils import *
 from yade.wrapper import *
 import yade.runtime
@@ -382,7 +394,7 @@ def checkAndCollide():
 	return true if collision detection needs activation in at least one SD, else false. If COPY_MIRROR_BODIES_WHEN_COLLIDE run collider when needed, and in that case return False.
 	'''
 	global _REALLOC_COUNT
-	needsCollide = int(utils.typedEngine("InsertionSortCollider").isActivated())
+	needsCollide = int(typedEngine("InsertionSortCollider").isActivated())
 	if(needsCollide!=0):
 		wprint("triggers collider at iter "+str(O.iter))
 	needsCollide = timing_comm.allreduce("checkcollider",needsCollide,op=MPI.SUM)
@@ -728,8 +740,9 @@ def mergeScene():
 
 def splitScene(): 
 	'''
-	Split a monolithic scene into distributed scenes on threads
-	precondition: the bodies have subdomain no. set in user script
+	Split a monolithic scene into distributed scenes on threads.
+	
+	Precondition: the bodies have subdomain no. set in user script
 	'''
 	if not COPY_MIRROR_BODIES_WHEN_COLLIDE: mprint("COPY_MIRROR_BODIES_WHEN_COLLIDE=False is not supported")
 	if not ERASE_REMOTE: mprint("ERASE_REMOTE=False is not supported")
@@ -763,7 +776,7 @@ def splitScene():
 			
 			
 			#tell the collider how to handle this new thing
-			collider = utils.typedEngine("InsertionSortCollider")
+			collider = typedEngine("InsertionSortCollider")
 			if FLUID_COUPLING: 
 				collider.boundDispatcher.functors = collider.boundDispatcher.functors+[Bo1_FluidDomainBbox_Aabb()]
 			collider.boundDispatcher.functors=collider.boundDispatcher.functors+[Bo1_Subdomain_Aabb()]
@@ -797,7 +810,7 @@ def splitScene():
 				subD = O.subD
 
 		if FLUID_COUPLING: 
-			fluidCoupling = utils.typedEngine("FoamCoupling")
+			fluidCoupling = typedEngine("FoamCoupling")
 			fluidCoupling.comm = comm
 			fluidCoupling.setIdList(fluidBodies)
 			fluidCoupling.couplingModeParallel = True
@@ -812,7 +825,7 @@ def splitScene():
 		wprint("end parallel collide")
 		
 		# insert states communicator after newton 
-		idx = O.engines.index(utils.typedEngine("NewtonIntegrator"))
+		idx = O.engines.index(typedEngine("NewtonIntegrator"))
 		O.engines=O.engines[:idx+1]+[PyRunner(iterPeriod=1,initRun=True,command="sys.modules['yade.mpy'].sendRecvStates();  ",label="sendRecvStatesRunner")]+O.engines[idx+1:]
 		
 		# insert force communicator before Newton
@@ -976,7 +989,7 @@ def parallelCollide():
 		pass
 
 	#maxVelocitySq is normally reset in NewtonIntegrator in the same iteration as bound dispatching, since Newton will not run before next iter in our case we force that value to avoid another collision detection at next step
-	utils.typedEngine("NewtonIntegrator").maxVelocitySq=0.5
+	typedEngine("NewtonIntegrator").maxVelocitySq=0.5
 
 
 def eraseRemote(): 
@@ -1034,7 +1047,7 @@ def mpirun(nSteps,np=None,withMerge=False):
 	
 	
 	if FLUID_COUPLING:
-		fluidCoupling = utils.typedEngine("FoamCoupling") 
+		fluidCoupling = typedEngine("FoamCoupling") 
 		fluidCoupling.comm = comm 
 		fluidCoupling.getFluidDomainBbox() #triggers the communication between yade procs and Yales2/openfoam procs, get's fluid domain bounding boxes from all fluid procs. 
 	
@@ -1190,7 +1203,7 @@ def projectedBounds(i,j):
 
 def medianFilter(i,j):
 	'''
-	Rsys.modules['yade.mpy'].eturns bodies in "i" to be assigned to "j" based on median split between the center points of subdomain's AABBs
+	Returns bodies in "i" to be assigned to "j" based on median split between the center points of subdomain's AABBs
 	'''
 	bodiesToSend=[]
 	bodiesToRecv=[]
