@@ -21,15 +21,19 @@
 #define YADE_REAL_STRONG_TYPEDEF_HPP
 
 #include <boost/config.hpp>
-#include <boost/core/enable_if.hpp>
 #include <boost/move/traits.hpp>
 #include <boost/operators.hpp>
 #include <boost/type_traits/has_nothrow_assign.hpp>
 #include <boost/type_traits/has_nothrow_constructor.hpp>
 #include <boost/type_traits/has_nothrow_copy.hpp>
-#include <boost/type_traits/is_convertible.hpp>
+#include <cmath>
 #include <limits>
+#include <stdexcept>
 #include <type_traits>
+
+// Maybe create separate file for ThinRealWrapper IO .hpp ?
+#include <iostream>
+#include <sstream>
 
 /*
 (A)
@@ -70,6 +74,9 @@
 (G)
 	class ThinRealWrapper : boost::ordered_field_operators1<ThinRealWrapper> {                                                                                       \
 
+(H)
+	class ThinRealWrapper : boost::partially_ordered1<ThinRealWrapper<WrappedReal>, boost::field_operators1<ThinRealWrapper<WrappedReal>>> {
+
  */
 
 // According to "Ordering note" if we want to have workinf NaN and Inf, we have to use partially_ordered* operators, not ordered_field_operators*
@@ -78,8 +85,14 @@
 // If we need ordering or field operators for other types than those listed below (double, long int, etc…), just add them.
 // I skip float for now. See what will happen.
 
+//#define YADE_IGNORE_IEEE_INFINITY_NAN
+
 template <typename WrappedReal>
-class ThinRealWrapper /* FIXME : boost::partially_ordered1<ThinRealWrapper<WrappedReal>, boost::field_operators1<ThinRealWrapper<WrappedReal>>>*/ {
+#ifdef YADE_IGNORE_IEEE_INFINITY_NAN
+class ThinRealWrapper : boost::ordered_field_operators1<ThinRealWrapper<WrappedReal>> {
+#else
+class ThinRealWrapper : boost::partially_ordered1<ThinRealWrapper<WrappedReal>, boost::field_operators1<ThinRealWrapper<WrappedReal>>> {
+#endif
 private:
 	WrappedReal val;
 
@@ -172,6 +185,23 @@ public:
 		return *this;
 	}
 
+
+	template <typename OtherType, typename = EnableIfConvertible<OtherType>> explicit operator OtherType() const { return static_cast<OtherType>(val); }
+	/*
+	// FIXED - replace these with template
+	explicit operator bool() const { return val; }
+	explicit operator int() const { return val; }
+	explicit operator long() const { return val; }
+	explicit operator long long() const { return val; }
+	explicit operator unsigned() const { return val; }
+	explicit operator unsigned long() const { return val; }
+	explicit operator unsigned long long() const { return val; }
+	explicit operator float() const { return val; }
+	explicit operator double() const { return val; }
+	explicit operator long double() const { return val; }
+*/
+
+
 	/** FIXME - this should work */
 	// accessors / perfect forwarding of &&
 	//	template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType() { return std::forward<OtherType>(val); }
@@ -180,8 +210,8 @@ public:
 	// accessors
 	operator const ThinRealWrapper&() const { return val; }
 	operator ThinRealWrapper&() { return val; }
-	operator const WrappedReal&() const { return val; }
-	operator WrappedReal&() { return val; }
+	//operator const WrappedReal&() const { return val; }
+	//operator WrappedReal&() { return val; }
 
 	// perfect forwarding
 	operator ThinRealWrapper &&() { return std::move(*this); }
@@ -218,14 +248,87 @@ public:
 	//template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType() const { return val; }
 	//template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType() { return val; }
 
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// ordering operators
-	//FIXME	bool operator==(const ThinRealWrapper& rhs) const { return val == rhs.val; }
-	//FIXME	bool operator<(const ThinRealWrapper& rhs) const { return val < rhs.val; }
+	bool operator<(const ThinRealWrapper& rhs) const { return val < rhs.val; }
+#ifdef YADE_IGNORE_IEEE_INFINITY_NAN
+	bool operator==(const ThinRealWrapper& rhs) const { return val == rhs.val; }
+#else
+	void check(const ThinRealWrapper& rhs) const
+	{
+		if (std::isnan(rhs.val) or std::isnan(val) or std::isinf(rhs.val) or std::isinf(val)) {
+			throw std::runtime_error("cannot compare NaN, Inf numbers.");
+		}
+	}
+	bool operator==(const ThinRealWrapper& rhs) const
+	{
+		check(rhs);
+		return val == rhs.val;
+	}
+	bool operator!=(const ThinRealWrapper& rhs) const
+	{
+		check(rhs);
+		return val != rhs.val;
+	}
+#endif
+	//template <typename OtherType> bool operator==(OtherType rhs) const { return val == rhs; }
+	//template <typename OtherType> bool operator<(OtherType rhs) const { return val < rhs; }
 
 	//template <typename OtherType, typename = EnableIfConvertible<OtherType>> bool operator==(OtherType&& rhs) const { return val == rhs.val; }
 	//template <typename OtherType, typename = EnableIfConvertible<OtherType>> bool operator<(OtherType&& rhs) const { return val < rhs.val; }
 
 	// field operators
+	inline ThinRealWrapper& operator+=(const ThinRealWrapper& x)
+	{
+		val += x.val;
+		return *this;
+	}
+	inline ThinRealWrapper& operator-=(const ThinRealWrapper& x)
+	{
+		val -= x.val;
+		return *this;
+	}
+	inline ThinRealWrapper& operator*=(const ThinRealWrapper& x)
+	{
+		val *= x.val;
+		return *this;
+	}
+	inline ThinRealWrapper& operator/=(const ThinRealWrapper& x)
+	{
+		val /= x.val;
+		return *this;
+	}
+	inline const ThinRealWrapper operator-() const { return -val; }
+	/*
+	template <typename OtherType> inline ThinRealWrapper& operator+=(const OtherType& x)
+	{
+		val += x;
+		return *this;
+	}
+	template <typename OtherType> inline ThinRealWrapper& operator-=(const OtherType& x)
+	{
+		val -= x;
+		return *this;
+	}
+	template <typename OtherType> inline ThinRealWrapper& operator*=(const OtherType& x)
+	{
+		val *= x;
+		return *this;
+	}
+	template <typename OtherType> inline ThinRealWrapper& operator/=(const OtherType& x)
+	{
+		val /= x;
+		return *this;
+	}
+*/
+
+	// Output/ Input
+	friend inline std::ostream& operator<<(std::ostream& os, const ThinRealWrapper& v) { return os << v.val; }
+	friend inline std::istream& operator>>(std::istream& is, ThinRealWrapper& v)
+	{
+		is >> v.val;
+		return is;
+	}
 };
 
 namespace boost {
