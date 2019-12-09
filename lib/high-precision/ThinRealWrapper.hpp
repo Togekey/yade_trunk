@@ -78,7 +78,7 @@
 // If we need ordering or field operators for other types than those listed below (double, long int, etc…), just add them.
 // I skip float for now. See what will happen.
 
-template <typename WrappedReal> class ThinRealWrapper {
+template <typename WrappedReal> class ThinRealWrapper /* FIXME : boost::partially_ordered1<ThinRealWrapper<WrappedReal>>*/ {
 private:
 	WrappedReal val;
 
@@ -213,6 +213,15 @@ public:
 
 	//template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType() const { return val; }
 	//template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType() { return val; }
+
+	// ordering operators
+//FIXME	bool operator==(const ThinRealWrapper& rhs) const { return val == rhs.val; }
+//FIXME	bool operator<(const ThinRealWrapper& rhs) const { return val < rhs.val; }
+
+	//template <typename OtherType, typename = EnableIfConvertible<OtherType>> bool operator==(OtherType&& rhs) const { return val == rhs.val; }
+	//template <typename OtherType, typename = EnableIfConvertible<OtherType>> bool operator<(OtherType&& rhs) const { return val < rhs.val; }
+
+	// field operators
 };
 
 namespace boost {
