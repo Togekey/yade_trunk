@@ -1,8 +1,8 @@
 .. _HydroForceEngine:
 
-=============================================
+
 Using YADE 1D vertical VANS fluid resolution
-=============================================
+############################################
 
 
 The goal of the present note is to detail how the DEM-fluid coupling can be used in practice in YADE. It is complementary with the three notes [Maurin2018_VANSbasis]_, [Maurin2018_VANSfluidResol]_ and [Maurin2018_VANSvalidations]_ detailing respectively the theoretical basis of the fluid momentum balance equation, the numerical resolution, and the validation of the code. 

@@ -2030,7 +2030,7 @@ When an object is crossing c++/python boundary, boost::python's global "converte
 
 
 Adding a new python/C++ module
-============================
+==============================
 
 Modules are placed in ``py/`` directory, the ``C++`` parts of the modules begin their name with an underscore ``_``. The procedure to add a new module is following:
 

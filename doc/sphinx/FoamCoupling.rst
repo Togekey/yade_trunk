@@ -1,7 +1,9 @@
 .. _FoamCouplingEngine:
-==================================================
+
+
 CFD-DEM coupled simulations with Yade and OpenFOAM
-==================================================
+##################################################
+
 The :yref:`FoamCoupling` engine provides a framework for Euler-Lagrange fluid-particle
 simulation with the open source finite volume solver `OpenFOAM <https://cfd.direct/openfoam/user-guide/>`_. The coupling
 relies on the `Message Passing Interface library (MPI) <https://www.open-mpi.org/software/>`_, as OpenFOAM is
@@ -56,6 +58,7 @@ drag force formulation:
 
 The force obtained from :eq:`eq-stokesForce` is applied on the particle and in the fluid side (in the cell where the particle resides), this hydrodynamic force  is formulated as a body/volume
 force:
+
   .. math:: \vec{f}_{h} = \frac{-\vec{F}_{h}}{V_{c} \rho_{f}}
     :label: eq-stokesfluid
 

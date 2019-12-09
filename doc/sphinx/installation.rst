@@ -2,8 +2,13 @@
 Installation
 ###############
 
+<<<<<<< 4fba8328f452ccb0c13f756a7a388c49289a2023
 * Linux systems:
   Yade can be installed from packages (pre-compiled binaries) or source code. The choice depends on what you need: if you don't plan to modify Yade itself, package installation is easier. In the contrary case, you must download and   install the source code.
+=======
+* Linux systems
+  Yade can be installed from packages (pre-compiled binaries) or source code. The choice depends on what you need: if you don't plan to modify Yade itself, package installation is easier. In the contrary case, you must download and install the source code.
+>>>>>>> a number of sphinx warnings and bib references fixed
 
 * Other Operating Systems:
   Jump to the `last section <https://yade-dem.org/doc/installation.html#yubuntu>`_ of this page.
@@ -460,7 +465,7 @@ GPU Acceleration
 The FlowEngine can be accelerated with CHOLMOD's GPU accelerated solver. The specific hardware and software requirements are outlined in the section :ref:`GPUacceleration`.
 
 Special builds
-------------
+--------------
 
 The software can be compiled by a special way to find some specific bugs and problems in it: memory corruptions, data races, undefined behaviour etc.
 
