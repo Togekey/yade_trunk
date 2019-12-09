@@ -47,7 +47,7 @@ for x,y,z in itertools.product(range(int(Nx)),range(int(Ny)),range(int(Nz))):
 		for j in range(M):
 			for k in range(N):
 				dxOndy = 1/5.; dzOndy=1/15.  # shifts in x/y-positions to make columns inclines
-				px= x*L+i+j*dxOndy; pz= z*N+k+j*dzOndy; py = (y*M+j)*(1 -dxOndy**2 -dzOndy**2)**0.5 #so they are always nearly touching initialy
+				px= x*L+i+(y*M+j)*dxOndy; pz= z*N+k+(y*M+j)*dzOndy; py = (y*M+j)*(1 -dxOndy**2 -dzOndy**2)**0.5 #so they are always nearly touching initialy
 				id = O.bodies.insertAtId(sphere((px,py,pz),0.500),_id+(N*M*L*(subdNo-1)))
 				_id+=1
 				ids.append(id)
@@ -64,7 +64,7 @@ O.dynDt=False
 # tune mpi
 mp.VERBOSE_OUTPUT=False
 mp.DISTRIBUTED_INSERT=True
-mp.REALLOCATE_FREQUENCY=4
+mp.REALLOCATE_FREQUENCY=5
 mp.MAX_RANK_OUTPUT=2
 mp.mpirun(1,numThreads,True) #this is to eliminate initialization overhead in Cundall number and timings
 mp.YADE_TIMING=True

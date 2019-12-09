@@ -45,7 +45,7 @@ for x,y,z in itertools.product(range(int(Nx)),range(int(Ny)),range(int(Nz))):
 		for j in range(M):
 			for k in range(N):
 				dxOndy = 1/15.; dzOndy=1/15. # to make the columns inclined
-				px= x*L+i+j*dxOndy; pz= z*N+k+j*dzOndy; py = (y*M+j)*(1 -dxOndy**2 -dzOndy**2)**0.5
+				px= x*L+i+(y*M+j)*dxOndy; pz= z*N+k+(y*M+j)*dzOndy; py = (y*M+j)*(1 -dxOndy**2 -dzOndy**2)**0.5
 				id = O.bodies.insertAtId(sphere((px,py,pz),0.500),_id+(N*M*L*(subdNo-1))) #a small shift in x-positions of the rows to break symmetry
 				_id+=1
 				ids.append(id)
@@ -70,7 +70,7 @@ mp.YADE_TIMING=True
 t1=time.time()
 mp.mpirun(NSTEPS,withMerge=False)
 t2=time.time()
-mp.mprint("num. bodies:",len([b for b in O.bodies])," ",len(O.bodies))
+mp.mprint("num. bodies:",len([b for b in O.bodies if b.subdomain==mp.rank]),"/",len(O.bodies))
 
 def collectTiming(Cundall):
 	created = os.path.isfile("collect3D.dat")
