@@ -82,6 +82,22 @@ template <typename WrappedReal> class ThinRealWrapper {
 private:
 	WrappedReal val;
 
+	// detect types which are convertible to WrappedReal
+	template <typename OtherType> using EnableIfConvertible = std::enable_if_t<std::is_convertible_v<OtherType, WrappedReal>>;
+
+	// detect types which are either WrappedReal or ThinRealWrapper
+	// accept all variants: const, &&, const &, etc. In C++20 it will be std::remove_cv_t
+	// now it is based on https://en.cppreference.com/w/cpp/types/decay, which may be a little too generous
+	// in case of problems we might need to switch to std::remove_cv + std::remove_reference
+	template <typename OtherType>
+	using EnableIfAnyOfThoseTwo = std::enable_if_t<
+	        std::is_same_v<typename std::decay_t<OtherType>, WrappedReal> or std::is_same_v<typename std::decay_t<OtherType>, ThinRealWrapper>>;
+
+	// detect if types are the same, exactly, to the const, volative and &, && qualifiers.
+	template <typename OtherType>
+	using EnableIfEitherOfThem = std::enable_if_t<std::is_same_v<OtherType, WrappedReal> or std::is_same_v<OtherType, ThinRealWrapper>>;
+
+
 public:
 	// default constructor
 	inline ThinRealWrapper() BOOST_NOEXCEPT_IF(boost::has_nothrow_default_constructor<WrappedReal>::value) = default;
@@ -96,14 +112,16 @@ public:
 	// destructor
 	inline ~ThinRealWrapper() noexcept = default;
 
-	// copy constructor from OtherType
+	/* Note: both of them are implemened below as move/copy constructors.
+	// copy constructor from OtherType which is_convertible o WrappedReal
+	//
 	template <typename OtherType>
 	inline ThinRealWrapper(typename boost::enable_if<std::is_convertible<OtherType, WrappedReal>, const OtherType&>::type initVal)
 	        BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<WrappedReal>::value)
 	        : val(initVal)
 	{
 	}
-	// copy assignment operator from OtherType
+	// copy assignment operator from OtherType which is_convertible o WrappedReal
 	template <typename OtherType>
 	inline ThinRealWrapper& operator=(typename boost::enable_if<std::is_convertible<OtherType, WrappedReal>, const OtherType&>::type rhs)
 	        BOOST_NOEXCEPT_IF(boost::has_nothrow_assign<WrappedReal>::value)
@@ -111,28 +129,90 @@ public:
 		val = rhs;
 		return *this;
 	}
-
+*/
 	// move constructor from WrappedReal
-	inline ThinRealWrapper(WrappedReal&& val) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
-	        : val(std::move(val))
+	inline ThinRealWrapper(WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
+	        : val(std::move(moveVal))
+	{
+	}
+	// move constructor from const WrappedReal - is it necessary?
+	inline ThinRealWrapper(const WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
+	        : val(std::move(moveVal))
 	{
 	}
 
-	inline ThinRealWrapper& operator=(WrappedReal&& val) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
+	// move/copy constructor from OtherType which is_convertible o WrappedReal
+	template <typename OtherType, typename = EnableIfConvertible<OtherType>>
+	inline ThinRealWrapper(OtherType&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
+	        : val(std::forward<OtherType>(moveVal))
 	{
-		val = std::move(val);
+	}
+
+	// move assignment from WrappedReal
+	inline ThinRealWrapper& operator=(WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
+	{
+		val = std::move(moveVal);
 		return *this;
 	}
 
-	// accessors
-	                              operator const WrappedReal&() const { return val; }
-	                              operator WrappedReal&() { return val; }
-	template <typename OtherType> operator typename boost::enable_if<std::is_convertible<WrappedReal, OtherType>, OtherType>::type() const { return val; }
-	template <typename OtherType> operator typename boost::enable_if<std::is_convertible<WrappedReal, OtherType>, OtherType>::type() { return val; }
+	// move assignment from const WrappedReal - is it necessary?
+	inline ThinRealWrapper& operator=(const WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
+	{
+		val = std::move(moveVal);
+		return *this;
+	}
 
-	// converters
+	// move/copy assignment from OtherType which is_convertible o WrappedReal
+	template <typename OtherType, typename = EnableIfConvertible<OtherType>>
+	inline ThinRealWrapper& operator=(OtherType&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
+	{
+		val = std::forward<OtherType>(moveVal);
+		return *this;
+	}
+
+	/** FIXME - this should work */
+	// perfect forwarding / accessors
+	//	template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType() { return std::forward<OtherType>(val); }
+	//	template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator const OtherType() const { return std::forward<OtherType>(val); }
+
+
+	/** FIXME - this almost works */
+	// perfect forwarding
+	template <typename OtherType, typename = EnableIfEitherOfThem<OtherType>> operator OtherType &&() { return std::forward<OtherType>(val); }
+	template <typename OtherType, typename = EnableIfEitherOfThem<OtherType>> operator const OtherType &&() { return std::forward<OtherType>(val); }
+	// accessors
+	operator const ThinRealWrapper&() const { return val; }
+	operator ThinRealWrapper&() { return val; }
+	operator const WrappedReal&() const { return val; }
+	operator WrappedReal&() { return val; }
+
+
+	/** FIXME - these are experiments */
+	//template <typename OtherType, typename = EnableIfEitherOfThem<OtherType>> operator const OtherType&() const { return val; }
+	//template <typename OtherType, typename = EnableIfEitherOfThem<OtherType>> operator OtherType&() { return val; }
+	//template <typename OtherType, typename = EnableIfEitherOfThem<OtherType>> operator OtherType() const { return val; }
+	//template <typename OtherType, typename = EnableIfEitherOfThem<OtherType>> operator OtherType() { return val; }
+
+	// perfect forwarding
 	//	operator ThinRealWrapper &&() { return std::move(*this); }
 	//	operator WrappedReal &&() { return std::move(val); }
+	//template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType &&() { return std::forward<OtherType>(val); }
+	//template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator const OtherType &&() { return std::forward<OtherType>(val); }
+
+	// accessors
+	//template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType() { return val; }
+	//template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator const OtherType() const { return val; }
+
+	//	operator const ThinRealWrapper&() const { return val; }
+	//	operator ThinRealWrapper&() { return val; }
+	//	operator const WrappedReal&() const { return val; }
+	//	operator WrappedReal&() { return val; }
+	// duplicate accessors ?
+	//template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator const OtherType&() const { return val; }
+	//template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType&() { return val; }
+
+	//template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType() const { return val; }
+	//template <typename OtherType, typename = EnableIfAnyOfThoseTwo<OtherType>> operator OtherType() { return val; }
 };
 
 namespace boost {
