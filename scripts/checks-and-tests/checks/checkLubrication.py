@@ -32,7 +32,7 @@ def check():
                 if abs(u-u_) > m_tol:
                     raise YadeCheckError("The moving body should be at position %.5e and is at position %.5e"%(u_,u));
 
-mat = O.materials.append(CohFrictMat(density=m_density,young=1e9,poisson=0.3,frictionAngle=radians(60)))
+mat = O.materials.append(CohFrictMat(density=m_density,young=1e7,poisson=0.3,frictionAngle=radians(60)))
 
 # add two spheres
 O.bodies.append([
@@ -59,8 +59,12 @@ O.engines=[ForceResetter(),
            PyRunner(command='check()',iterPeriod=10000)
            ]
 
-O.dt = 1.e-5;
+O.dt = 1.e-4;
 #plot.plots = {'t':('u','u_')};
 
+<<<<<<< 88aa250ff37d2b4abc2c98e8b48ec5337df6220c
 O.run(100000, True)
 
+=======
+O.run(1000000, True);
+>>>>>>> accelerate two checkScripts
