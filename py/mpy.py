@@ -633,7 +633,7 @@ def isendRecvForces():
 	#TDOD: FORCES FROM FLUID DOMAIN BOXES!!!!
 	if ACCUMULATE_FORCES:
 		if rank!=0:
-			if not 0 in O.subD.intersections[rank]: break
+			if not 0 in O.subD.intersections[rank]: return
 			if FLUID_COUPLING: 
 				forces0 = []
 				for id in O.subD.mirrorIntersections[0]: 
