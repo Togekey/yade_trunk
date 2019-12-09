@@ -58,30 +58,30 @@ private:
 
 public:
 	// default constructor
-	inline ThinRealWrapper() BOOST_NOEXCEPT_IF(boost::has_nothrow_default_constructor<WrappedReal>::value) = default;
+	ThinRealWrapper() BOOST_NOEXCEPT_IF(boost::has_nothrow_default_constructor<WrappedReal>::value) = default;
 	// copy constructor
-	inline ThinRealWrapper(const ThinRealWrapper& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<WrappedReal>::value) = default;
+	ThinRealWrapper(const ThinRealWrapper& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<WrappedReal>::value) = default;
 	// copy assignment operator
-	inline ThinRealWrapper& operator=(const ThinRealWrapper& rhs) BOOST_NOEXCEPT_IF(boost::has_nothrow_assign<WrappedReal>::value) = default;
+	ThinRealWrapper& operator=(const ThinRealWrapper& rhs) BOOST_NOEXCEPT_IF(boost::has_nothrow_assign<WrappedReal>::value) = default;
 	// move constructor
-	inline ThinRealWrapper(ThinRealWrapper&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value) = default;
+	ThinRealWrapper(ThinRealWrapper&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value) = default;
 	// move assignment operator
-	inline ThinRealWrapper& operator=(ThinRealWrapper&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value) = default;
+	ThinRealWrapper& operator=(ThinRealWrapper&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value) = default;
 	// destructor
-	inline ~ThinRealWrapper() noexcept = default;
+	~ThinRealWrapper() noexcept = default;
 
 	/* Note: both of them are implemened below as move/copy constructors.
 	// copy constructor from OtherType which is_convertible o WrappedReal
 	//
 	template <typename OtherType>
-	inline ThinRealWrapper(typename boost::enable_if<std::is_convertible<OtherType, WrappedReal>, const OtherType&>::type initVal)
+	ThinRealWrapper(typename boost::enable_if<std::is_convertible<OtherType, WrappedReal>, const OtherType&>::type initVal)
 	        BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<WrappedReal>::value)
 	        : val(initVal)
 	{
 	}
 	// copy assignment operator from OtherType which is_convertible o WrappedReal
 	template <typename OtherType>
-	inline ThinRealWrapper& operator=(typename boost::enable_if<std::is_convertible<OtherType, WrappedReal>, const OtherType&>::type rhs)
+	ThinRealWrapper& operator=(typename boost::enable_if<std::is_convertible<OtherType, WrappedReal>, const OtherType&>::type rhs)
 	        BOOST_NOEXCEPT_IF(boost::has_nothrow_assign<WrappedReal>::value)
 	{
 		val = rhs;
@@ -89,32 +89,32 @@ public:
 	}
 */
 	// move constructor from WrappedReal
-	inline ThinRealWrapper(WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
+	ThinRealWrapper(WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
 	        : val(std::move(moveVal))
 	{
 	}
 	// move constructor from const WrappedReal&&  FIXME: is it necessary?
-	inline ThinRealWrapper(const WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
+	ThinRealWrapper(const WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
 	        : val(std::move(moveVal))
 	{
 	}
 
 	// move/copy constructor from OtherType which is_convertible o WrappedReal
 	template <typename OtherType, typename = EnableIfConvertible<OtherType>>
-	inline ThinRealWrapper(OtherType&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
+	ThinRealWrapper(OtherType&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
 	        : val(std::forward<OtherType>(moveVal))
 	{
 	}
 
 	// move assignment from WrappedReal
-	inline ThinRealWrapper& operator=(WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
+	ThinRealWrapper& operator=(WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
 	{
 		val = std::move(moveVal);
 		return *this;
 	}
 
 	// move assignment from const WrappedReal&&  FIXME: is it necessary?
-	inline ThinRealWrapper& operator=(const WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
+	ThinRealWrapper& operator=(const WrappedReal&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
 	{
 		val = std::move(moveVal);
 		return *this;
@@ -122,7 +122,7 @@ public:
 
 	// move/copy assignment from OtherType which is_convertible o WrappedReal
 	template <typename OtherType, typename = EnableIfConvertible<OtherType>>
-	inline ThinRealWrapper& operator=(OtherType&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
+	ThinRealWrapper& operator=(OtherType&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
 	{
 		val = std::forward<OtherType>(moveVal);
 		return *this;
@@ -221,44 +221,44 @@ public:
 	//template <typename OtherType, typename = EnableIfConvertible<OtherType>> bool operator<(OtherType&& rhs) const { return val < rhs.val; }
 
 	// field operators
-	inline ThinRealWrapper& operator+=(const ThinRealWrapper& x)
+	ThinRealWrapper& operator+=(const ThinRealWrapper& x)
 	{
 		val += x.val;
 		return *this;
 	}
-	inline ThinRealWrapper& operator-=(const ThinRealWrapper& x)
+	ThinRealWrapper& operator-=(const ThinRealWrapper& x)
 	{
 		val -= x.val;
 		return *this;
 	}
-	inline ThinRealWrapper& operator*=(const ThinRealWrapper& x)
+	ThinRealWrapper& operator*=(const ThinRealWrapper& x)
 	{
 		val *= x.val;
 		return *this;
 	}
-	inline ThinRealWrapper& operator/=(const ThinRealWrapper& x)
+	ThinRealWrapper& operator/=(const ThinRealWrapper& x)
 	{
 		val /= x.val;
 		return *this;
 	}
-	inline const ThinRealWrapper operator-() const { return -val; }
+	const ThinRealWrapper operator-() const { return -val; }
 	/*
-	template <typename OtherType> inline ThinRealWrapper& operator+=(const OtherType& x)
+	template <typename OtherType> ThinRealWrapper& operator+=(const OtherType& x)
 	{
 		val += x;
 		return *this;
 	}
-	template <typename OtherType> inline ThinRealWrapper& operator-=(const OtherType& x)
+	template <typename OtherType> ThinRealWrapper& operator-=(const OtherType& x)
 	{
 		val -= x;
 		return *this;
 	}
-	template <typename OtherType> inline ThinRealWrapper& operator*=(const OtherType& x)
+	template <typename OtherType> ThinRealWrapper& operator*=(const OtherType& x)
 	{
 		val *= x;
 		return *this;
 	}
-	template <typename OtherType> inline ThinRealWrapper& operator/=(const OtherType& x)
+	template <typename OtherType> ThinRealWrapper& operator/=(const OtherType& x)
 	{
 		val /= x;
 		return *this;
