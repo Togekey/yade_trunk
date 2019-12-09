@@ -5,20 +5,13 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
-// This file is mainly to workaround the fact that boost::python has a built-in converter for long double which is losing 3 digits or precision.
+// This file is mainly to workaround the fact that boost::python has a built-in converter for long double which is losing 3 digits of precision.
 //      see: https://www.boost.org/doc/libs/1_71_0/boost/python/converter/builtin_converters.hpp
 //
-// This file might be useful later in general if we will need some special traits taken care of for Real type.
-// IIRC we had previously a problem with Scalar*Vector, like v2=2*v1; and only v2=v1*2; worked. This can be fixed here too:
-//                                https://www.boost.org/doc/libs/1_71_0/libs/utility/operators.htm#two_arg
-//
-// The implementation is based on https://www.boost.org/doc/libs/1_71_0/libs/utility/operators.htm
-//                                https://www.boost.org/doc/libs/1_71_0/libs/utility/operators.htm#example
-//                                https://www.boost.org/doc/libs/1_71_0/libs/utility/test/operators_test.cpp
-// so that all operators =,+,-,*,/,>,<,==,!= etc on Real are predefined using boost.
+// It will be useful later in general if we will need some special traits taken care of for Real type.
 
-#ifndef YADE_REAL_STRONG_TYPEDEF_HPP
-#define YADE_REAL_STRONG_TYPEDEF_HPP
+#ifndef YADE_THIN_REAL_WRAPPER_HPP
+#define YADE_THIN_REAL_WRAPPER_HPP
 
 #include <boost/config.hpp>
 #include <boost/move/traits.hpp>
@@ -27,65 +20,15 @@
 #include <boost/type_traits/has_nothrow_constructor.hpp>
 #include <boost/type_traits/has_nothrow_copy.hpp>
 #include <cmath>
+#include <iostream>
 #include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <type_traits>
 
-// Maybe create separate file for ThinRealWrapper IO .hpp ?
-#include <iostream>
-#include <sstream>
-
-/*
-(A)
-	struct ThinRealWrapper : boost::partially_ordered1<                                                                                                         \
-	                            ThinRealWrapper,                                                                                                                \
-	                            boost::field_operators1<                                                                                                   \
-	                                    ThinRealWrapper,                                                                                                        \
-	                                    boost::partially_ordered2<ThinRealWrapper, WrappedReal, boost::field_operators2<ThinRealWrapper, WrappedReal>>>> {     \
-(B)
-	struct ThinRealWrapper : boost::operators<ThinRealWrapper> {                                                                                                     \
-(C)
-	class ThinRealWrapper : boost::ordered_field_operators2<ThinRealWrapper, WrappedReal>, boost::ordered_field_operators1<ThinRealWrapper> {                    \
-(D)
-	class ThinRealWrapper : boost::ordered_field_operators1<ThinRealWrapper> {                                                                                       \
-(E) // starts to work
-	class ThinRealWrapper : boost::ordered_field_operators2<ThinRealWrapper, WrappedReal>,                                                                  \
-	                   boost::ordered_field_operators2<ThinRealWrapper, double>,                                                                                \
-	                   boost::ordered_field_operators2<ThinRealWrapper, long unsigned int>,                                                                     \
-	                   boost::ordered_field_operators2<ThinRealWrapper, long signed int>,                                                                       \
-	                   boost::ordered_field_operators2<ThinRealWrapper, unsigned int>,                                                                          \
-	                   boost::ordered_field_operators2<ThinRealWrapper, signed int>,                                                                            \
-	                   boost::ordered_field_operators1<ThinRealWrapper> {                                                                                       \
-(F)
-	class ThinRealWrapper : boost::field_operators2<ThinRealWrapper, WrappedReal>,                                                                          \
-	                   boost::field_operators2<ThinRealWrapper, double>,                                                                                        \
-	                   boost::field_operators2<ThinRealWrapper, long unsigned int>,                                                                             \
-	                   boost::field_operators2<ThinRealWrapper, long signed int>,                                                                               \
-	                   boost::field_operators2<ThinRealWrapper, unsigned int>,                                                                                  \
-	                   boost::field_operators2<ThinRealWrapper, signed int>,                                                                                    \
-	                   boost::field_operators1<ThinRealWrapper>,                                                                                                \
-	                   boost::partially_ordered2<ThinRealWrapper, WrappedReal>,                                                                        \
-	                   boost::partially_ordered2<ThinRealWrapper, double>,                                                                                      \
-	                   boost::partially_ordered2<ThinRealWrapper, long unsigned int>,                                                                           \
-	                   boost::partially_ordered2<ThinRealWrapper, long signed int>,                                                                             \
-	                   boost::partially_ordered2<ThinRealWrapper, unsigned int>,                                                                                \
-	                   boost::partially_ordered2<ThinRealWrapper, signed int>,                                                                                  \
-	                   boost::partially_ordered1<ThinRealWrapper> {                                                                                             \
-(G)
-	class ThinRealWrapper : boost::ordered_field_operators1<ThinRealWrapper> {                                                                                       \
-
-(H)
-	class ThinRealWrapper : boost::partially_ordered1<ThinRealWrapper<WrappedReal>, boost::field_operators1<ThinRealWrapper<WrappedReal>>> {
-
- */
-
-// According to "Ordering note" if we want to have workinf NaN and Inf, we have to use partially_ordered* operators, not ordered_field_operators*
-//    https://www.boost.org/doc/libs/1_71_0/libs/utility/operators.htm#ordering
-//
-// If we need ordering or field operators for other types than those listed below (double, long int, etc…), just add them.
-// I skip float for now. See what will happen.
-
-//#define YADE_IGNORE_IEEE_INFINITY_NAN
+// The implementation is based on https://www.boost.org/doc/libs/1_71_0/libs/utility/operators.htm
+// so that all operators =,+,-,*,/,>,<,==,!= etc on Real are predefined using boost.
+// it is possible to #define YADE_IGNORE_IEEE_INFINITY_NAN  ← about that see https://www.boost.org/doc/libs/1_71_0/libs/utility/operators.htm#ordering
 
 template <typename WrappedReal>
 #ifdef YADE_IGNORE_IEEE_INFINITY_NAN
