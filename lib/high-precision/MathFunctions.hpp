@@ -49,6 +49,11 @@
 
 // TODO: list all functions present in /usr/include/mpreal.h (from debian package libmpfrc++-dev) so we support the same set of functions as MPFR does.
 
+// TODO: https://www.boost.org/doc/libs/1_71_0/libs/math/doc/html/math_toolkit/overview_tr1.html
+// TODO: They suggest to use this -lboost_math_tr1               boost::math::acosh(x) ↔ boost::math::tr1::acosh(x)
+//      ↓ …… for large scale software development where compile times are significant …… difference in performance …… as much as 20 times,
+//#include <boost/math/tr1.hpp>
+
 YADE_WRAP_FUNC_1(log)
 YADE_WRAP_FUNC_1(abs)
 YADE_WRAP_FUNC_1(sqrt)
