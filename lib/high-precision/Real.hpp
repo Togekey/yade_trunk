@@ -135,12 +135,16 @@ using UnderlyingReal = ::mpfr::mpreal;
 using Real = ThinRealWrapper<UnderlyingReal>;
 
 #include "ThinRealWrapperNumericLimits.hpp"
-#include "MathFunctions.hpp"
 #else
 
 using Real = UnderlyingReal;
 
 #endif
+
+/*************************************************************************/
+/*************************    Math functions    **************************/
+/*************************************************************************/
+#include "MathFunctions.hpp"
 
 /*************************************************************************/
 /*************************   Eigen  NumTraits   **************************/
@@ -153,7 +157,8 @@ using EigenTraitsReal = Real;
 /*************************************************************************/
 /************************* Vector3 Matrix3 etc  **************************/
 /*************************************************************************/
-#include "ExposedTypes.hpp"
+#include "AllMathTypes.hpp"
+#undef YADE_REAL_MATH_NAMESPACE
 
 /*************************************************************************/
 /*************************  Some sanity checks  **************************/

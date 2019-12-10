@@ -279,5 +279,7 @@ namespace multiprecision {
 }
 }
 
+#define YADE_USE_MATH_FUNCTIONS_WRAPPER
+
 #endif
 

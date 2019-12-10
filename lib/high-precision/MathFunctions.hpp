@@ -27,6 +27,9 @@
 //		using namespace boost::multiprecision;                                                                                                         \
 //		using namespace std;                                                                                                                           \
 
+#ifdef YADE_THIN_REAL_WRAPPER_HPP
+// these are inline redirections towards the correct function
+
 #define YADE_WRAP_FUNC_1(func)                                                                                                                                 \
 	inline Real func(const Real& a)                                                                                                                        \
 	{                                                                                                                                                      \
@@ -46,6 +49,15 @@
 		return func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b));                                                                   \
 		/*return func(a.val,b.val);*/                                                                                                                  \
 	}
+
+#else
+
+// without ThinRealWrapper the using keywords are enough
+#define YADE_WRAP_FUNC_1(func)
+
+#define YADE_WRAP_FUNC_2(func)
+
+#endif
 
 // TODO: list all functions present in /usr/include/mpreal.h (from debian package libmpfrc++-dev) so we support the same set of functions as MPFR does.
 
