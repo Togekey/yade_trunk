@@ -28,7 +28,7 @@
 //		using namespace std;                                                                                                                           \
 
 #define YADE_WRAP_FUNC_1(func)                                                                                                                                 \
-	inline Real func(const Real& a)                                                                                                                  \
+	inline Real func(const Real& a)                                                                                                                        \
 	{                                                                                                                                                      \
 		using namespace boost::multiprecision;                                                                                                         \
 		using namespace std;                                                                                                                           \
@@ -38,7 +38,7 @@
 	}
 
 #define YADE_WRAP_FUNC_2(func)                                                                                                                                 \
-	inline Real func(const Real& a, const Real& b)                                                                                                   \
+	inline Real func(const Real& a, const Real& b)                                                                                                         \
 	{                                                                                                                                                      \
 		using namespace boost::multiprecision;                                                                                                         \
 		using namespace std;                                                                                                                           \
@@ -57,6 +57,9 @@ YADE_WRAP_FUNC_1(cos)
 YADE_WRAP_FUNC_1(acos)
 YADE_WRAP_FUNC_2(pow)
 YADE_WRAP_FUNC_2(atan2)
+
+#undef YADE_WRAP_FUNC_1
+#undef YADE_WRAP_FUNC_2
 
 #endif
 
