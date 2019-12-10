@@ -61,12 +61,6 @@
 
 #include <Eigen/Core>
 
-// TODO: https://www.boost.org/doc/libs/1_71_0/libs/math/doc/html/math_toolkit/overview_tr1.html
-// TODO: They suggest to use this -lboost_math_tr1               boost::math::acosh(x) ↔ boost::math::tr1::acosh(x)
-//      ↓ …… for large scale software development where compile times are significant …… difference in performance …… as much as 20 times,
-//#include <boost/math/tr1.hpp>
-
-
 /*************************************************************************/
 /*************************    float 32 bits     **************************/
 /*************************************************************************/
@@ -84,6 +78,9 @@ using UnderlyingReal = boost::float_fast64_t;
 /*************************************************************************/
 #elif YADE_REAL_BIT <= 80
 using UnderlyingReal = boost::float_fast80_t;
+namespace EigenCostReal {
+enum { ReadCost = 1, AddCost = 1, MulCost = 1 };
+}
 
 /*************************************************************************/
 /*************************  float128 128 bits   **************************/
@@ -94,8 +91,6 @@ using UnderlyingReal = boost::multiprecision::float128;
 namespace EigenCostReal {
 enum { ReadCost = 1, AddCost = 2, MulCost = 2 };
 }
-using EigenTraitsReal = UnderlyingReal;
-#include "EigenNumTraits.hpp"
 
 /*************************************************************************/
 /*************************         MPFR         **************************/
@@ -108,8 +103,6 @@ using UnderlyingReal        = boost::multiprecision::number<UnderlyingRealBacken
 namespace EigenCostReal {
 enum { ReadCost = Eigen::HugeCost, AddCost = Eigen::HugeCost, MulCost = Eigen::HugeCost };
 }
-using EigenTraitsReal = UnderlyingReal;
-#include "EigenNumTraits.hpp"
 
 /*************************************************************************/
 /************************* boost::cpp_bin_float **************************/
@@ -121,9 +114,6 @@ using UnderlyingReal = boost::multiprecision::number<UnderlyingRealBackend<YADE_
 namespace EigenCostReal {
 enum { ReadCost = Eigen::HugeCost, AddCost = Eigen::HugeCost, MulCost = Eigen::HugeCost };
 }
-using EigenTraitsReal = UnderlyingReal;
-#include "EigenNumTraits.hpp"
-
 
 /*************************************************************************/
 #elif defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
@@ -133,21 +123,36 @@ using UnderlyingReal = ::mpfr::mpreal;
 #error "Real precision is unspecified, there must be a mistake in CMakeLists.txt, the requested #defines should have been provided."
 #endif
 
-// `long double` needs special consideration to workaround boost::python losing 3 digits precision
+/*************************************************************************/
+/*************************     AND  FINALLY     **************************/
+/*************************     declare Real     **************************/
+/*************************************************************************/
+
 #if (YADE_REAL_BIT <= 80) and (YADE_REAL_BIT > 64)
+// `long double` needs special consideration to workaround boost::python losing 3 digits precision
 #include "ThinRealWrapper.hpp"
+
 using Real = ThinRealWrapper<UnderlyingReal>;
+
 #include "ThinRealWrapperNumericLimits.hpp"
 #include "MathFunctions.hpp"
-using EigenTraitsReal = Real;
-namespace EigenCostReal {
-enum { ReadCost = 1, AddCost = 1, MulCost = 1 };
-}
-#include "EigenNumTraits.hpp"
 #else
+
 using Real = UnderlyingReal;
+
 #endif
 
+/*************************************************************************/
+/*************************   Eigen  NumTraits   **************************/
+/*************************************************************************/
+#if (YADE_REAL_BIT > 64) and (not defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this))
+using EigenTraitsReal = Real;
+#include "EigenNumTraits.hpp"
+#endif
+
+/*************************************************************************/
+/************************* Vector3 Matrix3 etc  **************************/
+/*************************************************************************/
 #include "ExposedTypes.hpp"
 
 /*************************************************************************/
