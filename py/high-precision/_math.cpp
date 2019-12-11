@@ -18,6 +18,10 @@
 #include "Real/ToFromPythonConverter.hpp"
 #include "ExposeStorageOrdering.hpp"
 
+// testing Real type
+#include <boost/concept/assert.hpp>
+#include <boost/math/concepts/real_type_concept.hpp>
+
 namespace py = ::boost::python;
 
 struct Var {
@@ -168,6 +172,13 @@ try {
 	py::def("toInt", static_cast<int (*)(const Real&)>(&Eigen::internal::cast<Real, int>), (py::arg("x")));
 
 	expose_storage_ordering();
+
+#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
+	#warning "::mpfr::mpreal (non-boost implementation) is not passing Boost RealTypeConcept test"
+#else
+	BOOST_CONCEPT_ASSERT((boost::math::concepts::RealTypeConcept<Real>));
+#endif
+
 } catch (...) {
 	std::cerr << ("Importing this module caused an unrecognized exception caught on C++ side and this module is in an inconsistent state now.\n\n");
 	PyErr_Print();
