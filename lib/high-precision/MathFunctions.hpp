@@ -23,13 +23,14 @@
 //             conversion of first argument to `const Real&&` would be ill-formed
 //             cannot bind rvalue reference of type ‘const Real&&’ {aka ‘const ThinRealWrapper<long double>&&’} to lvalue of type ‘ThinRealWrapper<long double>’
 
-// NOTE, these using are necessary so that a correct overload will be used regardless of what actually is Real
-//		using namespace boost::multiprecision;                                                                                                         \
-//		using namespace std;                                                                                                                           \
-
 #ifdef YADE_THIN_REAL_WRAPPER_HPP
-// these are inline redirections towards the correct function
+// don't produce errors, even when UnderlyingReal is not related to boost multiprecision
+namespace boost {
+namespace multiprecision {
+}
+}
 
+// these are inline redirections towards the correct function
 #define YADE_WRAP_FUNC_1(func)                                                                                                                                 \
 	inline Real func(const Real& a)                                                                                                                        \
 	{                                                                                                                                                      \
@@ -53,8 +54,8 @@
 		/*return func(a.val,b.val);*/                                                                                                                  \
 	}
 
-#define YADE_WRAP_FUNC_2_TYPE2(func,SecondType)                                                                                                                         \
-	inline Real func(const Real& a, SecondType b)                                                                                                                \
+#define YADE_WRAP_FUNC_2_TYPE2(func, SecondType)                                                                                                               \
+	inline Real func(const Real& a, SecondType b)                                                                                                          \
 	{                                                                                                                                                      \
 		using namespace boost::multiprecision;                                                                                                         \
 		using namespace std;                                                                                                                           \
@@ -70,7 +71,7 @@
 #define YADE_WRAP_FUNC_1_RENAME(func1, func2)
 
 #define YADE_WRAP_FUNC_2(func)
-#define YADE_WRAP_FUNC_2_TYPE2(func,SecondType)
+#define YADE_WRAP_FUNC_2_TYPE2(func, SecondType)
 
 #endif
 
@@ -105,8 +106,8 @@ YADE_WRAP_FUNC_2(atan2)
 YADE_WRAP_FUNC_2(pow)
 YADE_WRAP_FUNC_2(fmod)
 
-YADE_WRAP_FUNC_2_TYPE2(frexp,int*)
-YADE_WRAP_FUNC_2_TYPE2(ldexp,int)
+YADE_WRAP_FUNC_2_TYPE2(frexp, int*)
+YADE_WRAP_FUNC_2_TYPE2(ldexp, int)
 
 #undef YADE_WRAP_FUNC_1
 #undef YADE_WRAP_FUNC_1_RENAME
