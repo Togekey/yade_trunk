@@ -32,9 +32,12 @@
 
 template <typename WrappedReal>
 #ifdef YADE_IGNORE_IEEE_INFINITY_NAN
-class ThinRealWrapper : boost::ordered_field_operators1<ThinRealWrapper<WrappedReal>> {
+class ThinRealWrapper
+        : boost::ordered_field_operators1<ThinRealWrapper<WrappedReal>, boost::ordered_field_operators2<ThinRealWrapper<WrappedReal>, WrappedReal>> {
 #else
-class ThinRealWrapper : boost::partially_ordered1<ThinRealWrapper<WrappedReal>, boost::field_operators1<ThinRealWrapper<WrappedReal>>> {
+class ThinRealWrapper : boost::partially_ordered1<
+                                ThinRealWrapper<WrappedReal>,
+                                boost::partially_ordered2<ThinRealWrapper<WrappedReal>, WrappedReal, boost::field_operators1<ThinRealWrapper<WrappedReal>>>> {
 #endif
 private:
 	WrappedReal val;
@@ -213,6 +216,19 @@ public:
 		check(rhs);
 		return val != rhs.val;
 	}
+
+	template <typename OtherType, typename = EnableIfConvertible<OtherType>>
+	friend inline bool operator==(OtherType rhs, const ThinRealWrapper& th)
+	{
+		th.check(rhs);
+		return th.val == rhs;
+	}
+	template <typename OtherType, typename = EnableIfConvertible<OtherType>>
+	friend inline bool operator!=(OtherType rhs, const ThinRealWrapper& th)
+	{
+		th.check(rhs);
+		return th.val != rhs;
+	}
 #endif
 	//template <typename OtherType> bool operator==(OtherType rhs) const { return val == rhs; }
 	//template <typename OtherType> bool operator<(OtherType rhs) const { return val < rhs; }
@@ -241,7 +257,8 @@ public:
 		val /= x.val;
 		return *this;
 	}
-	const ThinRealWrapper operator-() const { return -val; }
+	const ThinRealWrapper  operator-() const { return -val; }
+	const ThinRealWrapper& operator+() const { return *this; }
 	/*
 	template <typename OtherType> ThinRealWrapper& operator+=(const OtherType& x)
 	{
@@ -273,6 +290,16 @@ public:
 		return is;
 	}
 };
+
+// test this with https://www.boost.org/doc/libs/1_72_0/libs/math/doc/html/math_toolkit/real_concepts.html
+//
+//  #include <boost/concept/assert.hpp>
+//  #include <boost/math/concepts/real_type_concept.hpp>
+//  int main() { BOOST_CONCEPT_ASSERT((boost::math::concepts::RealTypeConcept<Real>)); }
+//
+// see also: /usr/include/boost/math/bindings/e_float.hpp
+//           /usr/include/mpreal.h
+//           https://www.boost.org/doc/libs/1_72_0/libs/math/test/e_float_concept_check.cpp
 
 namespace boost {
 namespace multiprecision {
