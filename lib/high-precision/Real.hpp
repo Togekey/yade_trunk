@@ -134,6 +134,8 @@ using UnderlyingReal = ::mpfr::mpreal;
 
 using Real = ThinRealWrapper<UnderlyingReal>;
 
+static_assert(sizeof(Real)==sizeof(UnderlyingReal));
+
 #include "ThinRealWrapperNumericLimits.hpp"
 #else
 
