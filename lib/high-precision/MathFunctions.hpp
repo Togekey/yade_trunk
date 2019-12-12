@@ -38,7 +38,6 @@ namespace multiprecision {
 		using namespace std;                                                                                                                           \
 		/*return func(std::forward<UnderlyingReal>(a));*/                                                                                              \
 		return func(static_cast<UnderlyingReal>(a));                                                                                                   \
-		/*return func(a.val);*/                                                                                                                        \
 	}
 
 #define YADE_WRAP_FUNC_1_RENAME(func1, func2)                                                                                                                  \
@@ -49,9 +48,15 @@ namespace multiprecision {
 	{                                                                                                                                                      \
 		using namespace boost::multiprecision;                                                                                                         \
 		using namespace std;                                                                                                                           \
-		/*return func(std::forward<UnderlyingReal>(a),std::forward<UnderlyingReal>(b));*/                                                              \
 		return func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b));                                                                   \
-		/*return func(a.val,b.val);*/                                                                                                                  \
+	}
+
+#define YADE_WRAP_FUNC_2_TYPE1(func, FirstType)                                                                                                                \
+	inline Real func(FirstType a, const Real& b)                                                                                                           \
+	{                                                                                                                                                      \
+		using namespace boost::multiprecision;                                                                                                         \
+		using namespace std;                                                                                                                           \
+		return func(a, static_cast<UnderlyingReal>(b));                                                                                                \
 	}
 
 #define YADE_WRAP_FUNC_2_TYPE2(func, SecondType)                                                                                                               \
@@ -59,9 +64,23 @@ namespace multiprecision {
 	{                                                                                                                                                      \
 		using namespace boost::multiprecision;                                                                                                         \
 		using namespace std;                                                                                                                           \
-		/*return func(std::forward<UnderlyingReal>(a),std::forward<UnderlyingReal>(b));*/                                                              \
 		return func(static_cast<UnderlyingReal>(a), b);                                                                                                \
-		/*return func(a.val,b.val);*/                                                                                                                  \
+	}
+
+#define YADE_WRAP_FUNC_3(func)                                                                                                                                 \
+	inline Real func(const Real& a, const Real& b, const Real& c)                                                                                          \
+	{                                                                                                                                                      \
+		using namespace boost::multiprecision;                                                                                                         \
+		using namespace std;                                                                                                                           \
+		return func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b), static_cast<UnderlyingReal>(c));                                   \
+	}
+
+#define YADE_WRAP_FUNC_3_TYPE3(func, ThirdType)                                                                                                                \
+	inline Real func(const Real& a, const Real& b, ThirdType c)                                                                                            \
+	{                                                                                                                                                      \
+		using namespace boost::multiprecision;                                                                                                         \
+		using namespace std;                                                                                                                           \
+		return func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b), c);                                                                \
 	}
 
 #else
@@ -72,10 +91,17 @@ namespace multiprecision {
 
 #define YADE_WRAP_FUNC_2(func)
 #define YADE_WRAP_FUNC_2_TYPE2(func, SecondType)
+#define YADE_WRAP_FUNC_2_TYPE1(func, FirstType)
+
+#define YADE_WRAP_FUNC_3(func)
+#define YADE_WRAP_FUNC_3_TYPE3(func, ThirdType)
 
 #endif
 
-// TODO: list all functions present in /usr/include/mpreal.h (from debian package libmpfrc++-dev) so we support the same set of functions as MPFR does.
+// here are listed functions present in
+//              https://en.cppreference.com/w/cpp/numeric/math
+//              https://en.cppreference.com/w/cpp/numeric/special_functions
+// compare with /usr/include/mpreal.h (from debian package libmpfrc++-dev) so we support the same set of functions as MPFR does.
 
 // TODO: https://www.boost.org/doc/libs/1_71_0/libs/math/doc/html/math_toolkit/overview_tr1.html
 // TODO: They suggest to use this -lboost_math_tr1               boost::math::acosh(x) ↔ boost::math::tr1::acosh(x)
@@ -84,36 +110,84 @@ namespace multiprecision {
 
 YADE_WRAP_FUNC_1(abs)
 YADE_WRAP_FUNC_1(acos)
+YADE_WRAP_FUNC_1(acosh)
 YADE_WRAP_FUNC_1(asin)
+YADE_WRAP_FUNC_1(asinh)
 YADE_WRAP_FUNC_1(atan)
+YADE_WRAP_FUNC_1(atanh)
+YADE_WRAP_FUNC_1(cbrt)
 YADE_WRAP_FUNC_1(ceil)
 YADE_WRAP_FUNC_1(cos)
 YADE_WRAP_FUNC_1(cosh)
+YADE_WRAP_FUNC_1(erf)
+YADE_WRAP_FUNC_1(erfc)
 YADE_WRAP_FUNC_1(exp)
+YADE_WRAP_FUNC_1(exp10)
+YADE_WRAP_FUNC_1(exp2)
+YADE_WRAP_FUNC_1(expm1)
 YADE_WRAP_FUNC_1(floor)
+YADE_WRAP_FUNC_1(ilogb)
+YADE_WRAP_FUNC_1(lgamma)
 YADE_WRAP_FUNC_1(log)
+YADE_WRAP_FUNC_1(log1)
 YADE_WRAP_FUNC_1(log10)
+YADE_WRAP_FUNC_1(log1p)
+YADE_WRAP_FUNC_1(log2)
+YADE_WRAP_FUNC_1(logb)
+YADE_WRAP_FUNC_1(riemann_zeta)
+YADE_WRAP_FUNC_1(rint)
 YADE_WRAP_FUNC_1(round)
 YADE_WRAP_FUNC_1(sin)
 YADE_WRAP_FUNC_1(sinh)
+YADE_WRAP_FUNC_1(sqr)
 YADE_WRAP_FUNC_1(sqrt)
 YADE_WRAP_FUNC_1(tan)
 YADE_WRAP_FUNC_1(tanh)
+YADE_WRAP_FUNC_1(tgamma)
+YADE_WRAP_FUNC_1(trunc)
 
 YADE_WRAP_FUNC_1_RENAME(fabs, abs)
 
 YADE_WRAP_FUNC_2(atan2)
-YADE_WRAP_FUNC_2(pow)
+YADE_WRAP_FUNC_2(beta)
+YADE_WRAP_FUNC_2(cyl_bessel_i)
+YADE_WRAP_FUNC_2(cyl_bessel_j)
+YADE_WRAP_FUNC_2(cyl_bessel_k)
 YADE_WRAP_FUNC_2(fmod)
+YADE_WRAP_FUNC_2(hypot)
+YADE_WRAP_FUNC_2(max)
+YADE_WRAP_FUNC_2(min)
+YADE_WRAP_FUNC_2(pow)
+YADE_WRAP_FUNC_2(remainder)
 
+YADE_WRAP_FUNC_2_TYPE1(sph_bessel, unsigned)
 YADE_WRAP_FUNC_2_TYPE2(frexp, int*)
 YADE_WRAP_FUNC_2_TYPE2(ldexp, int)
+YADE_WRAP_FUNC_2_TYPE2(modf, Real*)
+
+YADE_WRAP_FUNC_1(hypot)
+YADE_WRAP_FUNC_3(fma)
+YADE_WRAP_FUNC_3(hypot)
+YADE_WRAP_FUNC_3_TYPE3(remquo, int*)
+
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
+template <typename T> int sign(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
 
 #undef YADE_WRAP_FUNC_1
 #undef YADE_WRAP_FUNC_1_RENAME
 
 #undef YADE_WRAP_FUNC_2
 #undef YADE_WRAP_FUNC_2_TYPE2
+#undef YADE_WRAP_FUNC_2_TYPE1
+
+#undef YADE_WRAP_FUNC_3
+#undef YADE_WRAP_FUNC_3_TYPE3
 
 #endif
 
