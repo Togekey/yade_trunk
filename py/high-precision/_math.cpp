@@ -8,21 +8,60 @@
 #include "Real/Real.hpp"
 
 #include <boost/python.hpp>
+#include <Eigen/Core>
+#include <Eigen/src/Core/MathFunctions.h>
 #include <iostream>
 #include <limits>
 #include <sstream>
-#include <Eigen/Core>
-#include <Eigen/src/Core/MathFunctions.h>
 
 //#define ARBITRARY_REAL_DEBUG
-#include "Real/ToFromPythonConverter.hpp"
 #include "ExposeStorageOrdering.hpp"
+#include "Real/ToFromPythonConverter.hpp"
 
 // testing Real type
 #include <boost/concept/assert.hpp>
 #include <boost/math/concepts/real_type_concept.hpp>
 
 namespace py = ::boost::python;
+
+// Converts a std::pair instance to a Python tuple.
+template <typename T1, typename T2> struct std_pair_to_tuple {
+	static PyObject*           convert(std::pair<T1, T2> const& p) { return boost::python::incref(boost::python::make_tuple(p.first, p.second).ptr()); }
+	static PyTypeObject const* get_pytype() { return &PyTuple_Type; }
+};
+
+// Helper for convenience.
+template <typename T1, typename T2> struct std_pair_to_python_converter {
+	std_pair_to_python_converter()
+	{
+		boost::python::to_python_converter<
+		        std::pair<T1, T2>,
+		        std_pair_to_tuple<T1, T2>,
+		        true //std_pair_to_tuple has get_pytype
+		        >();
+	}
+};
+
+std::pair<Real, int> frexp_c_test(const Real& x)
+{
+	int  i   = 0;
+	Real ret = frexp(x, &i);
+	return std::pair<Real, int> { ret, i };
+}
+
+std::pair<Real, Real> modf_c_test(const Real& x)
+{
+	Real r   = 0;
+	Real ret = modf(x, &r);
+	return std::pair<Real, Real> { ret, r };
+}
+
+std::pair<Real, int> remquo_c_test(const Real& x, const Real& y)
+{
+	int  i   = 0;
+	Real ret = remquo(x, y, &i);
+	return std::pair<Real, int> { ret, i };
+}
 
 struct Var {
 	Real value { -71.23 };
@@ -50,7 +89,7 @@ double someFunction()
 	return ret;
 }
 
-#if not (defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H) or defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this))
+#if not(defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H) or defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this))
 namespace boost {
 namespace multiprecision {
 }
@@ -147,7 +186,8 @@ try {
 	py::def("random", static_cast<Real (*)()>(&Eigen::internal::random<Real>));
 	py::def("random", static_cast<Real (*)(const Real&, const Real&)>(&Eigen::internal::random<Real>), (py::arg("a"), "b"));
 
-#if ((EIGEN_MAJOR_VERSION > 2) and (EIGEN_WORLD_VERSION>=3)) or defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H) or defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
+#if ((EIGEN_MAJOR_VERSION > 2) and (EIGEN_WORLD_VERSION >= 3)) or defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H)                  \
+        or defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
 	py::def("isMuchSmallerThan",
 	        static_cast<bool (*)(const Real&, const Real&, const Real&)>(&Eigen::internal::isMuchSmallerThan),
 	        (py::arg("a"), "b", "eps"));
@@ -158,7 +198,7 @@ try {
 #else
 	// older eigen 3.2 didn't use `const Real&` but was copying third argument by value `Real`
 	py::def("isMuchSmallerThan",
-	        static_cast<bool (*)(const Real&, const Real&, Real)>(&Eigen::internal::isMuchSmallerThan<Real,Real>),
+	        static_cast<bool (*)(const Real&, const Real&, Real)>(&Eigen::internal::isMuchSmallerThan<Real, Real>),
 	        (py::arg("a"), "b", "eps"));
 	py::def("isApprox", static_cast<bool (*)(const Real&, const Real&, Real)>(&Eigen::internal::isApprox<Real>), (py::arg("a"), "b", "eps"));
 	py::def("isApproxOrLessThan",
@@ -174,10 +214,88 @@ try {
 	expose_storage_ordering();
 
 #ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-	#warning "::mpfr::mpreal (non-boost implementation) is not passing Boost RealTypeConcept test"
+#warning "::mpfr::mpreal (non-boost implementation) is not passing Boost RealTypeConcept test"
 #else
 	BOOST_CONCEPT_ASSERT((boost::math::concepts::RealTypeConcept<Real>));
 #endif
+
+	// check overload (and namespace) resolution for all math functions. As a side effect they are exported to python, and can be unit-tested.
+#define YADE_PYEXPORT_MATH_1(func) py::def(#func, static_cast<Real (*)(const Real&)>(&func), (py::arg("x")));
+#define YADE_PYEXPORT_MATH_1_INT(func) py::def(#func, static_cast<int (*)(const Real&)>(&func), (py::arg("x")));
+	YADE_PYEXPORT_MATH_1(abs)
+	YADE_PYEXPORT_MATH_1(acos)
+	YADE_PYEXPORT_MATH_1(acosh)
+	YADE_PYEXPORT_MATH_1(asin)
+	YADE_PYEXPORT_MATH_1(asinh)
+	YADE_PYEXPORT_MATH_1(atan)
+	YADE_PYEXPORT_MATH_1(atanh)
+	YADE_PYEXPORT_MATH_1(cbrt)
+	YADE_PYEXPORT_MATH_1(ceil)
+	YADE_PYEXPORT_MATH_1(cos)
+	YADE_PYEXPORT_MATH_1(cosh)
+	YADE_PYEXPORT_MATH_1(erf)
+	YADE_PYEXPORT_MATH_1(erfc)
+	YADE_PYEXPORT_MATH_1(exp)
+	YADE_PYEXPORT_MATH_1(exp2)
+	YADE_PYEXPORT_MATH_1(expm1)
+	YADE_PYEXPORT_MATH_1(floor)
+	YADE_PYEXPORT_MATH_1(ilogb)
+	YADE_PYEXPORT_MATH_1(lgamma)
+	YADE_PYEXPORT_MATH_1(log)
+	YADE_PYEXPORT_MATH_1(log10)
+	YADE_PYEXPORT_MATH_1(log1p)
+	YADE_PYEXPORT_MATH_1(log2)
+	YADE_PYEXPORT_MATH_1(logb)
+	//YADE_PYEXPORT_MATH_1(riemann_zeta) // since C++17
+	YADE_PYEXPORT_MATH_1(rint)
+	YADE_PYEXPORT_MATH_1(round)
+	YADE_PYEXPORT_MATH_1(sin)
+	YADE_PYEXPORT_MATH_1(sinh)
+	YADE_PYEXPORT_MATH_1(sqrt)
+	YADE_PYEXPORT_MATH_1(tan)
+	YADE_PYEXPORT_MATH_1(tanh)
+	YADE_PYEXPORT_MATH_1(tgamma)
+	YADE_PYEXPORT_MATH_1(trunc)
+
+	YADE_PYEXPORT_MATH_1(fabs)
+
+	YADE_PYEXPORT_MATH_1_INT(sgn)
+	YADE_PYEXPORT_MATH_1_INT(sign)
+#undef YADE_PYEXPORT_MATH_1
+#undef YADE_PYEXPORT_MATH_1_INT
+
+#define YADE_PYEXPORT_MATH_2(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&)>(&func), (py::arg("x"), "y"));
+	YADE_PYEXPORT_MATH_2(atan2)
+	//YADE_PYEXPORT_MATH_2(beta) // since C++17
+	//YADE_PYEXPORT_MATH_2(cyl_bessel_i) // since C++17
+	//YADE_PYEXPORT_MATH_2(cyl_bessel_j) // since C++17
+	//YADE_PYEXPORT_MATH_2(cyl_bessel_k) // since C++17
+	YADE_PYEXPORT_MATH_2(fmod)
+	YADE_PYEXPORT_MATH_2(hypot)
+	YADE_PYEXPORT_MATH_2(max)
+	YADE_PYEXPORT_MATH_2(min)
+	YADE_PYEXPORT_MATH_2(pow)
+	YADE_PYEXPORT_MATH_2(remainder)
+#undef YADE_PYEXPORT_MATH_2
+
+#define YADE_PYEXPORT_MATH_2_TYPE1(func, FirstType) py::def(#func, static_cast<Real (*)(FirstType, const Real&)>(&func), (py::arg("x"), "y"));
+	//YADE_PYEXPORT_MATH_2_TYPE1(sph_bessel, unsigned) // since C++17
+#undef YADE_PYEXPORT_MATH_2_TYPE1
+
+#define YADE_PYEXPORT_MATH_2_TYPE2(func, SecondType) py::def(#func, static_cast<Real (*)(const Real&, SecondType)>(&func), (py::arg("x"), "y"));
+	YADE_PYEXPORT_MATH_2_TYPE2(ldexp, int)
+#undef YADE_PYEXPORT_MATH_2_TYPE2
+
+	std_pair_to_python_converter<Real, Real>();
+	std_pair_to_python_converter<Real, int>();
+	py::def("frexp", frexp_c_test, (py::arg("x")));
+	py::def("modf", modf_c_test, (py::arg("x")));
+
+#define YADE_PYEXPORT_MATH_3(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&, const Real&)>(&func), (py::arg("x"), "y", "z"));
+	YADE_PYEXPORT_MATH_3(fma)
+#undef YADE_PYEXPORT_MATH_3
+
+	py::def("remquo", remquo_c_test, (py::arg("x"), "y"));
 
 } catch (...) {
 	std::cerr << ("Importing this module caused an unrecognized exception caught on C++ side and this module is in an inconsistent state now.\n\n");

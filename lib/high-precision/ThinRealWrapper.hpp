@@ -88,6 +88,12 @@ public:
 	// conversion operator to other types
 	template <typename OtherType, typename = EnableIfConvertible<OtherType>> explicit operator OtherType() const { return static_cast<OtherType>(val); }
 
+	// https://en.cppreference.com/w/cpp/language/cast_operator
+//	ThinRealWrapper* operator&() { return this; }
+//	explicit         operator ThinRealWrapper*() { return this; };
+//	WrappedReal*     operator&() { return &val; }
+	explicit         operator WrappedReal*() { return &val; };
+
 	// accessors
 	operator const ThinRealWrapper&() const { return val; }
 	operator ThinRealWrapper&() { return val; }
