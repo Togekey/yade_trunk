@@ -144,7 +144,7 @@ namespace yade {
 using Real = ::yade::ThinRealWrapper<UnderlyingReal>;
 }
 
-static_assert(sizeof(yade::Real)==sizeof(UnderlyingReal));
+static_assert(sizeof(yade::Real)==sizeof(UnderlyingReal),"This compiler introduced padding, which breaks binary compatibility");
 
 #include "ThinRealWrapperNumericLimits.hpp"
 #else
