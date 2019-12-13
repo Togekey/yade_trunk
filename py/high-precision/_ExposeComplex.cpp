@@ -1,5 +1,5 @@
 #include "Real/Real.hpp"
 #include "Real/ToFromPythonConverter.hpp"
-using namespace ::yade::UseExposedTypesOutside;
+using namespace ::yade::MathEigenTypes;
 #include <minieigen/expose-complex.cpp>
 
