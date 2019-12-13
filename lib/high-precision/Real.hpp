@@ -89,6 +89,7 @@ enum { ReadCost = 1, AddCost = 1, MulCost = 1 };
 /*************************  float128 128 bits   **************************/
 /*************************************************************************/
 #elif YADE_REAL_BIT <= 128
+#include <quadmath.h>
 #include <boost/multiprecision/float128.hpp>
 using UnderlyingReal = boost::multiprecision::float128;
 #define YADE_REAL_MATH_NAMESPACE ::boost::multiprecision
