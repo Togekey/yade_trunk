@@ -40,6 +40,7 @@ class SimpleTests(unittest.TestCase):
 			self.expectedEpsilon=mpmath.mpf('1.925929944387235853055977942584926994e-34')
 		self.maxval=(mpmath.mpf(1)-self.expectedEpsilon)*mpmath.power(2,mne.max_exp2)
 	def checkRelativeError(self,a,b,tol=None,functionName=None):
+		defaultTolerances={ "cos" : {18:10} , "erfc" : {18:50} , "sin" : {18:10} , "tan" : {18:10} , "tgamma" : {18:10} , "modf" : {18:10} }
 		if(abs(b) <= self.maxval and abs(b) >= mne.smallest_positive()):
 			#print("a= ",a," b= ",b," smallest=",mne.smallest_positive(), " maxval=",self.maxval)
 			if(mpmath.isnan(a)):
@@ -48,7 +49,12 @@ class SimpleTests(unittest.TestCase):
 				if(tol != None):
 					self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),tol)
 				else:
-					self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),self.tolerance)
+					if(functionName in defaultTolerances):
+						defaultToleranceForThisFunction = defaultTolerances[functionName][int(${DEC_DIGITS})]*self.tolerance
+						#print(defaultToleranceForThisFunction," ---- ",functionName)
+						self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),defaultToleranceForThisFunction)
+					else:
+						self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),self.tolerance)
 		else:
 			print("Skipping check, the builtin number: ", a, " cannot have value outside of its possible repesentation: " , b, ", because it has only ",${DEC_DIGITS}," digits.")
 
@@ -63,10 +69,10 @@ class SimpleTests(unittest.TestCase):
 		self.checkRelativeError(mne.atanh(r%1),mpmath.atanh(r%1),functionName="atanh")
 		self.checkRelativeError(mne.cbrt(abs(r)),mpmath.cbrt(abs(r)),functionName="cbrt")
 		self.assertEqual(mne.ceil(r),mpmath.ceil(r))
-		self.checkRelativeError(mne.cos(r),mpmath.cos(r),self.tolerance*10,functionName="cos")
+		self.checkRelativeError(mne.cos(r),mpmath.cos(r),functionName="cos")
 		self.checkRelativeError(mne.cosh(r),mpmath.cosh(r),functionName="cosh")
 		self.checkRelativeError(mne.erf(r),mpmath.erf(r),functionName="erf")
-		self.checkRelativeError(mne.erfc(r),mpmath.erfc(r),self.tolerance*50,functionName="erfc")
+		self.checkRelativeError(mne.erfc(r),mpmath.erfc(r),functionName="erfc")
 		self.checkRelativeError(mne.exp(r),mpmath.exp(r),functionName="exp")
 		self.checkRelativeError(mne.exp2(r),mpmath.power(2,r),functionName="exp2")
 		self.checkRelativeError(mne.expm1(r),mpmath.expm1(r),functionName="expm1")
@@ -80,18 +86,18 @@ class SimpleTests(unittest.TestCase):
 		#print(mne.logb(r).__repr__()) # logb is not present in mpmath
 		self.assertEqual(mne.rint(r),round(r))
 		self.assertEqual(mne.round(r),round(r))
-		self.checkRelativeError(mne.sin(r),mpmath.sin(r),self.tolerance*10,functionName="sin")
+		self.checkRelativeError(mne.sin(r),mpmath.sin(r),functionName="sin")
 		self.checkRelativeError(mne.sinh(r),mpmath.sinh(r),functionName="sinh")
-		self.checkRelativeError(mne.tan(r),mpmath.tan(r),self.tolerance*10,functionName="tan")
+		self.checkRelativeError(mne.tan(r),mpmath.tan(r),functionName="tan")
 		self.checkRelativeError(mne.tanh(r),mpmath.tanh(r),functionName="tanh")
 		if(${DEC_DIGITS}==33): # workaround bug in float128
 			#print("r=",r)
 			if((r<0)):
-				self.checkRelativeError(abs(mne.tgamma(r)),abs(mpmath.gamma(r)),self.tolerance*10,functionName="tgamma")
+				self.checkRelativeError(abs(mne.tgamma(r)),abs(mpmath.gamma(r)),functionName="tgamma")
 			else:
-				self.checkRelativeError(mne.tgamma(r),mpmath.gamma(r),self.tolerance*10,functionName="tgamma")
+				self.checkRelativeError(mne.tgamma(r),mpmath.gamma(r),functionName="tgamma")
 		else:
-			self.checkRelativeError(mne.tgamma(r),mpmath.gamma(r),self.tolerance*10,functionName="tgamma")
+			self.checkRelativeError(mne.tgamma(r),mpmath.gamma(r),functionName="tgamma")
 		self.assertEqual(mne.trunc(r),int(r))
 
 		self.checkRelativeError(mne.fabs(r),abs(r),functionName="fabs")
@@ -100,7 +106,7 @@ class SimpleTests(unittest.TestCase):
 		self.checkRelativeError(abs(r),pair[0]*mpmath.power(2,pair[1]),functionName="frexp")
 
 		pair = mne.modf(abs(r))
-		self.checkRelativeError(pair[0],(abs(r))%1,self.tolerance*10,functionName="modf")
+		self.checkRelativeError(pair[0],(abs(r))%1,functionName="modf")
 		self.assertEqual(pair[1],int(abs(r)))
 
 		#self.assertEqual(mne.frexp(abs(r)),mne.frexp_c_test(abs(r)))
