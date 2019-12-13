@@ -23,6 +23,7 @@
 #include <boost/math/concepts/real_type_concept.hpp>
 
 namespace py = ::boost::python;
+using ::yade::Real;
 
 // Converts a std::pair instance to a Python tuple.
 template <typename T1, typename T2> struct std_pair_to_tuple {
@@ -45,22 +46,30 @@ template <typename T1, typename T2> struct std_pair_to_python_converter {
 std::pair<Real, int> frexp_c_test(const Real& x)
 {
 	int  i   = 0;
-	Real ret = frexp(x, &i);
+	Real ret = ::yade::frexp(x, &i);
 	return std::pair<Real, int> { ret, i };
 }
 
 std::pair<Real, Real> modf_c_test(const Real& x)
 {
-	Real r   = 0;
-	Real ret = modf(x, &r);
+	Real r = 0;
+#if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
+	Real ret = ::yade::modf(x, r);
+#else
+	Real ret      = ::yade::modf(x, &r);
+#endif
 	return std::pair<Real, Real> { ret, r };
 }
 
-std::pair<Real, int> remquo_c_test(const Real& x, const Real& y)
+std::pair<Real, long> remquo_c_test(const Real& x, const Real& y)
 {
-	int  i   = 0;
-	Real ret = remquo(x, y, &i);
-	return std::pair<Real, int> { ret, i };
+#if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
+	long i = 0;
+#else
+	int  i        = 0;
+#endif
+	Real ret = ::yade::remquo(x, y, &i);
+	return std::pair<Real, long> { ret, i };
 }
 
 struct Var {
@@ -87,6 +96,10 @@ double someFunction()
 	double ret = std::pow(y, a);
 	//	std::cerr << ret << " !!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
 	return ret;
+}
+
+namespace {
+static inline Real smallest_positive() { return std::numeric_limits<Real>::min(); }
 }
 
 #if not(defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H) or defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this))
@@ -164,8 +177,10 @@ try {
 	py::def("epsilon", static_cast<Real (*)(const Real&)>(&Eigen::NumTraits<Real>::epsilon), (py::arg("x")));
 #ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
 	py::def("isEqualFuzzy", static_cast<bool (*)(const Real&, const Real&, const Real&)>(&mpfr::isEqualFuzzy));
+	py::def("smallest_positive", static_cast<Real (*)()>(&smallest_positive));
 #else
 	py::def("isEqualFuzzy", Eigen::internal::isEqualFuzzy);
+	py::def("smallest_positive", static_cast<Real (*)()>(&Eigen::NumTraits<Real>::smallest_positive));
 #endif
 #else
 	py::def("highest", Substitute::highest, (py::arg("Precision") = defprec));
@@ -178,6 +193,7 @@ try {
 
 	py::def("epsilon", static_cast<Real (*)(long)>(&Substitute::epsilon), (py::arg("Precision") = defprec));
 	py::def("epsilon", static_cast<Real (*)(const Real&)>(&Substitute::epsilon), (py::arg("x")));
+	py::def("smallest_positive", static_cast<Real (*)()>(&smallest_positive));
 	py::def("isEqualFuzzy", Substitute::isEqualFuzzy);
 #endif
 
@@ -220,8 +236,8 @@ try {
 #endif
 
 	// check overload (and namespace) resolution for all math functions. As a side effect they are exported to python, and can be unit-tested.
-#define YADE_PYEXPORT_MATH_1(func) py::def(#func, static_cast<Real (*)(const Real&)>(&func), (py::arg("x")));
-#define YADE_PYEXPORT_MATH_1_INT(func) py::def(#func, static_cast<int (*)(const Real&)>(&func), (py::arg("x")));
+#define YADE_PYEXPORT_MATH_1(func) py::def(#func, static_cast<Real (*)(const Real&)>(&::yade::func), (py::arg("x")));
+#define YADE_PYEXPORT_MATH_1_INT(func) py::def(#func, static_cast<int (*)(const Real&)>(&::yade::func), (py::arg("x")));
 	YADE_PYEXPORT_MATH_1(abs)
 	YADE_PYEXPORT_MATH_1(acos)
 	YADE_PYEXPORT_MATH_1(acosh)
@@ -264,7 +280,7 @@ try {
 #undef YADE_PYEXPORT_MATH_1
 #undef YADE_PYEXPORT_MATH_1_INT
 
-#define YADE_PYEXPORT_MATH_2(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&)>(&func), (py::arg("x"), "y"));
+#define YADE_PYEXPORT_MATH_2(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&)>(&::yade::func), (py::arg("x"), "y"));
 	YADE_PYEXPORT_MATH_2(atan2)
 	//YADE_PYEXPORT_MATH_2(beta) // since C++17
 	//YADE_PYEXPORT_MATH_2(cyl_bessel_i) // since C++17
@@ -278,20 +294,21 @@ try {
 	YADE_PYEXPORT_MATH_2(remainder)
 #undef YADE_PYEXPORT_MATH_2
 
-#define YADE_PYEXPORT_MATH_2_TYPE1(func, FirstType) py::def(#func, static_cast<Real (*)(FirstType, const Real&)>(&func), (py::arg("x"), "y"));
+#define YADE_PYEXPORT_MATH_2_TYPE1(func, FirstType) py::def(#func, static_cast<Real (*)(FirstType, const Real&)>(&::yade::func), (py::arg("x"), "y"));
 	//YADE_PYEXPORT_MATH_2_TYPE1(sph_bessel, unsigned) // since C++17
 #undef YADE_PYEXPORT_MATH_2_TYPE1
 
-#define YADE_PYEXPORT_MATH_2_TYPE2(func, SecondType) py::def(#func, static_cast<Real (*)(const Real&, SecondType)>(&func), (py::arg("x"), "y"));
+#define YADE_PYEXPORT_MATH_2_TYPE2(func, SecondType) py::def(#func, static_cast<Real (*)(const Real&, SecondType)>(&::yade::func), (py::arg("x"), "y"));
 	YADE_PYEXPORT_MATH_2_TYPE2(ldexp, int)
 #undef YADE_PYEXPORT_MATH_2_TYPE2
 
 	std_pair_to_python_converter<Real, Real>();
+	std_pair_to_python_converter<Real, long>();
 	std_pair_to_python_converter<Real, int>();
 	py::def("frexp", frexp_c_test, (py::arg("x")));
 	py::def("modf", modf_c_test, (py::arg("x")));
 
-#define YADE_PYEXPORT_MATH_3(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&, const Real&)>(&func), (py::arg("x"), "y", "z"));
+#define YADE_PYEXPORT_MATH_3(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&, const Real&)>(&::yade::func), (py::arg("x"), "y", "z"));
 	YADE_PYEXPORT_MATH_3(fma)
 #undef YADE_PYEXPORT_MATH_3
 

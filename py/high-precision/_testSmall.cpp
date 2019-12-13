@@ -58,6 +58,7 @@
 #include "Real/ToFromPythonConverter.hpp"
 
 namespace py = ::boost::python;
+using ::yade::Real;
 
 struct Var {
 	Real value { -71.23 };
