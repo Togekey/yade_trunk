@@ -16,6 +16,17 @@
 #include <boost/math/constants/constants.hpp>
 #include <boost/random.hpp>
 
+namespace yade {
+	namespace EigenCompat {
+		// random number [0,1)
+		static inline EigenTraitsReal random01()
+		{
+			static boost::random::mt19937 gen;
+			return boost::random::generate_canonical<EigenTraitsReal, std::numeric_limits<EigenTraitsReal>::digits>(gen);
+		}
+	}
+}
+
 namespace Eigen {
 // NOTE: Don't include this file for float, double, long double. Otherwise you will get errors like:
 // error: redefinition of ‘struct Eigen::NumTraits<long double>’
@@ -46,14 +57,13 @@ template <> struct NumTraits<EigenTraitsReal> : GenericNumTraits<EigenTraitsReal
 	static inline Real Euler(long = get_default_prec) { return boost::math::constants::euler<UR>(); }
 	static inline Real Log2(long = get_default_prec)
 	{
-		using namespace boost::multiprecision;
-		using namespace std;
-		return log(EigenTraitsReal(2));
+		return ::yade::log(EigenTraitsReal(2));
 	}
 	static inline Real Catalan(long = get_default_prec) { return boost::math::constants::catalan<UR>(); }
 
 	static inline Real epsilon(long = get_default_prec) { return std::numeric_limits<UR>::epsilon(); }
 	static inline Real epsilon(const Real&) { return std::numeric_limits<UR>::epsilon(); }
+	static inline Real smallest_positive() { return std::numeric_limits<UR>::min(); }
 
 	//#ifdef MPREAL_HAVE_DYNAMIC_STD_NUMERIC_LIMITS
 	static inline int digits10(long = get_default_prec) { return std::numeric_limits<UR>::digits10; }
@@ -62,39 +72,26 @@ template <> struct NumTraits<EigenTraitsReal> : GenericNumTraits<EigenTraitsReal
 
 	static inline Real dummy_precision()
 	{
-		using namespace boost::multiprecision;
-		return epsilon() * pow(Real(10), digits10() / Real(10));
+		return epsilon() * ::yade::pow(Real(10), digits10() / Real(10));
 	}
 };
 
 namespace internal {
-	namespace supportDetail {
-		// random number [0,1)
-		static inline EigenTraitsReal random01()
-		{
-			static boost::random::mt19937 gen;
-			return boost::random::generate_canonical<EigenTraitsReal, std::numeric_limits<EigenTraitsReal>::digits>(gen);
-		}
-	}
-	template <> inline EigenTraitsReal random<EigenTraitsReal>() { return supportDetail::random01() * 2 - 1; }
+	template <> inline EigenTraitsReal random<EigenTraitsReal>() { return ::yade::EigenCompat::random01() * 2 - 1; }
 
 	template <> inline EigenTraitsReal random<EigenTraitsReal>(const EigenTraitsReal& a, const EigenTraitsReal& b)
 	{
-		return a + (b - a) * supportDetail::random01();
+		return a + (b - a) * ::yade::EigenCompat::random01();
 	}
 
 	inline bool isMuchSmallerThan(const EigenTraitsReal& a, const EigenTraitsReal& b, const EigenTraitsReal& eps)
 	{
-		using namespace boost::multiprecision;
-		using namespace std;
-		return abs(a) <= abs(b) * eps;
+		return ::yade::abs(a) <= ::yade::abs(b) * eps;
 	}
 
 	inline bool isEqualFuzzy(const EigenTraitsReal& a, const EigenTraitsReal& b, const EigenTraitsReal& eps)
 	{
-		using namespace boost::multiprecision;
-		using namespace std;
-		return abs(a - b) <= eps;
+		return ::yade::abs(a - b) <= eps;
 	}
 	inline bool isApprox(const EigenTraitsReal& a, const EigenTraitsReal& b, const EigenTraitsReal& eps) { return isEqualFuzzy(a, b, eps); }
 
@@ -121,9 +118,7 @@ inline const EigenTraitsReal& real(const EigenTraitsReal& x) { return x; }
 inline EigenTraitsReal        imag(const EigenTraitsReal&) { return 0.; }
 inline EigenTraitsReal        abs(const EigenTraitsReal& x)
 {
-	using namespace boost::multiprecision;
-	using namespace std;
-	return abs(x);
+	return ::yade::abs(x);
 }
 inline EigenTraitsReal abs2(const EigenTraitsReal& x) { return x * x; }
 
