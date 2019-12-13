@@ -105,7 +105,7 @@ class SimpleTests(unittest.TestCase):
 		self.checkRelativeError(mne.lgamma(r),mpmath.log(abs(mpmath.gamma(r))),functionName="lgamma")
 		self.checkRelativeError(mne.log(abs(r)+self.tolerance),mpmath.log(abs(r)+self.tolerance),functionName="log")
 		self.checkRelativeError(mne.log10(abs(r)+self.tolerance),mpmath.log10(abs(r)+self.tolerance),functionName="log10")
-		self.checkRelativeError(mne.log1p(abs(r)+self.tolerance),mpmath.log1p(abs(r)+self.tolerance),functionName="log1p")
+		self.checkRelativeError(mne.log1p(abs(r)+self.tolerance),mpmath.log(1+abs(r)+self.tolerance),functionName="log1p")
 		self.checkRelativeError(mne.log2(abs(r)+self.tolerance),mpmath.log(abs(r)+self.tolerance)/mpmath.log(2),functionName="log2")
 		#print(mne.logb(r).__repr__()) # logb is not present in mpmath
 		self.assertEqual(mne.rint(r),round(r))
