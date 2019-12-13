@@ -114,14 +114,7 @@ class SimpleTests(unittest.TestCase):
 		self.checkRelativeError(mne.sinh(r),mpmath.sinh(r),functionName="sinh")
 		self.checkRelativeError(mne.tan(r),mpmath.tan(r),functionName="tan")
 		self.checkRelativeError(mne.tanh(r),mpmath.tanh(r),functionName="tanh")
-		if(${DEC_DIGITS}==33): # workaround bug in float128
-			#print("r=",r)
-			if((r<0)):
-				self.checkRelativeError(abs(mne.tgamma(r)),abs(mpmath.gamma(r)),functionName="tgamma")
-			else:
-				self.checkRelativeError(mne.tgamma(r),mpmath.gamma(r),functionName="tgamma")
-		else:
-			self.checkRelativeError(mne.tgamma(r),mpmath.gamma(r),functionName="tgamma")
+		self.checkRelativeError(mne.tgamma(r),mpmath.gamma(r),functionName="tgamma")
 		self.assertEqual(mne.trunc(r),int(r))
 
 		self.checkRelativeError(mne.fabs(r),abs(r),functionName="fabs")
