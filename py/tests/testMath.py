@@ -39,8 +39,29 @@ class SimpleTests(unittest.TestCase):
 			self.bits=113
 			self.expectedEpsilon=mpmath.mpf('1.925929944387235853055977942584926994e-34')
 		self.maxval=(mpmath.mpf(1)-self.expectedEpsilon)*mpmath.power(2,mne.max_exp2)
+
+		# If failures appear and function is not broken then increase tolerance a little.
+		self.defaultTolerances={
+			#  function     decimal places : tolerance factor. Each "10" corresponds to single wrong decimal place.
+			   "cos"       : {"6":1 , "15":1 , "18":5  , "33":1  , "100":10 , "100nb":30 , "150" :40 , "150nb" :30  , "100_b" :20   , "150_b" :60   }
+			 , "cosh"      : {"6":1 , "15":1 , "18":1  , "33":1  , "100":1  , "100nb":1  , "150" :1  , "150nb" :1   , "100_b" :1    , "150_b" :2    }
+			 , "erfc"      : {"6":1 , "15":1 , "18":15 , "33":10 , "100":30 , "100nb":30 , "150" :30 , "150nb" :30  , "100_b" :50   , "150_b" :50   }
+			 , "exp"       : {"6":1 , "15":1 , "18":1  , "33":1  , "100":1  , "100nb":1  , "150" :1  , "150nb" :1   , "100_b" :1    , "150_b" :2    }
+			 , "expm1"     : {"6":1 , "15":1 , "18":1  , "33":1  , "100":1  , "100nb":1  , "150" :1  , "150nb" :1   , "100_b" :1    , "150_b" :2    }
+			 , "fmod"      : {"6":1 , "15":1 , "18":1  , "33":5  , "100":2  , "100nb":15 , "150" :50 , "150nb" :20  , "100_b" :2    , "150_b" :40   }
+			 , "fma"       : {"6":1 , "15":1 , "18":1  , "33":1  , "100":1  , "100nb":1  , "150" :1  , "150nb" :10  , "100_b" :1    , "150_b" :1    }
+			 , "lgamma"    : {"6":1 , "15":1 , "18":1  , "33":5  , "100":1  , "100nb":2  , "150" :4  , "150nb" :10  , "100_b" :1500 , "150_b" :1500 }
+			 , "modf"      : {"6":1 , "15":1 , "18":2  , "33":2  , "100":10 , "100nb":10 , "150" :5  , "150nb" :5   , "100_b" :10   , "150_b" :10   }
+			 , "remainder" : {"6":1 , "15":30, "18":1  , "33":10 , "100":5  , "100nb":20 , "150" :40 , "150nb" :120 , "100_b" :4    , "150_b" :40   }
+			 , "remquo"    : {"6":1 , "15":30, "18":1  , "33":10 , "100":5  , "100nb":15 , "150" :40 , "150nb" :120 , "100_b" :4    , "150_b" :40   }
+			 , "pow"       : {"6":1 , "15":10, "18":1  , "33":10 , "100":2  , "100nb":2  , "150" :2  , "150nb" :2   , "100_b" :2    , "150_b" :2    }
+			 , "sin"       : {"6":1 , "15":1 , "18":10 , "33":1  , "100":4  , "100nb":4  , "150" :6  , "150nb" :1   , "100_b" :20   , "150_b" :60   }
+			 , "sinh"      : {"6":1 , "15":1 , "18":1  , "33":1  , "100":1  , "100nb":1  , "150" :1  , "150nb" :1   , "100_b" :1    , "150_b" :2    }
+			 , "tan"       : {"6":1 , "15":1 , "18":10 , "33":1  , "100":8  , "100nb":30 , "150" :40 , "150nb" :30  , "100_b" :20   , "150_b" :60   }
+			 , "tgamma"    : {"6":1 , "15":1 , "18":10 , "33":4  , "100":3  , "100nb":3  , "150" :5  , "150nb" :30  , "100_b" :300  , "150_b" :300  }
+			 }
+
 	def checkRelativeError(self,a,b,tol=None,functionName=None):
-		defaultTolerances={ "cos" : {18:10} , "erfc" : {18:50} , "sin" : {18:10} , "tan" : {18:10} , "tgamma" : {18:10} , "modf" : {18:10} }
 		if(abs(b) <= self.maxval and abs(b) >= mne.smallest_positive()):
 			#print("a= ",a," b= ",b," smallest=",mne.smallest_positive(), " maxval=",self.maxval)
 			if(mpmath.isnan(a)):
@@ -49,8 +70,11 @@ class SimpleTests(unittest.TestCase):
 				if(tol != None):
 					self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),tol)
 				else:
-					if(functionName in defaultTolerances):
-						defaultToleranceForThisFunction = defaultTolerances[functionName][int(${DEC_DIGITS})]*self.tolerance
+					if(functionName in self.defaultTolerances):
+						extraName=""
+						if(str("${LIBTOTEST}")[-2:] == "nb"):   extraName="nb" # non-boost MPFR
+						if(str("${LIBTOTEST}")[-4:] == "BBFL"): extraName="_b" # boost cpp_bin_float
+						defaultToleranceForThisFunction = self.defaultTolerances[functionName][str(${DEC_DIGITS})+extraName]*self.tolerance
 						#print(defaultToleranceForThisFunction," ---- ",functionName)
 						self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),defaultToleranceForThisFunction)
 					else:
@@ -132,7 +156,7 @@ class SimpleTests(unittest.TestCase):
 		self.checkRelativeError(mne.remainder(abs(r1),abs(r2)),abs(r1)-round(abs(r1)/abs(r2))*abs(r2),functionName="remainder")
 		pair = mne.remquo(abs(r1),abs(r2))
 		self.checkRelativeError(pair[0],abs(r1)-round(abs(r1)/abs(r2))*abs(r2),functionName="remquo")
-		self.assertEqual(pair[1], round(abs(r1/r2))%8)
+		self.assertEqual(pair[1]%8, round(abs(r1/r2))%8)
 
 		self.checkRelativeError(mne.ldexp(r1,int(r2)),mpmath.mpf(r1)*mpmath.power(2,int(r2)),functionName="ldexp")
 
