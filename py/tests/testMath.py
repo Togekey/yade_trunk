@@ -245,6 +245,8 @@ class SimpleTests(unittest.TestCase):
 				self.twoArgMathCheck(r2,r3)
 				self.threeArgMathCheck(r,r2,r3)
 
+	def testArray(self):
+		mne.testArray()
 
 if __name__ == '__main__':
 		unittest.main(testRunner=unittest.TextTestRunner(stream=sys.stdout, verbosity=2))

@@ -82,6 +82,20 @@
 
 namespace yade {
 
+#ifdef YADE_THIN_REAL_WRAPPER_HPP
+// Some old C library functions need pointer to C-array, this is for compatibility between ThinRealWrapper and UnderlyingReal
+static_assert(sizeof(Real)==sizeof(UnderlyingReal),"This compiler introduced padding, which breaks binary compatibility");
+
+static inline const UnderlyingReal* constVectorData(const std::vector<Real>& v) { return v.data()->operator const UnderlyingReal*(); }
+static inline UnderlyingReal*       vectorData(std::vector<Real>& v) { return v.data()->operator UnderlyingReal*(); }
+
+#else
+
+static inline const UnderlyingReal* constVectorData(const std::vector<Real>& v) { return v.data(); }
+static inline UnderlyingReal*       vectorData(std::vector<Real>& v) { return v.data(); }
+
+#endif
+
 // random number [0,1)
 static inline Real random01()
 {
