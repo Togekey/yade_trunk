@@ -49,7 +49,7 @@ typedef Eigen::Matrix<::std::complex<Real>, Eigen::Dynamic, Eigen::Dynamic> Matr
 
 // This is for external applications, shouldn't be normally used.
 // Use this only inside a .cpp file! Otherwise the types will leak outside which will cause compilation errors due to ambiguity.
-namespace UseExposedTypesOutside {
+namespace MathEigenTypes {
 	using ::yade::Real;
 
 	using ::yade::Index;

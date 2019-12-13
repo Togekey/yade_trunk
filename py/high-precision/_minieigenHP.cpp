@@ -13,7 +13,7 @@
 #include <limits>
 #include <sstream>
 
-using namespace ::yade::UseExposedTypesOutside;
+using namespace ::yade::MathEigenTypes;
 #include <minieigen/converters.hpp>
 #include <minieigen/visitors.hpp>
 #include <minieigen/expose.hpp>
