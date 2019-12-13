@@ -113,7 +113,23 @@ YADE_WRAP_FUNC_1(sinh)
 YADE_WRAP_FUNC_1(sqrt)
 YADE_WRAP_FUNC_1(tan)
 YADE_WRAP_FUNC_1(tanh)
+
+#if (YADE_REAL_BIT <= 128) and (YADE_REAL_BIT > 80)
+// workaround broken tgamma for float128
+static_assert(std::is_same<UnderlyingReal, boost::multiprecision::float128>::value);
+inline Real tgamma(const Real& a)
+{
+	if (a >= 0) {
+		return YADE_REAL_MATH_NAMESPACE::tgamma(static_cast<UnderlyingReal>(a));
+	} else {
+		return abs(YADE_REAL_MATH_NAMESPACE::tgamma(static_cast<UnderlyingReal>(a)))
+		        * ((static_cast<unsigned long long>(floor(abs(a))) % 2 == 0) ? -1 : 1);
+	}
+}
+#else
 YADE_WRAP_FUNC_1(tgamma)
+#endif
+
 YADE_WRAP_FUNC_1(trunc)
 
 YADE_WRAP_FUNC_1_RENAME(fabs, abs)
