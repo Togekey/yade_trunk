@@ -39,11 +39,18 @@ class SimpleTests(unittest.TestCase):
 			self.bits=113
 			self.expectedEpsilon=mpmath.mpf('1.925929944387235853055977942584926994e-34')
 		self.maxval=(mpmath.mpf(1)-self.expectedEpsilon)*mpmath.power(2,mne.max_exp2)
-	def checkRelativeError(self,a,b,tol=None):
-		if(tol != None):
-			self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),tol)
+	def checkRelativeError(self,a,b,tol=None,functionName=None):
+		if(abs(b) <= self.maxval and abs(b) >= mne.smallest_positive()):
+			#print("a= ",a," b= ",b," smallest=",mne.smallest_positive(), " maxval=",self.maxval)
+			if(mpmath.isnan(a)):
+				print("\033[93m Warning: \033[0m got NaN, cannot verify if: ",a," == " ,b, " that was for function: \033[93m ",functionName, " \033[0m")
+			else:
+				if(tol != None):
+					self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),tol)
+				else:
+					self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),self.tolerance)
 		else:
-			self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),self.tolerance)
+			print("Skipping check, the builtin number: ", a, " cannot have value outside of its possible repesentation: " , b, ", because it has only ",${DEC_DIGITS}," digits.")
 
 	def oneArgMathCheck(self,r):
 		# check math functions, but ensure that input arguments produce real (not complex) results
