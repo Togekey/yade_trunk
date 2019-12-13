@@ -66,18 +66,21 @@
 /*************************************************************************/
 #if YADE_REAL_BIT <= 32
 using UnderlyingReal = boost::float_fast32_t;
+#define YADE_REAL_MATH_NAMESPACE ::std
 
 /*************************************************************************/
 /*************************   double 64 bits     **************************/
 /*************************************************************************/
 #elif YADE_REAL_BIT <= 64
 using UnderlyingReal = boost::float_fast64_t;
+#define YADE_REAL_MATH_NAMESPACE ::std
 
 /*************************************************************************/
 /************************* long double 80 bits  **************************/
 /*************************************************************************/
 #elif YADE_REAL_BIT <= 80
 using UnderlyingReal = boost::float_fast80_t;
+#define YADE_REAL_MATH_NAMESPACE ::std
 namespace EigenCostReal {
 enum { ReadCost = 1, AddCost = 1, MulCost = 1 };
 }
@@ -88,6 +91,7 @@ enum { ReadCost = 1, AddCost = 1, MulCost = 1 };
 #elif YADE_REAL_BIT <= 128
 #include <boost/multiprecision/float128.hpp>
 using UnderlyingReal = boost::multiprecision::float128;
+#define YADE_REAL_MATH_NAMESPACE ::boost::multiprecision
 namespace EigenCostReal {
 enum { ReadCost = 1, AddCost = 2, MulCost = 2 };
 }
@@ -100,6 +104,7 @@ enum { ReadCost = 1, AddCost = 2, MulCost = 2 };
 template <unsigned int DecimalPlaces>
 using UnderlyingRealBackend = boost::multiprecision::mpfr_float_backend<DecimalPlaces, boost::multiprecision::allocate_stack>;
 using UnderlyingReal        = boost::multiprecision::number<UnderlyingRealBackend<YADE_REAL_DEC>, boost::multiprecision::et_off>;
+#define YADE_REAL_MATH_NAMESPACE ::boost::multiprecision
 namespace EigenCostReal {
 enum { ReadCost = Eigen::HugeCost, AddCost = Eigen::HugeCost, MulCost = Eigen::HugeCost };
 }
@@ -111,6 +116,7 @@ enum { ReadCost = Eigen::HugeCost, AddCost = Eigen::HugeCost, MulCost = Eigen::H
 #include <boost/multiprecision/cpp_bin_float.hpp>
 template <unsigned int DecimalPlaces> using UnderlyingRealBackend = boost::multiprecision::cpp_bin_float<DecimalPlaces>;
 using UnderlyingReal = boost::multiprecision::number<UnderlyingRealBackend<YADE_REAL_DEC>, boost::multiprecision::et_off>;
+#define YADE_REAL_MATH_NAMESPACE ::boost::multiprecision
 namespace EigenCostReal {
 enum { ReadCost = Eigen::HugeCost, AddCost = Eigen::HugeCost, MulCost = Eigen::HugeCost };
 }
@@ -119,6 +125,7 @@ enum { ReadCost = Eigen::HugeCost, AddCost = Eigen::HugeCost, MulCost = Eigen::H
 #elif defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
 #include <unsupported/Eigen/MPRealSupport>
 using UnderlyingReal = ::mpfr::mpreal;
+#define YADE_REAL_MATH_NAMESPACE ::mpfr
 #else
 #error "Real precision is unspecified, there must be a mistake in CMakeLists.txt, the requested #defines should have been provided."
 #endif
@@ -132,14 +139,18 @@ using UnderlyingReal = ::mpfr::mpreal;
 // `long double` needs special consideration to workaround boost::python losing 3 digits precision
 #include "ThinRealWrapper.hpp"
 
-using Real = ThinRealWrapper<UnderlyingReal>;
+namespace yade {
+using Real = ::yade::ThinRealWrapper<UnderlyingReal>;
+}
 
-static_assert(sizeof(Real)==sizeof(UnderlyingReal));
+static_assert(sizeof(yade::Real)==sizeof(UnderlyingReal));
 
 #include "ThinRealWrapperNumericLimits.hpp"
 #else
 
+namespace yade {
 using Real = UnderlyingReal;
+}
 
 #endif
 
@@ -147,12 +158,13 @@ using Real = UnderlyingReal;
 /*************************    Math functions    **************************/
 /*************************************************************************/
 #include "MathFunctions.hpp"
+#undef YADE_REAL_MATH_NAMESPACE
 
 /*************************************************************************/
 /*************************   Eigen  NumTraits   **************************/
 /*************************************************************************/
 #if (YADE_REAL_BIT > 64) and (not defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this))
-using EigenTraitsReal = Real;
+using EigenTraitsReal = yade::Real;
 #include "EigenNumTraits.hpp"
 #endif
 
