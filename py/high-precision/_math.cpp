@@ -98,6 +98,44 @@ double someFunction()
 	return ret;
 }
 
+void compareVec(const std::vector<Real>& vec, const UnderlyingReal* array)
+{
+	for (size_t i = 0; i < vec.size(); i++) {
+		if (vec[i] != array[i]) {
+			std::cerr << __PRETTY_FUNCTION__ << " failed test\n";
+			exit(1);
+		}
+	}
+}
+
+#include <boost/range/combine.hpp>
+// this funcction simulates some external library which works on C-arrays.
+void multVec(UnderlyingReal* array, const UnderlyingReal& fac, size_t s)
+{
+	for (size_t i = 0; i < s; i++)
+		array[i] *= fac;
+}
+
+namespace yade {
+void testArray()
+{
+	std::vector<Real> vec {};
+	int               i = 1000;
+	while (i-- > 0)
+		vec.push_back(random01());
+	compareVec(vec, constVectorData(vec));
+	auto copy = vec;
+	Real fac  = 3.33;
+	multVec(vectorData(vec), static_cast<UnderlyingReal>(fac), vec.size());
+	for (auto a : boost::combine(copy, vec)) {
+		if (a.get<0>() * fac != a.get<1>() ) {
+			std::cerr << __PRETTY_FUNCTION__ << " failed test\n";
+			exit(1);
+		}
+	}
+}
+}
+
 namespace {
 static inline Real smallest_positive() { return std::numeric_limits<Real>::min(); }
 }
@@ -313,6 +351,7 @@ try {
 #undef YADE_PYEXPORT_MATH_3
 
 	py::def("remquo", remquo_c_test, (py::arg("x"), "y"));
+	py::def("testArray", ::yade::testArray);
 
 } catch (...) {
 	std::cerr << ("Importing this module caused an unrecognized exception caught on C++ side and this module is in an inconsistent state now.\n\n");
