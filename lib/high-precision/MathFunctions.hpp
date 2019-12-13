@@ -116,7 +116,7 @@ YADE_WRAP_FUNC_1(tanh)
 
 #if (YADE_REAL_BIT <= 128) and (YADE_REAL_BIT > 80)
 // workaround broken tgamma for float128
-static_assert(std::is_same<UnderlyingReal, boost::multiprecision::float128>::value);
+static_assert(std::is_same<UnderlyingReal, boost::multiprecision::float128>::value, "Incorrect type, please file a bug report.");
 inline Real tgamma(const Real& a)
 {
 	if (a >= 0) {
