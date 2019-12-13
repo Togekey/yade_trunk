@@ -18,116 +18,58 @@
 #include <cstdlib>
 #include <limits>
 
-// FIXME : use correct perfect forwarding.
-//         sometimes I get these errors
-//             conversion of first argument to `const Real&&` would be ill-formed
-//             cannot bind rvalue reference of type ‘const Real&&’ {aka ‘const ThinRealWrapper<long double>&&’} to lvalue of type ‘ThinRealWrapper<long double>’
+#ifndef YADE_REAL_MATH_NAMESPACE
+#error "This file cannot be included alone, include Real.hpp instead"
+#endif
 
-#ifdef YADE_THIN_REAL_WRAPPER_HPP
-// don't produce errors, even when UnderlyingReal is not related to boost multiprecision
-namespace boost {
-namespace multiprecision {
-}
-}
-
+namespace yade {
 // these are inline redirections towards the correct function
 #define YADE_WRAP_FUNC_1(func)                                                                                                                                 \
-	inline Real func(const Real& a)                                                                                                                        \
-	{                                                                                                                                                      \
-		using namespace boost::multiprecision;                                                                                                         \
-		using namespace std;                                                                                                                           \
-		/*return func(std::forward<UnderlyingReal>(a));*/                                                                                              \
-		return ::std::func(static_cast<UnderlyingReal>(a));                                                                                            \
-	}
+	inline Real func(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a)); }
 
 #define YADE_WRAP_FUNC_1_RENAME(func1, func2)                                                                                                                  \
-	inline Real func1(const Real& a) { return func2(a); }
+	inline Real func1(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func2(static_cast<UnderlyingReal>(a)); }
 
 #define YADE_WRAP_FUNC_2(func)                                                                                                                                 \
 	inline Real func(const Real& a, const Real& b)                                                                                                         \
 	{                                                                                                                                                      \
-		using namespace boost::multiprecision;                                                                                                         \
-		using namespace std;                                                                                                                           \
-		return ::std::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b));                                                            \
+		return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b));                                         \
 	}
+
+#define YADE_WRAP_FUNC_2_STD(func)                                                                                                                             \
+	inline Real func(const Real& a, const Real& b) { return ::std::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b)); }
 
 #define YADE_WRAP_FUNC_2_TYPE1(func, FirstType)                                                                                                                \
-	inline Real func(FirstType a, const Real& b)                                                                                                           \
-	{                                                                                                                                                      \
-		using namespace boost::multiprecision;                                                                                                         \
-		using namespace std;                                                                                                                           \
-		return ::std::func(a, static_cast<UnderlyingReal>(b));                                                                                         \
-	}
+	inline Real func(FirstType a, const Real& b) { return YADE_REAL_MATH_NAMESPACE::func(a, static_cast<UnderlyingReal>(b)); }
 
 #define YADE_WRAP_FUNC_2_TYPE2(func, SecondType)                                                                                                               \
-	inline Real func(const Real& a, SecondType b)                                                                                                          \
-	{                                                                                                                                                      \
-		using namespace boost::multiprecision;                                                                                                         \
-		using namespace std;                                                                                                                           \
-		return ::std::func(static_cast<UnderlyingReal>(a), b);                                                                                         \
-	}
+	inline Real func(const Real& a, SecondType b) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), b); }
 
+#ifdef YADE_THIN_REAL_WRAPPER_HPP
 #define YADE_WRAP_FUNC_2_TYPE2_CAST(func, SecondType, CastType)                                                                                                \
-	inline Real func(const Real& a, SecondType b)                                                                                                          \
-	{                                                                                                                                                      \
-		using namespace boost::multiprecision;                                                                                                         \
-		using namespace std;                                                                                                                           \
-		return ::std::func(static_cast<UnderlyingReal>(a), b->operator CastType());                                                                    \
-	}
-
-/*
-#define YADE_WRAP_FUNC_2_TYPE2_PTR_TO_PAIR(func, PairType)                                                                                                     \
-	inline std::pair<Real, PairType> func(const Real& a)                                                                                                   \
-	{                                                                                                                                                      \
-		using namespace boost::multiprecision;                                                                                                         \
-		using namespace std;                                                                                                                           \
-		PairType b;                                                                                                                                    \
-		Real     ret = ::std::func(static_cast<UnderlyingReal>(a), &b);                                                                                \
-		return std::pair<Real, PairType> { ret, b };                                                                                                   \
-	}
-
-
-#define YADE_WRAP_FUNC_2_TYPE2_PTR_TO_PAIR_CAST(func, PairType, CastType)                                                                                      \
-	inline std::pair<Real, PairType> func(const Real& a)                                                                                                   \
-	{                                                                                                                                                      \
-		using namespace boost::multiprecision;                                                                                                         \
-		using namespace std;                                                                                                                           \
-		CastType b;                                                                                                                                    \
-		Real     ret = ::std::func(static_cast<UnderlyingReal>(a), &b);                                                                                \
-		return std::pair<Real, PairType> { ret, b };                                                                                                   \
-	}
-*/
+	inline Real func(const Real& a, SecondType b) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), b->operator CastType()); }
+#else
+#define YADE_WRAP_FUNC_2_TYPE2_CAST(func, SecondType, CastType)                                                                                                \
+	inline Real func(const Real& a, SecondType b) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), b); }
+#endif
 
 #define YADE_WRAP_FUNC_3(func)                                                                                                                                 \
 	inline Real func(const Real& a, const Real& b, const Real& c)                                                                                          \
 	{                                                                                                                                                      \
-		using namespace boost::multiprecision;                                                                                                         \
-		using namespace std;                                                                                                                           \
-		return ::std::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b), static_cast<UnderlyingReal>(c));                            \
+		return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b), static_cast<UnderlyingReal>(c));         \
+	}
+
+#define YADE_WRAP_FUNC_3_TYPE31(func, ThirdToFirstType)                                                                                                        \
+	inline Real func(const Real& a, const Real& b, ThirdToFirstType c)                                                                                     \
+	{                                                                                                                                                      \
+		return YADE_REAL_MATH_NAMESPACE::func(c, static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b));                                      \
 	}
 
 #define YADE_WRAP_FUNC_3_TYPE3(func, ThirdType)                                                                                                                \
 	inline Real func(const Real& a, const Real& b, ThirdType c)                                                                                            \
 	{                                                                                                                                                      \
-		using namespace boost::multiprecision;                                                                                                         \
-		using namespace std;                                                                                                                           \
-		return ::std::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b), c);                                                         \
+		return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b), c);                                      \
 	}
-
-#else
-
-// TODO: make sure that without ThinRealWrapper the correct functions are called.
-#define YADE_WRAP_FUNC_1(func)
-#define YADE_WRAP_FUNC_1_RENAME(func1, func2)
-
-#define YADE_WRAP_FUNC_2(func)
-#define YADE_WRAP_FUNC_2_TYPE2(func, SecondType, CastType)
-#define YADE_WRAP_FUNC_2_TYPE1(func, FirstType)
-
-#define YADE_WRAP_FUNC_3(func)
-#define YADE_WRAP_FUNC_3_TYPE3(func, ThirdType)
-
-#endif
 
 // here are listed functions present in
 //              https://en.cppreference.com/w/cpp/numeric/math
@@ -177,7 +119,6 @@ YADE_WRAP_FUNC_1(trunc)
 YADE_WRAP_FUNC_1_RENAME(fabs, abs)
 
 template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
-
 template <typename T> int sign(T val) { return (T(0) < val) - (val < T(0)); }
 
 YADE_WRAP_FUNC_2(atan2)
@@ -187,8 +128,8 @@ YADE_WRAP_FUNC_2(atan2)
 //YADE_WRAP_FUNC_2(cyl_bessel_k) // since C++17
 YADE_WRAP_FUNC_2(fmod)
 YADE_WRAP_FUNC_2(hypot)
-YADE_WRAP_FUNC_2(max)
-YADE_WRAP_FUNC_2(min)
+YADE_WRAP_FUNC_2_STD(max)
+YADE_WRAP_FUNC_2_STD(min)
 YADE_WRAP_FUNC_2(pow)
 YADE_WRAP_FUNC_2(remainder)
 
@@ -196,26 +137,34 @@ YADE_WRAP_FUNC_2(remainder)
 YADE_WRAP_FUNC_2_TYPE2(ldexp, int)
 
 YADE_WRAP_FUNC_2_TYPE2(frexp, int*) // original C signature
+#if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
+YADE_WRAP_FUNC_2_TYPE2_CAST(modf, Real&, NotUsed)
+#else
 YADE_WRAP_FUNC_2_TYPE2_CAST(modf, Real*, UnderlyingReal*)
+#endif
 
 //YADE_WRAP_FUNC_2_TYPE2_PTR_TO_PAIR(frexp, int) // for python it returns a pair
 //YADE_WRAP_FUNC_2_TYPE2_PTR_TO_PAIR_CAST(modf, Real, UnderlyingReal)
 
 YADE_WRAP_FUNC_3(fma)
 //YADE_WRAP_FUNC_3(hypot) // since C++17
+#if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
+YADE_WRAP_FUNC_3_TYPE31(remquo, long*)
+#else
 YADE_WRAP_FUNC_3_TYPE3(remquo, int*)
-
+#endif
 
 #undef YADE_WRAP_FUNC_1
 #undef YADE_WRAP_FUNC_1_RENAME
-
 #undef YADE_WRAP_FUNC_2
+#undef YADE_WRAP_FUNC_2_STD
 #undef YADE_WRAP_FUNC_2_TYPE2
 #undef YADE_WRAP_FUNC_2_TYPE2_CAST
 #undef YADE_WRAP_FUNC_2_TYPE1
-
 #undef YADE_WRAP_FUNC_3
 #undef YADE_WRAP_FUNC_3_TYPE3
+#undef YADE_WRAP_FUNC_3_TYPE31
+}
 
 #endif
 
