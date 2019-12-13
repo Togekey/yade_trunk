@@ -5,15 +5,24 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
+// This file conaints mathematical functions available in standard library and boost library.
+//     https://en.cppreference.com/w/cpp/numeric/math
+//     https://en.cppreference.com/w/cpp/numeric/special_functions
+
+// TODO: Boost documentation recommends to link with tr1: -lboost_math_tr1 as it provides significand speedup. For example replace boost::math::acosh(x) ↔ boost::math::tr1::acosh(x)
+//     https://www.boost.org/doc/libs/1_71_0/libs/math/doc/html/math_toolkit/overview_tr1.html
+//#include <boost/math/tr1.hpp>
+
+
 #ifndef YADE_THIN_REAL_WRAPPER_MATH_FUNCIONS_HPP
 #define YADE_THIN_REAL_WRAPPER_MATH_FUNCIONS_HPP
 
 #include <boost/cstdfloat.hpp> // Must be the first include https://www.boost.org/doc/libs/1_71_0/libs/math/doc/html/math_toolkit/rationale.html
-
 #include <boost/config.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <boost/math/special_functions.hpp>
 #include <boost/math/tools/config.hpp>
+#include <boost/random.hpp>
 #include <cmath>
 #include <cstdlib>
 #include <limits>
@@ -22,8 +31,7 @@
 #error "This file cannot be included alone, include Real.hpp instead"
 #endif
 
-namespace yade {
-// these are inline redirections towards the correct function
+// Macors for quick inline redirections towards the correct function from standard library or boost::multiprecision
 #define YADE_WRAP_FUNC_1(func)                                                                                                                                 \
 	inline Real func(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a)); }
 
@@ -71,15 +79,25 @@ namespace yade {
 		return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b), c);                                      \
 	}
 
-// here are listed functions present in
-//              https://en.cppreference.com/w/cpp/numeric/math
-//              https://en.cppreference.com/w/cpp/numeric/special_functions
-// compare with /usr/include/mpreal.h (from debian package libmpfrc++-dev) so we support the same set of functions as MPFR does.
 
-// TODO: https://www.boost.org/doc/libs/1_71_0/libs/math/doc/html/math_toolkit/overview_tr1.html
-// TODO: They suggest to use this -lboost_math_tr1               boost::math::acosh(x) ↔ boost::math::tr1::acosh(x)
-//      ↓ …… for large scale software development where compile times are significant …… difference in performance …… as much as 20 times,
-//#include <boost/math/tr1.hpp>
+namespace yade {
+
+// random number [0,1)
+static inline Real random01()
+{
+#if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
+	return ::mpfr::random();
+#else
+	static ::boost::random::mt19937 gen;
+	return ::boost::random::generate_canonical<Real, std::numeric_limits<Real>::digits>(gen);
+#endif
+}
+
+static inline Real unitRandom() { return random01(); }
+static inline Real random() { return random01() * 2 - 1; }
+
+template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
+template <typename T> int sign(T val) { return (T(0) < val) - (val < T(0)); }
 
 YADE_WRAP_FUNC_1(abs)
 YADE_WRAP_FUNC_1(acos)
@@ -131,14 +149,9 @@ YADE_WRAP_FUNC_1(tgamma)
 #endif
 
 YADE_WRAP_FUNC_1(trunc)
-
 YADE_WRAP_FUNC_1_RENAME(fabs, abs)
-
-template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
-template <typename T> int sign(T val) { return (T(0) < val) - (val < T(0)); }
-
 YADE_WRAP_FUNC_2(atan2)
-//YADE_WRAP_FUNC_2(beta) // since C++17
+//YADE_WRAP_FUNC_2(beta)         // since C++17
 //YADE_WRAP_FUNC_2(cyl_bessel_i) // since C++17
 //YADE_WRAP_FUNC_2(cyl_bessel_j) // since C++17
 //YADE_WRAP_FUNC_2(cyl_bessel_k) // since C++17
@@ -151,16 +164,12 @@ YADE_WRAP_FUNC_2(remainder)
 
 //YADE_WRAP_FUNC_2_TYPE1(sph_bessel, unsigned) // since C++17
 YADE_WRAP_FUNC_2_TYPE2(ldexp, int)
-
 YADE_WRAP_FUNC_2_TYPE2(frexp, int*) // original C signature
 #if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
 YADE_WRAP_FUNC_2_TYPE2_CAST(modf, Real&, NotUsed)
 #else
 YADE_WRAP_FUNC_2_TYPE2_CAST(modf, Real*, UnderlyingReal*)
 #endif
-
-//YADE_WRAP_FUNC_2_TYPE2_PTR_TO_PAIR(frexp, int) // for python it returns a pair
-//YADE_WRAP_FUNC_2_TYPE2_PTR_TO_PAIR_CAST(modf, Real, UnderlyingReal)
 
 YADE_WRAP_FUNC_3(fma)
 //YADE_WRAP_FUNC_3(hypot) // since C++17
@@ -169,6 +178,8 @@ YADE_WRAP_FUNC_3_TYPE31(remquo, long*)
 #else
 YADE_WRAP_FUNC_3_TYPE3(remquo, int*)
 #endif
+
+}
 
 #undef YADE_WRAP_FUNC_1
 #undef YADE_WRAP_FUNC_1_RENAME
@@ -180,7 +191,6 @@ YADE_WRAP_FUNC_3_TYPE3(remquo, int*)
 #undef YADE_WRAP_FUNC_3
 #undef YADE_WRAP_FUNC_3_TYPE3
 #undef YADE_WRAP_FUNC_3_TYPE31
-}
 
 #endif
 

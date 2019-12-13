@@ -12,20 +12,8 @@
 // http://eigen.tuxfamily.org/dox/TopicCustomizing_CustomScalar.html
 // http://eigen.tuxfamily.org/dox-3.2/TopicCustomizingEigen.html
 
-#include <Eigen/Core>
 #include <boost/math/constants/constants.hpp>
-#include <boost/random.hpp>
-
-namespace yade {
-	namespace EigenCompat {
-		// random number [0,1)
-		static inline EigenTraitsReal random01()
-		{
-			static boost::random::mt19937 gen;
-			return boost::random::generate_canonical<EigenTraitsReal, std::numeric_limits<EigenTraitsReal>::digits>(gen);
-		}
-	}
-}
+#include <Eigen/Core>
 
 namespace Eigen {
 // NOTE: Don't include this file for float, double, long double. Otherwise you will get errors like:
@@ -55,10 +43,7 @@ template <> struct NumTraits<EigenTraitsReal> : GenericNumTraits<EigenTraitsReal
 	// Constants
 	static inline Real Pi(long = get_default_prec) { return boost::math::constants::pi<UR>(); }
 	static inline Real Euler(long = get_default_prec) { return boost::math::constants::euler<UR>(); }
-	static inline Real Log2(long = get_default_prec)
-	{
-		return ::yade::log(EigenTraitsReal(2));
-	}
+	static inline Real Log2(long = get_default_prec) { return ::yade::log(EigenTraitsReal(2)); }
 	static inline Real Catalan(long = get_default_prec) { return boost::math::constants::catalan<UR>(); }
 
 	static inline Real epsilon(long = get_default_prec) { return std::numeric_limits<UR>::epsilon(); }
@@ -70,18 +55,15 @@ template <> struct NumTraits<EigenTraitsReal> : GenericNumTraits<EigenTraitsReal
 	static inline int digits10(const Real&) { return std::numeric_limits<UR>::digits10; }
 	//#endif
 
-	static inline Real dummy_precision()
-	{
-		return epsilon() * ::yade::pow(Real(10), digits10() / Real(10));
-	}
+	static inline Real dummy_precision() { return epsilon() * ::yade::pow(Real(10), digits10() / Real(10)); }
 };
 
 namespace internal {
-	template <> inline EigenTraitsReal random<EigenTraitsReal>() { return ::yade::EigenCompat::random01() * 2 - 1; }
+	template <> inline EigenTraitsReal random<EigenTraitsReal>() { return ::yade::random01() * 2 - 1; }
 
 	template <> inline EigenTraitsReal random<EigenTraitsReal>(const EigenTraitsReal& a, const EigenTraitsReal& b)
 	{
-		return a + (b - a) * ::yade::EigenCompat::random01();
+		return a + (b - a) * ::yade::random01();
 	}
 
 	inline bool isMuchSmallerThan(const EigenTraitsReal& a, const EigenTraitsReal& b, const EigenTraitsReal& eps)
@@ -89,10 +71,7 @@ namespace internal {
 		return ::yade::abs(a) <= ::yade::abs(b) * eps;
 	}
 
-	inline bool isEqualFuzzy(const EigenTraitsReal& a, const EigenTraitsReal& b, const EigenTraitsReal& eps)
-	{
-		return ::yade::abs(a - b) <= eps;
-	}
+	inline bool isEqualFuzzy(const EigenTraitsReal& a, const EigenTraitsReal& b, const EigenTraitsReal& eps) { return ::yade::abs(a - b) <= eps; }
 	inline bool isApprox(const EigenTraitsReal& a, const EigenTraitsReal& b, const EigenTraitsReal& eps) { return isEqualFuzzy(a, b, eps); }
 
 	inline bool isApproxOrLessThan(const EigenTraitsReal& a, const EigenTraitsReal& b, const EigenTraitsReal& eps)
