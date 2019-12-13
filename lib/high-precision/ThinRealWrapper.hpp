@@ -39,6 +39,8 @@
 
 // it is possible to #define YADE_IGNORE_IEEE_INFINITY_NAN  ← about that see https://www.boost.org/doc/libs/1_71_0/libs/utility/operators.htm#ordering
 
+namespace yade {
+
 template <typename WrappedReal>
 #ifdef YADE_IGNORE_IEEE_INFINITY_NAN
 class ThinRealWrapper
@@ -167,6 +169,8 @@ public:
 		return is;
 	}
 };
+
+}
 
 #endif
 
