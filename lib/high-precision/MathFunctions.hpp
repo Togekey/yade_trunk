@@ -96,6 +96,7 @@ static inline UnderlyingReal*       vectorData(std::vector<Real>& v) { return v.
 
 #endif
 
+// These random functions are necessary for Eigen library to for example write in python: Vector3.Random()
 // random number [0,1)
 static inline Real random01()
 {
