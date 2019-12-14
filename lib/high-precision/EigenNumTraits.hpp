@@ -59,7 +59,7 @@ template <> struct NumTraits<EigenTraitsReal> : GenericNumTraits<EigenTraitsReal
 };
 
 namespace internal {
-	template <> inline EigenTraitsReal random<EigenTraitsReal>() { return ::yade::random01() * 2 - 1; }
+	template <> inline EigenTraitsReal random<EigenTraitsReal>() { return ::yade::random(); }
 
 	template <> inline EigenTraitsReal random<EigenTraitsReal>(const EigenTraitsReal& a, const EigenTraitsReal& b)
 	{
