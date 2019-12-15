@@ -17,7 +17,6 @@
 #ifndef YADE_THIN_REAL_WRAPPER_MATH_FUNCIONS_HPP
 #define YADE_THIN_REAL_WRAPPER_MATH_FUNCIONS_HPP
 
-#include <boost/cstdfloat.hpp> // Must be the first include https://www.boost.org/doc/libs/1_71_0/libs/math/doc/html/math_toolkit/rationale.html
 #include <boost/config.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <boost/math/special_functions.hpp>

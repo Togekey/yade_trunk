@@ -50,12 +50,17 @@
  *   et_off         → slower calculations, faster compilation
  */
 
-#include <boost/cstdfloat.hpp> // Must be the first include https://www.boost.org/doc/libs/1_71_0/libs/math/doc/html/math_toolkit/rationale.html
-
 #include <boost/config.hpp>
-#include <boost/math/constants/constants.hpp>
-#include <boost/math/special_functions.hpp>
-#include <boost/math/tools/config.hpp>
+#if (__GNUC__ > 7) or (not BOOST_GCC)
+#include <boost/cstdfloat.hpp>
+#else
+namespace boost {
+// the cstdfloat.hpp makes sure these are fastest types for each particular platform. But including this file for g++ version <=7 does not work.
+using float_fast32_t = float;
+using float_fast64_t = double;
+using float_fast80_t = long double;
+}
+#endif
 #include <cmath>
 #include <limits>
 
@@ -89,8 +94,8 @@ enum { ReadCost = 1, AddCost = 1, MulCost = 1 };
 /*************************  float128 128 bits   **************************/
 /*************************************************************************/
 #elif YADE_REAL_BIT <= 128
-#include <quadmath.h>
 #include <boost/multiprecision/float128.hpp>
+#include <quadmath.h>
 using UnderlyingReal = boost::multiprecision::float128;
 #define YADE_REAL_MATH_NAMESPACE ::boost::multiprecision
 namespace EigenCostReal {
@@ -144,7 +149,7 @@ namespace yade {
 using Real = ::yade::ThinRealWrapper<UnderlyingReal>;
 }
 
-static_assert(sizeof(yade::Real)==sizeof(UnderlyingReal),"This compiler introduced padding, which breaks binary compatibility");
+static_assert(sizeof(yade::Real) == sizeof(UnderlyingReal), "This compiler introduced padding, which breaks binary compatibility");
 
 #include "ThinRealWrapperNumericLimits.hpp"
 #else
