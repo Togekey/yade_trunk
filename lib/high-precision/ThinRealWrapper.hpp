@@ -94,13 +94,6 @@ public:
 	explicit operator WrappedReal*() { return &val; };
 	explicit operator const WrappedReal*() const { return &val; };
 
-	// accessors
-	operator const ThinRealWrapper&() const { return val; }
-	operator ThinRealWrapper&() { return val; }
-
-	// perfect forwarding
-	operator ThinRealWrapper &&() { return std::move(*this); }
-
 	// field operators
 	ThinRealWrapper& operator+=(const ThinRealWrapper& x)
 	{
