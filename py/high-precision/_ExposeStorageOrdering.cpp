@@ -48,7 +48,7 @@ py::dict getEigenFlags()
 	ret["AngleAxisr"]   = getEigenFlagTemplate<AngleAxisr::VectorType::Base>();
 	ret["AlignedBox3r"] = getEigenFlagTemplate<AlignedBox3r::VectorType::Base>();
 	ret["AlignedBox2r"] = getEigenFlagTemplate<AlignedBox2r::VectorType::Base>();
-#ifdef _COMPLEX_SUPPORT
+
 	ret["Vector2cr"] = getEigenFlagTemplate<Vector2cr>();
 	ret["Vector3cr"] = getEigenFlagTemplate<Vector3cr>();
 	ret["Vector6cr"] = getEigenFlagTemplate<Vector6cr>();
@@ -56,7 +56,7 @@ py::dict getEigenFlags()
 	ret["Matrix3cr"] = getEigenFlagTemplate<Matrix3cr>();
 	ret["Matrix6cr"] = getEigenFlagTemplate<Matrix6cr>();
 	ret["MatrixXcr"] = getEigenFlagTemplate<MatrixXcr>();
-#endif
+
 	return ret;
 }
 
@@ -95,7 +95,7 @@ py::dict getEigenStorageOrders()
 	ret["AngleAxisr"]   = getEigenStorageOrderTemplate<AngleAxisr::VectorType>();
 	ret["AlignedBox3r"] = getEigenStorageOrderTemplate<AlignedBox3r::VectorType>();
 	ret["AlignedBox2r"] = getEigenStorageOrderTemplate<AlignedBox2r::VectorType>();
-#ifdef _COMPLEX_SUPPORT
+
 	ret["Vector2cr"] = getEigenStorageOrderTemplate<Vector2cr>();
 	ret["Vector3cr"] = getEigenStorageOrderTemplate<Vector3cr>();
 	ret["Vector6cr"] = getEigenStorageOrderTemplate<Vector6cr>();
@@ -103,7 +103,7 @@ py::dict getEigenStorageOrders()
 	ret["Matrix3cr"] = getEigenStorageOrderTemplate<Matrix3cr>();
 	ret["Matrix6cr"] = getEigenStorageOrderTemplate<Matrix6cr>();
 	ret["MatrixXcr"] = getEigenStorageOrderTemplate<MatrixXcr>();
-#endif
+
 	return ret;
 }
 

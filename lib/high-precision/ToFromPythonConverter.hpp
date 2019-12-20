@@ -97,7 +97,11 @@ template <typename T> std::string num_to_string(const T& num, int = 0)
 	return ss.str();
 }
 
-#ifdef _COMPLEX_SUPPORT
+
+/*************************************************************************/
+/*************************     std::complex     **************************/
+/*************************************************************************/
+
 template <typename ArbitraryReal> struct ArbitraryReal_to_python<std::complex<ArbitraryReal>> {
 	static PyObject* convert(const std::complex<ArbitraryReal>& val)
 	{
@@ -189,8 +193,6 @@ template <typename T> std::string num_to_string(const std::complex<T>& num, int 
 	}
 }
 
-
-#endif
 
 #ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
 #undef digits10
