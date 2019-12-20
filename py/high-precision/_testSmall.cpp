@@ -62,8 +62,13 @@ using ::yade::Real;
 
 struct Var {
 	Real value { -71.23 };
+	std::complex<Real> valueComplex { -71.23 , 33.23 };
+
 	Real get() const { return value; };
 	void set(Real val) { value = val; };
+
+	std::complex<Real> getComplex() const { return valueComplex; };
+	void setComplex(std::complex<Real> val) { valueComplex = val; };
 };
 
 #include <boost/python/def.hpp>
@@ -125,6 +130,12 @@ try {
 
 	ArbitraryReal_from_python<Real>();
 	py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
+
+#ifdef _COMPLEX_SUPPORT
+	ArbitraryReal_from_python<std::complex<Real>>();
+	py::to_python_converter<std::complex<Real>, ArbitraryReal_to_python<std::complex<Real>>>();
+#endif
+
 #ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
 	mpfr::mpreal::set_default_prec(YADE_REAL_BIT + 1);
 #endif
@@ -133,7 +144,7 @@ try {
 	std::cerr << __FILE__ << ":" << __LINE__ << " startPrecision: " << startPrecision << "\n";
 	boost::python::object startPrecisionPyObj { startPrecision };
 
-	py::class_<Var>("Var").add_property("val", &Var::get, &Var::set);
+	py::class_<Var>("Var").add_property("val", &Var::get, &Var::set).add_property("cpl", &Var::getComplex, &Var::setComplex);
 
 	py::def("f", f, (py::arg("x"), "y", py::arg("z") = 0.0, py::arg("w") = someFunction()));
 	/*} catch(const py::error_already_set& e) {
