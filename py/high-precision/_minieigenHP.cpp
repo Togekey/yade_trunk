@@ -18,7 +18,7 @@ using namespace ::yade::MathEigenTypes;
 #include <minieigen/visitors.hpp>
 #include <minieigen/expose.hpp>
 
-#define ARBITRARY_REAL_DEBUG
+//#define ARBITRARY_REAL_DEBUG
 #include "ExposeStorageOrdering.hpp"
 #include "Real/ToFromPythonConverter.hpp"
 

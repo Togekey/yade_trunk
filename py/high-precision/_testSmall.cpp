@@ -54,7 +54,7 @@
 #include <limits>
 #include <sstream>
 
-#define ARBITRARY_REAL_DEBUG
+//#define ARBITRARY_REAL_DEBUG
 #include "Real/ToFromPythonConverter.hpp"
 
 namespace py = ::boost::python;
