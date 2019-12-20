@@ -28,10 +28,8 @@ try {
 	ArbitraryReal_from_python<Real>();
 	py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
 
-#ifdef _COMPLEX_SUPPORT
 	ArbitraryReal_from_python<std::complex<Real>>();
 	py::to_python_converter<std::complex<Real>, ArbitraryReal_to_python<std::complex<Real>>>();
-#endif
 
 	expose_storage_ordering();
 	// arbitrary Real specific stuff: end

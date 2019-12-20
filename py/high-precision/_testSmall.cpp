@@ -131,10 +131,8 @@ try {
 	ArbitraryReal_from_python<Real>();
 	py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
 
-#ifdef _COMPLEX_SUPPORT
 	ArbitraryReal_from_python<std::complex<Real>>();
 	py::to_python_converter<std::complex<Real>, ArbitraryReal_to_python<std::complex<Real>>>();
-#endif
 
 #ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
 	mpfr::mpreal::set_default_prec(YADE_REAL_BIT + 1);

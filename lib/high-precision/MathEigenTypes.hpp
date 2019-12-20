@@ -9,6 +9,7 @@
 #define REAL_EXPOSED_TYPES_HPP
 
 #include <Eigen/Core>
+#include <complex>
 #include <unsupported/Eigen/AlignedVector3>
 
 namespace yade {
@@ -34,10 +35,10 @@ typedef Eigen::AngleAxis<Real>                              AngleAxisr;
 typedef Eigen::AlignedBox<Real, 3>                          AlignedBox3r;
 typedef Eigen::AlignedBox<Real, 2>                          AlignedBox2r;
 
-#define _COMPLEX_SUPPORT
+/*************************************************************************/
+/*************************     std::complex     **************************/
+/*************************************************************************/
 
-#ifdef _COMPLEX_SUPPORT
-#include <complex>
 typedef Eigen::Matrix<::std::complex<Real>, 2, 1>                           Vector2cr;
 typedef Eigen::Matrix<::std::complex<Real>, 3, 1>                           Vector3cr;
 typedef Eigen::Matrix<::std::complex<Real>, 6, 1>                           Vector6cr;
@@ -45,7 +46,6 @@ typedef Eigen::Matrix<::std::complex<Real>, Eigen::Dynamic, 1>              Vect
 typedef Eigen::Matrix<::std::complex<Real>, 3, 3>                           Matrix3cr;
 typedef Eigen::Matrix<::std::complex<Real>, 6, 6>                           Matrix6cr;
 typedef Eigen::Matrix<::std::complex<Real>, Eigen::Dynamic, Eigen::Dynamic> MatrixXcr;
-#endif
 
 // This is for external applications, shouldn't be normally used.
 // Use this only inside a .cpp file! Otherwise the types will leak outside which will cause compilation errors due to ambiguity.
@@ -54,28 +54,31 @@ namespace MathEigenTypes {
 
 	using ::yade::Index;
 	using ::yade::Vector2i;
-	using ::yade::Vector3i;
-	using ::yade::Vector6i;
 	using ::yade::Vector2r;
+	using ::yade::Vector3i;
 	using ::yade::Vector3r;
 	using ::yade::Vector3ra;
 	using ::yade::Vector4r;
+	using ::yade::Vector6i;
 	using ::yade::Vector6r;
+
 	using ::yade::Matrix3r;
 	using ::yade::Matrix6r;
 	using ::yade::MatrixXr;
 	using ::yade::VectorXr;
-	using ::yade::Quaternionr;
-	using ::yade::AngleAxisr;
-	using ::yade::AlignedBox3r;
+
 	using ::yade::AlignedBox2r;
+	using ::yade::AlignedBox3r;
+	using ::yade::AngleAxisr;
+	using ::yade::Quaternionr;
+
+	using ::yade::Matrix3cr;
+	using ::yade::Matrix6cr;
+	using ::yade::MatrixXcr;
 	using ::yade::Vector2cr;
 	using ::yade::Vector3cr;
 	using ::yade::Vector6cr;
 	using ::yade::VectorXcr;
-	using ::yade::Matrix3cr;
-	using ::yade::Matrix6cr;
-	using ::yade::MatrixXcr;
 }
 
 }
