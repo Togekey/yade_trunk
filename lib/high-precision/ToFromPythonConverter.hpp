@@ -84,12 +84,96 @@ template <typename ArbitraryReal> struct ArbitraryReal_from_python {
 template <typename T> std::string num_to_string(const T& num, int = 0)
 {
 #ifdef ARBITRARY_REAL_DEBUG
-	std::cerr << "\e[91m num_to_string<" << boost::core::demangle(typeid(T).name()) << ">" << (std::numeric_limits<T>::digits10+1) << " number: " << num << "\e[0m\n";
+	std::cerr << "\e[91m num_to_string<" << boost::core::demangle(typeid(T).name()) << ">" << (std::numeric_limits<T>::digits10 + 1) << " number: " << num
+	          << "\e[0m\n";
 #endif
 	std::stringstream ss {};
 	ss << std::setprecision(std::numeric_limits<T>::digits10 + 1) << num;
 	return ss.str();
 }
+
+#ifdef _COMPLEX_SUPPORT
+template <typename ArbitraryReal> struct ArbitraryReal_to_python<std::complex<ArbitraryReal>> {
+	static PyObject* convert(const std::complex<ArbitraryReal>& val)
+	{
+		std::stringstream ss_real {};
+		std::stringstream ss_imag {};
+		// the '+1' is to make sure that there are no conversion errors in the last bit.
+		ss_real << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << val.real();
+		ss_imag << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << val.imag();
+		::boost::python::object mpmath = ::boost::python::import("mpmath");
+#ifdef ARBITRARY_REAL_DEBUG
+		std::cerr << "→" << infoPrec<ArbitraryReal>() << "\n"
+		          << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << " COMPLEX  HAVE val= " << val << "\n";
+		std::cerr << "py::object mpmath pointer is: " << mpmath.ptr() << "\n";
+#endif
+		// http://mpmath.org/doc/current/technical.html
+		mpmath.attr("mp").attr("dps")  = int(std::numeric_limits<ArbitraryReal>::digits10 + 1);
+		::boost::python::object result = mpmath.attr("mpc")(ss_real.str(), ss_imag.str());
+		return boost::python::incref(result.ptr());
+	}
+};
+
+// https://www.boost.org/doc/libs/1_71_0/libs/python/doc/html/faq/how_can_i_automatically_convert_.html
+template <typename ArbitraryReal> struct ArbitraryReal_from_python<std::complex<ArbitraryReal>> {
+	ArbitraryReal_from_python()
+	{
+		boost::python::converter::registry::push_back(&convertible, &construct, boost::python::type_id<std::complex<ArbitraryReal>>());
+	}
+	static void* convertible(PyObject* obj_ptr)
+	{
+		// only python complex or mpmath.mpc(…) objects are supoprted. Strings are not parsed.
+		// However a simple workaround is to write mpmath.mpc("1.211213123123123123123123123","-124234234.111")
+		PyComplex_AsCComplex(obj_ptr);
+		if (PyErr_Occurred() == nullptr)
+			return obj_ptr;
+		PyErr_Clear();
+		return nullptr;
+	}
+	static void construct(PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
+	{
+		// use default syntax for std::complex stringstream https://en.cppreference.com/w/cpp/numeric/complex/operator_ltltgtgt
+		std::istringstream ss {
+			"(" + ::boost::python::call_method<std::string>(::boost::python::expect_non_null(PyObject_GetAttrString(obj_ptr, "real")), "__str__")
+			+ "," + ::boost::python::call_method<std::string>(::boost::python::expect_non_null(PyObject_GetAttrString(obj_ptr, "imag")), "__str__")
+			+ ")"
+		};
+#ifdef ARBITRARY_REAL_DEBUG
+		std::cerr << " construct COMPLEX  ss stringstream= " << ss.str() << "\n";
+#endif
+		void* storage = ((boost::python::converter::rvalue_from_python_storage<std::complex<ArbitraryReal>>*)(data))->storage.bytes;
+		new (storage) std::complex<ArbitraryReal>;
+		std::complex<ArbitraryReal>* val = (std::complex<ArbitraryReal>*)storage;
+		ss >> *val;
+		data->convertible = storage;
+#ifdef ARBITRARY_REAL_DEBUG
+		std::cerr << "PyObject* pointer is: " << obj_ptr << " name: " << infoPrec<ArbitraryReal>() << "\n";
+		std::cerr << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << " COMPLEX  READ val= " << *val << "\n";
+#endif
+	}
+};
+
+template <typename T> std::string num_to_string(const std::complex<T>& num, int = 0)
+{
+#ifdef ARBITRARY_REAL_DEBUG
+	std::cerr << "\e[91m COMPLEX num_to_string<" << boost::core::demangle(typeid(T).name()) << ">" << (std::numeric_limits<T>::digits10 + 1)
+	          << " number: " << num << "\e[0m\n";
+#endif
+	std::string ret;
+	if (num.real() != 0 && num.imag() != 0) {
+		// don't add "+" in the middle if imag is negative and will start with "-"
+		std::string ret = num_to_string(num.real()) + (num.imag() > 0 ? "+" : "") + num_to_string(num.imag()) + "j";
+		return ret;
+	}
+	// only imaginary is non-zero: skip the real part, and decrease padding to accomoadate the trailing "j"
+	if (num.imag() != 0) {
+		return num_to_string(num.imag()) + "j";
+	}
+	return num_to_string(num.real());
+}
+
+
+#endif
 
 #ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
 #undef digits10
