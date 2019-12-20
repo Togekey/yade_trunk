@@ -184,6 +184,11 @@ try {
 	ArbitraryReal_from_python<Real>();
 	py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
 
+#ifdef _COMPLEX_SUPPORT
+	ArbitraryReal_from_python<std::complex<Real>>();
+	py::to_python_converter<std::complex<Real>, ArbitraryReal_to_python<std::complex<Real>>>();
+#endif
+
 	py::class_<Var>("Var").add_property("val", &Var::get, &Var::set);
 
 	py::def("f", f, (py::arg("x"), "y", py::arg("z") = 0.0, py::arg("w") = someFunction()));
