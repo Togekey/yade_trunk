@@ -56,11 +56,19 @@ class SimpleTests(unittest.TestCase):
 			 , "cos"       : {"6":5  , "15":5  , "18":20000, "33":4000   , "100":80000 , "100nb":80000 , "150" :80000 , "150nb" :8000000, "100_b" :800000  , "150_b" :800000 }
 			 , "tan"       : {"6":5  , "15":5  , "18":20000, "33":4000   , "100":80000 , "100nb":80000 , "150" :80000 , "150nb" :8000000, "100_b" :800000  , "150_b" :800000 }
 
+			 , "csin"      : {"6":5  , "15":5  , "18":20000, "33":4000   , "100":80000 , "100nb":80000 , "150" :80000 , "150nb" :8000000, "100_b" :800000  , "150_b" :800000 }
+			 , "ccos"      : {"6":5  , "15":5  , "18":20000, "33":4000   , "100":80000 , "100nb":80000 , "150" :80000 , "150nb" :8000000, "100_b" :800000  , "150_b" :800000 }
+			 , "ctan"      : {"6":5  , "15":5  , "18":20000, "33":4000   , "100":80000 , "100nb":80000 , "150" :80000 , "150nb" :8000000, "100_b" :800000  , "150_b" :800000 }
+
 			 , "exp"       : {"6":5  , "15":5  , "18":10   , "33":10     , "100":10    , "100nb":10    , "150" :10    , "150nb" :10     , "100_b" :100     , "150_b" :100    }
 			 , "exp2"      : {"6":5  , "15":5  , "18":10   , "33":10     , "100":10    , "100nb":10    , "150" :10    , "150nb" :10     , "100_b" :100     , "150_b" :100    }
 			 , "expm1"     : {"6":5  , "15":5  , "18":10   , "33":10     , "100":10    , "100nb":10    , "150" :10    , "150nb" :10     , "100_b" :100     , "150_b" :100    }
 			 , "cosh"      : {"6":5  , "15":5  , "18":10   , "33":10     , "100":10    , "100nb":10    , "150" :10    , "150nb" :10     , "100_b" :100     , "150_b" :100    }
 			 , "sinh"      : {"6":5  , "15":5  , "18":10   , "33":10     , "100":10    , "100nb":10    , "150" :10    , "150nb" :10     , "100_b" :100     , "150_b" :100    }
+
+			 , "ccosh"     : {"6":5  , "15":5  , "18":20000, "33":4000   , "100":80000 , "100nb":80000 , "150" :80000 , "150nb" :8000000, "100_b" :800000  , "150_b" :800000 }
+			 , "csinh"     : {"6":5  , "15":5  , "18":20000, "33":4000   , "100":80000 , "100nb":80000 , "150" :80000 , "150nb" :8000000, "100_b" :800000  , "150_b" :800000 }
+			 , "ctanh"     : {"6":5  , "15":5  , "18":20000, "33":4000   , "100":80000 , "100nb":80000 , "150" :80000 , "150nb" :8000000, "100_b" :800000  , "150_b" :800000 }
 
 			 , "log"       : {"6":100, "15":100, "18":10   , "33":100    , "100":100   , "100nb":100   , "150" :100   , "150nb" :100    , "100_b" :100     , "150_b" :100    }
 			 , "log10"     : {"6":100, "15":100, "18":10   , "33":100    , "100":100   , "100nb":100   , "150" :100   , "150nb" :100    , "100_b" :100     , "150_b" :100    }
@@ -88,7 +96,7 @@ class SimpleTests(unittest.TestCase):
 				print("\033[93m Warning: \033[0m got NaN, cannot verify if: ",a," == " ,b, " that was for function: \033[93m ",functionName, " \033[0m")
 			else:
 				if(tol != None):
-					self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),tol)
+					self.assertLessEqual(abs( (mpmath.mpc(a)-mpmath.mpc(b))/mpmath.mpc(b) ),tol)
 				else:
 					if(functionName in self.defaultTolerances):
 						extraName=""
@@ -96,13 +104,19 @@ class SimpleTests(unittest.TestCase):
 						if(str("${LIBTOTEST}")[-4:] == "BBFL"): extraName="_b" # boost cpp_bin_float
 						defaultToleranceForThisFunction = self.defaultTolerances[functionName][str(${DEC_DIGITS})+extraName]*self.tolerance
 						#print(defaultToleranceForThisFunction," ---- ",functionName)
-						self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),defaultToleranceForThisFunction)
+						self.assertLessEqual(abs( (mpmath.mpc(a)-mpmath.mpc(b))/mpmath.mpc(b) ),defaultToleranceForThisFunction)
 					else:
-						self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),self.tolerance)
+						self.assertLessEqual(abs( (mpmath.mpc(a)-mpmath.mpc(b))/mpmath.mpc(b) ),self.tolerance)
 		else:
 			print("Skipping ",functionName," check, the builtin number: ", a, " cannot have value outside of its possible repesentation: " , b, ", because it has only ",${DEC_DIGITS}," digits.")
 
 	def oneArgMathCheck(self,r):
+		self.checkRelativeError(mne.sin(r),mpmath.sin(r),functionName="sin")
+		self.checkRelativeError(mne.sinh(r),mpmath.sinh(r),functionName="sinh")
+		self.checkRelativeError(mne.cos(r),mpmath.cos(r),functionName="cos")
+		self.checkRelativeError(mne.cosh(r),mpmath.cosh(r),functionName="cosh")
+		self.checkRelativeError(mne.tan(r),mpmath.tan(r),functionName="tan")
+		self.checkRelativeError(mne.tanh(r),mpmath.tanh(r),functionName="tanh")
 		# check math functions, but ensure that input arguments produce real (not complex) results
 		self.checkRelativeError(mne.abs(r),abs(r),functionName="abs")
 		self.checkRelativeError(mne.acos(r%1),mpmath.acos(r%1),functionName="acos")
@@ -113,8 +127,6 @@ class SimpleTests(unittest.TestCase):
 		self.checkRelativeError(mne.atanh(r%1),mpmath.atanh(r%1),functionName="atanh")
 		self.checkRelativeError(mne.cbrt(abs(r)),mpmath.cbrt(abs(r)),functionName="cbrt")
 		self.assertEqual(mne.ceil(r),mpmath.ceil(r))
-		self.checkRelativeError(mne.cos(r),mpmath.cos(r),functionName="cos")
-		self.checkRelativeError(mne.cosh(r),mpmath.cosh(r),functionName="cosh")
 		self.checkRelativeError(mne.erf(r),mpmath.erf(r),functionName="erf")
 		self.checkRelativeError(mne.erfc(r),mpmath.erfc(r),functionName="erfc")
 		self.checkRelativeError(mne.exp(r),mpmath.exp(r),functionName="exp")
@@ -130,10 +142,6 @@ class SimpleTests(unittest.TestCase):
 		#print(mne.logb(r).__repr__()) # logb is not present in mpmath
 		self.assertEqual(mne.rint(r),round(r))
 		self.assertTrue((mne.round(r)==round(r)) or (r%1==0.5)) # ignore rounding 0.5 up or down.
-		self.checkRelativeError(mne.sin(r),mpmath.sin(r),functionName="sin")
-		self.checkRelativeError(mne.sinh(r),mpmath.sinh(r),functionName="sinh")
-		self.checkRelativeError(mne.tan(r),mpmath.tan(r),functionName="tan")
-		self.checkRelativeError(mne.tanh(r),mpmath.tanh(r),functionName="tanh")
 		self.checkRelativeError(mne.tgamma(r),mpmath.gamma(r),functionName="tgamma")
 		self.assertEqual(mne.trunc(r),int(r))
 
@@ -160,6 +168,13 @@ class SimpleTests(unittest.TestCase):
 			self.assertEqual(mne.sign(r),-1)
 
 	def twoArgMathCheck(self,r1,r2):
+		self.checkRelativeError(mne.csin (mpmath.mpc(r1,r2)),mpmath.sin (mpmath.mpc(r1,r2)),functionName="csin")
+		self.checkRelativeError(mne.csinh(mpmath.mpc(r1,r2)),mpmath.sinh(mpmath.mpc(r1,r2)),functionName="csinh")
+		self.checkRelativeError(mne.ccos (mpmath.mpc(r1,r2)),mpmath.cos (mpmath.mpc(r1,r2)),functionName="ccos")
+		self.checkRelativeError(mne.ccosh(mpmath.mpc(r1,r2)),mpmath.cosh(mpmath.mpc(r1,r2)),functionName="ccosh")
+		self.checkRelativeError(mne.ctan (mpmath.mpc(r1,r2)),mpmath.tan (mpmath.mpc(r1,r2)),functionName="ctan")
+		self.checkRelativeError(mne.ctanh(mpmath.mpc(r1,r2)),mpmath.tanh(mpmath.mpc(r1,r2)),functionName="ctanh")
+
 		self.checkRelativeError(mne.atan2(r1,r2),mpmath.atan2(r1,r2),functionName="atan2")
 		self.checkRelativeError(mne.fmod(abs(r1),abs(r2)),mpmath.fmod(abs(r1),abs(r2)),functionName="fmod")
 		self.checkRelativeError(mne.hypot(r1,r2),mpmath.hypot(r1,r2),functionName="hypot")
