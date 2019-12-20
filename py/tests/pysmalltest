@@ -25,6 +25,8 @@ class SimpleTests(unittest.TestCase):
 		self.tolerance=(mpmath.mpf(10)**(-${DEC_DIGITS}+1))*mpmath.mpf("1.001")
 	def checkRelativeError(self,a,b):
 		self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),self.tolerance)
+	def checkRelativeComplexError(self,a,b):
+		self.assertLessEqual(abs( (mpmath.mpc(a)-mpmath.mpc(b))/mpmath.mpc(b) ),self.tolerance)
 	def testSimple(self):
 		zz=mpmath.acos(0)
 		print(zz.__repr__())
@@ -38,8 +40,20 @@ class SimpleTests(unittest.TestCase):
 		print("---- DPS  =",mpmath.mp.dps)
 		print("---- abs  =",abs(mpmath.mpf(a.val-zz)))
 		print("---- 10** =",self.tolerance)
-		#self.assertAlmostEqual(a.val,zz)
 		self.checkRelativeError(a.val,zz)
+
+	def testComplex(self):
+		print("================== Complex numbers test ==================")
+		zz=mpmath.acos(2)
+		print(zz.__repr__())
+		print("zz:",hex(id(zz)))
+		print("mpmath:",hex(id(mpmath)))
+		a=mne.Var()
+		a.cpl=zz
+		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
+		print("---- a.cpl=",a.cpl.__repr__())
+		print("---- abs  =",abs(mpmath.mpc(a.cpl-zz)))
+		self.checkRelativeComplexError(a.cpl,zz)
 
 if __name__ == '__main__':
 		unittest.main(testRunner=unittest.TextTestRunner(stream=sys.stdout, verbosity=2))
