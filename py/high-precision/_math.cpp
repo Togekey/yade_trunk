@@ -278,7 +278,23 @@ try {
 
 	// check overload (and namespace) resolution for all math functions. As a side effect they are exported to python, and can be unit-tested.
 #define YADE_PYEXPORT_MATH_1(func) py::def(#func, static_cast<Real (*)(const Real&)>(&::yade::func), (py::arg("x")));
+#define YADE_PYEXPORT_MATH_1_COMPLEX(func) py::def("c"#func, static_cast<std::complex<Real> (*)(const std::complex<Real>&)>(&::yade::func), (py::arg("x")));
 #define YADE_PYEXPORT_MATH_1_INT(func) py::def(#func, static_cast<int (*)(const Real&)>(&::yade::func), (py::arg("x")));
+	YADE_PYEXPORT_MATH_1(sin)
+	YADE_PYEXPORT_MATH_1(sinh)
+	YADE_PYEXPORT_MATH_1(cos)
+	YADE_PYEXPORT_MATH_1(cosh)
+	YADE_PYEXPORT_MATH_1(tan)
+	YADE_PYEXPORT_MATH_1(tanh)
+
+	// the complex function names have "c" prefix.
+	YADE_PYEXPORT_MATH_1_COMPLEX(sin)
+	YADE_PYEXPORT_MATH_1_COMPLEX(sinh)
+	YADE_PYEXPORT_MATH_1_COMPLEX(cos)
+	YADE_PYEXPORT_MATH_1_COMPLEX(cosh)
+	YADE_PYEXPORT_MATH_1_COMPLEX(tan)
+	YADE_PYEXPORT_MATH_1_COMPLEX(tanh)
+
 	YADE_PYEXPORT_MATH_1(abs)
 	YADE_PYEXPORT_MATH_1(acos)
 	YADE_PYEXPORT_MATH_1(acosh)
@@ -288,8 +304,6 @@ try {
 	YADE_PYEXPORT_MATH_1(atanh)
 	YADE_PYEXPORT_MATH_1(cbrt)
 	YADE_PYEXPORT_MATH_1(ceil)
-	YADE_PYEXPORT_MATH_1(cos)
-	YADE_PYEXPORT_MATH_1(cosh)
 	YADE_PYEXPORT_MATH_1(erf)
 	YADE_PYEXPORT_MATH_1(erfc)
 	YADE_PYEXPORT_MATH_1(exp)
@@ -306,11 +320,7 @@ try {
 	//YADE_PYEXPORT_MATH_1(riemann_zeta) // since C++17
 	YADE_PYEXPORT_MATH_1(rint)
 	YADE_PYEXPORT_MATH_1(round)
-	YADE_PYEXPORT_MATH_1(sin)
-	YADE_PYEXPORT_MATH_1(sinh)
 	YADE_PYEXPORT_MATH_1(sqrt)
-	YADE_PYEXPORT_MATH_1(tan)
-	YADE_PYEXPORT_MATH_1(tanh)
 	YADE_PYEXPORT_MATH_1(tgamma)
 	YADE_PYEXPORT_MATH_1(trunc)
 
@@ -319,6 +329,7 @@ try {
 	YADE_PYEXPORT_MATH_1_INT(sgn)
 	YADE_PYEXPORT_MATH_1_INT(sign)
 #undef YADE_PYEXPORT_MATH_1
+#undef YADE_PYEXPORT_MATH_1_COMPLEX
 #undef YADE_PYEXPORT_MATH_1_INT
 
 #define YADE_PYEXPORT_MATH_2(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&)>(&::yade::func), (py::arg("x"), "y"));
