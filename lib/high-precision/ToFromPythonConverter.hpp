@@ -83,12 +83,17 @@ template <typename ArbitraryReal> struct ArbitraryReal_from_python {
 
 template <typename T> std::string num_to_string(const T& num, int = 0)
 {
+	auto digs1 = std::numeric_limits<T>::digits10 + 1;
 #ifdef ARBITRARY_REAL_DEBUG
-	std::cerr << "\e[91m num_to_string<" << boost::core::demangle(typeid(T).name()) << ">" << (std::numeric_limits<T>::digits10 + 1) << " number: " << num
-	          << "\e[0m\n";
+	std::cerr << "\e[91m num_to_string<" << boost::core::demangle(typeid(T).name()) << ">" << digs1 << " number: " << num << "\e[0m\n";
 #endif
 	std::stringstream ss {};
-	ss << std::setprecision(std::numeric_limits<T>::digits10 + 1) << num;
+	if (digs1 <= 16) {
+		ss << std::setprecision(digs1) << num;
+	} else {
+		// make sure it is copy-pasteable without loss of precision
+		ss << "\"" << std::setprecision(digs1) << num << "\"";
+	}
 	return ss.str();
 }
 
@@ -155,21 +160,33 @@ template <typename ArbitraryReal> struct ArbitraryReal_from_python<std::complex<
 
 template <typename T> std::string num_to_string(const std::complex<T>& num, int = 0)
 {
+	auto digs1 = std::numeric_limits<T>::digits10 + 1;
 #ifdef ARBITRARY_REAL_DEBUG
-	std::cerr << "\e[91m COMPLEX num_to_string<" << boost::core::demangle(typeid(T).name()) << ">" << (std::numeric_limits<T>::digits10 + 1)
-	          << " number: " << num << "\e[0m\n";
+	std::cerr << "\e[91m COMPLEX num_to_string<" << boost::core::demangle(typeid(T).name()) << ">" << digs1 << " number: " << num << "\e[0m\n";
 #endif
 	std::string ret;
 	if (num.real() != 0 && num.imag() != 0) {
-		// don't add "+" in the middle if imag is negative and will start with "-"
-		std::string ret = num_to_string(num.real()) + (num.imag() > 0 ? "+" : "") + num_to_string(num.imag()) + "j";
-		return ret;
+		if (digs1 <= 16) {
+			// don't add "+" in the middle if imag is negative and will start with "-"
+			return num_to_string(num.real()) + (num.imag() > 0 ? "+" : "") + num_to_string(num.imag()) + "j";
+		} else {
+			// make sure it is copy-pasteable without loss of precision
+			return "mpc(" + num_to_string(num.real()) + "," + num_to_string(num.imag()) + ")";
+		}
 	}
 	// only imaginary is non-zero: skip the real part, and decrease padding to accomoadate the trailing "j"
 	if (num.imag() != 0) {
-		return num_to_string(num.imag()) + "j";
+		if (digs1 <= 16) {
+			return num_to_string(num.imag()) + "j";
+		} else {
+			return "mpc(\"0\"," + num_to_string(num.imag()) + ")";
+		}
 	}
-	return num_to_string(num.real());
+	if (digs1 <= 16) {
+		return num_to_string(num.real());
+	} else {
+		return "mpc(" + num_to_string(num.real()) + ",\"0\")";
+	}
 }
 
 
