@@ -24,6 +24,7 @@
 #include <boost/math/tools/config.hpp>
 #include <boost/random.hpp>
 #include <cmath>
+#include <complex>
 #include <cstdlib>
 #include <limits>
 
@@ -34,6 +35,9 @@
 // Macors for quick inline redirections towards the correct function from (1) standard library or (2) boost::multiprecision; depending on which one is used.
 #define YADE_WRAP_FUNC_1(func)                                                                                                                                 \
 	inline Real func(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a)); }
+
+#define YADE_WRAP_FUNC_1_COMPLEX(func)                                                                                                                         \
+	inline std::complex<Real> func(const std::complex<Real>& a) { return YADE_REAL_MATH_NAMESPACE::func(a); }
 
 #define YADE_WRAP_FUNC_1_RENAME(func1, func2)                                                                                                                  \
 	inline Real func1(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func2(static_cast<UnderlyingReal>(a)); }
@@ -92,6 +96,14 @@ YADE_WRAP_FUNC_1(cos)
 YADE_WRAP_FUNC_1(cosh)
 YADE_WRAP_FUNC_1(tan)
 YADE_WRAP_FUNC_1(tanh)
+
+// add more functions as necessary
+YADE_WRAP_FUNC_1_COMPLEX(sin)
+YADE_WRAP_FUNC_1_COMPLEX(sinh)
+YADE_WRAP_FUNC_1_COMPLEX(cos)
+YADE_WRAP_FUNC_1_COMPLEX(cosh)
+YADE_WRAP_FUNC_1_COMPLEX(tan)
+YADE_WRAP_FUNC_1_COMPLEX(tanh)
 
 /********************************************************************************************/
 /**********************        inverse trigonometric functions         **********************/
