@@ -62,6 +62,7 @@ using float_fast80_t = long double;
 }
 #endif
 #include <cmath>
+#include <complex>
 #include <limits>
 
 #include <Eigen/Core>
@@ -95,6 +96,7 @@ enum { ReadCost = 1, AddCost = 1, MulCost = 1 };
 /*************************************************************************/
 #elif YADE_REAL_BIT <= 128
 #include <boost/multiprecision/float128.hpp>
+// TODO: boost 1.68 has #include <boost/multiprecision/complex128.hpp>, which would simplify some things
 #include <quadmath.h>
 using UnderlyingReal = boost::multiprecision::float128;
 #define YADE_REAL_MATH_NAMESPACE ::boost::multiprecision
@@ -146,16 +148,19 @@ using UnderlyingReal = ::mpfr::mpreal;
 #include "ThinRealWrapper.hpp"
 
 namespace yade {
-using Real = ::yade::ThinRealWrapper<UnderlyingReal>;
+using Real    = ::yade::ThinRealWrapper<UnderlyingReal>;
+using Complex = ::yade::ThinRealWrapper<std::complex<UnderlyingReal>>;
 }
 
 static_assert(sizeof(yade::Real) == sizeof(UnderlyingReal), "This compiler introduced padding, which breaks binary compatibility");
+static_assert(sizeof(yade::Complex) == sizeof(std::complex<UnderlyingReal>), "This compiler introduced padding, which breaks binary compatibility");
 
 #include "ThinRealWrapperNumericLimits.hpp"
 #else
 
 namespace yade {
-using Real = UnderlyingReal;
+using Real    = UnderlyingReal;
+using Complex = std::complex<UnderlyingReal>;
 }
 
 #endif
@@ -164,13 +169,13 @@ using Real = UnderlyingReal;
 /*************************    Math functions    **************************/
 /*************************************************************************/
 #include "MathFunctions.hpp"
-#undef YADE_REAL_MATH_NAMESPACE
 
 /*************************************************************************/
 /*************************   Eigen  NumTraits   **************************/
 /*************************************************************************/
 #if (YADE_REAL_BIT > 64) and (not defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this))
-using EigenTraitsReal = yade::Real;
+using EigenTraitsReal    = yade::Real;
+using EigenTraitsComplex = yade::Complex;
 #include "EigenNumTraits.hpp"
 #endif
 
