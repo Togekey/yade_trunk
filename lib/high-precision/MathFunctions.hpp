@@ -19,6 +19,7 @@
 #define YADE_THIN_REAL_WRAPPER_MATH_FUNCIONS_HPP
 
 #include <boost/config.hpp>
+#include <boost/math/complex.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <boost/math/special_functions.hpp>
 #include <boost/math/tools/config.hpp>
@@ -37,7 +38,10 @@
 	inline Real func(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a)); }
 
 #define YADE_WRAP_FUNC_1_COMPLEX(func)                                                                                                                         \
-	inline std::complex<Real> func(const std::complex<Real>& a) { return YADE_REAL_MATH_NAMESPACE::func(a); }
+	inline Complex func(const Complex& a) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<std::complex<UnderlyingReal>>(a)); }
+
+#define YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(func)                                                                                                                 \
+	inline Real func(const Complex& a) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<std::complex<UnderlyingReal>>(a)); }
 
 #define YADE_WRAP_FUNC_1_RENAME(func1, func2)                                                                                                                  \
 	inline Real func1(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func2(static_cast<UnderlyingReal>(a)); }
@@ -158,6 +162,12 @@ YADE_WRAP_FUNC_1(round)
 YADE_WRAP_FUNC_1(rint)
 YADE_WRAP_FUNC_1(trunc)
 
+YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(abs)
+
+YADE_WRAP_FUNC_1_COMPLEX(conj)
+YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(real)
+YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(imag)
+
 /********************************************************************************************/
 /**********************        integer division and remainder          **********************/
 /********************************************************************************************/
@@ -217,6 +227,7 @@ YADE_WRAP_FUNC_1(tgamma)
 // Some old C library functions need pointer to C-array, this is for compatibility between ThinRealWrapper and UnderlyingReal
 #ifdef YADE_THIN_REAL_WRAPPER_HPP
 static_assert(sizeof(Real) == sizeof(UnderlyingReal), "This compiler introduced padding. This breaks binary compatibility");
+static_assert(sizeof(yade::Complex) == sizeof(std::complex<UnderlyingReal>), "This compiler introduced padding, which breaks binary compatibility");
 
 static inline const UnderlyingReal* constVectorData(const std::vector<Real>& v) { return v.data()->operator const UnderlyingReal*(); }
 static inline UnderlyingReal*       vectorData(std::vector<Real>& v) { return v.data()->operator UnderlyingReal*(); }
