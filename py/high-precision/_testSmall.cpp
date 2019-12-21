@@ -47,7 +47,7 @@
 //    https://docs.python.org/2.5/ext/dnt-basics.html
 //    https://wiki.python.org/moin/boost.python/HowTo
 
-#include "Real/Real.hpp"
+#include <lib/high-precision/Real.hpp>
 
 #include <boost/python.hpp>
 #include <iostream>
@@ -55,7 +55,7 @@
 #include <sstream>
 
 //#define ARBITRARY_REAL_DEBUG
-#include "Real/ToFromPythonConverter.hpp"
+#include <lib/high-precision/ToFromPythonConverter.hpp>
 
 namespace py = ::boost::python;
 using ::yade::Real;

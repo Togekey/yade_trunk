@@ -5,7 +5,7 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
-#include "Real/Real.hpp"
+#include <lib/high-precision/Real.hpp>
 
 #include <boost/python.hpp>
 #include <Eigen/Core>
@@ -15,8 +15,8 @@
 #include <sstream>
 
 //#define ARBITRARY_REAL_DEBUG
-#include "ExposeStorageOrdering.hpp"
-#include "Real/ToFromPythonConverter.hpp"
+#include <py/high-precision/_ExposeStorageOrdering.hpp>
+#include <lib/high-precision/ToFromPythonConverter.hpp>
 
 // testing Real type
 #include <boost/concept/assert.hpp>
