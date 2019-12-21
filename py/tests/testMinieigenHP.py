@@ -25,7 +25,10 @@ class SimpleTests(unittest.TestCase):
 		# so basically we store one more decimal digit, and expect one less decimal digit. That amounts to ignoring one (actually two) least significant digits.
 		self.tolerance=(mpmath.mpf(10)**(-${DEC_DIGITS}+1))*mpmath.mpf("1.001")
 	def checkRelativeError(self,a,b):
-		self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),self.tolerance)
+		if b!=0:
+			self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),self.tolerance)
+		else:
+			self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/self.tolerance ),self.tolerance)
 	def checkRelativeComplexError(self,a,b):
 		self.assertLessEqual(abs( (mpmath.mpc(a)-mpmath.mpc(b))/mpmath.mpc(b) ),self.tolerance)
 	def testVector2i(self):
@@ -218,8 +221,6 @@ class SimpleTests(unittest.TestCase):
 		self.assertEqual(a3m.eigenStorageOrder(),0)
 		b3m=a3m.transpose()
 		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
-		aaaaa=b3m[0][0]
-		print(b3m[0][0])
 		self.checkRelativeError( b3m[0][0] , mpmath.mpf("1") )
 		self.checkRelativeError( b3m[0][1] , mpmath.mpf("4") )
 		self.checkRelativeError( b3m[0][2] , mpmath.mpf("7") )
@@ -238,6 +239,44 @@ class SimpleTests(unittest.TestCase):
 
 		self.checkRelativeError( a3m.maxAbsCoeff() , mpmath.mpf("9") )
 
+		from ${LIBTOTEST} import Matrix3
+		for i in range(3):
+			for j in range(3):
+				self.checkRelativeError( b3m[i][j] , eval(b3m.__str__())[i][j] )
+		#print(b3m.__str__())
+
+	def testMatrix3cTest(self):
+		a3m=mne.Matrix3c(1+1j,2,3,
+		                4,5,6,
+		                7,8,9-9j)
+		self.assertEqual(a3m.eigenFlags(),352)
+		self.assertEqual(a3m.eigenStorageOrder(),0)
+		b3m=a3m.transpose()
+		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
+		self.checkRelativeComplexError( b3m[0][0] , mpmath.mpc("1","1") )
+		self.checkRelativeComplexError( b3m[0][1] , mpmath.mpc("4","0") )
+		self.checkRelativeComplexError( b3m[0][2] , mpmath.mpc("7","0") )
+		self.checkRelativeComplexError( b3m[1][0] , mpmath.mpc("2","0") )
+		self.checkRelativeComplexError( b3m[1][1] , mpmath.mpc("5","0") )
+		self.checkRelativeComplexError( b3m[1][2] , mpmath.mpc("8","0") )
+		self.checkRelativeComplexError( b3m[2][0] , mpmath.mpc("3","0") )
+		self.checkRelativeComplexError( b3m[2][1] , mpmath.mpc("6","0") )
+		self.checkRelativeComplexError( b3m[2][2] , mpmath.mpc("9","-9") )
+
+		c3m=a3m.diagonal()
+		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
+		self.checkRelativeComplexError( c3m[0] , mpmath.mpc("1","1") )
+		self.checkRelativeComplexError( c3m[1] , mpmath.mpc("5","0") )
+		self.checkRelativeComplexError( c3m[2] , mpmath.mpc("9","-9") )
+
+		self.checkRelativeComplexError( a3m.maxAbsCoeff() , abs(mpmath.mpc("9","-9")) )
+
+		from ${LIBTOTEST} import Matrix3c
+		for i in range(3):
+			for j in range(3):
+				self.checkRelativeComplexError( b3m[i][j] , eval(b3m.__str__())[i][j] )
+		#print(b3m.__str__())
+
 
 	def testQuaternion(self):
 		q1 = mne.Quaternion.Identity
@@ -251,16 +290,23 @@ class SimpleTests(unittest.TestCase):
 		q3=mne.Quaternion(axis=mne.Vector3(1,0,0),angle=mpmath.pi/2.0)
 		m3q=q3.toRotationMatrix()
 		self.checkRelativeError( m3q[0][0] , mpmath.mpf("1") )
-		print(m3q[1][2].__repr__())
+		#print(m3q[1][2].__repr__())
 		self.checkRelativeError( m3q[1][2] , mpmath.mpf("-1") )
-		print(q3)
+		#print(q3)
 		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
 
 		q4 = mne.Quaternion.Identity
 		q4.setFromTwoVectors(mne.Vector3(1,2,3),mne.Vector3(2,3,4))
-		print(q4.norm().__repr__())
+		#print(q4.norm().__repr__())
 		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
 		self.checkRelativeError( q4.norm() , mpmath.mpf("1") )
+
+		from ${LIBTOTEST} import Quaternion
+		self.checkRelativeError( q3[0] , eval(q3.__str__())[0] )
+		self.checkRelativeError( q3[1] , eval(q3.__str__())[1] )
+		self.checkRelativeError( q3[2] , eval(q3.__str__())[2] )
+		self.checkRelativeError( q3[3] , eval(q3.__str__())[3] )
+		#print(q3.__str__())
 
 if __name__ == '__main__':
 		unittest.main(testRunner=unittest.TextTestRunner(stream=sys.stdout, verbosity=2))
