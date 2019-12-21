@@ -211,34 +211,23 @@ class SimpleTests(unittest.TestCase):
 		self.checkRelativeError( c4r[3] , eval(c4r.__str__())[3] )
 
 	def testMatrix3Test(self):
-		ll=1
-		print("------------------------------------------------------",ll);ll+=1;
 		a3m=mne.Matrix3(1,2,3,
 		                4,5,6,
 		                7,8,9)
 		self.assertEqual(a3m.eigenFlags(),352)
 		self.assertEqual(a3m.eigenStorageOrder(),0)
-		print("------------------------------------------------------",ll);ll+=1;
 		b3m=a3m.transpose()
-		print("------------------------------------------------------",ll);ll+=1;
 		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
-		print("------------------------------------------------------",ll);ll+=1;
 		aaaaa=b3m[0][0]
-		print("------------------------------------------------------",ll,aaaaa);ll+=1;
 		print(b3m[0][0])
-		print("------------------------------------------------------",ll);ll+=1;
 		self.checkRelativeError( b3m[0][0] , mpmath.mpf("1") )
-		print("------------------------------------------------------",ll);ll+=1;
 		self.checkRelativeError( b3m[0][1] , mpmath.mpf("4") )
 		self.checkRelativeError( b3m[0][2] , mpmath.mpf("7") )
-		print("------------------------------------------------------",ll);ll+=1;
 		self.checkRelativeError( b3m[1][0] , mpmath.mpf("2") )
 		self.checkRelativeError( b3m[1][1] , mpmath.mpf("5") )
 		self.checkRelativeError( b3m[1][2] , mpmath.mpf("8") )
-		print("------------------------------------------------------",ll);ll+=1;
 		self.checkRelativeError( b3m[2][0] , mpmath.mpf("3") )
 		self.checkRelativeError( b3m[2][1] , mpmath.mpf("6") )
-		print("------------------------------------------------------",ll);ll+=1;
 		self.checkRelativeError( b3m[2][2] , mpmath.mpf("9") )
 
 		c3m=a3m.diagonal()
@@ -251,36 +240,27 @@ class SimpleTests(unittest.TestCase):
 
 
 	def testQuaternion(self):
-		ll=1
-		print("------------------------------------------------------",ll);ll+=1;
 		q1 = mne.Quaternion.Identity
-		print("------------------------------------------------------",ll,q1);ll+=1;
 		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
 		self.checkRelativeError( q1[3] , mpmath.mpf("1") )
-		print("------------------------------------------------------",ll);ll+=1;
 		self.assertEqual(q1.eigenFlags(),32)
 		self.assertEqual(q1.eigenStorageOrder(),0)
 
 		q2 = q1.inverse()
 		self.checkRelativeError( q2[3] , mpmath.mpf("1") )
-		print("------------------------------------------------------",ll);ll+=1;
 		q3=mne.Quaternion(axis=mne.Vector3(1,0,0),angle=mpmath.pi/2.0)
 		m3q=q3.toRotationMatrix()
 		self.checkRelativeError( m3q[0][0] , mpmath.mpf("1") )
 		print(m3q[1][2].__repr__())
-		print("------------------------------------------------------",ll);ll+=1;
 		self.checkRelativeError( m3q[1][2] , mpmath.mpf("-1") )
 		print(q3)
 		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
 
-		print("------------------------------------------------------",ll);ll+=1;
 		q4 = mne.Quaternion.Identity
 		q4.setFromTwoVectors(mne.Vector3(1,2,3),mne.Vector3(2,3,4))
 		print(q4.norm().__repr__())
-		print("------------------------------------------------------",ll);ll+=1;
 		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
 		self.checkRelativeError( q4.norm() , mpmath.mpf("1") )
-		print("------------------------------------------------------",ll);ll+=1;
 
 if __name__ == '__main__':
 		unittest.main(testRunner=unittest.TextTestRunner(stream=sys.stdout, verbosity=2))
