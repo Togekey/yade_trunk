@@ -6,7 +6,7 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
-#include "Real/Real.hpp"
+#include <lib/high-precision/Real.hpp>
 
 #include <iomanip>
 #include <iostream>
@@ -19,8 +19,8 @@ using namespace ::yade::MathEigenTypes;
 #include <minieigen/expose.hpp>
 
 //#define ARBITRARY_REAL_DEBUG
-#include "ExposeStorageOrdering.hpp"
-#include "Real/ToFromPythonConverter.hpp"
+#include <py/high-precision/_ExposeStorageOrdering.hpp>
+#include <lib/high-precision/ToFromPythonConverter.hpp>
 
 BOOST_PYTHON_MODULE(THE_CPP_NAME)
 try {
