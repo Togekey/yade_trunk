@@ -89,14 +89,17 @@ class SimpleTests(unittest.TestCase):
 			 , "fma"       : {"6":10 , "15":10 , "18":10   , "33":10     , "100":100   , "100nb":100   , "150" :100   , "150nb" :100    , "100_b" :100     , "150_b" :1000   }
 			 }
 
-	def checkRelativeError(self,a,b,tol=None,functionName=None):
+	def checkRelativeError(self,a,b,tol=None,functionName=None,isComplex=False):
 		if(abs(b) <= self.maxval and abs(b) >= mne.smallest_positive()):
 			#print("a= ",a," b= ",b," smallest=",mne.smallest_positive(), " maxval=",self.maxval)
 			if(mpmath.isnan(a)):
 				print("\033[93m Warning: \033[0m got NaN, cannot verify if: ",a," == " ,b, " that was for function: \033[93m ",functionName, " \033[0m")
 			else:
 				if(tol != None):
-					self.assertLessEqual(abs( (mpmath.mpc(a)-mpmath.mpc(b))/mpmath.mpc(b) ),tol)
+					if isComplex:
+						self.assertLessEqual(abs( (mpmath.mpc(a)-mpmath.mpc(b))/mpmath.mpc(b) ),tol)
+					else:
+						self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),tol)
 				else:
 					if(functionName in self.defaultTolerances):
 						extraName=""
@@ -104,11 +107,20 @@ class SimpleTests(unittest.TestCase):
 						if(str("${LIBTOTEST}")[-4:] == "BBFL"): extraName="_b" # boost cpp_bin_float
 						defaultToleranceForThisFunction = self.defaultTolerances[functionName][str(${DEC_DIGITS})+extraName]*self.tolerance
 						#print(defaultToleranceForThisFunction," ---- ",functionName)
-						self.assertLessEqual(abs( (mpmath.mpc(a)-mpmath.mpc(b))/mpmath.mpc(b) ),defaultToleranceForThisFunction)
+						if isComplex:
+							self.assertLessEqual(abs( (mpmath.mpc(a)-mpmath.mpc(b))/mpmath.mpc(b) ),defaultToleranceForThisFunction)
+						else:
+							self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),defaultToleranceForThisFunction)
 					else:
-						self.assertLessEqual(abs( (mpmath.mpc(a)-mpmath.mpc(b))/mpmath.mpc(b) ),self.tolerance)
+						if isComplex:
+							self.assertLessEqual(abs( (mpmath.mpc(a)-mpmath.mpc(b))/mpmath.mpc(b) ),self.tolerance)
+						else:
+							self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),self.tolerance)
 		else:
 			print("Skipping ",functionName," check, the builtin number: ", a, " cannot have value outside of its possible repesentation: " , b, ", because it has only ",${DEC_DIGITS}," digits.")
+	
+	def checkRelativeComplexError(self,a,b,tol=None,functionName=None):
+		self.checkRelativeError(a,b,tol,functionName,True)
 
 	def oneArgMathCheck(self,r):
 		self.checkRelativeError(mne.sin(r),mpmath.sin(r),functionName="sin")
@@ -168,12 +180,17 @@ class SimpleTests(unittest.TestCase):
 			self.assertEqual(mne.sign(r),-1)
 
 	def twoArgMathCheck(self,r1,r2):
-		self.checkRelativeError(mne.csin (mpmath.mpc(r1,r2)),mpmath.sin (mpmath.mpc(r1,r2)),functionName="csin")
-		self.checkRelativeError(mne.csinh(mpmath.mpc(r1,r2)),mpmath.sinh(mpmath.mpc(r1,r2)),functionName="csinh")
-		self.checkRelativeError(mne.ccos (mpmath.mpc(r1,r2)),mpmath.cos (mpmath.mpc(r1,r2)),functionName="ccos")
-		self.checkRelativeError(mne.ccosh(mpmath.mpc(r1,r2)),mpmath.cosh(mpmath.mpc(r1,r2)),functionName="ccosh")
-		self.checkRelativeError(mne.ctan (mpmath.mpc(r1,r2)),mpmath.tan (mpmath.mpc(r1,r2)),functionName="ctan")
-		self.checkRelativeError(mne.ctanh(mpmath.mpc(r1,r2)),mpmath.tanh(mpmath.mpc(r1,r2)),functionName="ctanh")
+		self.checkRelativeComplexError(mne.sin (mpmath.mpc(r1,r2)),mpmath.sin (mpmath.mpc(r1,r2)),functionName="csin")
+		self.checkRelativeComplexError(mne.sinh(mpmath.mpc(r1,r2)),mpmath.sinh(mpmath.mpc(r1,r2)),functionName="csinh")
+		self.checkRelativeComplexError(mne.cos (mpmath.mpc(r1,r2)),mpmath.cos (mpmath.mpc(r1,r2)),functionName="ccos")
+		self.checkRelativeComplexError(mne.cosh(mpmath.mpc(r1,r2)),mpmath.cosh(mpmath.mpc(r1,r2)),functionName="ccosh")
+		self.checkRelativeComplexError(mne.tan (mpmath.mpc(r1,r2)),mpmath.tan (mpmath.mpc(r1,r2)),functionName="ctan")
+		self.checkRelativeComplexError(mne.tanh(mpmath.mpc(r1,r2)),mpmath.tanh(mpmath.mpc(r1,r2)),functionName="ctanh")
+
+		self.checkRelativeComplexError(mne.abs  (mpmath.mpc(r1,r2)),abs(mpmath.mpc(r1,r2)),functionName="cabs")
+		self.checkRelativeComplexError(mne.conj (mpmath.mpc(r1,r2)),mpmath.conj(mpmath.mpc(r1,r2)),functionName="cconj")
+		self.checkRelativeComplexError(mne.real (mpmath.mpc(r1,r2)),r1,functionName="creal")
+		self.checkRelativeComplexError(mne.imag (mpmath.mpc(r1,r2)),r2,functionName="cimag")
 
 		self.checkRelativeError(mne.atan2(r1,r2),mpmath.atan2(r1,r2),functionName="atan2")
 		self.checkRelativeError(mne.fmod(abs(r1),abs(r2)),mpmath.fmod(abs(r1),abs(r2)),functionName="fmod")
