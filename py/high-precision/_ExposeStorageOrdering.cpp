@@ -9,7 +9,11 @@
 #include <boost/python.hpp>
 
 using yade::Index;
+#ifdef EXPERIMENTS_ONLY_LOCAL_MINIEIGEN
+#include <minieigen-local/common.hpp>
+#else
 #include <minieigen/common.hpp>
+#endif
 
 namespace py = ::boost::python;
 

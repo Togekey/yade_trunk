@@ -14,9 +14,16 @@
 #include <sstream>
 
 using namespace ::yade::MathEigenTypes;
+#ifdef EXPERIMENTS_ONLY_LOCAL_MINIEIGEN
+#include <minieigen-local/converters.hpp>
+#include <minieigen-local/visitors.hpp>
+#include <minieigen-local/expose.hpp>
+#else
 #include <minieigen/converters.hpp>
 #include <minieigen/visitors.hpp>
 #include <minieigen/expose.hpp>
+#endif
+
 
 //#define ARBITRARY_REAL_DEBUG
 #include <py/high-precision/_ExposeStorageOrdering.hpp>
