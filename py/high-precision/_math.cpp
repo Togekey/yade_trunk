@@ -75,8 +75,13 @@ std::pair<Real, long> remquo_c_test(const Real& x, const Real& y)
 
 struct Var {
 	Real value { -71.23 };
+	Complex valueComplex { -71.23 , 33.23 };
+
 	Real get() const { return value; };
 	void set(Real val) { value = val; };
+
+	Complex getComplex() const { return valueComplex; };
+	void setComplex(Complex val) { valueComplex = val; };
 };
 
 #include <boost/python/def.hpp>
@@ -188,7 +193,7 @@ try {
 	ArbitraryReal_from_python<Real>();
 	py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
 
-	py::class_<Var>("Var").add_property("val", &Var::get, &Var::set);
+	py::class_<Var>("Var").add_property("val", &Var::get, &Var::set).add_property("cpl", &Var::getComplex, &Var::setComplex);
 
 	py::def("f", f, (py::arg("x"), "y", py::arg("z") = 0.0, py::arg("w") = someFunction()));
 
