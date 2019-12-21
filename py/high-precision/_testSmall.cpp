@@ -146,6 +146,16 @@ try {
 	py::class_<Var>("Var").add_property("val", &Var::get, &Var::set).add_property("cpl", &Var::getComplex, &Var::setComplex);
 
 	py::def("f", f, (py::arg("x"), "y", py::arg("z") = 0.0, py::arg("w") = someFunction()));
+
+	::yade::Matrix3cr m,n;
+	m << Complex(1),Complex(2),Complex(3),Complex(4),Complex(5),Complex(6),Complex(7),Complex(8),Complex(9);
+	std::cout << m << "\n";
+	n = static_cast<Complex>(2)*m;
+	//n = 2*m; // XXX: does no work. Explicit conversion is necessary.
+	std::cout << n << "\n";
+	n = m*Complex(2);
+	std::cout << n << "\n";
+
 	/*} catch(const py::error_already_set& e) {
 	PyErr_Print();
 //	boost::python::handle_exception();
