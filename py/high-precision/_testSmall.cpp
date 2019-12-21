@@ -59,16 +59,17 @@
 
 namespace py = ::boost::python;
 using ::yade::Real;
+using ::yade::Complex;
 
 struct Var {
 	Real value { -71.23 };
-	std::complex<Real> valueComplex { -71.23 , 33.23 };
+	Complex valueComplex { -71.23 , 33.23 };
 
 	Real get() const { return value; };
 	void set(Real val) { value = val; };
 
-	std::complex<Real> getComplex() const { return valueComplex; };
-	void setComplex(std::complex<Real> val) { valueComplex = val; };
+	Complex getComplex() const { return valueComplex; };
+	void setComplex(Complex val) { valueComplex = val; };
 };
 
 #include <boost/python/def.hpp>
@@ -128,11 +129,11 @@ try {
 	// If it can't find a propeer conversion:
 	// https://www.boost.org/doc/libs/1_71_0/libs/python/doc/html/faq/why_is_my_automatic_to_python_co.html
 
+	ArbitraryComplex_from_python<Complex>();
+	py::to_python_converter<Complex, ArbitraryComplex_to_python<Complex>>();
+
 	ArbitraryReal_from_python<Real>();
 	py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
-
-	ArbitraryReal_from_python<std::complex<Real>>();
-	py::to_python_converter<std::complex<Real>, ArbitraryReal_to_python<std::complex<Real>>>();
 
 #ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
 	mpfr::mpreal::set_default_prec(YADE_REAL_BIT + 1);
