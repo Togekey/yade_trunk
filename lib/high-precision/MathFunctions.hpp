@@ -38,10 +38,26 @@
 	inline Real func(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a)); }
 
 #define YADE_WRAP_FUNC_1_COMPLEX(func)                                                                                                                         \
-	inline Complex func(const Complex& a) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<std::complex<UnderlyingReal>>(a)); }
+	inline Complex func(const Complex& a)                                                                                                                  \
+	{                                                                                                                                                      \
+		using YADE_REAL_MATH_NAMESPACE::func;                                                                                                          \
+		using ::std::func;                                                                                                                             \
+		return func(static_cast<std::complex<UnderlyingReal>>(a));                                                                                     \
+	}
+
+#define YADE_WRAP_FUNC_1_COMPLEX_STD(func)                                                                                                                     \
+	inline Complex func(const Complex& a) { return ::std::func(static_cast<std::complex<UnderlyingReal>>(a)); }
 
 #define YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(func)                                                                                                                 \
-	inline Real func(const Complex& a) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<std::complex<UnderlyingReal>>(a)); }
+	inline Real func(const Complex& a)                                                                                                                     \
+	{                                                                                                                                                      \
+		using YADE_REAL_MATH_NAMESPACE::func;                                                                                                          \
+		using ::std::func;                                                                                                                             \
+		return func(static_cast<std::complex<UnderlyingReal>>(a));                                                                                     \
+	}
+
+#define YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD(func)                                                                                                             \
+	inline Real func(const Complex& a) { return ::std::func(static_cast<std::complex<UnderlyingReal>>(a)); }
 
 #define YADE_WRAP_FUNC_1_RENAME(func1, func2)                                                                                                                  \
 	inline Real func1(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func2(static_cast<UnderlyingReal>(a)); }
@@ -164,9 +180,9 @@ YADE_WRAP_FUNC_1(trunc)
 
 YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(abs)
 
-YADE_WRAP_FUNC_1_COMPLEX(conj)
-YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(real)
-YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(imag)
+YADE_WRAP_FUNC_1_COMPLEX_STD(conj)
+YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD(real)
+YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD(imag)
 
 /********************************************************************************************/
 /**********************        integer division and remainder          **********************/
