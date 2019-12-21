@@ -25,11 +25,11 @@ using namespace ::yade::MathEigenTypes;
 BOOST_PYTHON_MODULE(THE_CPP_NAME)
 try {
 	// arbitrary Real specific stuff: start
+	ArbitraryComplex_from_python<Complex>();
+	py::to_python_converter<Complex, ArbitraryComplex_to_python<Complex>>();
+
 	ArbitraryReal_from_python<Real>();
 	py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
-
-	ArbitraryReal_from_python<std::complex<Real>>();
-	py::to_python_converter<std::complex<Real>, ArbitraryReal_to_python<std::complex<Real>>>();
 
 	expose_storage_ordering();
 	// arbitrary Real specific stuff: end
