@@ -29,6 +29,8 @@ class SimpleTests(unittest.TestCase):
 		a2i = mne.Vector2i(2,1)
 		b2i = mne.Vector2i(3,5)
 		c2i = a2i + b2i
+		self.assertEqual(c2i.eigenFlags(),352)
+		self.assertEqual(c2i.eigenStorageOrder(),0)
 
 		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
 		self.checkRelativeError( c2i[0] , mpmath.mpf("5") )
@@ -44,6 +46,8 @@ class SimpleTests(unittest.TestCase):
 		a3r = mne.Vector3(2.1,1.1,4.3)
 		b3r = mne.Vector3(3.1,5.1,5.2)
 		c3r = a3r + b3r
+		self.assertEqual(c3r.eigenFlags(),352)
+		self.assertEqual(c3r.eigenStorageOrder(),0)
 
 		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
 		self.checkRelativeError( c3r[0] , mpmath.mpf("5.2") )
@@ -57,12 +61,35 @@ class SimpleTests(unittest.TestCase):
 		self.checkRelativeError( c3r[1] , mpmath.mpf("18.6") )
 		self.checkRelativeError( c3r[2] , mpmath.mpf("28.5") )
 
+	def testVector4(self):
+		a4r = mne.Vector4(2.1,1.1,4.3,5.5)
+		b4r = mne.Vector4(3.1,5.1,5.2,-5.4)
+		c4r = a4r + b4r
+		self.assertEqual(c4r.eigenFlags(),352)
+		self.assertEqual(c4r.eigenStorageOrder(),0)
+
+		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
+		self.checkRelativeError( c4r[0] , mpmath.mpf("5.2") )
+		self.checkRelativeError( c4r[1] , mpmath.mpf("6.2") )
+		self.checkRelativeError( c4r[2] , mpmath.mpf("9.5") )
+		self.checkRelativeError( c4r[3] , mpmath.mpf("0.1") )
+
+		c4r *= 3
+
+		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
+		self.checkRelativeError( c4r[0] , mpmath.mpf("15.6") )
+		self.checkRelativeError( c4r[1] , mpmath.mpf("18.6") )
+		self.checkRelativeError( c4r[2] , mpmath.mpf("28.5") )
+		self.checkRelativeError( c4r[3] , mpmath.mpf("0.3") )
+
 	def testMatrix3Test(self):
 		ll=1
 		print("------------------------------------------------------",ll);ll+=1;
 		a3m=mne.Matrix3(1,2,3,
 		                4,5,6,
 		                7,8,9)
+		self.assertEqual(a3m.eigenFlags(),352)
+		self.assertEqual(a3m.eigenStorageOrder(),0)
 		print("------------------------------------------------------",ll);ll+=1;
 		b3m=a3m.transpose()
 		print("------------------------------------------------------",ll);ll+=1;
@@ -103,6 +130,8 @@ class SimpleTests(unittest.TestCase):
 		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
 		self.checkRelativeError( q1[3] , mpmath.mpf("1") )
 		print("------------------------------------------------------",ll);ll+=1;
+		self.assertEqual(q1.eigenFlags(),32)
+		self.assertEqual(q1.eigenStorageOrder(),0)
 
 		q2 = q1.inverse()
 		self.checkRelativeError( q2[3] , mpmath.mpf("1") )

@@ -26,16 +26,16 @@ class SimpleTests(unittest.TestCase):
 		self.bits=mpmath.ceil(mpmath.mpf(${DEC_DIGITS})/(mpmath.log(2)/mpmath.log(10)))+1
 		# mpmath has 5 more internal bits
 		self.expectedEpsilon=(2**5)*mpmath.eps()
-		if(${DEC_DIGITS} == 6): # exception for float
+		if(${DEC_DIGITS} == 6): # float case
 			self.bits=24
 			self.expectedEpsilon=1.1920928955078125e-07
-		if(${DEC_DIGITS} == 15): # exception for double
+		if(${DEC_DIGITS} == 15): # double case
 			self.bits=53
 			self.expectedEpsilon=2.220446049250313e-16
-		if(${DEC_DIGITS} == 18): # exception for long double
+		if(${DEC_DIGITS} == 18): # long double case
 			self.bits=64
-			self.expectedEpsilon=mpmath.mpf('1.0842021724855044e-19')
-		if(${DEC_DIGITS} == 33): # exception for float128
+			self.expectedEpsilon=mpmath.mpf('1.084202172485504433993e-19')
+		if(${DEC_DIGITS} == 33): # float128 case
 			self.bits=113
 			self.expectedEpsilon=mpmath.mpf('1.925929944387235853055977942584926994e-34')
 		self.maxval=(mpmath.mpf(1)-self.expectedEpsilon)*mpmath.power(2,mne.max_exp2)
@@ -62,7 +62,7 @@ class SimpleTests(unittest.TestCase):
 		self.assertEqual(mne.IsInteger, 0 )
 		self.assertEqual(mne.IsSigned, 1 )
 		self.assertEqual(mne.IsComplex,  0)
-		if(self.bits >= 100):
+		if(self.bits >= 64):
 			self.assertEqual(mne.RequireInitialization, 1 )
 		else:
 			self.assertEqual(mne.RequireInitialization, 0 )
