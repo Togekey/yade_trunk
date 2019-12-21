@@ -32,15 +32,16 @@ template <typename ArbitraryReal> struct ArbitraryReal_to_python {
 	{
 		std::stringstream ss {};
 		// the '+1' is to make sure that there are no conversion errors in the last bit.
-		ss << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << val;
+		static constexpr auto digs1 = std::numeric_limits<ArbitraryReal>::digits10 + 1;
+		ss << std::setprecision(digs1) << val;
 		::boost::python::object mpmath = ::boost::python::import("mpmath");
 #ifdef ARBITRARY_REAL_DEBUG
 		std::cerr << "→" << infoPrec<ArbitraryReal>() << "\n"
-		          << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << "   HAVE val= " << val << "\n";
+		          << std::setprecision(digs1) << "   HAVE val= " << val << "\n";
 		std::cerr << "py::object mpmath pointer is: " << mpmath.ptr() << "\n";
 #endif
 		// http://mpmath.org/doc/current/technical.html
-		mpmath.attr("mp").attr("dps")  = int(std::numeric_limits<ArbitraryReal>::digits10 + 1);
+		mpmath.attr("mp").attr("dps")  = int(digs1);
 		::boost::python::object result = mpmath.attr("mpf")(ss.str());
 		return boost::python::incref(result.ptr());
 	}
@@ -90,7 +91,7 @@ template <typename ArbitraryReal> struct ArbitraryReal_from_python {
 
 template <typename T> std::string num_to_string(const T& num, int = 0)
 {
-	auto digs1 = std::numeric_limits<T>::digits10 + 1;
+	static constexpr auto digs1 = std::numeric_limits<T>::digits10 + 1;
 #ifdef ARBITRARY_REAL_DEBUG
 	std::cerr << "\e[91m num_to_string<" << boost::core::demangle(typeid(T).name()) << ">" << digs1 << " number: " << num << "\e[0m\n";
 #endif
@@ -115,16 +116,17 @@ template <typename ArbitraryComplex> struct ArbitraryComplex_to_python {
 		std::stringstream ss_real {};
 		std::stringstream ss_imag {};
 		// the '+1' is to make sure that there are no conversion errors in the last bit.
-		ss_real << std::setprecision(std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1) << val.real();
-		ss_imag << std::setprecision(std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1) << val.imag();
+		static constexpr auto digs1 = std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1;
+		ss_real << std::setprecision(digs1) << val.real();
+		ss_imag << std::setprecision(digs1) << val.imag();
 		::boost::python::object mpmath = ::boost::python::import("mpmath");
 #ifdef ARBITRARY_REAL_DEBUG
 		std::cerr << "→" << infoPrecComplex<ArbitraryComplex>() << "\n"
-		          << std::setprecision(std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1) << " COMPLEX  HAVE val= " << val << "\n";
+		          << std::setprecision(digs1) << " COMPLEX  HAVE val= " << val << "\n";
 		std::cerr << "py::object mpmath pointer is: " << mpmath.ptr() << "\n";
 #endif
 		// http://mpmath.org/doc/current/technical.html
-		mpmath.attr("mp").attr("dps")  = int(std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1);
+		mpmath.attr("mp").attr("dps")  = int(digs1);
 		::boost::python::object result = mpmath.attr("mpc")(ss_real.str(), ss_imag.str());
 		return boost::python::incref(result.ptr());
 	}
@@ -174,7 +176,7 @@ template <typename ArbitraryComplex> struct ArbitraryComplex_from_python {
 
 template <typename T> inline std::string num_to_string(const std::complex<T>& num, int = 0)
 {
-	auto digs1 = std::numeric_limits<T>::digits10 + 1;
+	static constexpr auto digs1 = std::numeric_limits<T>::digits10 + 1;
 #ifdef ARBITRARY_REAL_DEBUG
 	std::cerr << "\e[91m COMPLEX num_to_string<" << boost::core::demangle(typeid(T).name()) << ">" << digs1 << " number: " << num << "\e[0m\n";
 #endif
