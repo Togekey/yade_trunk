@@ -24,6 +24,7 @@
 
 namespace py = ::boost::python;
 using ::yade::Real;
+using ::yade::Complex;
 
 // Converts a std::pair instance to a Python tuple.
 template <typename T1, typename T2> struct std_pair_to_tuple {
@@ -181,11 +182,11 @@ try {
 	long defprec  = std::numeric_limits<Real>::digits;
 	long max_exp2 = std::numeric_limits<Real>::max_exponent;
 #endif
+	ArbitraryComplex_from_python<Complex>();
+	py::to_python_converter<Complex, ArbitraryComplex_to_python<Complex>>();
+
 	ArbitraryReal_from_python<Real>();
 	py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
-
-	ArbitraryReal_from_python<std::complex<Real>>();
-	py::to_python_converter<std::complex<Real>, ArbitraryReal_to_python<std::complex<Real>>>();
 
 	py::class_<Var>("Var").add_property("val", &Var::get, &Var::set);
 
@@ -278,22 +279,30 @@ try {
 
 	// check overload (and namespace) resolution for all math functions. As a side effect they are exported to python, and can be unit-tested.
 #define YADE_PYEXPORT_MATH_1(func) py::def(#func, static_cast<Real (*)(const Real&)>(&::yade::func), (py::arg("x")));
-#define YADE_PYEXPORT_MATH_1_COMPLEX(func) py::def("c"#func, static_cast<std::complex<Real> (*)(const std::complex<Real>&)>(&::yade::func), (py::arg("x")));
+#define YADE_PYEXPORT_MATH_1_COMPLEX(func) py::def(#func, static_cast<Complex (*)(const Complex&)>(&::yade::func), (py::arg("x")));
+#define YADE_PYEXPORT_MATH_1_COMPLEX_TO_REAL(func) py::def(#func, static_cast<Real (*)(const Complex&)>(&::yade::func), (py::arg("x")));
 #define YADE_PYEXPORT_MATH_1_INT(func) py::def(#func, static_cast<int (*)(const Real&)>(&::yade::func), (py::arg("x")));
-	YADE_PYEXPORT_MATH_1(sin)
-	YADE_PYEXPORT_MATH_1(sinh)
-	YADE_PYEXPORT_MATH_1(cos)
-	YADE_PYEXPORT_MATH_1(cosh)
-	YADE_PYEXPORT_MATH_1(tan)
-	YADE_PYEXPORT_MATH_1(tanh)
-
-	// the complex function names have "c" prefix.
+	// FIXED: maybe registering the complex versions first will solve the problem that they are used when Real ones should be used - Yes.
+	// Complex versions are registered first
 	YADE_PYEXPORT_MATH_1_COMPLEX(sin)
 	YADE_PYEXPORT_MATH_1_COMPLEX(sinh)
 	YADE_PYEXPORT_MATH_1_COMPLEX(cos)
 	YADE_PYEXPORT_MATH_1_COMPLEX(cosh)
 	YADE_PYEXPORT_MATH_1_COMPLEX(tan)
 	YADE_PYEXPORT_MATH_1_COMPLEX(tanh)
+
+	YADE_PYEXPORT_MATH_1_COMPLEX_TO_REAL(abs)
+	YADE_PYEXPORT_MATH_1_COMPLEX(conj)
+	YADE_PYEXPORT_MATH_1_COMPLEX_TO_REAL(real)
+	YADE_PYEXPORT_MATH_1_COMPLEX_TO_REAL(imag)
+
+	// Real versions are registered afterwards
+	YADE_PYEXPORT_MATH_1(sin)
+	YADE_PYEXPORT_MATH_1(sinh)
+	YADE_PYEXPORT_MATH_1(cos)
+	YADE_PYEXPORT_MATH_1(cosh)
+	YADE_PYEXPORT_MATH_1(tan)
+	YADE_PYEXPORT_MATH_1(tanh)
 
 	YADE_PYEXPORT_MATH_1(abs)
 	YADE_PYEXPORT_MATH_1(acos)
@@ -330,6 +339,7 @@ try {
 	YADE_PYEXPORT_MATH_1_INT(sign)
 #undef YADE_PYEXPORT_MATH_1
 #undef YADE_PYEXPORT_MATH_1_COMPLEX
+#undef YADE_PYEXPORT_MATH_1_COMPLEX_TO_REAL
 #undef YADE_PYEXPORT_MATH_1_INT
 
 #define YADE_PYEXPORT_MATH_2(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&)>(&::yade::func), (py::arg("x"), "y"));
