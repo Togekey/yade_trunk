@@ -32,6 +32,7 @@ template <> struct NumTraits<EigenTraitsReal> : GenericNumTraits<EigenTraitsReal
 	typedef EigenTraitsReal UR;
 	typedef EigenTraitsReal Real;
 	typedef EigenTraitsReal NonInteger;
+	typedef EigenTraitsReal Nested;
 
 	static constexpr long get_default_prec = std::numeric_limits<UR>::digits;
 
@@ -91,6 +92,7 @@ template <> struct NumTraits<EigenTraitsComplex> : GenericNumTraits<EigenTraitsC
 
 	typedef EigenTraitsComplex::value_type Real;
 	typedef EigenTraitsComplex             NonInteger;
+	typedef EigenTraitsComplex             Nested;
 
 	static constexpr long get_default_prec = std::numeric_limits<Real>::digits;
 
