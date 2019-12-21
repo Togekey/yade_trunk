@@ -12,6 +12,10 @@
 #include <complex>
 #include <unsupported/Eigen/AlignedVector3>
 
+#ifndef YADE_REAL_MATH_NAMESPACE
+#error "This file cannot be included alone, include Real.hpp instead"
+#endif
+
 namespace yade {
 
 // integral type for indices, to avoid compiler warnings with int
@@ -36,21 +40,23 @@ typedef Eigen::AlignedBox<Real, 3>                          AlignedBox3r;
 typedef Eigen::AlignedBox<Real, 2>                          AlignedBox2r;
 
 /*************************************************************************/
-/*************************     std::complex     **************************/
+/*************************       Complex        **************************/
 /*************************************************************************/
 
-typedef Eigen::Matrix<::std::complex<Real>, 2, 1>                           Vector2cr;
-typedef Eigen::Matrix<::std::complex<Real>, 3, 1>                           Vector3cr;
-typedef Eigen::Matrix<::std::complex<Real>, 6, 1>                           Vector6cr;
-typedef Eigen::Matrix<::std::complex<Real>, Eigen::Dynamic, 1>              VectorXcr;
-typedef Eigen::Matrix<::std::complex<Real>, 3, 3>                           Matrix3cr;
-typedef Eigen::Matrix<::std::complex<Real>, 6, 6>                           Matrix6cr;
-typedef Eigen::Matrix<::std::complex<Real>, Eigen::Dynamic, Eigen::Dynamic> MatrixXcr;
+typedef Eigen::Matrix<Complex, 2, 1>                           Vector2cr;
+typedef Eigen::Matrix<Complex, 3, 1>                           Vector3cr;
+typedef Eigen::Matrix<Complex, 6, 1>                           Vector6cr;
+typedef Eigen::Matrix<Complex, Eigen::Dynamic, 1>              VectorXcr;
+typedef Eigen::Matrix<Complex, 3, 3>                           Matrix3cr;
+typedef Eigen::Matrix<Complex, 6, 6>                           Matrix6cr;
+typedef Eigen::Matrix<Complex, Eigen::Dynamic, Eigen::Dynamic> MatrixXcr;
 
 // This is for external applications, shouldn't be normally used.
-// Use this only inside a .cpp file! Otherwise the types will leak outside which will cause compilation errors due to ambiguity.
+// Use this `using namespace ::yade::AllMathTypes;` only inside a .cpp file! Otherwise the types will leak outside which will cause compilation errors due to ambiguity.
 namespace MathEigenTypes {
 	using ::yade::Real;
+
+	using ::yade::Complex;
 
 	using ::yade::Index;
 	using ::yade::Vector2i;
