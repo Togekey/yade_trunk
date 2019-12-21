@@ -41,8 +41,7 @@ template <typename ArbitraryReal> struct ArbitraryReal_to_python {
 		ss << std::setprecision(digs1) << val;
 		::boost::python::object mpmath = ::boost::python::import("mpmath");
 #ifdef ARBITRARY_REAL_DEBUG
-		std::cerr << "→" << infoPrec<ArbitraryReal>() << "\n"
-		          << std::setprecision(digs1) << "   HAVE val= " << val << "\n";
+		std::cerr << "→" << infoPrec<ArbitraryReal>() << "\n" << std::setprecision(digs1) << "   HAVE val= " << val << "\n";
 		std::cerr << "py::object mpmath pointer is: " << mpmath.ptr() << "\n";
 #endif
 		// http://mpmath.org/doc/current/technical.html
@@ -134,8 +133,7 @@ template <typename ArbitraryComplex> struct ArbitraryComplex_to_python {
 		ss_imag << std::setprecision(digs1) << val.imag();
 		::boost::python::object mpmath = ::boost::python::import("mpmath");
 #ifdef ARBITRARY_REAL_DEBUG
-		std::cerr << "→" << infoPrecComplex<ArbitraryComplex>() << "\n"
-		          << std::setprecision(digs1) << " COMPLEX  HAVE val= " << val << "\n";
+		std::cerr << "→" << infoPrecComplex<ArbitraryComplex>() << "\n" << std::setprecision(digs1) << " COMPLEX  HAVE val= " << val << "\n";
 		std::cerr << "py::object mpmath pointer is: " << mpmath.ptr() << "\n";
 #endif
 		// http://mpmath.org/doc/current/technical.html
@@ -147,10 +145,7 @@ template <typename ArbitraryComplex> struct ArbitraryComplex_to_python {
 
 // https://www.boost.org/doc/libs/1_71_0/libs/python/doc/html/faq/how_can_i_automatically_convert_.html
 template <typename ArbitraryComplex> struct ArbitraryComplex_from_python {
-	ArbitraryComplex_from_python()
-	{
-		boost::python::converter::registry::push_back(&convertible, &construct, boost::python::type_id<ArbitraryComplex>());
-	}
+	ArbitraryComplex_from_python() { boost::python::converter::registry::push_back(&convertible, &construct, boost::python::type_id<ArbitraryComplex>()); }
 	static void* convertible(PyObject* obj_ptr)
 	{
 #ifdef ARBITRARY_REAL_DEBUG
@@ -166,23 +161,26 @@ template <typename ArbitraryComplex> struct ArbitraryComplex_from_python {
 	}
 	static void construct(PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
 	{
-		// use default syntax for std::complex stringstream https://en.cppreference.com/w/cpp/numeric/complex/operator_ltltgtgt
-		std::istringstream ss {
-			"(" + ::boost::python::call_method<std::string>(::boost::python::expect_non_null(PyObject_GetAttrString(obj_ptr, "real")), "__str__")
-			+ "," + ::boost::python::call_method<std::string>(::boost::python::expect_non_null(PyObject_GetAttrString(obj_ptr, "imag")), "__str__")
-			+ ")"
-		};
+		std::istringstream ss_real { ::boost::python::call_method<std::string>(
+			::boost::python::expect_non_null(PyObject_GetAttrString(obj_ptr, "real")), "__str__") };
+		std::istringstream ss_imag { ::boost::python::call_method<std::string>(
+			::boost::python::expect_non_null(PyObject_GetAttrString(obj_ptr, "imag")), "__str__") };
 #ifdef ARBITRARY_REAL_DEBUG
-		std::cerr << " construct COMPLEX  ss stringstream= " << ss.str() << "\n";
+		std::cerr << " construct COMPLEX  ss_real stringstream= " << ss_real.str() << "\n";
+		std::cerr << " construct COMPLEX  ss_imag stringstream= " << ss_imag.str() << "\n";
 #endif
 		void* storage = ((boost::python::converter::rvalue_from_python_storage<ArbitraryComplex>*)(data))->storage.bytes;
 		new (storage) ArbitraryComplex;
-		ArbitraryComplex* val = (ArbitraryComplex*)storage;
-		ss >> *val;
+		ArbitraryComplex*                     val = (ArbitraryComplex*)storage;
+		typename ArbitraryComplex::value_type re { 0 }, im { 0 };
+		ss_real >> re;
+		ss_imag >> im;
+		*val              = ArbitraryComplex(re, im); // must explicitly call the constructor, static_cast won't work.
 		data->convertible = storage;
 #ifdef ARBITRARY_REAL_DEBUG
 		std::cerr << "PyObject* pointer is: " << obj_ptr << " name: " << infoPrecComplex<ArbitraryComplex>() << "\n";
-		std::cerr << std::setprecision(std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1) << " COMPLEX  READ val= " << *val << "\n";
+		std::cerr << std::setprecision(std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1) << " COMPLEX  READ val= " << *val
+		          << "\n";
 #endif
 	}
 };
@@ -223,7 +221,10 @@ template <typename T> inline std::string num_to_string(const std::complex<T>& nu
 }
 
 #ifdef YADE_THIN_REAL_WRAPPER_HPP
-template <> inline std::string num_to_string<::yade::Complex>(const ::yade::Complex& num, int) { return num_to_string(static_cast<std::complex<UnderlyingReal>>(num)); }
+template <> inline std::string num_to_string<::yade::Complex>(const ::yade::Complex& num, int)
+{
+	return num_to_string(static_cast<std::complex<UnderlyingReal>>(num));
+}
 #endif
 
 #ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
