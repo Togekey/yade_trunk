@@ -21,6 +21,10 @@ template <typename T> std::string infoPrec()
 {
 	return "\e[93m " + boost::core::demangle(typeid(T).name()) + " prec=" + boost::lexical_cast<std::string>(std::numeric_limits<T>::digits10) + "\e[0m";
 }
+template <typename T> std::string infoPrecComplex()
+{
+	return "\e[93m " + boost::core::demangle(typeid(T).name()) + " prec=" + boost::lexical_cast<std::string>(std::numeric_limits<typename T::value_type>::digits10) + "\e[0m";
+}
 #endif
 
 template <typename ArbitraryReal> struct ArbitraryReal_to_python {
@@ -47,6 +51,9 @@ template <typename ArbitraryReal> struct ArbitraryReal_from_python {
 	ArbitraryReal_from_python() { boost::python::converter::registry::push_back(&convertible, &construct, boost::python::type_id<ArbitraryReal>()); }
 	static void* convertible(PyObject* obj_ptr)
 	{
+#ifdef ARBITRARY_REAL_DEBUG
+		std::cerr << "py::object pointer is: " << obj_ptr << "\n";
+#endif
 		// using long strings or mpmath.mpf(…) object is the only way to get higher precision numbers into C++
 		// The line below quickly accepts whatever python is able to convert into float, fortunately this also works for mpmath.mpf(…)
 		// this can not work with val=0.123123123123123123123333312312333333123123123, the extra digits are cut-off by python before it reaches this function
@@ -102,35 +109,38 @@ template <typename T> std::string num_to_string(const T& num, int = 0)
 /*************************     std::complex     **************************/
 /*************************************************************************/
 
-template <typename ArbitraryReal> struct ArbitraryReal_to_python<std::complex<ArbitraryReal>> {
-	static PyObject* convert(const std::complex<ArbitraryReal>& val)
+template <typename ArbitraryComplex> struct ArbitraryComplex_to_python {
+	static PyObject* convert(const ArbitraryComplex& val)
 	{
 		std::stringstream ss_real {};
 		std::stringstream ss_imag {};
 		// the '+1' is to make sure that there are no conversion errors in the last bit.
-		ss_real << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << val.real();
-		ss_imag << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << val.imag();
+		ss_real << std::setprecision(std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1) << val.real();
+		ss_imag << std::setprecision(std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1) << val.imag();
 		::boost::python::object mpmath = ::boost::python::import("mpmath");
 #ifdef ARBITRARY_REAL_DEBUG
-		std::cerr << "→" << infoPrec<ArbitraryReal>() << "\n"
-		          << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << " COMPLEX  HAVE val= " << val << "\n";
+		std::cerr << "→" << infoPrecComplex<ArbitraryComplex>() << "\n"
+		          << std::setprecision(std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1) << " COMPLEX  HAVE val= " << val << "\n";
 		std::cerr << "py::object mpmath pointer is: " << mpmath.ptr() << "\n";
 #endif
 		// http://mpmath.org/doc/current/technical.html
-		mpmath.attr("mp").attr("dps")  = int(std::numeric_limits<ArbitraryReal>::digits10 + 1);
+		mpmath.attr("mp").attr("dps")  = int(std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1);
 		::boost::python::object result = mpmath.attr("mpc")(ss_real.str(), ss_imag.str());
 		return boost::python::incref(result.ptr());
 	}
 };
 
 // https://www.boost.org/doc/libs/1_71_0/libs/python/doc/html/faq/how_can_i_automatically_convert_.html
-template <typename ArbitraryReal> struct ArbitraryReal_from_python<std::complex<ArbitraryReal>> {
-	ArbitraryReal_from_python()
+template <typename ArbitraryComplex> struct ArbitraryComplex_from_python {
+	ArbitraryComplex_from_python()
 	{
-		boost::python::converter::registry::push_back(&convertible, &construct, boost::python::type_id<std::complex<ArbitraryReal>>());
+		boost::python::converter::registry::push_back(&convertible, &construct, boost::python::type_id<ArbitraryComplex>());
 	}
 	static void* convertible(PyObject* obj_ptr)
 	{
+#ifdef ARBITRARY_REAL_DEBUG
+		std::cerr << "COMPLEX py::object mpmath pointer is: " << obj_ptr << "\n";
+#endif
 		// only python complex or mpmath.mpc(…) objects are supoprted. Strings are not parsed.
 		// However a simple workaround is to write mpmath.mpc("1.211213123123123123123123123","-124234234.111")
 		PyComplex_AsCComplex(obj_ptr);
@@ -150,19 +160,19 @@ template <typename ArbitraryReal> struct ArbitraryReal_from_python<std::complex<
 #ifdef ARBITRARY_REAL_DEBUG
 		std::cerr << " construct COMPLEX  ss stringstream= " << ss.str() << "\n";
 #endif
-		void* storage = ((boost::python::converter::rvalue_from_python_storage<std::complex<ArbitraryReal>>*)(data))->storage.bytes;
-		new (storage) std::complex<ArbitraryReal>;
-		std::complex<ArbitraryReal>* val = (std::complex<ArbitraryReal>*)storage;
+		void* storage = ((boost::python::converter::rvalue_from_python_storage<ArbitraryComplex>*)(data))->storage.bytes;
+		new (storage) ArbitraryComplex;
+		ArbitraryComplex* val = (ArbitraryComplex*)storage;
 		ss >> *val;
 		data->convertible = storage;
 #ifdef ARBITRARY_REAL_DEBUG
-		std::cerr << "PyObject* pointer is: " << obj_ptr << " name: " << infoPrec<ArbitraryReal>() << "\n";
-		std::cerr << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << " COMPLEX  READ val= " << *val << "\n";
+		std::cerr << "PyObject* pointer is: " << obj_ptr << " name: " << infoPrecComplex<ArbitraryComplex>() << "\n";
+		std::cerr << std::setprecision(std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1) << " COMPLEX  READ val= " << *val << "\n";
 #endif
 	}
 };
 
-template <typename T> std::string num_to_string(const std::complex<T>& num, int = 0)
+template <typename T> inline std::string num_to_string(const std::complex<T>& num, int = 0)
 {
 	auto digs1 = std::numeric_limits<T>::digits10 + 1;
 #ifdef ARBITRARY_REAL_DEBUG
@@ -193,6 +203,9 @@ template <typename T> std::string num_to_string(const std::complex<T>& num, int 
 	}
 }
 
+#ifdef YADE_THIN_REAL_WRAPPER_HPP
+template <> inline std::string num_to_string<::yade::Complex>(const ::yade::Complex& num, int) { return num_to_string(static_cast<std::complex<UnderlyingReal>>(num)); }
+#endif
 
 #ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
 #undef digits10
