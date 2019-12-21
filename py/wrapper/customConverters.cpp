@@ -29,61 +29,7 @@
 
 CREATE_CPP_LOCAL_LOGGER("customConverters.cpp");
 
-// FIXME - move these headers into single place. Current duplicates: customConverters, _testCppPy
-#if YADE_REAL_BIT >= 128
-#include <boost/cstdfloat.hpp>
-#include <boost/math/cstdfloat/cstdfloat_types.hpp>
-#include <boost/multiprecision/float128.hpp>
-#endif
-
-#ifdef YADE_MPFR
-#include <boost/multiprecision/mpfr.hpp>
-#endif
-
-#include <type_traits>
-
 namespace yade { // Cannot have #include directive inside.
-
-template <typename ArbitraryReal> struct ArbitraryReal_to_python {
-	static PyObject* convert(const ArbitraryReal& val)
-	{
-		std::stringstream ss {};
-		ss << std::setprecision(std::numeric_limits<ArbitraryReal>::digits10 + 1) << val;
-		std::string cmd    = "mpmath.mpf('" + ss.str() + "')";
-		py::object  result = py::eval(cmd.c_str());
-		return boost::python::incref(result.ptr());
-	}
-};
-
-template <typename ArbitraryReal> struct ArbitraryReal_from_python {
-	ArbitraryReal_from_python() { boost::python::converter::registry::push_back(&convertible, &construct, boost::python::type_id<ArbitraryReal>()); }
-	static void* convertible(PyObject* obj_ptr)
-	{
-		// accept whatever python is able to convert into float
-		PyFloat_AsDouble(obj_ptr);
-		return (PyErr_Occurred() == nullptr) ? obj_ptr : nullptr;
-	}
-	static void construct(PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
-	{
-		PyObject* pyStr = PyObject_Str(obj_ptr);
-		if (not pyStr) {
-			throw std::runtime_error(__FILE__ ", ArbitraryReal_from_python: failed to turn into string.");
-		}
-
-		std::istringstream ss { boost::python::extract<std::string>(pyStr) };
-		Py_DECREF(pyStr);
-
-		void* storage = ((boost::python::converter::rvalue_from_python_storage<ArbitraryReal>*)(data))->storage.bytes;
-		new (storage) ArbitraryReal;
-		ArbitraryReal* val = (ArbitraryReal*)storage;
-		ss >> *val;
-		if (ss.fail()) {
-			throw std::runtime_error(__FILE__ ", ArbitraryReal_from_python: failed to parse.");
-		} else {
-			data->convertible = storage;
-		}
-	}
-};
 
 // move this to the miniEigen wrapper later
 
@@ -315,16 +261,6 @@ try {
 
 	y::custom_Se3r_from_seq();
 	boost::python::to_python_converter<y::Se3r, y::custom_se3_to_tuple>();
-	y::ArbitraryReal_from_python<boost::float128_t>();
-	boost::python::to_python_converter<boost::float128_t, y::ArbitraryReal_to_python<boost::float128_t>>();
-	y::ArbitraryReal_from_python<yade::bmp::number<yade::bmp::mpfr_float_backend<YADE_REAL_DEC>>>();
-	boost::python::to_python_converter<
-	        yade::bmp::number<yade::bmp::mpfr_float_backend<YADE_REAL_DEC>>,
-	        y::ArbitraryReal_to_python<yade::bmp::number<yade::bmp::mpfr_float_backend<YADE_REAL_DEC>>>>();
-	y::ArbitraryReal_from_python<yade::bmp::number<yade::bmp::mpfr_float_backend<500>>>();
-	boost::python::to_python_converter<
-	        yade::bmp::number<yade::bmp::mpfr_float_backend<500>>,
-	        y::ArbitraryReal_to_python<yade::bmp::number<yade::bmp::mpfr_float_backend<500>>>>();
 
 	y::custom_OpenMPAccumulator_from_float();
 	boost::python::to_python_converter<y::OpenMPAccumulator<Real>, y::custom_OpenMPAccumulator_to_float>();
@@ -338,19 +274,10 @@ try {
 	//custom_StrArrayMap_to_dict();
 	// register from-python converter and to-python converter
 
-	//std::is_same< Traits::RT , Real >::value
 	boost::python::to_python_converter<std::vector<std::vector<std::string>>, y::custom_vvector_to_list<std::string>>();
 	boost::python::to_python_converter<std::vector<std::vector<y::Matrix3r>>, y::custom_vvector_to_list<y::Matrix3r>>();
 	boost::python::to_python_converter<std::vector<std::vector<int>>, y::custom_vvector_to_list<int>>();
 	boost::python::to_python_converter<std::vector<std::vector<double>>, y::custom_vvector_to_list<double>>();
-	boost::python::to_python_converter<std::vector<std::vector<long double>>, y::custom_vvector_to_list<long double>>();
-	boost::python::to_python_converter<std::vector<std::vector<boost::float128_t>>, y::custom_vvector_to_list<boost::float128_t>>();
-	boost::python::to_python_converter<
-	        std::vector<std::vector<yade::bmp::number<yade::bmp::mpfr_float_backend<YADE_REAL_DEC>>>>,
-	        y::custom_vvector_to_list<yade::bmp::number<yade::bmp::mpfr_float_backend<YADE_REAL_DEC>>>>();
-	boost::python::to_python_converter<
-	        std::vector<std::vector<yade::bmp::number<yade::bmp::mpfr_float_backend<500>>>>,
-	        y::custom_vvector_to_list<yade::bmp::number<yade::bmp::mpfr_float_backend<500>>>>();
 	//boost::python::to_python_converter<std::list<shared_ptr<Functor     > >, y::custom_list_to_list<shared_ptr<Functor> > >();
 	//boost::python::to_python_converter<std::list<shared_ptr<Functor     > >, y::custom_list_to_list<shared_ptr<Functor> > >();
 
@@ -367,12 +294,7 @@ try {
 		using namespace yade; // but only inside this { … } block. Keep pollution under control. Make it convenient.
 		VECTOR_SEQ_CONV(int);
 		VECTOR_SEQ_CONV(bool);
-		//		VECTOR_SEQ_CONV(Real);
-		VECTOR_SEQ_CONV(double);
-		VECTOR_SEQ_CONV(long double);
-		VECTOR_SEQ_CONV(boost::float128_t);
-		VECTOR_SEQ_CONV(yade::bmp::number<yade::bmp::mpfr_float_backend<YADE_REAL_DEC>>);
-		VECTOR_SEQ_CONV(yade::bmp::number<yade::bmp::mpfr_float_backend<500>>);
+		VECTOR_SEQ_CONV(Real);
 		VECTOR_SEQ_CONV(Se3r);
 		VECTOR_SEQ_CONV(Vector2r);
 		VECTOR_SEQ_CONV(Vector2i);
