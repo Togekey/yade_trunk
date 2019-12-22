@@ -1,47 +1,55 @@
-#!/bin/bash
-# autopkgtest check for minieigen
+# -*- coding: utf-8 -*-
+# This is the test of all C++ lib/high-precision/MathFunctions.hpp exported to python via py/high-precision/_math.cpp
 # (C) 2015 Anton Gladky <gladk@debian.org>
 # (C) 2019 Janek Kozicki
 
-set -e
+import unittest, math, sys
+import yade
+from yade import math as mne
 
-LIBTOTEST=${1}
-DEC_DIGITS=${2}
-
-WORKDIR=$(mktemp -d)
-trap "rm -rf $WORKDIR" 0 INT QUIT ABRT PIPE TERM
-cp ${LIBTOTEST}.so ${WORKDIR}
-cd ${WORKDIR}
-
-cat <<EOF > esuptest.py
-import unittest, math, sys, mpmath
-import ${LIBTOTEST} as mne
+import testMathHelper as mpmath
+from   testMathHelper import mpc
 
 class SimpleTests(unittest.TestCase):
 	def setUp(self):
-		mpmath.mp.dps=${DEC_DIGITS}+1
-		# tolerance = 1.2×10⁻ᵈ⁺¹, where ᵈ==${DEC_DIGITS}
+		self.printCount=0
+		self.everyNth=100
+		self.extraName=""
+		# the non-boost MPFR is not used in yade, that was just for more broader testing in minieigen-real, it used self.extraName="nb"
+		#if(str("${LIBTOTEST}")[-2:] == "nb"):   extraName="nb" # non-boost MPFR
+		self.nonBoostMPFR=False
+		#if(str("${LIBTOTEST}")[-4:] == "BBFL"): extraName="_b" # boost cpp_bin_float
+		if(yade.config.highPrecisionName.startswith("PrecisionBoost")):
+			self.extraName="_b"
+		self.digs0=yade.config.highPrecisionDecimalPlaces
+		mpmath.mp.dps=self.digs0+1
+		# tolerance = 1.2×10⁻ᵈ⁺¹, where ᵈ==self.digs0
 		# so basically we store one more decimal digit, and expect one less decimal digit. That amounts to ignoring one (actually two) least significant digits.
-		self.tolerance=(mpmath.mpf(10)**(-${DEC_DIGITS}+1))*mpmath.mpf("1.2")
-		self.bits=mpmath.ceil(mpmath.mpf(${DEC_DIGITS})/(mpmath.log(2)/mpmath.log(10)))+1
+		self.tolerance=(mpmath.mpf(10)**(-self.digs0+1))*mpmath.mpf("1.2")
+		self.bits=mpmath.ceil(mpmath.mpf(self.digs0)/(mpmath.log(2)/mpmath.log(10)))+1
 		# mpmath has 5 more internal bits
 		self.expectedEpsilon=(2**5)*mpmath.eps()
-		if(${DEC_DIGITS} == 6): # float case
+		if(self.digs0 == 6): # float case
 			self.bits=24
 			self.expectedEpsilon=1.1920928955078125e-07
-		if(${DEC_DIGITS} == 15): # double case
+		if(self.digs0 == 15): # double case
 			self.bits=53
 			self.expectedEpsilon=2.220446049250313e-16
-		if(${DEC_DIGITS} == 18): # long double case
+		if(self.digs0 == 18): # long double case
 			self.bits=64
 			self.expectedEpsilon=mpmath.mpf('1.084202172485504433993e-19')
-		if(${DEC_DIGITS} == 33): # float128 case
+		if(self.digs0 == 33): # float128 case
 			self.bits=113
 			self.expectedEpsilon=mpmath.mpf('1.925929944387235853055977942584926994e-34')
-		self.maxval=(mpmath.mpf(1)-self.expectedEpsilon)*mpmath.power(2,mne.max_exp2)
+		if(yade.config.highPrecisionMpmath):
+			self.maxval=(mpmath.mpf(1)-self.expectedEpsilon)*mpmath.power(2,mne.max_exp2)
+		else:
+			import sys
+			self.maxval=sys.float_info.max
 
 		# If failures appear and function is not broken then increase tolerance a little.
 		self.defaultTolerances={
+			# FIXME - generate tolerances for other numbers of decimal places.
 			#  function decimal places : tolerance factor. Each "10" corresponds to single wrong decimal place.
 			#
 			#                 float   double    long double float128      MPFR_100   non_boost_MPFR_100  MPFR_150     non_boost_MPFR_150  cpp_bin_float_100 cpp_bin_float_150
@@ -94,6 +102,9 @@ class SimpleTests(unittest.TestCase):
 	def checkRelativeError(self,a,b,tol=None,functionName=None,isComplex=False):
 		if(abs(b) <= self.maxval and abs(b) >= mne.smallest_positive()):
 			#print("a= ",a," b= ",b," smallest=",mne.smallest_positive(), " maxval=",self.maxval)
+			self.printCount+=1
+			if(functionName and (self.printCount % self.everyNth == 0)):
+				print(functionName.ljust(15)+" : "+str(a))
 			if(mpmath.isnan(a)):
 				print("\033[93m Warning: \033[0m got NaN, cannot verify if: ",a," == " ,b, " that was for function: \033[93m ",functionName, " \033[0m")
 			else:
@@ -104,10 +115,7 @@ class SimpleTests(unittest.TestCase):
 						self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),tol)
 				else:
 					if(functionName in self.defaultTolerances):
-						extraName=""
-						if(str("${LIBTOTEST}")[-2:] == "nb"):   extraName="nb" # non-boost MPFR
-						if(str("${LIBTOTEST}")[-4:] == "BBFL"): extraName="_b" # boost cpp_bin_float
-						defaultToleranceForThisFunction = self.defaultTolerances[functionName][str(${DEC_DIGITS})+extraName]*self.tolerance
+						defaultToleranceForThisFunction = self.defaultTolerances[functionName][str(self.digs0)+self.extraName]*self.tolerance
 						#print(defaultToleranceForThisFunction," ---- ",functionName)
 						if isComplex:
 							self.assertLessEqual(abs( (mpmath.mpc(a)-mpmath.mpc(b))/mpmath.mpc(b) ),defaultToleranceForThisFunction)
@@ -119,10 +127,10 @@ class SimpleTests(unittest.TestCase):
 						else:
 							self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/mpmath.mpf(b) ),self.tolerance)
 		else:
-			print("Skipping ",functionName," check, the builtin number: ", a, " cannot have value outside of its possible repesentation: " , b, ", because it has only ",${DEC_DIGITS}," digits.")
+			print("Skipping ",functionName," check, the builtin number: ", a, " cannot have value outside of its possible repesentation: " , b, ", because it has only ",self.digs0," digits.")
 	
 	def checkRelativeComplexError(self,a,b,tol=None,functionName=None):
-		self.checkRelativeError(a,b,tol,functionName,True)
+		self.checkRelativeError(abs(a),abs(b),tol,functionName,True)
 
 	def oneArgMathCheck(self,r):
 		self.checkRelativeError(mne.sin(r),mpmath.sin(r),functionName="sin")
@@ -221,7 +229,7 @@ class SimpleTests(unittest.TestCase):
 		#print("mpmath:",hex(id(mpmath)))
 		a=mne.Var()
 		a.val=zz
-		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
+		self.assertEqual(mpmath.mp.dps , self.digs0+1 )
 		#print("---- a.val=",a.val.__repr__())
 		#print("---- zz   =",zz   .__repr__())
 		#print("---- DPS  =",mpmath.mp.dps)
@@ -245,12 +253,12 @@ class SimpleTests(unittest.TestCase):
 		self.checkRelativeError(mne.Log2(),mpmath.log(2))
 		self.checkRelativeError(mne.Catalan(),mpmath.catalan)
 		self.checkRelativeError(mne.epsilon(),self.expectedEpsilon)
-		if(${DEC_DIGITS} == 6): # exception for float
+		if(self.digs0 == 6): # exception for float
 			self.assertLessEqual(mne.dummy_precision(),10e-6)
 		else:
-			self.checkRelativeError(mpmath.log(mne.dummy_precision()/mne.epsilon())/mpmath.log(10) , mpmath.mpf(${DEC_DIGITS})/10 , 1.5 )
+			self.checkRelativeError(mpmath.log(mne.dummy_precision()/mne.epsilon())/mpmath.log(10) , mpmath.mpf(self.digs0)/10 , 1.5 )
 		for x in range(50):
-			if(str("${LIBTOTEST}")[-2:] == "nb" ): # this looks like a bug in /usr/include/eigen3/unsupported/Eigen/MPRealSupport !
+			if(self.nonBoostMPFR): # this looks like a bug in /usr/include/eigen3/unsupported/Eigen/MPRealSupport !
 				self.assertLessEqual(abs(mne.random()-0.5),0.5)
 			else:
 				self.assertLessEqual(abs(mne.random()    ),1.0)
@@ -303,28 +311,10 @@ class SimpleTests(unittest.TestCase):
 		a.cpl="13123-123123*123-50j"
 
 	def testWrongInput(self):
-		if(str("${LIBTOTEST}")[-2:] == "nb" ): # this looks like another bug in /usr/include/mpreal.h
+		if(self.nonBoostMPFR): # this looks like another bug in /usr/include/mpreal.h
 			print("skipping this test for non-boost /usr/include/mpreal.h")
 			return
 		# depending on backed Real use it throws TypeError or RuntimeError
 		self.assertRaises(Exception,self.thisTestsExceptionReal)
 		self.assertRaises(Exception,self.thisTestsExceptionComplex)
-
-if __name__ == '__main__':
-		unittest.main(testRunner=unittest.TextTestRunner(stream=sys.stdout, verbosity=2))
-EOF
-
-function handle_error() {
-	ls -la
-	gdb --batch -ex "bt full" `which python3` ./core
-	exit 1
-}
-
-echo 'Test Python3'
-ulimit -c unlimited
-python3 esuptest.py || handle_error
-echo "Python3 run: OK"
-
-cd
-rm -rf ${WORKDIR}
 
