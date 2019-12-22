@@ -1,3 +1,5 @@
+# NOTE: remember to add new tests to file py/tests/__init__.py
+
 import unittest
 
 class TestDummy(unittest.TestCase):
