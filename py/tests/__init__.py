@@ -15,6 +15,7 @@ allTests=[
 	, 'utilsModule'
 	, 'libVersions'
         , 'testMinieigenHP'
+        , 'testMath'
 	#, 'testColliderByGiulia' # to investigate later maybe, my impression is that due to issue #7 the results are randomly different in that ill-posed periodic problem
 ]
 
