@@ -6,6 +6,8 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
+#ifdef MINIEIGEN_OVERRIDE
+
 #include <lib/high-precision/Real.hpp>
 
 #include <iomanip>
@@ -65,4 +67,6 @@ try {
 	boost::python::handle_exception();
 	throw;
 }
+
+#endif
 

@@ -9,7 +9,6 @@
 #include <boost/python.hpp>
 
 using yade::Index;
-#include <minieigen/common.hpp>
 
 namespace py = ::boost::python;
 
