@@ -3,10 +3,61 @@
 # (C) 2015 Anton Gladky <gladk@debian.org>
 # (C) 2019 Janek Kozicki
 
-import unittest, math, sys, mpmath
-from mpmath import mpc
+import unittest, math, sys
 import minieigen as mne
 import yade
+
+if(yade.config.highPrecisionMpmath):
+	import mpmath
+	from mpmath import mpc
+else:
+	# When mpmath is not required implement a super-minimal version of mpmath, so that the tests below will work.
+	class MP:
+		dps=None
+	class mpmath:
+		mp=MP
+		def __init__(self):
+			pass
+		class mpf:
+			def __init__(self,realpart):
+				self.r = float(realpart)
+			def __float__(self):
+				return float(self.r)
+			def __pow__(self,p):
+				return float(self.r**float(p))
+			def __truediv__(self,p):
+				return float(self.r/float(p))
+			def __rtruediv__(self,p):
+				return float(float(p)/self.r)
+			def __rmul__(self,p):
+				return float(self.r*float(p))
+			def __sub__(self,b):
+				return float(self.r - float(b))
+		class mpc:
+			def __init__(self,realpart, imagpart=None):
+				if(imagpart.__class__ == str):
+					self.i = float(imagpart)
+				elif(imagpart == None):
+					self.i = 0
+				else:
+					raise TypeError
+				if(realpart.__class__ == complex or realpart.__class__ == mpmath.mpc):
+					self.r = complex(realpart).real
+					self.i = complex(realpart).imag
+				elif(realpart.__class__ == float or realpart.__class__ == int or realpart.__class__ == mpmath.mpf or realpart.__class__ == str):
+					self.r = float(realpart)
+				else:
+					raise TypeError
+			def __complex__(self):
+				return complex(self.r + self.i*1j)
+			def __sub__(self,b):
+				return complex(self) - complex(b)
+			def __truediv__(self,p):
+				return complex(self)/complex(p)
+			def __rtruediv__(self,p):
+				return complex(p)/complex(self)
+			def __abs__(self):
+				return abs(complex(self))
 
 class ExtendedMinieigenTests(unittest.TestCase):
 	def setUp(self):
@@ -22,6 +73,26 @@ class ExtendedMinieigenTests(unittest.TestCase):
 			self.assertLessEqual(abs( (mpmath.mpf(a)-mpmath.mpf(b))/self.tolerance ),self.tolerance)
 	def checkRelativeComplexError(self,a,b):
 		self.assertLessEqual(abs( (mpmath.mpc(a)-mpmath.mpc(b))/mpmath.mpc(b) ),self.tolerance)
+
+	def testMpmath(self):
+		self.assertEqual(2    ,float(mpmath.mpf(2)))
+		self.assertEqual(2    ,float(mpmath.mpf("2")))
+		self.assertEqual(2**3 ,mpmath.mpf("2")**3)
+		self.assertEqual(2/3  ,mpmath.mpf("2")/3)
+		self.assertEqual(3/2,3/mpmath.mpf("2"))
+		self.assertEqual(3*2,3*mpmath.mpf("2"))
+		self.assertEqual(2-3  ,mpmath.mpf("2")-3)
+
+		self.assertEqual(2    ,complex(mpmath.mpc(2)))
+		self.assertEqual(2+5j ,complex(mpmath.mpc(2+5j)))
+		self.assertEqual(2    ,complex(mpmath.mpc("2")))
+		self.assertEqual(2+5j ,complex(mpmath.mpc("2","5")))
+		self.assertEqual(2-3  ,mpmath.mpc("2")-3)
+		self.assertEqual(2/3  ,mpmath.mpc("2")/3)
+		self.assertEqual(3/2,3/mpmath.mpc("2"))
+		self.assertEqual(5,abs(mpmath.mpc("-3","-4")))
+
+
 	def testVector2i(self):
 		a2i = mne.Vector2i(2,1)
 		b2i = mne.Vector2i(3,5)
