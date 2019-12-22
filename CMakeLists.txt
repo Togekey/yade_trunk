@@ -1126,6 +1126,8 @@ FILE(GLOB filesGUItestHelper "${CMAKE_CURRENT_SOURCE_DIR}/scripts/checks-and-tes
 INSTALL(FILES ${filesGUItestHelper} DESTINATION ${YADE_PY_PATH}/yade)
 INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/scripts/checks-and-tests/checks/data/" DESTINATION ${YADE_PY_PATH}/yade/tests/checks/data)
 INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/doc/yade-logo-note.png" DESTINATION "${YADE_DOC_PATH}/img")
+FILE(GLOB filesHP "${CMAKE_CURRENT_SOURCE_DIR}/py/high-precision/*.py" "${CMAKE_CURRENT_SOURCE_DIR}/py/tests/testMathHelper.py")
+INSTALL(FILES ${filesHP} DESTINATION ${YADE_PY_PATH}/yade)
 
 INSTALL(TARGETS boot DESTINATION "${YADE_PY_PATH}/yade/")
 INSTALL(TARGETS yade DESTINATION ${YADE_LIB_PATH})
