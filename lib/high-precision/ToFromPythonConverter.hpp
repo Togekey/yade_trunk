@@ -28,6 +28,10 @@ template <typename T> std::string infoPrecComplex()
 }
 #endif
 
+/*************************************************************************/
+/*************************        Real          **************************/
+/*************************************************************************/
+
 template <typename ArbitraryReal> struct ArbitraryReal_to_python {
 	static PyObject* convert(const ArbitraryReal& val)
 	{
@@ -115,7 +119,7 @@ template <typename T> std::string num_to_string(const T& num, int = 0)
 
 
 /*************************************************************************/
-/*************************     std::complex     **************************/
+/*************************       Complex        **************************/
 /*************************************************************************/
 
 template <typename ArbitraryComplex> struct ArbitraryComplex_to_python {

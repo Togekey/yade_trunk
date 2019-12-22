@@ -15,12 +15,15 @@
 #include <boost/math/constants/constants.hpp>
 #include <Eigen/Core>
 
+/*************************************************************************/
+/*************************        Real          **************************/
+/*************************************************************************/
+
 namespace Eigen {
 // NOTE: Don't include this file for float, double, long double. Otherwise you will get errors like:
 // error: redefinition of ‘struct Eigen::NumTraits<long double>’
 // note: previous definition of ‘struct Eigen::NumTraits<long double>’ in /usr/include/eigen3/Eigen/src/Core/NumTraits.h
 template <> struct NumTraits<EigenTraitsReal> : GenericNumTraits<EigenTraitsReal> { // NOTE: Don't include this file for float, double, long double.
-	// /\<ReadCost.*=\|\<MulCost.*=\|\<AddCost.*=
 	enum { IsInteger             = 0,
 	       IsSigned              = 1,
 	       IsComplex             = 0,
