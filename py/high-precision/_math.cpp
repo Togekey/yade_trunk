@@ -16,7 +16,7 @@
 
 //#define ARBITRARY_REAL_DEBUG
 #include <py/high-precision/_ExposeStorageOrdering.hpp>
-#include <lib/high-precision/ToFromPythonConverter.hpp>
+//#include <lib/high-precision/ToFromPythonConverter.hpp>
 
 // testing Real type
 #include <boost/concept/assert.hpp>
@@ -187,11 +187,12 @@ try {
 	long defprec  = std::numeric_limits<Real>::digits;
 	long max_exp2 = std::numeric_limits<Real>::max_exponent;
 #endif
-	ArbitraryComplex_from_python<Complex>();
-	py::to_python_converter<Complex, ArbitraryComplex_to_python<Complex>>();
+	// This is registered in py/high-precision/_minieigenHP.cpp
+	//ArbitraryComplex_from_python<Complex>();
+	//py::to_python_converter<Complex, ArbitraryComplex_to_python<Complex>>();
 
-	ArbitraryReal_from_python<Real>();
-	py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
+	//ArbitraryReal_from_python<Real>();
+	//py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
 
 	py::class_<Var>("Var").add_property("val", &Var::get, &Var::set).add_property("cpl", &Var::getComplex, &Var::setComplex);
 
@@ -200,7 +201,7 @@ try {
 	py::scope().attr("defprec")  = defprec;
 	py::scope().attr("max_exp2") = max_exp2;
 
-	// by zadziałało, gdyby ten enum miał nazwę.
+	// it would work if this enum had a name.
 	//py::enum_<Eigen::NumTraits<Real>::NazwaEnuma>("traits").value("IsInteger",Eigen::NumTraits<Real>::IsInteger).export_values();
 
 	py::scope().attr("IsInteger")             = int(Eigen::NumTraits<Real>::IsInteger);
