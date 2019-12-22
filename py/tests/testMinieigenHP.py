@@ -7,57 +7,7 @@ import unittest, math, sys
 import minieigen as mne
 import yade
 
-if(yade.config.highPrecisionMpmath):
-	import mpmath
-	from mpmath import mpc
-else:
-	# When mpmath is not required implement a super-minimal version of mpmath, so that the tests below will work.
-	class MP:
-		dps=None
-	class mpmath:
-		mp=MP
-		def __init__(self):
-			pass
-		class mpf:
-			def __init__(self,realpart):
-				self.r = float(realpart)
-			def __float__(self):
-				return float(self.r)
-			def __pow__(self,p):
-				return float(self.r**float(p))
-			def __truediv__(self,p):
-				return float(self.r/float(p))
-			def __rtruediv__(self,p):
-				return float(float(p)/self.r)
-			def __rmul__(self,p):
-				return float(self.r*float(p))
-			def __sub__(self,b):
-				return float(self.r - float(b))
-		class mpc:
-			def __init__(self,realpart, imagpart=None):
-				if(imagpart.__class__ == str):
-					self.i = float(imagpart)
-				elif(imagpart == None):
-					self.i = 0
-				else:
-					raise TypeError
-				if(realpart.__class__ == complex or realpart.__class__ == mpmath.mpc):
-					self.r = complex(realpart).real
-					self.i = complex(realpart).imag
-				elif(realpart.__class__ == float or realpart.__class__ == int or realpart.__class__ == mpmath.mpf or realpart.__class__ == str):
-					self.r = float(realpart)
-				else:
-					raise TypeError
-			def __complex__(self):
-				return complex(self.r + self.i*1j)
-			def __sub__(self,b):
-				return complex(self) - complex(b)
-			def __truediv__(self,p):
-				return complex(self)/complex(p)
-			def __rtruediv__(self,p):
-				return complex(p)/complex(self)
-			def __abs__(self):
-				return abs(complex(self))
+import testMathHelper as mpmath
 
 class ExtendedMinieigenTests(unittest.TestCase):
 	def setUp(self):
@@ -249,6 +199,8 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeError( c3a[2] , eval(c3a.__str__())[2] )
 
 	def testVector4(self):
+		# The Vector4 bug was fixed only recently, don't test if there's nothing to test
+		if(not hasattr(mne, 'Vector4')): return
 		a4r = mne.Vector4(2.1,1.1,4.3,5.5)
 		b4r = mne.Vector4(3.1,5.1,5.2,-5.4)
 		c4r = a4r + b4r
