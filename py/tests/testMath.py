@@ -60,6 +60,7 @@ class SimpleTests(unittest.TestCase):
 			 , "ccos"      : {"6":5  , "15":5  , "18":20000, "33":4000   , "100":80000 , "100nb":80000 , "150" :80000 , "150nb" :8000000, "100_b" :800000  , "150_b" :800000 }
 			 , "ctan"      : {"6":5  , "15":5  , "18":20000, "33":4000   , "100":80000 , "100nb":80000 , "150" :80000 , "150nb" :8000000, "100_b" :800000  , "150_b" :800000 }
 
+			 , "cexp"      : {"6":5  , "15":5  , "18":10   , "33":10     , "100":10    , "100nb":10    , "150" :10    , "150nb" :10     , "100_b" :100     , "150_b" :100    }
 			 , "exp"       : {"6":5  , "15":5  , "18":10   , "33":10     , "100":10    , "100nb":10    , "150" :10    , "150nb" :10     , "100_b" :100     , "150_b" :100    }
 			 , "exp2"      : {"6":5  , "15":5  , "18":10   , "33":10     , "100":10    , "100nb":10    , "150" :10    , "150nb" :10     , "100_b" :100     , "150_b" :100    }
 			 , "expm1"     : {"6":5  , "15":5  , "18":10   , "33":10     , "100":10    , "100nb":10    , "150" :10    , "150nb" :10     , "100_b" :100     , "150_b" :100    }
@@ -70,6 +71,7 @@ class SimpleTests(unittest.TestCase):
 			 , "csinh"     : {"6":5  , "15":5  , "18":20000, "33":4000   , "100":80000 , "100nb":80000 , "150" :80000 , "150nb" :8000000, "100_b" :800000  , "150_b" :800000 }
 			 , "ctanh"     : {"6":5  , "15":5  , "18":20000, "33":4000   , "100":80000 , "100nb":80000 , "150" :80000 , "150nb" :8000000, "100_b" :800000  , "150_b" :800000 }
 
+			 , "clog"      : {"6":100, "15":100, "18":10   , "33":100    , "100":100   , "100nb":100   , "150" :100   , "150nb" :100    , "100_b" :100     , "150_b" :100    }
 			 , "log"       : {"6":100, "15":100, "18":10   , "33":100    , "100":100   , "100nb":100   , "150" :100   , "150nb" :100    , "100_b" :100     , "150_b" :100    }
 			 , "log10"     : {"6":100, "15":100, "18":10   , "33":100    , "100":100   , "100nb":100   , "150" :100   , "150nb" :100    , "100_b" :100     , "150_b" :100    }
 			 , "log1p"     : {"6":100, "15":100, "18":10   , "33":100    , "100":100   , "100nb":100   , "150" :100   , "150nb" :100    , "100_b" :100     , "150_b" :100    }
@@ -186,6 +188,9 @@ class SimpleTests(unittest.TestCase):
 		self.checkRelativeComplexError(mne.cosh(mpmath.mpc(r1,r2)),mpmath.cosh(mpmath.mpc(r1,r2)),functionName="ccosh")
 		self.checkRelativeComplexError(mne.tan (mpmath.mpc(r1,r2)),mpmath.tan (mpmath.mpc(r1,r2)),functionName="ctan")
 		self.checkRelativeComplexError(mne.tanh(mpmath.mpc(r1,r2)),mpmath.tanh(mpmath.mpc(r1,r2)),functionName="ctanh")
+
+		self.checkRelativeComplexError(mne.exp(mpmath.mpc(r1,r2)),mpmath.exp(mpmath.mpc(r1,r2)),functionName="cexp")
+		self.checkRelativeComplexError(mne.log(mpmath.mpc(r1,r2)),mpmath.log(mpmath.mpc(r1,r2)),functionName="clog")
 
 		self.checkRelativeComplexError(mne.abs  (mpmath.mpc(r1,r2)),abs(mpmath.mpc(r1,r2)),functionName="cabs")
 		self.checkRelativeComplexError(mne.conj (mpmath.mpc(r1,r2)),mpmath.conj(mpmath.mpc(r1,r2)),functionName="cconj")

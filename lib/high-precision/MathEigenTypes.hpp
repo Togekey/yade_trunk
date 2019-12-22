@@ -24,6 +24,10 @@ typedef Eigen::Matrix<int, 2, 1>        Vector2i;
 typedef Eigen::Matrix<int, 3, 1>        Vector3i;
 typedef Eigen::Matrix<int, 6, 1>        Vector6i;
 
+/*************************************************************************/
+/*************************        Real          **************************/
+/*************************************************************************/
+
 /* exposed types */
 typedef Eigen::Matrix<Real, 2, 1>                           Vector2r;
 typedef Eigen::Matrix<Real, 3, 1>                           Vector3r;
@@ -51,8 +55,12 @@ typedef Eigen::Matrix<Complex, 3, 3>                           Matrix3cr;
 typedef Eigen::Matrix<Complex, 6, 6>                           Matrix6cr;
 typedef Eigen::Matrix<Complex, Eigen::Dynamic, Eigen::Dynamic> MatrixXcr;
 
+/*************************************************************************/
+/*************************   for external use   **************************/
+/*************************************************************************/
+
 // This is for external applications, shouldn't be normally used.
-// Use this `using namespace ::yade::AllMathTypes;` only inside a .cpp file! Otherwise the types will leak outside which will cause compilation errors due to ambiguity.
+// Use `using namespace ::yade::AllMathTypes;` only inside a .cpp file! Otherwise the types will leak outside which will cause compilation errors due to ambiguity.
 namespace MathEigenTypes {
 	using ::yade::Real;
 
