@@ -117,7 +117,8 @@ YADE_WRAP_FUNC_1(cosh)
 YADE_WRAP_FUNC_1(tan)
 YADE_WRAP_FUNC_1(tanh)
 
-// add more functions as necessary
+/**********************                    Complex                     *********************/
+// add more complex functions as necessary
 YADE_WRAP_FUNC_1_COMPLEX(sin)
 YADE_WRAP_FUNC_1_COMPLEX(sinh)
 YADE_WRAP_FUNC_1_COMPLEX(cos)
@@ -162,6 +163,10 @@ YADE_WRAP_FUNC_1(cbrt)
 YADE_WRAP_FUNC_2(hypot)
 //YADE_WRAP_FUNC_3(hypot) // since C++17, could be very useful for us
 
+/**********************                    Complex                     *********************/
+YADE_WRAP_FUNC_1_COMPLEX(exp)
+YADE_WRAP_FUNC_1_COMPLEX(log)
+
 /********************************************************************************************/
 /**********************    min, max, abs, sign, floor, ceil, round     **********************/
 /********************************************************************************************/
@@ -178,9 +183,10 @@ YADE_WRAP_FUNC_1(round)
 YADE_WRAP_FUNC_1(rint)
 YADE_WRAP_FUNC_1(trunc)
 
-YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(abs)
-
+/**********************                    Complex                     *********************/
+// add more complex functions as necessary
 YADE_WRAP_FUNC_1_COMPLEX_STD(conj)
+YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(abs)
 YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD(real)
 YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD(imag)
 
