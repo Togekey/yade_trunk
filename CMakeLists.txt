@@ -452,9 +452,6 @@ IF( (NOT REAL_DECIMAL_PLACES) AND (    REAL_PRECISION_BITS))
   ENDIF()
 ENDIF()
 
-# Now we have properly set following: REAL_PRECISION_BITS==Nbits, REAL_DECIMAL_PLACES==Ndecimal, REAL_USE_ARBITRARY==ON/OFF
-MESSAGE(STATUS "${Esc}[36mReal type will have ${REAL_DECIMAL_PLACES} decimal places precision and use ${REAL_PRECISION_BITS} bits of storage.${Esc}[0m")
-
 IF(REAL_USE_ARBITRARY)
   IF(NOT ENABLE_MPFR)
     SET(REAL_PREC_NAME "PrecisionBoostBinFloat${REAL_DECIMAL_PLACES}")
@@ -492,14 +489,18 @@ IF(NOT ((${REAL_PRECISION_BITS} EQUAL 64)))
   ENDIF()
 
   MESSAGE(STATUS "Checking compiler version for ${REAL_PREC_NAME}")
-  IF(REAL_USE_ARBITRARY AND ENABLE_MPFR)
-    IF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.3.0 )
-      MESSAGE(FATAL_ERROR "MPFR works since g++ version around 8.3.0. For possible supported platforms see https://gitlab.com/cosurgi/minieigen-real/pipelines/104924921")
+  IF(NOT ALLOW_CRASHES)
+    IF(REAL_USE_ARBITRARY AND ENABLE_MPFR)
+      IF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.3.0 )
+        MESSAGE(FATAL_ERROR "MPFR works since g++ version around 8.3.0. For possible supported platforms see https://gitlab.com/cosurgi/minieigen-real/pipelines/104924921 you can use -D ALLOW_CRASHES=ON to override.")
+      ENDIF()
+    ELSE()
+      IF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.2.1 )
+        MESSAGE(FATAL_ERROR "High precision '${REAL_PREC_NAME}' works since g++ version around 9.2.1. For possible supported platforms see https://gitlab.com/cosurgi/minieigen-real/pipelines/104924921 you can use -D ALLOW_CRASHES=ON to override.")
+      ENDIF()
     ENDIF()
   ELSE()
-    IF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.2.1 )
-      MESSAGE(FATAL_ERROR "High precision '${REAL_PREC_NAME}' works since g++ version around 9.2.1. For possible supported platforms see https://gitlab.com/cosurgi/minieigen-real/pipelines/104924921")
-    ENDIF()
+    MESSAGE(STATUS "${Esc}[31mSkipping this check, ALLOW_CRASHES=ON${Esc}[0m")
   ENDIF()
 ENDIF()
 
@@ -527,6 +528,7 @@ IF(REAL_USE_ARBITRARY EQUAL "ON")
   MESSAGE(FATAL_ERROR " there's an error in CMakeLists.txt, REAL_USE_ARBITRARY == ${REAL_USE_ARBITRARY}, but should be OFF,MPFR,BOOST_BIN_FLOAT")
 ENDIF()
 
+MESSAGE(STATUS "Will use ${Esc}[93m${REAL_PREC_NAME}${Esc}[0m as Real type with ${Esc}[36m${REAL_DECIMAL_PLACES}${Esc}[0m decimal places precision and use ${Esc}[36m${REAL_PRECISION_BITS}${Esc}[0m bits of storage.")
 #======================================
 #====== ** END Real precision ** ======
 #======================================
