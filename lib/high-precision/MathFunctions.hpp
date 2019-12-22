@@ -118,7 +118,7 @@ YADE_WRAP_FUNC_1(tan)
 YADE_WRAP_FUNC_1(tanh)
 
 /**********************                    Complex                     *********************/
-// add more complex functions as necessary
+// add more complex functions as necessary, but remember to add them in py/high-precision/_math.cpp, py/tests/testMath.py and py/tests/testMathHelper.py
 YADE_WRAP_FUNC_1_COMPLEX(sin)
 YADE_WRAP_FUNC_1_COMPLEX(sinh)
 YADE_WRAP_FUNC_1_COMPLEX(cos)
@@ -164,6 +164,7 @@ YADE_WRAP_FUNC_2(hypot)
 //YADE_WRAP_FUNC_3(hypot) // since C++17, could be very useful for us
 
 /**********************                    Complex                     *********************/
+// add more complex functions as necessary, but remember to add them in py/high-precision/_math.cpp, py/tests/testMath.py and py/tests/testMathHelper.py
 YADE_WRAP_FUNC_1_COMPLEX(exp)
 YADE_WRAP_FUNC_1_COMPLEX(log)
 
@@ -184,7 +185,7 @@ YADE_WRAP_FUNC_1(rint)
 YADE_WRAP_FUNC_1(trunc)
 
 /**********************                    Complex                     *********************/
-// add more complex functions as necessary
+// add more complex functions as necessary, but remember to add them in py/high-precision/_math.cpp and py/tests/testMath.py
 YADE_WRAP_FUNC_1_COMPLEX_STD(conj)
 YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(abs)
 YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD(real)
