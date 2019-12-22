@@ -30,7 +30,11 @@ typedef Eigen::Matrix<int, 6, 1>        Vector6i;
 
 /* exposed types */
 typedef Eigen::Matrix<Real, 2, 1>                           Vector2r;
+#ifdef EIGEN_DONT_ALIGN
 typedef Eigen::Matrix<Real, 3, 1>                           Vector3r;
+#else
+typedef Eigen::AlignedVector3<Real>                         Vector3r;
+#endif
 typedef Eigen::AlignedVector3<Real>                         Vector3ra;
 typedef Eigen::Matrix<Real, 4, 1>                           Vector4r;
 typedef Eigen::Matrix<Real, 6, 1>                           Vector6r;
