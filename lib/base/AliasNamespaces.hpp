@@ -11,17 +11,12 @@
 // don't include here <boost/filesystem.hpp> or <Python.h>. Better to include them in places where they are needed.
 
 namespace boost {
-namespace python {
-}
-namespace filesystem {
-}
-namespace multiprecision {
-}
+	namespace python {}
+	namespace filesystem {}
 }
 
 namespace yade {
-namespace py  = ::boost::python;
-namespace bfs = ::boost::filesystem;
-namespace bmp = ::boost::multiprecision;
+	namespace py =::boost::python;
+	namespace bfs=::boost::filesystem;
 }
 
