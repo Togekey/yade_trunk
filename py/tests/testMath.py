@@ -208,20 +208,20 @@ class SimpleTests(unittest.TestCase):
 	def threeArgMathCheck(self,r1,r2,r3):
 		self.checkRelativeError(mne.fma(r1,r2,r3),(mpmath.mpf(r1)*r2)+r3,functionName="fma")
 
-	def testSimple(self):
+	def testMathFunctions(self):
 		self.assertEqual(mne.defprec , self.bits )
 		zz=mpmath.acos(0)
-		print(zz.__repr__())
-		print("zz:",hex(id(zz)))
-		print("mpmath:",hex(id(mpmath)))
+		#print(zz.__repr__())
+		#print("zz:",hex(id(zz)))
+		#print("mpmath:",hex(id(mpmath)))
 		a=mne.Var()
 		a.val=zz
 		self.assertEqual(mpmath.mp.dps , ${DEC_DIGITS}+1 )
-		print("---- a.val=",a.val.__repr__())
-		print("---- zz   =",zz   .__repr__())
-		print("---- DPS  =",mpmath.mp.dps)
-		print("---- abs  =",abs(mpmath.mpf(a.val-zz)))
-		print("---- 10** =",self.tolerance)
+		#print("---- a.val=",a.val.__repr__())
+		#print("---- zz   =",zz   .__repr__())
+		#print("---- DPS  =",mpmath.mp.dps)
+		#print("---- abs  =",abs(mpmath.mpf(a.val-zz)))
+		#print("---- 10** =",self.tolerance)
 		self.checkRelativeError(a.val,zz)
 		self.assertEqual(mne.IsInteger, 0 )
 		self.assertEqual(mne.IsSigned, 1 )
@@ -268,7 +268,7 @@ class SimpleTests(unittest.TestCase):
 				self.assertEqual(mne.toLong(r),int(r))
 				self.assertEqual(mne.toInt(r),int(r))
 				#
-				print(r.__repr__(),r2.__repr__(),r3.__repr__())
+				#print(r.__repr__(),r2.__repr__(),r3.__repr__())
 				self.oneArgMathCheck(r)
 				self.oneArgMathCheck(r2)
 				self.oneArgMathCheck(r3)
@@ -279,6 +279,31 @@ class SimpleTests(unittest.TestCase):
 
 	def testArray(self):
 		mne.testArray()
+
+	def testBasicVariable(self):
+		a=mne.Var()
+		self.checkRelativeError(a.val,-71.23,0.01)
+		a.val=10
+		self.checkRelativeError(a.val,10)
+		self.checkRelativeComplexError(a.cpl,-71.23+33.23j,0.01)
+		a.cpl=mpmath.mpc("1","-1")
+		self.checkRelativeComplexError(a.cpl,1-1j)
+
+	def thisTestsExceptionReal(self):
+		a=mne.Var()
+		a.val="13123-123123*123"
+
+	def thisTestsExceptionComplex(self):
+		a=mne.Var()
+		a.cpl="13123-123123*123-50j"
+
+	def testWrongInput(self):
+		if(str("${LIBTOTEST}")[-2:] == "nb" ): # this looks like another bug in /usr/include/mpreal.h
+			print("skipping this test for non-boost /usr/include/mpreal.h")
+			return
+		# depending on backed Real use it throws TypeError or RuntimeError
+		self.assertRaises(Exception,self.thisTestsExceptionReal)
+		self.assertRaises(Exception,self.thisTestsExceptionComplex)
 
 if __name__ == '__main__':
 		unittest.main(testRunner=unittest.TextTestRunner(stream=sys.stdout, verbosity=2))
