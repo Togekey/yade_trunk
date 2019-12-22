@@ -16,10 +16,9 @@ from yade import *
 import yade.qt
 import yade.config
 
-checkMpmath = next((check for check in yade.config.features if "mpmath" in check), None)
-if checkMpmath:
+if yade.config.highPrecisionMpmath:
 	import mpmath
-	mpmath.mp.dps=(int(checkMpmath[6:])+1)
+	mpmath.mp.dps=(int(yade.config.highPrecisionDecimalPlaces)+1)
 
 from minieigen import *
 
@@ -374,8 +373,8 @@ _fundamentalEditorMap={
 	,Vector3i:AttrEditor_Vector3i
 	,Vector2i:AttrEditor_Vector2i
 	,Se3FakeType:AttrEditor_Se3
-	,mpmath.ctx_mp_python.mpf:AttrEditor_Mpmath
 }
+
 _fundamentalInitValues={
 	 bool:True
 	,str:''
@@ -391,8 +390,12 @@ _fundamentalInitValues={
 	,Vector2i:Vector2i.Zero
 	,Vector2:Vector2.Zero
 	,Se3FakeType:(Vector3.Zero,Quaternion((0,1,0),0.0))
-	,mpmath.ctx_mp_python.mpf:(mpmath.mpf(0))
 }
+
+if yade.config.highPrecisionMpmath:
+	# TODO: handle Complex mpmath.ctx_mp_python.mpc
+	_fundamentalEditorMap[mpmath.ctx_mp_python.mpf]=AttrEditor_Mpmath
+	_fundamentalInitValues[mpmath.ctx_mp_python.mpf]=(mpmath.mpf(0))
 
 class SerQLabel(QLabel):
 	def __init__(self,parent,label,tooltip,path):
@@ -454,7 +457,7 @@ class SerializableEditor(QFrame):
 			return m
 		vecMap={
 			'bool':bool,'int':int,'long':int,'Body::id_t':int,'size_t':int,
-			'Real':float,'float':float,'double':float,'complex':complex,'std::complex<Real>':complex,'mpf':mpmath.ctx_mp_python.mpf,
+			'Real':float,'float':float,'double':float,'complex':complex,'std::complex<Real>':complex,
 			'Vector6r':Vector6,'Vector6i':Vector6i,'Vector3i':Vector3i,'Vector2r':Vector2,'Vector2i':Vector2i,
 			'Vector3r':Vector3,'Matrix3r':Matrix3,'Se3r':Se3FakeType,
 			'string':str,
@@ -462,6 +465,8 @@ class SerializableEditor(QFrame):
 			'IntrCallback':IntrCallback,'BoundFunctor':BoundFunctor,'IGeomFunctor':IGeomFunctor,'IPhysFunctor':IPhysFunctor,'LawFunctor':LawFunctor,'KinematicEngine':KinematicEngine,
 			'GlShapeFunctor':GlShapeFunctor,'GlStateFunctor':GlStateFunctor,'GlIGeomFunctor':GlIGeomFunctor,'GlIPhysFunctor':GlIPhysFunctor,'GlBoundFunctor':GlBoundFunctor,'GlExtraDrawer':GlExtraDrawer
 		}
+		if yade.config.highPrecisionMpmath:
+			vecMap['mpf']=mpmath.ctx_mp_python.mpf
 		for T,ret in list(vecMap.items()):
 			if vecTest(T,cxxT):
 				logging.debug("Got type %s from cxx type %s"%(repr(ret),cxxT))

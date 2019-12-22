@@ -25,10 +25,9 @@ features,version,debugbuild='${CONFIGURED_FEATS}'.split(' '),'${realVersion}',' 
 
 if (features[0]==''): features=features[1:]
 
-checkMpmath = next((check for check in features if "mpmath" in check), None)
-if checkMpmath:
+if(${MPMATH_IS_USED}==True):
 	import mpmath
-	mpmath.mp.dps=(int(checkMpmath[6:])+1)
+	mpmath.mp.dps=(int(${REAL_DECIMAL_PLACES})+1)
 
 libPATH='${LIBRARY_OUTPUT_PATH}'
 if (libPATH[1:] == '{LIBRARY_OUTPUT_PATH}'): libPATH='lib'
