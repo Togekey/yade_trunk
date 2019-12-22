@@ -7,12 +7,7 @@ import unittest, math, sys
 import minieigen as mne
 import yade
 
-if(yade.config.highPrecisionMpmath):
-	import mpmath
-	from mpmath import mpc
-else:
-	# When mpmath is not required implement a super-minimal version of mpmath, so that the tests below will work.
-	from superMinimalMath import SuperMinimalMath as mpmath
+import testMathHelper as mpmath
 
 class ExtendedMinieigenTests(unittest.TestCase):
 	def setUp(self):
@@ -204,6 +199,8 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeError( c3a[2] , eval(c3a.__str__())[2] )
 
 	def testVector4(self):
+		# The Vector4 bug was fixed only recently, don't test if there's nothing to test
+		if(not hasattr(mne, 'Vector4')): return
 		a4r = mne.Vector4(2.1,1.1,4.3,5.5)
 		b4r = mne.Vector4(3.1,5.1,5.2,-5.4)
 		c4r = a4r + b4r
