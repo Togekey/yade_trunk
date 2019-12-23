@@ -9,12 +9,7 @@
 
 #pragma once
 
-#ifdef QUAD_PRECISION
-	using quad = long double;
-	using Real = quad;
-#else
-	using Real = double;
-#endif
+#include <lib/high-precision/Real.hpp>
 
 #include <cassert>
 #include <cmath>
@@ -80,6 +75,9 @@
 // https://en.cppreference.com/w/cpp/language/unqualified_lookup
 // https://en.cppreference.com/w/cpp/language/qualified_lookup
 // https://en.cppreference.com/w/cpp/language/namespace
+
+using Real=::yade::Real; // FIXME - remove this line
+
 namespace yade { // Cannot have #include directive inside.
 
 
@@ -111,6 +109,7 @@ using std::type_info;
 using std::vector;
 using boost::shared_ptr;
 
+/*
 // the math functions in yade:: must work correctly for Real as:
 // * double
 // * long double
@@ -159,6 +158,7 @@ using Quaternionr = Eigen::Quaternion<Real>;
 using AngleAxisr  = Eigen::AngleAxis<Real>;
 using AlignedBox2r = Eigen::AlignedBox<Real,2>;
 using AlignedBox3r = Eigen::AlignedBox<Real,3>;
+*/
 
 using Eigen::AngleAxis;
 using Eigen::Quaternion;
