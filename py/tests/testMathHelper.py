@@ -14,45 +14,14 @@ class MP:
 	dps=None
 class SuperMinimalMath:
 	mp=MP
-	def __init__(self):
-		pass
-	class mpf:
-		def __init__(self,realpart):
-			self.r = float(realpart)
-		def __float__(self):
-			return float(self.r)
-		def __pow__(self,p):
-			return float(self.r**float(p))
-		def __truediv__(self,p):
-			return float(self.r/float(p))
-		def __rtruediv__(self,p):
-			return float(float(p)/self.r)
-		def __rmul__(self,p):
-			return float(self.r*float(p))
-		def __sub__(self,b):
-			return float(self.r - float(b))
-	class mpc:
-		def __init__(self,realpart, imagpart=None):
-			if(imagpart.__class__ == str):
-				self.i = float(imagpart)
-			elif(imagpart == None):
-				self.i = 0
-			else:
-				raise TypeError
-			if(realpart.__class__ == complex or realpart.__class__ == SuperMinimalMath.mpc):
-				self.r = complex(realpart).real
-				self.i = complex(realpart).imag
-			elif(realpart.__class__ == float or realpart.__class__ == int or realpart.__class__ == SuperMinimalMath.mpf or realpart.__class__ == str):
-				self.r = float(realpart)
-			else:
-				raise TypeError
-		def __complex__(self):
-			return complex(self.r + self.i*1j)
-		def __sub__(self,b):
-			return complex(self) - complex(b)
-		def __truediv__(self,p):
-			return complex(self)/complex(p)
-		def __rtruediv__(self,p):
-			return complex(p)/complex(self)
-		def __abs__(self):
-			return abs(complex(self))
+	mpf=float
+	# mpc needs to accept two string arguments, apart from that it's just a complex number
+	class mpc(complex):
+		def __new__(cls, *args, **kwargs):
+			super_new = super(SuperMinimalMath.mpc, cls).__new__
+			if super_new is object.__new__:
+				return super_new(cls)
+			if len(args)==2:
+				return super_new(cls, float(args[0]), float(args[1]))
+			return super_new(cls, *args, **kwargs)
+
