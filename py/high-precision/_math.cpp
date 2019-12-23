@@ -5,6 +5,16 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
+// This python module exposes all C++ math functions for Real and Complex type to python.
+// In fact it "just duplicates" 'import math', 'import cmath' or 'import mpmath'.
+// This module has three purposes:
+// 1. to reliably test all C++ math functions of arbitrary Real and Complex types against mpmath.
+// 2. to test Eigen NumTraits
+// 3. To allow writing python math code in  a way that mirrors C++ math code in yade. As a bonus it will be faster than mpmath
+//    because mpmath is a purely python library (which was one of the main difficulties when writing lib/high-precision/ToFromPythonConverter.hpp)
+
+// TODO: add docstrings to all these math functions.
+
 #include <lib/high-precision/Real.hpp>
 
 #include <Eigen/Core>
