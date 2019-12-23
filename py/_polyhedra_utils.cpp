@@ -189,12 +189,12 @@ Vector3r SizeOfPolyhedra(const shared_ptr<Shape>& cm1)
 	Real minx = 0, maxx = 0, miny = 0, maxy = 0, minz = 0, maxz = 0;
 
 	for (vector<Vector3r>::iterator i = A->v.begin(); i != A->v.end(); ++i) {
-		minx = Min(minx, (*i)[0]);
-		maxx = Max(maxx, (*i)[0]);
-		miny = Min(miny, (*i)[1]);
-		maxy = Max(maxy, (*i)[1]);
-		minz = Min(minz, (*i)[2]);
-		maxz = Max(maxz, (*i)[2]);
+		minx = min(minx, (*i)[0]);
+		maxx = max(maxx, (*i)[0]);
+		miny = min(miny, (*i)[1]);
+		maxy = max(maxy, (*i)[1]);
+		minz = min(minz, (*i)[2]);
+		maxz = max(maxz, (*i)[2]);
 	}
 
 	return Vector3r(maxx - minx, maxy - miny, maxz - minz);

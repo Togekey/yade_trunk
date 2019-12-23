@@ -381,7 +381,7 @@ void HydroForceEngine::turbulentFluctuationBIS(){
 					// Limit the value to avoid the application of fluctuations in the viscous sublayer
                                         const Real zPos = max(b->state->pos[2]-zRef-bedElevation,11.6*viscoDyn/densFluid/uStar);
 					// Time of application of the fluctuation as a function of depth from kepsilon model
-                                        if (uStar>0.0) fluctTime[idPart]=Min(0.33*0.41*zPos/uStar,10.);
+                                        if (uStar>0.0) fluctTime[idPart]=min(0.33*0.41*zPos/uStar,10.);
                                         }
 				else{
 					vFluctZ[idPart] = 0.0;
@@ -522,7 +522,7 @@ void HydroForceEngine::fluidResolution(Real tfin,Real dt)
 		else {dragTerm = phiPart[i]/partVolume*averageDrag[i];}
 		urel = std::abs(ufn[i+1] - vxPart[i]); // Difference of definition between ufn and vxPart, ufn starts at 0, while vxPart starts at 1/2. The two therefore corresponds for i+1 and i
 		urel_bound = std::max(urel,lim); //limit the value to avoid division by 0
-		taufsi[i] = Max(0.,Min(dragTerm/urel_bound/densFluid,pow(10*dt,-1.))); //limit the max value of taufsi to the fluid resolution limit, i.e. 1/(10dt) and required positive (charact. time)
+		taufsi[i] = max(0.,min(dragTerm/urel_bound/densFluid,pow(10*dt,-1.))); //limit the max value of taufsi to the fluid resolution limit, i.e. 1/(10dt) and required positive (charact. time)
 		}
 
 	//////////////////////////////////// 
@@ -601,7 +601,7 @@ void HydroForceEngine::fluidResolution(Real tfin,Real dt)
 			maxiter = 100;	//Maximum number iteration for the resolution
 			eps = 1e-2;	//Tolerance for the equation resolution
 			for (j=0;j<nCell-1;j++){
-				Re = Max(1e-10,fabs(ufn[j+1])*channelWidth/viscof);
+				Re = max(1e-10,fabs(ufn[j+1])*channelWidth/viscof);
 				ffold=pow(0.32,-2);	//Initial guess of the friction factor
 				delta=1e10;	//Initialize at a random value greater than eps
 				q=0;

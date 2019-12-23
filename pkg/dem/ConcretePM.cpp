@@ -392,9 +392,9 @@ bool Law2_ScGeom_CpmPhys_Cpm::go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _p
 		/* simplified public model */
 		epsN += phys->isoPrestress/E;
 		/* very simplified version of the constitutive law */
-		Real xi2 = std::pow(phys->equivStrainShearContrib,2);
-		Real epsNorm = std::sqrt(std::pow(Max(epsN-epsNPl,0.),2)+xi2*epsT.squaredNorm());
-		kappaD = std::max(epsNorm,kappaD); /* internal variable, max positive strain (non-decreasing) */
+		Real xi2 = pow(phys->equivStrainShearContrib,2);
+		Real epsNorm = sqrt(pow(max(epsN-epsNPl,0.),2)+xi2*epsT.squaredNorm());
+		kappaD = max(epsNorm,kappaD); /* internal variable, max positive strain (non-decreasing) */
 		omega = isCohesive? phys->funcG(kappaD,epsCrackOnset,epsFracture,neverDamage,damLaw) : 1.; /* damage variable (non-decreasing, as funcG is also non-decreasing) */
 		sigmaN = (1-(epsN-epsNPl>0?omega:0))*E*(epsN-epsNPl); /* damage taken in account in tension only */
 		if((epsSoft<0) && (epsN-epsNPl<epsSoft)){ /* plastic slip in compression */
