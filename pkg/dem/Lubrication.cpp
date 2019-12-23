@@ -218,10 +218,6 @@ Real Law2_ScGeom_ImplicitLubricationPhys::ObjF(Real const& un, Real const& eps, 
 }
 
 
-template <typename T> int sign(T val) {
-    return (int)(T(0) < val) - (val < T(0));
-}
-
 // Dimentionless exact solution, with contact prediction
 Real Law2_ScGeom_ImplicitLubricationPhys::normalForce_trpz_adim(LubricationPhys *phys, ScGeom* geom, Real undot, bool isNew) {
 		// Dry contact
