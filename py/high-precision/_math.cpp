@@ -177,7 +177,7 @@ inline bool        isEqualFuzzy(const Real& a, const Real& b, const Real& eps)
 }
 #endif
 
-BOOST_PYTHON_MODULE(THE_CPP_NAME)
+BOOST_PYTHON_MODULE(_math)
 try {
 #ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
 	mpfr::mpreal::set_default_prec(YADE_REAL_BIT + 1);
