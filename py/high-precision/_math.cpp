@@ -7,24 +7,22 @@
 
 #include <lib/high-precision/Real.hpp>
 
-#include <boost/python.hpp>
 #include <Eigen/Core>
 #include <Eigen/src/Core/MathFunctions.h>
+#include <boost/python.hpp>
 #include <iostream>
 #include <limits>
 #include <sstream>
 
-//#define ARBITRARY_REAL_DEBUG
 #include <py/high-precision/_ExposeStorageOrdering.hpp>
-//#include <lib/high-precision/ToFromPythonConverter.hpp>
 
 // testing Real type
 #include <boost/concept/assert.hpp>
 #include <boost/math/concepts/real_type_concept.hpp>
 
 namespace py = ::boost::python;
-using ::yade::Real;
 using ::yade::Complex;
+using ::yade::Real;
 
 // Converts a std::pair instance to a Python tuple.
 template <typename T1, typename T2> struct std_pair_to_tuple {
@@ -74,35 +72,15 @@ std::pair<Real, long> remquo_c_test(const Real& x, const Real& y)
 }
 
 struct Var {
-	Real value { -71.23 };
-	Complex valueComplex { -71.23 , 33.23 };
+	Real    value { -71.23 };
+	Complex valueComplex { -71.23, 33.23 };
 
 	Real get() const { return value; };
 	void set(Real val) { value = val; };
 
 	Complex getComplex() const { return valueComplex; };
-	void setComplex(Complex val) { valueComplex = val; };
+	void    setComplex(Complex val) { valueComplex = val; };
 };
-
-#include <boost/python/def.hpp>
-int f(double x, double y, double z = 0.0, double w = 1.0)
-{
-	std::cerr << "x=" << x << "\n";
-	std::cerr << "y=" << y << "\n";
-	std::cerr << "z=" << z << "\n";
-	std::cerr << "w=" << w << "\n";
-	return 92;
-}
-
-double someFunction()
-{
-	double a   = 10.11;
-	double b   = 30.11;
-	double y   = a * b + b * a + b - a;
-	double ret = std::pow(y, a);
-	//	std::cerr << ret << " !!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-	return ret;
-}
 
 void compareVec(const std::vector<Real>& vec, const UnderlyingReal* array)
 {
@@ -134,7 +112,7 @@ void testArray()
 	Real fac  = 3.33;
 	multVec(vectorData(vec), static_cast<UnderlyingReal>(fac), vec.size());
 	for (auto a : boost::combine(copy, vec)) {
-		if (a.get<0>() * fac != a.get<1>() ) {
+		if (a.get<0>() * fac != a.get<1>()) {
 			std::cerr << __PRETTY_FUNCTION__ << " failed test\n";
 			exit(1);
 		}
@@ -195,8 +173,6 @@ try {
 	//py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
 
 	py::class_<Var>("Var").add_property("val", &Var::get, &Var::set).add_property("cpl", &Var::getComplex, &Var::setComplex);
-
-	py::def("f", f, (py::arg("x"), "y", py::arg("z") = 0.0, py::arg("w") = someFunction()));
 
 	py::scope().attr("defprec")  = defprec;
 	py::scope().attr("max_exp2") = max_exp2;
