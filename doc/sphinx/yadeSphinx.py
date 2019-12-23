@@ -52,7 +52,6 @@ yade.%s module
 mods={
           'libVersions'     : ['_libVersions']
         , 'log'             : ['_log']
-        , 'testCppPy'       : ['_testCppPy']
         , 'math'            : ['_math']
         , 'export'          : []
         , 'post2d'          : []
