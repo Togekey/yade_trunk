@@ -58,8 +58,6 @@
 	#define YADE_PTR_DYN_CAST ::boost::dynamic_pointer_cast
 #endif
 
-#define EIGEN_DONT_PARALLELIZE
-
 #ifdef YADE_MASK_ARBITRARY
 	#include <bitset>
 #endif
