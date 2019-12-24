@@ -173,10 +173,10 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeComplexError( c3c[1] , eval(c3c.__str__())[1] )
 		self.checkRelativeComplexError( c3c[2] , eval(c3c.__str__())[2] )
 
-	def testVector3a(self):
+	def testVector3na(self):
 		if(mne.vectorize == False): return
-		a3a = mne.Vector3a(2.1,1.1,4.3)
-		b3a = mne.Vector3a(3.1,5.1,5.2)
+		a3a = mne.Vector3na(2.1,1.1,4.3)
+		b3a = mne.Vector3na(3.1,5.1,5.2)
 		c3a = a3a + b3a
 		#self.assertEqual(c3a.eigenFlags(),352)
 		#self.assertEqual(c3a.eigenStorageOrder(),0)
@@ -193,7 +193,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeError( c3a[1] , mpmath.mpf("18.6") )
 		self.checkRelativeError( c3a[2] , mpmath.mpf("28.5") )
 
-		from minieigen import Vector3a
+		from minieigen import Vector3na
 		self.checkRelativeError( c3a[0] , eval(c3a.__str__())[0] )
 		self.checkRelativeError( c3a[1] , eval(c3a.__str__())[1] )
 		self.checkRelativeError( c3a[2] , eval(c3a.__str__())[2] )
