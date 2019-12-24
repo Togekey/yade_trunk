@@ -39,6 +39,10 @@ try {
 	ArbitraryReal_from_python<Real>();
 	py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
 
+#ifndef EIGEN_DONT_ALIGN
+	// when we use vectorization the Vector3r is AlignedVector3, so we need to register converter from plain old Vector3<Real> so that other functions can accept it as an argument
+	custom_VectorAnyAny_from_sequence<Vector3<Real>>();
+#endif
 	expose_storage_ordering();
 	// arbitrary Real specific stuff: end
 
