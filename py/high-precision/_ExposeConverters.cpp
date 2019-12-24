@@ -3,9 +3,5 @@
 using namespace ::yade::MathEigenTypes;
 // define this for compatibility with minieigen.
 #define _COMPLEX_SUPPORT
-#ifdef EXPERIMENTS_ONLY_LOCAL_MINIEIGEN
-#include <minieigen-local/expose-converters.cpp>
-#else
 #include <minieigen/expose-converters.cpp>
-#endif
 
