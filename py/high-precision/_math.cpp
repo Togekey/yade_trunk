@@ -70,11 +70,6 @@ std::pair<Real, Real> modf_c_test(const Real& x)
 	return std::pair<Real, Real> { ret, r };
 }
 
-Real tmp_min(const Real& a, const Real& b) { return ::yade::min(a, b); }
-Real tmp_max(const Real& a, const Real& b) { return ::yade::max(a, b); }
-Real tmp_abs(const Real& a) { return ::yade::abs(a); }
-Real tmp_fabs(const Real& a) { return ::yade::fabs(a); }
-
 std::pair<Real, long> remquo_c_test(const Real& x, const Real& y)
 {
 #if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
@@ -276,7 +271,6 @@ try {
 
 	// check overload (and namespace) resolution for all math functions. As a side effect they are exported to python, and can be unit-tested.
 #define YADE_PYEXPORT_MATH_1(func) py::def(#func, static_cast<Real (*)(const Real&)>(&::yade::func), (py::arg("x")));
-#define YADE_PYEXPORT_MATH_1_TMP(func) py::def(#func, static_cast<Real (*)(const Real&)>(&tmp_##func), (py::arg("x")));
 #define YADE_PYEXPORT_MATH_1_COMPLEX(func) py::def(#func, static_cast<Complex (*)(const Complex&)>(&::yade::func), (py::arg("x")));
 #define YADE_PYEXPORT_MATH_1_COMPLEX_TO_REAL(func) py::def(#func, static_cast<Real (*)(const Complex&)>(&::yade::func), (py::arg("x")));
 #define YADE_PYEXPORT_MATH_1_INT(func) py::def(#func, static_cast<int (*)(const Real&)>(&::yade::func), (py::arg("x")));
@@ -305,7 +299,7 @@ try {
 	YADE_PYEXPORT_MATH_1(tan)
 	YADE_PYEXPORT_MATH_1(tanh)
 
-	YADE_PYEXPORT_MATH_1_TMP(abs)
+	YADE_PYEXPORT_MATH_1(abs)
 	YADE_PYEXPORT_MATH_1(acos)
 	YADE_PYEXPORT_MATH_1(acosh)
 	YADE_PYEXPORT_MATH_1(asin)
@@ -334,18 +328,16 @@ try {
 	YADE_PYEXPORT_MATH_1(tgamma)
 	YADE_PYEXPORT_MATH_1(trunc)
 
-	YADE_PYEXPORT_MATH_1_TMP(fabs)
+	YADE_PYEXPORT_MATH_1(fabs)
 
 	YADE_PYEXPORT_MATH_1_INT(sgn)
 	YADE_PYEXPORT_MATH_1_INT(sign)
 #undef YADE_PYEXPORT_MATH_1
-#undef YADE_PYEXPORT_MATH_1_TMP
 #undef YADE_PYEXPORT_MATH_1_COMPLEX
 #undef YADE_PYEXPORT_MATH_1_COMPLEX_TO_REAL
 #undef YADE_PYEXPORT_MATH_1_INT
 
 #define YADE_PYEXPORT_MATH_2(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&)>(&::yade::func), (py::arg("x"), "y"));
-#define YADE_PYEXPORT_MATH_2_TMP(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&)>(&tmp_##func), (py::arg("x"), "y"));
 	YADE_PYEXPORT_MATH_2(atan2)
 	//YADE_PYEXPORT_MATH_2(beta) // since C++17
 	//YADE_PYEXPORT_MATH_2(cyl_bessel_i) // since C++17
@@ -353,11 +345,10 @@ try {
 	//YADE_PYEXPORT_MATH_2(cyl_bessel_k) // since C++17
 	YADE_PYEXPORT_MATH_2(fmod)
 	YADE_PYEXPORT_MATH_2(hypot)
-	YADE_PYEXPORT_MATH_2_TMP(max)
-	YADE_PYEXPORT_MATH_2_TMP(min)
+	YADE_PYEXPORT_MATH_2(max)
+	YADE_PYEXPORT_MATH_2(min)
 	YADE_PYEXPORT_MATH_2(pow)
 	YADE_PYEXPORT_MATH_2(remainder)
-#undef YADE_PYEXPORT_MATH_2_TMP
 #undef YADE_PYEXPORT_MATH_2
 
 #define YADE_PYEXPORT_MATH_2_TYPE1(func, FirstType) py::def(#func, static_cast<Real (*)(FirstType, const Real&)>(&::yade::func), (py::arg("x"), "y"));

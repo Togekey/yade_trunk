@@ -59,11 +59,17 @@
 #define YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD(func)                                                                                                             \
 	inline Real func(const Complex& a) { return ::std::func(static_cast<std::complex<UnderlyingReal>>(a)); }
 
+#define YADE_WRAP_FUNC_1_RENAME(func1, func2)                                                                                                                  \
+	inline Real func1(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func2(static_cast<UnderlyingReal>(a)); }
+
 #define YADE_WRAP_FUNC_2(func)                                                                                                                                 \
 	inline Real func(const Real& a, const Real& b)                                                                                                         \
 	{                                                                                                                                                      \
 		return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b));                                         \
 	}
+
+#define YADE_WRAP_FUNC_2_STD(func)                                                                                                                             \
+	inline Real func(const Real& a, const Real& b) { return ::std::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b)); }
 
 #define YADE_WRAP_FUNC_2_TYPE1(func, FirstType)                                                                                                                \
 	inline Real func(FirstType a, const Real& b) { return YADE_REAL_MATH_NAMESPACE::func(a, static_cast<UnderlyingReal>(b)); }
@@ -166,10 +172,10 @@ YADE_WRAP_FUNC_1_COMPLEX(log)
 /**********************    min, max, abs, sign, floor, ceil, round     **********************/
 /********************************************************************************************/
 
-using ::std::min;
-using ::std::max;
-using ::std::abs;
-using ::std::fabs;
+YADE_WRAP_FUNC_2_STD(max)
+YADE_WRAP_FUNC_2_STD(min)
+YADE_WRAP_FUNC_1(abs)
+YADE_WRAP_FUNC_1_RENAME(fabs, abs)
 template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 template <typename T> int sign(T val) { return (T(0) < val) - (val < T(0)); }
 YADE_WRAP_FUNC_1(floor)
@@ -275,7 +281,9 @@ static inline Real random() { return random01() * 2 - 1; }
 }
 
 #undef YADE_WRAP_FUNC_1
+#undef YADE_WRAP_FUNC_1_RENAME
 #undef YADE_WRAP_FUNC_2
+#undef YADE_WRAP_FUNC_2_STD
 #undef YADE_WRAP_FUNC_2_TYPE2
 #undef YADE_WRAP_FUNC_2_TYPE2_CAST
 #undef YADE_WRAP_FUNC_2_TYPE1
