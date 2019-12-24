@@ -157,7 +157,7 @@ using Complex = ::yade::ThinRealWrapper<std::complex<UnderlyingReal>>;
 static_assert(sizeof(yade::Real) == sizeof(UnderlyingReal), "This compiler introduced padding, which breaks binary compatibility");
 static_assert(sizeof(yade::Complex) == sizeof(std::complex<UnderlyingReal>), "This compiler introduced padding, which breaks binary compatibility");
 
-#include "ThinRealWrapperNumericLimits.hpp"
+#include "NumericLimits.hpp"
 #else
 
 namespace yade {
