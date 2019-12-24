@@ -15,6 +15,9 @@
 #ifdef MINIEIGEN_OVERRIDE
 
 #include <lib/high-precision/Real.hpp>
+//#define ARBITRARY_REAL_DEBUG
+#include <py/high-precision/_ExposeStorageOrdering.hpp>
+#include <lib/high-precision/ToFromPythonConverter.hpp>
 
 #include <iomanip>
 #include <iostream>
@@ -26,10 +29,6 @@ using namespace ::yade::MathEigenTypes;
 #include <minieigen/visitors.hpp>
 #include <minieigen/expose.hpp>
 
-//#define ARBITRARY_REAL_DEBUG
-#include <py/high-precision/_ExposeStorageOrdering.hpp>
-#include <lib/high-precision/ToFromPythonConverter.hpp>
-
 BOOST_PYTHON_MODULE(THE_CPP_NAME)
 try {
 	// arbitrary Real specific stuff: start
@@ -39,10 +38,6 @@ try {
 	ArbitraryReal_from_python<Real>();
 	py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
 
-#ifndef EIGEN_DONT_ALIGN
-	// when we use vectorization the Vector3r is AlignedVector3, so we need to register converter from plain old Vector3<Real> so that other functions can accept it as an argument
-	custom_VectorAnyAny_from_sequence<Vector3<Real>>();
-#endif
 	expose_storage_ordering();
 	// arbitrary Real specific stuff: end
 
@@ -55,6 +50,13 @@ try {
 
 
 	expose_converters(); // in expose-converters.cpp
+#ifndef EIGEN_DONT_ALIGN
+	// when we use vectorization the Vector3r is AlignedVector3, so we need to register converter from plain old Vector3<Real> so that other functions can accept it as an argument
+	custom_VectorAnyAny_from_sequence<Eigen::Matrix<Real, 3, 1>>();
+	py::class_<Eigen::Matrix<Real, 3, 1>>("Vector3na","3-dimensional non-aligned float vector; same as :obj:`Vector3`, but with alignment (``Eigen::AlignedVector3``).\n\nSupported operations (``f`` if a float/int, ``v`` is a Vector3): ``-v``, ``v+v``, ``v+=v``, ``v-v``, ``v-=v``, ``v*f``, ``f*v``, ``v*=f``, ``v/f``, ``v/=f``, ``v==v``, ``v!=v``, plus operations with ``Matrix3`` and ``Quaternion``.\n\nImplicit conversion from sequence (list, tuple, ...) of 3 floats.\n\nStatic attributes: ``Zero``, ``Ones``, ``UnitX``, ``UnitY``, ``UnitZ``.",py::init<>())
+	.def(VectorVisitor<Eigen::Matrix<Real, 3, 1>>())
+	;
+#endif
 
 	expose_vectors();
 	expose_matrices(); // must come after vectors
