@@ -91,6 +91,45 @@ using Matrix6cr = Matrix6<Complex>;
 using MatrixXcr = Eigen::Matrix<Complex, Eigen::Dynamic, Eigen::Dynamic>;
 
 /*************************************************************************/
+/*************************         Se3          **************************/
+/*************************************************************************/
+
+template <class Scalar> class Se3 {
+public:
+	Vector3<Scalar>           position;
+	Eigen::Quaternion<Scalar> orientation;
+	Se3() {};
+	Se3(Vector3<Scalar> rkP, Eigen::Quaternion<Scalar> qR)
+	{
+		position    = rkP;
+		orientation = qR;
+	}
+	Se3(const Se3<Scalar>& s)
+	{
+		position    = s.position;
+		orientation = s.orientation;
+	}
+	Se3(Se3<Scalar>& a, Se3<Scalar>& b)
+	{
+		position    = b.orientation.inverse() * (a.position - b.position);
+		orientation = b.orientation.inverse() * a.orientation;
+	}
+	Se3<Scalar> inverse() { return Se3(-(orientation.inverse() * position), orientation.inverse()); }
+	void        toGLMatrix(float m[16])
+	{
+		orientation.toGLMatrix(m);
+		m[12] = position[0];
+		m[13] = position[1];
+		m[14] = position[2];
+	}
+	Vector3<Scalar> operator*(const Vector3<Scalar>& b) { return orientation * b + position; }
+	Se3<Scalar>     operator*(const Eigen::Quaternion<Scalar>& b) { return Se3<Scalar>(position, orientation * b); }
+	Se3<Scalar>     operator*(const Se3<Scalar>& b) { return Se3<Scalar>(orientation * b.position + position, orientation * b.orientation); }
+};
+
+using Se3r = Se3<Real>;
+
+/*************************************************************************/
 /*************************   for external use   **************************/
 /*************************************************************************/
 
@@ -141,6 +180,8 @@ namespace MathEigenTypes {
 	using ::yade::Matrix4cr;
 	using ::yade::Matrix6cr;
 	using ::yade::MatrixXcr;
+
+	using ::yade::Se3r;
 }
 
 }
