@@ -9,6 +9,7 @@
 //     https://en.cppreference.com/w/cpp/numeric/math
 //     https://en.cppreference.com/w/cpp/numeric/special_functions
 // They have to be provided here as inline redirections towards the correct implementation, depending on what precision type yade is being compiled with.
+// This is the only way to make sure that ::std, ::boost::math, ::boost::multiprecision are all called correctly.
 
 // TODO: Boost documentation recommends to link with tr1: -lboost_math_tr1 as it provides significant speedup. For example replace boost::math::acosh(x) ↔ boost::math::tr1::acosh(x)
 //     https://www.boost.org/doc/libs/1_71_0/libs/math/doc/html/math_toolkit/overview_tr1.html
@@ -37,6 +38,12 @@
 #define YADE_WRAP_FUNC_1(func)                                                                                                                                 \
 	inline Real func(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a)); }
 
+#define YADE_WRAP_FUNC_1_STD(func)                                                                                                                                 \
+	inline Real func(const Real& a) { return ::std::func(static_cast<UnderlyingReal>(a)); }
+
+#define YADE_WRAP_FUNC_1_MREF(func)                                                                                                                                 \
+	inline Real func(Real&& a) { return ::std::func(static_cast<UnderlyingReal>(a)); }
+
 #define YADE_WRAP_FUNC_1_COMPLEX(func)                                                                                                                         \
 	inline Complex func(const Complex& a)                                                                                                                  \
 	{                                                                                                                                                      \
@@ -59,8 +66,8 @@
 #define YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD(func)                                                                                                             \
 	inline Real func(const Complex& a) { return ::std::func(static_cast<std::complex<UnderlyingReal>>(a)); }
 
-#define YADE_WRAP_FUNC_1_RENAME(func1, func2)                                                                                                                  \
-	inline Real func1(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func2(static_cast<UnderlyingReal>(a)); }
+#define YADE_WRAP_FUNC_1_MREF_RENAME(func1, func2)                                                                                                                  \
+	inline Real func1(Real&& a) { return YADE_REAL_MATH_NAMESPACE::func2(static_cast<UnderlyingReal>(a)); }
 
 #define YADE_WRAP_FUNC_2(func)                                                                                                                                 \
 	inline Real func(const Real& a, const Real& b)                                                                                                         \
@@ -68,8 +75,8 @@
 		return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b));                                         \
 	}
 
-#define YADE_WRAP_FUNC_2_STD(func)                                                                                                                             \
-	inline Real func(const Real& a, const Real& b) { return ::std::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b)); }
+#define YADE_WRAP_FUNC_2_CREF(func)                                                                                                                             \
+	inline const Real& func(const Real& a, const Real& b) { return ::std::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b)); }
 
 #define YADE_WRAP_FUNC_2_TYPE1(func, FirstType)                                                                                                                \
 	inline Real func(FirstType a, const Real& b) { return YADE_REAL_MATH_NAMESPACE::func(a, static_cast<UnderlyingReal>(b)); }
@@ -169,13 +176,20 @@ YADE_WRAP_FUNC_1_COMPLEX(exp)
 YADE_WRAP_FUNC_1_COMPLEX(log)
 
 /********************************************************************************************/
-/**********************    min, max, abs, sign, floor, ceil, round     **********************/
+/**********************    min, max, abs, sign, floor, ceil, etc...    **********************/
 /********************************************************************************************/
 
-YADE_WRAP_FUNC_2_STD(max)
-YADE_WRAP_FUNC_2_STD(min)
-YADE_WRAP_FUNC_1(abs)
-YADE_WRAP_FUNC_1_RENAME(fabs, abs)
+// Both must be found by automatic lookup: the ones from ::std and the ones that accept non-double Real types.
+using ::std::min;
+using ::std::max;
+using ::std::abs;
+using ::std::fabs;
+#if (YADE_REAL_BIT > 64)
+YADE_WRAP_FUNC_2_CREF(min)
+YADE_WRAP_FUNC_2_CREF(max)
+YADE_WRAP_FUNC_1_MREF(abs)
+YADE_WRAP_FUNC_1_MREF_RENAME(fabs, abs)
+#endif
 template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 template <typename T> int sign(T val) { return (T(0) < val) - (val < T(0)); }
 YADE_WRAP_FUNC_1(floor)
@@ -183,6 +197,9 @@ YADE_WRAP_FUNC_1(ceil)
 YADE_WRAP_FUNC_1(round)
 YADE_WRAP_FUNC_1(rint)
 YADE_WRAP_FUNC_1(trunc)
+
+YADE_WRAP_FUNC_1_STD(isnan)
+YADE_WRAP_FUNC_1_STD(isinf)
 
 /**********************                    Complex                     *********************/
 // add more complex functions as necessary, but remember to add them in py/high-precision/_math.cpp and py/tests/testMath.py
@@ -281,9 +298,11 @@ static inline Real random() { return random01() * 2 - 1; }
 }
 
 #undef YADE_WRAP_FUNC_1
-#undef YADE_WRAP_FUNC_1_RENAME
+#undef YADE_WRAP_FUNC_1_STD
+#undef YADE_WRAP_FUNC_1_MREF
+#undef YADE_WRAP_FUNC_1_MREF_RENAME
 #undef YADE_WRAP_FUNC_2
-#undef YADE_WRAP_FUNC_2_STD
+#undef YADE_WRAP_FUNC_2_CREF
 #undef YADE_WRAP_FUNC_2_TYPE2
 #undef YADE_WRAP_FUNC_2_TYPE2_CAST
 #undef YADE_WRAP_FUNC_2_TYPE1
