@@ -271,6 +271,7 @@ try {
 
 	// check overload (and namespace) resolution for all math functions. As a side effect they are exported to python, and can be unit-tested.
 #define YADE_PYEXPORT_MATH_1(func) py::def(#func, static_cast<Real (*)(const Real&)>(&::yade::func), (py::arg("x")));
+#define YADE_PYEXPORT_MATH_1_MREF(func) py::def(#func, static_cast<Real (*)(Real)>(&::yade::func), (py::arg("x")));
 #define YADE_PYEXPORT_MATH_1_COMPLEX(func) py::def(#func, static_cast<Complex (*)(const Complex&)>(&::yade::func), (py::arg("x")));
 #define YADE_PYEXPORT_MATH_1_COMPLEX_TO_REAL(func) py::def(#func, static_cast<Real (*)(const Complex&)>(&::yade::func), (py::arg("x")));
 #define YADE_PYEXPORT_MATH_1_INT(func) py::def(#func, static_cast<int (*)(const Real&)>(&::yade::func), (py::arg("x")));
@@ -299,7 +300,13 @@ try {
 	YADE_PYEXPORT_MATH_1(tan)
 	YADE_PYEXPORT_MATH_1(tanh)
 
+#if (YADE_REAL_BIT > 64)
 	YADE_PYEXPORT_MATH_1(abs)
+	YADE_PYEXPORT_MATH_1(fabs)
+#else
+	YADE_PYEXPORT_MATH_1_MREF(fabs)
+	YADE_PYEXPORT_MATH_1_MREF(abs)
+#endif
 	YADE_PYEXPORT_MATH_1(acos)
 	YADE_PYEXPORT_MATH_1(acosh)
 	YADE_PYEXPORT_MATH_1(asin)
@@ -328,16 +335,16 @@ try {
 	YADE_PYEXPORT_MATH_1(tgamma)
 	YADE_PYEXPORT_MATH_1(trunc)
 
-	YADE_PYEXPORT_MATH_1(fabs)
-
 	YADE_PYEXPORT_MATH_1_INT(sgn)
 	YADE_PYEXPORT_MATH_1_INT(sign)
 #undef YADE_PYEXPORT_MATH_1
+#undef YADE_PYEXPORT_MATH_1_MREF
 #undef YADE_PYEXPORT_MATH_1_COMPLEX
 #undef YADE_PYEXPORT_MATH_1_COMPLEX_TO_REAL
 #undef YADE_PYEXPORT_MATH_1_INT
 
 #define YADE_PYEXPORT_MATH_2(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&)>(&::yade::func), (py::arg("x"), "y"));
+#define YADE_PYEXPORT_MATH_2_CREF(func) py::def(#func, static_cast<const Real& (*)(const Real&, const Real&)>(&::yade::func), (py::arg("x"), "y"),py::return_value_policy<py::copy_const_reference>());
 	YADE_PYEXPORT_MATH_2(atan2)
 	//YADE_PYEXPORT_MATH_2(beta) // since C++17
 	//YADE_PYEXPORT_MATH_2(cyl_bessel_i) // since C++17
@@ -345,11 +352,12 @@ try {
 	//YADE_PYEXPORT_MATH_2(cyl_bessel_k) // since C++17
 	YADE_PYEXPORT_MATH_2(fmod)
 	YADE_PYEXPORT_MATH_2(hypot)
-	YADE_PYEXPORT_MATH_2(max)
-	YADE_PYEXPORT_MATH_2(min)
+	YADE_PYEXPORT_MATH_2_CREF(max)
+	YADE_PYEXPORT_MATH_2_CREF(min)
 	YADE_PYEXPORT_MATH_2(pow)
 	YADE_PYEXPORT_MATH_2(remainder)
 #undef YADE_PYEXPORT_MATH_2
+#undef YADE_PYEXPORT_MATH_2_CREF
 
 #define YADE_PYEXPORT_MATH_2_TYPE1(func, FirstType) py::def(#func, static_cast<Real (*)(FirstType, const Real&)>(&::yade::func), (py::arg("x"), "y"));
 	//YADE_PYEXPORT_MATH_2_TYPE1(sph_bessel, unsigned) // since C++17

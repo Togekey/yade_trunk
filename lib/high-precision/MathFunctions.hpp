@@ -36,79 +36,76 @@
 
 // Macors for quick inline redirections towards the correct function from (1) standard library or (2) boost::multiprecision; depending on which one is used.
 #define YADE_WRAP_FUNC_1(func)                                                                                                                                 \
-	inline Real func(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a)); }
+	inline Real func(const Real& a)                                                                                                                        \
+	{                                                                                                                                                      \
+		using YADE_REAL_MATH_NAMESPACE::func;                                                                                                          \
+		using ::std::func;                                                                                                                             \
+		return func(static_cast<const UnderlyingReal&>(a));                                                                                            \
+	}
 
-#define YADE_WRAP_FUNC_1_STD(func)                                                                                                                                 \
-	inline Real func(const Real& a) { return ::std::func(static_cast<UnderlyingReal>(a)); }
+#define YADE_WRAP_FUNC_1_RENAME(func1, func2)                                                                                                                  \
+	inline Real func1(const Real& a) { return YADE_REAL_MATH_NAMESPACE::func2(static_cast<const UnderlyingReal&>(a)); }
 
-#define YADE_WRAP_FUNC_1_MREF(func)                                                                                                                                 \
-	inline Real func(Real&& a) { return ::std::func(static_cast<UnderlyingReal>(a)); }
+#define YADE_WRAP_FUNC_2(func)                                                                                                                                 \
+	inline Real func(const Real& a, const Real& b)                                                                                                         \
+	{                                                                                                                                                      \
+		return YADE_REAL_MATH_NAMESPACE::func(static_cast<const UnderlyingReal&>(a), static_cast<const UnderlyingReal&>(b));                           \
+	}
+
+#define YADE_WRAP_FUNC_2_TYPE1(func, FirstType)                                                                                                                \
+	inline Real func(FirstType a, const Real& b) { return YADE_REAL_MATH_NAMESPACE::func(a, static_cast<const UnderlyingReal&>(b)); }
+
+#define YADE_WRAP_FUNC_2_TYPE2(func, SecondType)                                                                                                               \
+	inline Real func(const Real& a, SecondType b) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<const UnderlyingReal&>(a), b); }
+
+#ifdef YADE_THIN_REAL_WRAPPER_HPP
+#define YADE_WRAP_FUNC_2_TYPE2_CAST(func, SecondType, CastType)                                                                                                \
+	inline Real func(const Real& a, SecondType b) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<const UnderlyingReal&>(a), b->operator CastType()); }
+#else
+#define YADE_WRAP_FUNC_2_TYPE2_CAST(func, SecondType, CastType)                                                                                                \
+	inline Real func(const Real& a, SecondType b) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<const UnderlyingReal&>(a), b); }
+#endif
+
+#define YADE_WRAP_FUNC_3(func)                                                                                                                                 \
+	inline Real func(const Real& a, const Real& b, const Real& c)                                                                                          \
+	{                                                                                                                                                      \
+		return YADE_REAL_MATH_NAMESPACE::func(                                                                                                         \
+		        static_cast<const UnderlyingReal&>(a), static_cast<const UnderlyingReal&>(b), static_cast<const UnderlyingReal&>(c));                  \
+	}
+
+#define YADE_WRAP_FUNC_3_TYPE31(func, ThirdToFirstType)                                                                                                        \
+	inline Real func(const Real& a, const Real& b, ThirdToFirstType c)                                                                                     \
+	{                                                                                                                                                      \
+		return YADE_REAL_MATH_NAMESPACE::func(c, static_cast<const UnderlyingReal&>(a), static_cast<const UnderlyingReal&>(b));                        \
+	}
+
+#define YADE_WRAP_FUNC_3_TYPE3(func, ThirdType)                                                                                                                \
+	inline Real func(const Real& a, const Real& b, ThirdType c)                                                                                            \
+	{                                                                                                                                                      \
+		return YADE_REAL_MATH_NAMESPACE::func(static_cast<const UnderlyingReal&>(a), static_cast<const UnderlyingReal&>(b), c);                        \
+	}
 
 #define YADE_WRAP_FUNC_1_COMPLEX(func)                                                                                                                         \
 	inline Complex func(const Complex& a)                                                                                                                  \
 	{                                                                                                                                                      \
 		using YADE_REAL_MATH_NAMESPACE::func;                                                                                                          \
 		using ::std::func;                                                                                                                             \
-		return func(static_cast<std::complex<UnderlyingReal>>(a));                                                                                     \
+		return func(static_cast<const std::complex<UnderlyingReal>&>(a));                                                                              \
 	}
 
 #define YADE_WRAP_FUNC_1_COMPLEX_STD(func)                                                                                                                     \
-	inline Complex func(const Complex& a) { return ::std::func(static_cast<std::complex<UnderlyingReal>>(a)); }
+	inline Complex func(const Complex& a) { return ::std::func(static_cast<const std::complex<UnderlyingReal>&>(a)); }
 
 #define YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(func)                                                                                                                 \
 	inline Real func(const Complex& a)                                                                                                                     \
 	{                                                                                                                                                      \
 		using YADE_REAL_MATH_NAMESPACE::func;                                                                                                          \
 		using ::std::func;                                                                                                                             \
-		return func(static_cast<std::complex<UnderlyingReal>>(a));                                                                                     \
+		return func(static_cast<const std::complex<UnderlyingReal>&>(a));                                                                              \
 	}
 
 #define YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD(func)                                                                                                             \
-	inline Real func(const Complex& a) { return ::std::func(static_cast<std::complex<UnderlyingReal>>(a)); }
-
-#define YADE_WRAP_FUNC_1_MREF_RENAME(func1, func2)                                                                                                                  \
-	inline Real func1(Real&& a) { return YADE_REAL_MATH_NAMESPACE::func2(static_cast<UnderlyingReal>(a)); }
-
-#define YADE_WRAP_FUNC_2(func)                                                                                                                                 \
-	inline Real func(const Real& a, const Real& b)                                                                                                         \
-	{                                                                                                                                                      \
-		return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b));                                         \
-	}
-
-#define YADE_WRAP_FUNC_2_CREF(func)                                                                                                                             \
-	inline const Real& func(const Real& a, const Real& b) { return ::std::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b)); }
-
-#define YADE_WRAP_FUNC_2_TYPE1(func, FirstType)                                                                                                                \
-	inline Real func(FirstType a, const Real& b) { return YADE_REAL_MATH_NAMESPACE::func(a, static_cast<UnderlyingReal>(b)); }
-
-#define YADE_WRAP_FUNC_2_TYPE2(func, SecondType)                                                                                                               \
-	inline Real func(const Real& a, SecondType b) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), b); }
-
-#ifdef YADE_THIN_REAL_WRAPPER_HPP
-#define YADE_WRAP_FUNC_2_TYPE2_CAST(func, SecondType, CastType)                                                                                                \
-	inline Real func(const Real& a, SecondType b) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), b->operator CastType()); }
-#else
-#define YADE_WRAP_FUNC_2_TYPE2_CAST(func, SecondType, CastType)                                                                                                \
-	inline Real func(const Real& a, SecondType b) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), b); }
-#endif
-
-#define YADE_WRAP_FUNC_3(func)                                                                                                                                 \
-	inline Real func(const Real& a, const Real& b, const Real& c)                                                                                          \
-	{                                                                                                                                                      \
-		return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b), static_cast<UnderlyingReal>(c));         \
-	}
-
-#define YADE_WRAP_FUNC_3_TYPE31(func, ThirdToFirstType)                                                                                                        \
-	inline Real func(const Real& a, const Real& b, ThirdToFirstType c)                                                                                     \
-	{                                                                                                                                                      \
-		return YADE_REAL_MATH_NAMESPACE::func(c, static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b));                                      \
-	}
-
-#define YADE_WRAP_FUNC_3_TYPE3(func, ThirdType)                                                                                                                \
-	inline Real func(const Real& a, const Real& b, ThirdType c)                                                                                            \
-	{                                                                                                                                                      \
-		return YADE_REAL_MATH_NAMESPACE::func(static_cast<UnderlyingReal>(a), static_cast<UnderlyingReal>(b), c);                                      \
-	}
+	inline Real func(const Complex& a) { return ::std::func(static_cast<const std::complex<UnderlyingReal>&>(a)); }
 
 
 namespace yade {
@@ -185,10 +182,8 @@ using ::std::max;
 using ::std::abs;
 using ::std::fabs;
 #if (YADE_REAL_BIT > 64)
-YADE_WRAP_FUNC_2_CREF(min)
-YADE_WRAP_FUNC_2_CREF(max)
-YADE_WRAP_FUNC_1_MREF(abs)
-YADE_WRAP_FUNC_1_MREF_RENAME(fabs, abs)
+YADE_WRAP_FUNC_1(abs)
+YADE_WRAP_FUNC_1_RENAME(fabs, abs)
 #endif
 template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
 template <typename T> int sign(T val) { return (T(0) < val) - (val < T(0)); }
@@ -198,8 +193,8 @@ YADE_WRAP_FUNC_1(round)
 YADE_WRAP_FUNC_1(rint)
 YADE_WRAP_FUNC_1(trunc)
 
-YADE_WRAP_FUNC_1_STD(isnan)
-YADE_WRAP_FUNC_1_STD(isinf)
+YADE_WRAP_FUNC_1(isnan)
+YADE_WRAP_FUNC_1(isinf)
 
 /**********************                    Complex                     *********************/
 // add more complex functions as necessary, but remember to add them in py/high-precision/_math.cpp and py/tests/testMath.py
@@ -298,17 +293,18 @@ static inline Real random() { return random01() * 2 - 1; }
 }
 
 #undef YADE_WRAP_FUNC_1
-#undef YADE_WRAP_FUNC_1_STD
-#undef YADE_WRAP_FUNC_1_MREF
-#undef YADE_WRAP_FUNC_1_MREF_RENAME
+#undef YADE_WRAP_FUNC_1_RENAME
 #undef YADE_WRAP_FUNC_2
-#undef YADE_WRAP_FUNC_2_CREF
 #undef YADE_WRAP_FUNC_2_TYPE2
 #undef YADE_WRAP_FUNC_2_TYPE2_CAST
 #undef YADE_WRAP_FUNC_2_TYPE1
 #undef YADE_WRAP_FUNC_3
 #undef YADE_WRAP_FUNC_3_TYPE3
 #undef YADE_WRAP_FUNC_3_TYPE31
+#undef YADE_WRAP_FUNC_1_COMPLEX
+#undef YADE_WRAP_FUNC_1_COMPLEX_STD
+#undef YADE_WRAP_FUNC_1_COMPLEX_TO_REAL
+#undef YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD
 
 #endif
 
