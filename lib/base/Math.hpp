@@ -107,60 +107,6 @@ using std::type_info;
 using std::vector;
 using boost::shared_ptr;
 
-/*
-// the math functions in yade:: must work correctly for Real as:
-// * double
-// * long double
-// * boost::float128_t
-// * boost::multiprecision::mpfr_float_backend<N>
-// https://www.boost.org/doc/libs/1_71_0/libs/multiprecision/doc/html/index.html
-// https://www.boost.org/doc/libs/1_71_0/libs/multiprecision/doc/html/boost_multiprecision/tut/floats/fp_eg/aos.html
-// Math functions must have different name in yade than in std:: namespace because some of them are in :: instead of ::std namespace.
-// * https://stackoverflow.com/questions/11085916/why-are-some-functions-in-cmath-not-in-the-std-namespace
-//   "Implementations of the C++ standard library are permitted to declare C library functions in the global namespace as well as in std."
-//   "In the C++ standard library, however, the declarations (except for names which are defined as macros in C) are within namespace scope (3.3.6)
-//    of the namespace std. It is unspecified whether these names are first declared within the global namespace scope and are then
-// →→ injected into namespace
-//    std by explicit using-declarations (7.3.3)."
-// So th chosen "different" name is to capitalize them.
-using std::max;
-using std::min;
-inline Real Max(const Real& a, const Real& b) { return std::max(a,b); }
-inline Real Min(const Real& a, const Real& b) { return std::min(a,b); }
-inline Real Abs(const Real& a               ) { return std::abs(a  ); }
-
-template<typename Scalar> using Vector2 = Eigen::Matrix<Scalar,2,1>;
-using Vector2i = Vector2<int>;
-using Vector2r = Vector2<Real>;
-
-template<typename Scalar> using Vector3 = Eigen::Matrix<Scalar,3,1>;
-using Vector3i = Vector3<int>;
-using Vector3r = Vector3<Real>;
-
-template<typename Scalar> using Vector6 = Eigen::Matrix<Scalar,6,1>;
-using Vector6i = Vector6<int>;
-using Vector6r = Vector6<Real>;
-
-template<typename Scalar> using Matrix3 = Eigen::Matrix<Scalar,3,3>;
-using Matrix3i = Matrix3<int>;
-using Matrix3r = Matrix3<Real>;
-
-template<typename Scalar> using Matrix6 = Eigen::Matrix<Scalar,6,6>;
-using Matrix6i = Matrix6<int>;
-using Matrix6r = Matrix6<Real>;
-
-using VectorXr  = Eigen::Matrix<Real, Eigen::Dynamic, 1>; // It's only for this double → Real merge request to work. In !366 it is moved to lib/high-precision/MathEigenTypes.hpp
-using MatrixXr = Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>;
-
-using Quaternionr = Eigen::Quaternion<Real>;
-using AngleAxisr  = Eigen::AngleAxis<Real>;
-using AlignedBox2r = Eigen::AlignedBox<Real,2>;
-using AlignedBox3r = Eigen::AlignedBox<Real,3>;
-*/
-
-using Eigen::AngleAxis;
-using Eigen::Quaternion;
-
 // in some cases, we want to initialize types that have no default constructor (OpenMPAccumulator, for instance)
 // template specialization will help us here
 template<typename EigenMatrix> EigenMatrix ZeroInitializer(){ return EigenMatrix::Zero(); };
@@ -255,7 +201,7 @@ Vector6<Scalar> tensor_toVoigt(const Matrix3<Scalar>& m, bool strain=false){
 const Real NaN(std::numeric_limits<Real>::signaling_NaN());
 
 // void quaternionToEulerAngles (const Quaternionr& q, Vector3r& eulerAngles,Real threshold=1e-6f);
-template<typename Scalar> void quaterniontoGLMatrix(const Quaternion<Scalar>& q, Scalar m[16]){
+template<typename Scalar> void quaterniontoGLMatrix(const Eigen::Quaternion<Scalar>& q, Scalar m[16]){
 	Scalar w2=2.*q.w(), x2=2.*q.x(), y2=2.*q.y(), z2=2.*q.z();
 	Scalar x2w=w2*q.w(), y2w=y2*q.w(), z2w=z2*q.w();
 	Scalar x2x=x2*q.x(), y2x=y2*q.x(), z2x=z2*q.x();
@@ -266,27 +212,6 @@ template<typename Scalar> void quaterniontoGLMatrix(const Quaternion<Scalar>& q,
 	m[2]=z2x-y2w;      m[6]=z2y+x2w;      m[10]=1.-(x2x+y2y); m[14]=0;
 	m[3]=0.;           m[7]=0.;           m[11]=0.;           m[15]=1.;
 }
-
-// se3
-template <class Scalar>
-class Se3
-{
-	public :
-		Vector3<Scalar>	position;
-		Quaternion<Scalar>	orientation;
-		Se3(){};
-		Se3(Vector3<Scalar> rkP, Quaternion<Scalar> qR){ position = rkP; orientation = qR; }
-		Se3(const Se3<Scalar>& s){position = s.position;orientation = s.orientation;}
-		Se3(Se3<Scalar>& a,Se3<Scalar>& b){
-			position  = b.orientation.inverse()*(a.position - b.position);  
-			orientation = b.orientation.inverse()*a.orientation;
-		}
-		Se3<Scalar> inverse(){ return Se3(-(orientation.inverse()*position), orientation.inverse());}
-		void toGLMatrix(float m[16]){ orientation.toGLMatrix(m); m[12] = position[0]; m[13] = position[1]; m[14] = position[2];}
-		Vector3<Scalar> operator * (const Vector3<Scalar>& b ){return orientation*b+position;}
-		Se3<Scalar> operator * (const Quaternion<Scalar>& b ){return Se3<Scalar>(position , orientation*b);}
-		Se3<Scalar> operator * (const Se3<Scalar>& b ){return Se3<Scalar>(orientation*b.position+position,orientation*b.orientation);}
-};
 
 // functions
 template<typename Scalar> Scalar unitVectorsAngle(const Vector3<Scalar>& a, const Vector3<Scalar>& b){ return acos(a.dot(b)); }
@@ -314,7 +239,6 @@ bool operator&&(bool b, const mask_t& g);
 using mask_t = int;
 #endif
 
-using Se3r = Se3<Real>;
 
 } // namespace yade
 
