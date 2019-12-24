@@ -16,58 +16,79 @@
 #error "This file cannot be included alone, include Real.hpp instead"
 #endif
 
-// FIXME: replace typedef with using
-
 namespace yade {
 
-template<typename Scalar> using Vector2 = Eigen::Matrix<Scalar,2,1>;
-template<typename Scalar> using Vector3 = Eigen::Matrix<Scalar,3,1>;
-template<typename Scalar> using Vector6 = Eigen::Matrix<Scalar,6,1>;
-template<typename Scalar> using Matrix3 = Eigen::Matrix<Scalar,3,3>;
-template<typename Scalar> using Matrix6 = Eigen::Matrix<Scalar,6,6>;
+template <typename Scalar> using Vector2 = Eigen::Matrix<Scalar, 2, 1>;
+template <typename Scalar> using Vector3 = Eigen::Matrix<Scalar, 3, 1>;
+template <typename Scalar> using Vector4 = Eigen::Matrix<Scalar, 4, 1>;
+template <typename Scalar> using Vector6 = Eigen::Matrix<Scalar, 6, 1>;
 
+template <typename Scalar> using Matrix2 = Eigen::Matrix<Scalar, 3, 3>;
+template <typename Scalar> using Matrix3 = Eigen::Matrix<Scalar, 3, 3>;
+template <typename Scalar> using Matrix4 = Eigen::Matrix<Scalar, 4, 4>;
+template <typename Scalar> using Matrix6 = Eigen::Matrix<Scalar, 6, 6>;
+
+/*************************************************************************/
+/*************************      Integer         **************************/
+/*************************************************************************/
 // integral type for indices, to avoid compiler warnings with int
-typedef Eigen::Matrix<int, 1, 1>::Index Index;
-typedef Eigen::Matrix<int, 2, 1>        Vector2i;
-typedef Eigen::Matrix<int, 3, 1>        Vector3i;
-typedef Eigen::Matrix<int, 6, 1>        Vector6i;
+using Index = Eigen::Matrix<int, 1, 1>::Index;
+
+using Vector2i = Vector2<int>;
+using Vector3i = Vector3<int>;
+using Vector4i = Vector4<int>;
+using Vector6i = Vector6<int>;
+using VectorXi = Eigen::Matrix<int, Eigen::Dynamic, 1>;
+
+using Matrix2i = Matrix2<int>;
 using Matrix3i = Matrix3<int>;
+using Matrix4i = Matrix4<int>;
 using Matrix6i = Matrix6<int>;
+using MatrixXi = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>;
 
 /*************************************************************************/
 /*************************        Real          **************************/
 /*************************************************************************/
 
-/* exposed types */
-typedef Eigen::Matrix<Real, 2, 1>                           Vector2r;
+// The Vector3r will become AlignedVector3 once we will start using SSE vectorization.
 #ifdef EIGEN_DONT_ALIGN
-typedef Eigen::Matrix<Real, 3, 1>                           Vector3r;
+using Vector3r = Vector3<Real>;
 #else
-typedef Eigen::AlignedVector3<Real>                         Vector3r;
+using Vector3r = Eigen::AlignedVector3<Real>;
 #endif
-typedef Eigen::AlignedVector3<Real>                         Vector3ra;
-typedef Eigen::Matrix<Real, 4, 1>                           Vector4r;
-typedef Eigen::Matrix<Real, 6, 1>                           Vector6r;
-typedef Eigen::Matrix<Real, 3, 3>                           Matrix3r;
-typedef Eigen::Matrix<Real, 6, 6>                           Matrix6r;
-typedef Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic> MatrixXr;
-typedef Eigen::Matrix<Real, Eigen::Dynamic, 1>              VectorXr;
-typedef Eigen::Quaternion<Real>                             Quaternionr;
-typedef Eigen::AngleAxis<Real>                              AngleAxisr;
-typedef Eigen::AlignedBox<Real, 3>                          AlignedBox3r;
-typedef Eigen::AlignedBox<Real, 2>                          AlignedBox2r;
+
+using Vector2r  = Vector2<Real>;
+using Vector3ra = Eigen::AlignedVector3<Real>;
+using Vector4r  = Vector4<Real>;
+using Vector6r  = Vector6<Real>;
+using VectorXr  = Eigen::Matrix<Real, Eigen::Dynamic, 1>;
+
+using Matrix2r = Matrix2<Real>;
+using Matrix3r = Matrix3<Real>;
+using Matrix4r = Matrix4<Real>;
+using Matrix6r = Matrix6<Real>;
+using MatrixXr = Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>;
+
+using Quaternionr  = Eigen::Quaternion<Real>;
+using AngleAxisr   = Eigen::AngleAxis<Real>;
+using AlignedBox3r = Eigen::AlignedBox<Real, 3>;
+using AlignedBox2r = Eigen::AlignedBox<Real, 2>;
 
 /*************************************************************************/
 /*************************       Complex        **************************/
 /*************************************************************************/
 
-typedef Eigen::Matrix<Complex, 2, 1>                           Vector2cr;
-typedef Eigen::Matrix<Complex, 3, 1>                           Vector3cr;
-typedef Eigen::Matrix<Complex, 6, 1>                           Vector6cr;
-typedef Eigen::Matrix<Complex, Eigen::Dynamic, 1>              VectorXcr;
-typedef Eigen::Matrix<Complex, 3, 3>                           Matrix3cr;
-typedef Eigen::Matrix<Complex, 6, 6>                           Matrix6cr;
-typedef Eigen::Matrix<Complex, Eigen::Dynamic, Eigen::Dynamic> MatrixXcr;
+using Vector2cr = Vector2<Complex>;
+using Vector3cr = Vector3<Complex>;
+using Vector4cr = Vector4<Complex>;
+using Vector6cr = Vector6<Complex>;
+using VectorXcr = Eigen::Matrix<Complex, Eigen::Dynamic, 1>;
+
+using Matrix2cr = Matrix2<Complex>;
+using Matrix3cr = Matrix3<Complex>;
+using Matrix4cr = Matrix4<Complex>;
+using Matrix6cr = Matrix6<Complex>;
+using MatrixXcr = Eigen::Matrix<Complex, Eigen::Dynamic, Eigen::Dynamic>;
 
 /*************************************************************************/
 /*************************   for external use   **************************/
@@ -86,27 +107,40 @@ namespace MathEigenTypes {
 	using ::yade::Vector3i;
 	using ::yade::Vector3r;
 	using ::yade::Vector3ra;
+	using ::yade::Vector4i;
 	using ::yade::Vector4r;
 	using ::yade::Vector6i;
 	using ::yade::Vector6r;
-
-	using ::yade::Matrix3r;
-	using ::yade::Matrix6r;
-	using ::yade::MatrixXr;
+	using ::yade::VectorXi;
 	using ::yade::VectorXr;
+
+	using ::yade::Matrix2i;
+	using ::yade::Matrix2r;
+	using ::yade::Matrix3i;
+	using ::yade::Matrix3r;
+	using ::yade::Matrix4i;
+	using ::yade::Matrix4r;
+	using ::yade::Matrix6i;
+	using ::yade::Matrix6r;
+	using ::yade::MatrixXi;
+	using ::yade::MatrixXr;
 
 	using ::yade::AlignedBox2r;
 	using ::yade::AlignedBox3r;
 	using ::yade::AngleAxisr;
 	using ::yade::Quaternionr;
 
-	using ::yade::Matrix3cr;
-	using ::yade::Matrix6cr;
-	using ::yade::MatrixXcr;
 	using ::yade::Vector2cr;
 	using ::yade::Vector3cr;
+	using ::yade::Vector4cr;
 	using ::yade::Vector6cr;
 	using ::yade::VectorXcr;
+
+	using ::yade::Matrix2cr;
+	using ::yade::Matrix3cr;
+	using ::yade::Matrix4cr;
+	using ::yade::Matrix6cr;
+	using ::yade::MatrixXcr;
 }
 
 }
