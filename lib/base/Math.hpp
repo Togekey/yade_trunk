@@ -242,5 +242,5 @@ using mask_t = int;
 
 } // namespace yade
 
-#include <lib/high-precision/AllMathSerialization.hpp>
+#include <lib/high-precision/MathSerialization.hpp>
 
