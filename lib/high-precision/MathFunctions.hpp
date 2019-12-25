@@ -193,8 +193,10 @@ YADE_WRAP_FUNC_1(round)
 YADE_WRAP_FUNC_1(rint)
 YADE_WRAP_FUNC_1(trunc)
 
+#ifndef YADE_IGNORE_IEEE_INFINITY_NAN
 YADE_WRAP_FUNC_1(isnan)
 YADE_WRAP_FUNC_1(isinf)
+#endif
 
 /**********************                    Complex                     *********************/
 // add more complex functions as necessary, but remember to add them in py/high-precision/_math.cpp and py/tests/testMath.py
