@@ -350,6 +350,16 @@ makeHP_bf150:
     - echo $EXTRA_CMAKE_ARGS
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
 
+make_SSE:
+  <<: *make_definition
+  <<: *artifacts_definition
+  before_script:
+    # there can be only one before_script:, so the line below cannot be in a separate template
+    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
+    - export EXTRA_CMAKE_ARGS="-DVECTORIZE=ON $EXTRA_CMAKE_ARGS"
+    - echo $EXTRA_CMAKE_ARGS
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+
 # 3.1. test stage
 .test_template: &test_definition
   <<: *platforms_definition
@@ -518,6 +528,14 @@ testHP_bf150:
   needs: ["makeHP_bf150"]
   timeout: 4 hours
 
+test_SSE:
+  <<: *test_definition
+  <<: *skip_wip_test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  dependencies:
+    - make_SSE
+  needs: ["make_SSE"]
+
 
 # 3.2. check stage
 .check_template: &check_definition
@@ -653,6 +671,14 @@ checkHP_bf150:
     - makeHP_bf150
   needs: ["makeHP_bf150"]
   timeout: 8 hours
+
+check_SSE:
+  <<: *check_definition
+  <<: *skip_wip_test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  dependencies:
+    - make_SSE
+  needs: ["make_SSE"]
 
 
 .doc_template: &doc_definition
