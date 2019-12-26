@@ -367,9 +367,9 @@ void Law2_ScGeom_VirtualLubricationPhys::shearForce_firstOrder(LubricationPhys* 
 		Ft = Ft_ + kt*dus; // Trial force
 		phys->shearContactForce = Ft; // If no slip: no lubrication!
 #if 1
-		if(Ft.norm() > phys->normalContactForce.norm()*max(0.,phys->mum)) { // If slip
+		if(Ft.norm() > phys->normalContactForce.norm()*std::max(0.,phys->mum)) { // If slip
 			//LOG_INFO("SLIP");
-			Ft *= phys->normalContactForce.norm()*max(0.,phys->mum)/Ft.norm();
+			Ft *= phys->normalContactForce.norm()*std::max(0.,phys->mum)/Ft.norm();
 			phys->shearContactForce = Ft;
 			Ft = (Ft*kt*scene->dt + Ft_*nut + dus*kt*nut)/(kt*scene->dt+nut);
 			phys->slip = true;
@@ -407,10 +407,10 @@ void Law2_ScGeom_VirtualLubricationPhys::shearForce_firstOrder_log(LubricationPh
 		Ft = Ft_ + kt*dus; // Trial force
 		phys->shearContactForce = Ft; // If no slip: no lubrication!
 #if 1
-		if(Ft.norm() > phys->normalContactForce.norm()*max(0.,phys->mum)) // If slip
+		if(Ft.norm() > phys->normalContactForce.norm()*std::max(0.,phys->mum)) // If slip
 		{
 			//LOG_INFO("SLIP");
-			Ft *= phys->normalContactForce.norm()*max(0.,phys->mum)/Ft.norm();
+			Ft *= phys->normalContactForce.norm()*std::max(0.,phys->mum)/Ft.norm();
 			phys->shearContactForce = Ft;
 			Ft = (Ft*kt*scene->dt + Ft_*nut + dus*kt*nut)/(kt*scene->dt+nut);
 			phys->slip = true;

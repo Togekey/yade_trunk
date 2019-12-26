@@ -522,7 +522,7 @@ void HydroForceEngine::fluidResolution(Real tfin,Real dt)
 		else {dragTerm = phiPart[i]/partVolume*averageDrag[i];}
 		urel = std::abs(ufn[i+1] - vxPart[i]); // Difference of definition between ufn and vxPart, ufn starts at 0, while vxPart starts at 1/2. The two therefore corresponds for i+1 and i
 		urel_bound = std::max(urel,lim); //limit the value to avoid division by 0
-		taufsi[i] = max(0.,min(dragTerm/urel_bound/densFluid,pow(10*dt,-1.))); //limit the max value of taufsi to the fluid resolution limit, i.e. 1/(10dt) and required positive (charact. time)
+		taufsi[i] = std::max(0.,std::min(dragTerm/urel_bound/densFluid,pow(10*dt,-1.))); //limit the max value of taufsi to the fluid resolution limit, i.e. 1/(10dt) and required positive (charact. time)
 		}
 
 	//////////////////////////////////// 

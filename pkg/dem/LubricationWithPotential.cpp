@@ -160,7 +160,7 @@ CREATE_LOGGER(GenericPotential);
 
 Real CundallStrackPotential::potential(Real const& u, LubricationPhys const& phys) const
 {
-    return min(0.,-alpha*phys.kn*(phys.eps*phys.a-u));
+    return std::min(0.,-alpha*phys.kn*(phys.eps*phys.a-u));
 }
 
 void CundallStrackPotential::applyPotential(Real const& u, LubricationPhys& phys, Vector3r const& n)
@@ -194,7 +194,7 @@ CREATE_LOGGER(CundallStrackAdhesivePotential);
 
 Real LinExponentialPotential::potential(Real const& u, LubricationPhys const& phys) const
 {
-    return min(0.,-alpha*phys.kn*(phys.eps*phys.a-u)) + LinExpPotential(u/phys.a);
+    return std::min(0.,-alpha*phys.kn*(phys.eps*phys.a-u)) + LinExpPotential(u/phys.a);
 }
 
 void LinExponentialPotential::applyPotential(Real const& u, LubricationPhys & phys, Vector3r const& n)
