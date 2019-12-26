@@ -235,6 +235,16 @@ make_clang:
     - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 $EXTRA_CMAKE_ARGS"
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye
 
+make_SSE:
+  <<: *make_definition
+  <<: *artifacts_definition
+  before_script:
+    # there can be only one before_script:, so the line below cannot be in a separate template
+    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
+    - export EXTRA_CMAKE_ARGS="-DVECTORIZE=ON $EXTRA_CMAKE_ARGS"
+    - echo $EXTRA_CMAKE_ARGS
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+
 # 3.1. test stage
 .test_template: &test_definition
   <<: *platforms_definition
@@ -368,6 +378,13 @@ test_clang:
     - make_clang
   needs: ["make_clang"]
 
+test_SSE:
+  <<: *test_definition
+  <<: *skip_wip_test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  dependencies:
+    - make_SSE
+  needs: ["make_SSE"]
 
 # 3.2. check stage
 .check_template: &check_definition
@@ -468,6 +485,13 @@ check_clang:
     - make_clang
   needs: ["make_clang"]
 
+check_SSE:
+  <<: *check_definition
+  <<: *skip_wip_test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  dependencies:
+    - make_SSE
+  needs: ["make_SSE"]
 
 .doc_template: &doc_definition
   <<: *platforms_definition
