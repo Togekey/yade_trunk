@@ -14,8 +14,13 @@
 namespace yade { // Cannot have #include directive inside.
 
 // make sure that (void*)&vec[0]==(void*)&vec
+// we could use some `constexpr auto vectorSize=3; …… =4; depending on #ifdef EIGEN_DONT_ALIGN, then only have a single line here:
+// BOOST_STATIC_ASSERT(sizeof(Vector3r)==vectorSize*sizeof(Real));
+#ifdef EIGEN_DONT_ALIGN
 BOOST_STATIC_ASSERT(sizeof(Vector3r)==3*sizeof(Real));
-
+#else
+BOOST_STATIC_ASSERT(sizeof(Vector3r)==4*sizeof(Real));
+#endif
 
 /*! Container for Body External Variables (forces), typically forces and torques from interactions.
  * Values should be reset at every iteration by calling ForceContainer::reset();
