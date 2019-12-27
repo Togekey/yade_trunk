@@ -148,10 +148,11 @@ using UnderlyingReal = ::mpfr::mpreal;
 #if (YADE_REAL_BIT <= 80) and (YADE_REAL_BIT > 64)
 // `long double` needs special consideration to workaround boost::python losing 3 digits precision
 #include "ThinRealWrapper.hpp"
+#include "ThinComplexWrapper.hpp"
 
 namespace yade {
 using Real    = ::yade::ThinRealWrapper<UnderlyingReal>;
-using Complex = ::yade::ThinRealWrapper<std::complex<UnderlyingReal>>;
+using Complex = ::yade::ThinComplexWrapper<std::complex<UnderlyingReal>>;
 }
 
 static_assert(sizeof(yade::Real) == sizeof(UnderlyingReal), "This compiler introduced padding, which breaks binary compatibility");

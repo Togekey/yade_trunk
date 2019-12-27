@@ -76,6 +76,8 @@ private:
 	template <typename OtherType> using EnableIfIsComplex          = std::enable_if_t<boost::is_complex<OtherType>::value>;
 	template <typename OtherType> using EnableIfComplexConvertible = std::enable_if_t<IsComplex and (std::is_convertible<OtherType, NonComplex>::value)>;
 
+	static_assert(IsComplex == false, "WrappedReal cannot be complex");
+
 public:
 	// default constructor
 	ThinRealWrapper() BOOST_NOEXCEPT_IF(boost::has_nothrow_default_constructor<WrappedReal>::value) = default;
@@ -184,7 +186,6 @@ public:
 
 
 	// support Complex numbers - start
-	using value_type = ThinRealWrapper<NonComplex>;
 	// constructor from two ThinRealWrapper arguments
 	template <typename OtherType, typename = EnableIfComplexConvertible<OtherType>>
 	ThinRealWrapper(const ThinRealWrapper<OtherType>& v1, const ThinRealWrapper<OtherType>& v2)
