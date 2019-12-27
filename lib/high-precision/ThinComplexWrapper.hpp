@@ -5,10 +5,12 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
-// This is an almost exact copy for ThinRealWrapper. I had to make it because of `using value_type = ThinRealWrapper<NonComplex>;`
-// It's not possible to conditionally declare or not declare a typedef using SFINAE techniques.
-// I tried to unify the two files using
-// https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern but the code only become less readable.
+// This is an almost exact copy for ThinRealWrapper. I had to make it because the typedef 'using value_type = ThinRealWrapper<NonComplex>'
+// has to be defined only for Complex type. And it's not possible to conditionally declare or not declare a typedef using SFINAE techniques.
+// Also I did a unified version of the two files using https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
+// but the code only became much less readable. And not much shorter, so I decided to use the two very similar files instead.
+//
+// As a nice side effect the ThinRealWrapper got a little shorter, since it has nothing to do with complex type now.
 
 #ifndef YADE_THIN_COMPLEX_WRAPPER_HPP
 #define YADE_THIN_COMPLEX_WRAPPER_HPP
@@ -32,56 +34,100 @@
 
 namespace yade {
 
+template <typename T> struct RealPart {
+	typedef T type;
+};
+template <typename T> struct RealPart<std::complex<T>> {
+	typedef T type;
+};
+
 template <typename WrappedComplex>
 #ifdef YADE_IGNORE_IEEE_INFINITY_NAN
-class ThinComplexWrapper
-        : boost::ordered_field_operators1<ThinComplexWrapper<WrappedComplex>, boost::ordered_field_operators2<ThinComplexWrapper<WrappedComplex>, WrappedComplex>> {
+class ThinComplexWrapper : boost::ordered_field_operators1<
+                                   ThinComplexWrapper<WrappedComplex>,
+                                   boost::ordered_field_operators2<ThinComplexWrapper<WrappedComplex>, WrappedComplex>> {
 #else
-class ThinComplexWrapper : boost::partially_ordered1<
-                                ThinComplexWrapper<WrappedComplex>,
-                                boost::partially_ordered2<ThinComplexWrapper<WrappedComplex>, WrappedComplex, boost::field_operators1<ThinComplexWrapper<WrappedComplex>>>> {
+class ThinComplexWrapper
+        : boost::partially_ordered1<
+                  ThinComplexWrapper<WrappedComplex>,
+                  boost::partially_ordered2<ThinComplexWrapper<WrappedComplex>, WrappedComplex, boost::field_operators1<ThinComplexWrapper<WrappedComplex>>>> {
 #endif
+
 private:
 	WrappedComplex val;
 
 	// detect types which are convertible to WrappedComplex
-	static constexpr bool IsComplex                                = boost::is_complex<WrappedComplex>::value;
-	using NonComplex                                               = typename RealPart<WrappedComplex>::type;
-	template <typename OtherType> using EnableIfConvertible        = std::enable_if_t<(std::is_convertible<OtherType, WrappedComplex>::value) or (std::is_convertible<OtherType, NonComplex>::value)>;
-	template <typename OtherType> using EnableIfNonComplex         = std::enable_if_t<(not boost::is_complex<OtherType>::value)>;
-	template <typename OtherType> using EnableIfIsComplex          = std::enable_if_t<boost::is_complex<OtherType>::value>;
-	template <typename OtherType> using EnableIfComplexConvertible = std::enable_if_t<IsComplex and (std::is_convertible<OtherType, NonComplex>::value)>;
+	using NonComplex                                        = typename RealPart<WrappedComplex>::type;
+	template <typename OtherType> using ComplexConvert      = std::is_convertible<OtherType, WrappedComplex>;
+	template <typename OtherType> using NonComplexConvert   = std::is_convertible<OtherType, NonComplex>;
+	template <typename OtherType> using EnableIfIsComplex   = std::enable_if_t<boost::is_complex<OtherType>::value>;
+	template <typename OtherType> using EnableIfNonComplex  = std::enable_if_t<(not boost::is_complex<OtherType>::value)>;
+	template <typename OtherType> using EnableIfConvertible = std::enable_if_t<(ComplexConvert<OtherType>::value) or (NonComplexConvert<OtherType>::value)>;
+	template <typename OtherType> using EnableIfNonComplexConvertible = std::enable_if_t<NonComplexConvert<OtherType>::value>;
 
-	static_assert(IsComplex == true, "WrappedComplex cannot be real");
+	static_assert(boost::is_complex<WrappedComplex>::value == true, "WrappedComplex cannot be real");
+
+public:
+	// this typedef is the only reason for this class. It's not possible to conditionally declare or not declare a typedef using SFINAE techniques.
+	using value_type = ThinRealWrapper<NonComplex>;
 
 public:
 	// default constructor
 	ThinComplexWrapper() BOOST_NOEXCEPT_IF(boost::has_nothrow_default_constructor<WrappedComplex>::value) = default;
 	// copy constructor
 	ThinComplexWrapper(const ThinComplexWrapper& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<WrappedComplex>::value) = default;
-	ThinComplexWrapper(const ThinRealWrapper<NonComplex>& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<WrappedComplex>::value): val(static_cast<NonComplex>(initVal)) {};
 	// copy assignment operator
 	ThinComplexWrapper& operator=(const ThinComplexWrapper& rhs) BOOST_NOEXCEPT_IF(boost::has_nothrow_assign<WrappedComplex>::value) = default;
-	ThinComplexWrapper& operator=(const ThinRealWrapper<NonComplex>& rhs) BOOST_NOEXCEPT_IF(boost::has_nothrow_assign<WrappedComplex>::value) { val = static_cast<NonComplex>(rhs); };
 	// move constructor
 	ThinComplexWrapper(ThinComplexWrapper&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedComplex>::value) = default;
-	ThinComplexWrapper(ThinRealWrapper<NonComplex>&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedComplex>::value): val(static_cast<NonComplex>(moveVal))  {};
 	// move assignment operator
 	ThinComplexWrapper& operator=(ThinComplexWrapper&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedComplex>::value) = default;
-	ThinComplexWrapper& operator=(ThinRealWrapper<NonComplex>&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedComplex>::value) {val=static_cast<NonComplex>(moveVal);};
 	// destructor
 	~ThinComplexWrapper() noexcept = default;
 
+	// construct from Real
+	// copy constructor from Real
+	ThinComplexWrapper(const ThinRealWrapper<NonComplex>& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<WrappedComplex>::value)
+	        : val(static_cast<NonComplex>(initVal)) {};
+	// copy assignment operator from Real
+	ThinComplexWrapper& operator=(const ThinRealWrapper<NonComplex>& rhs) BOOST_NOEXCEPT_IF(boost::has_nothrow_assign<WrappedComplex>::value)
+	{
+		val = static_cast<NonComplex>(rhs);
+		return *this;
+	};
+	// move constructor from Real
+	ThinComplexWrapper(ThinRealWrapper<NonComplex>&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedComplex>::value)
+	        : val(static_cast<NonComplex>(moveVal)) {};
+	// move assignment operator Real
+	ThinComplexWrapper& operator=(ThinRealWrapper<NonComplex>&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedComplex>::value)
+	{
+		val = static_cast<NonComplex>(moveVal);
+		return *this;
+	};
+	// constructor from two Real arguments
+	template <typename OtherType, typename = EnableIfNonComplexConvertible<OtherType>>
+	ThinComplexWrapper(const ThinRealWrapper<OtherType>& v1, const ThinRealWrapper<OtherType>& v2)
+	        BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedComplex>::value)
+	        : val(static_cast<OtherType>(v1), static_cast<OtherType>(v2))
+	{
+	}
+	// move/copy constructor from two Real arguments
+	template <typename OtherType, typename = EnableIfNonComplexConvertible<OtherType>>
+	ThinComplexWrapper(OtherType&& moveVal_1, OtherType&& moveVal_2) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedComplex>::value)
+	        : val(std::forward<OtherType>(moveVal_1), std::forward<OtherType>(moveVal_2))
+	{
+	}
+
 	// NOTE: copy and assignment constructors are implemened below as templated move/copy constructors.
 
-	// move/copy constructor from OtherType which is_convertible o WrappedComplex
+	// move/copy constructor from OtherType which is_convertible to WrappedComplex
 	template <typename OtherType, typename = EnableIfConvertible<OtherType>>
 	ThinComplexWrapper(OtherType&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedComplex>::value)
 	        : val(static_cast<WrappedComplex>(std::forward<OtherType>(moveVal)))
 	{
 	}
 
-	// move/copy assignment from OtherType which is_convertible o WrappedComplex
+	// move/copy assignment from OtherType which is_convertible to WrappedComplex
 	template <typename OtherType, typename = EnableIfConvertible<OtherType>>
 	ThinComplexWrapper& operator=(OtherType&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedComplex>::value)
 	{
@@ -91,7 +137,7 @@ public:
 
 	// conversion operator to other types
 	template <typename OtherType, typename = EnableIfConvertible<OtherType>> explicit operator OtherType() const { return static_cast<OtherType>(val); }
-	explicit operator const WrappedComplex&() const { return val; }
+	explicit                                                                          operator const WrappedComplex&() const { return val; }
 
 	// https://en.cppreference.com/w/cpp/language/cast_operator
 	explicit operator WrappedComplex*() { return &val; };
@@ -126,10 +172,10 @@ public:
 #ifdef YADE_IGNORE_IEEE_INFINITY_NAN
 	bool operator==(const ThinComplexWrapper& rhs) const { return val == rhs.val; }
 #else
-	template <typename OtherType = WrappedComplex, typename boost::disable_if<boost::is_complex<OtherType>, int>::type = 0>
 	void check(const ThinComplexWrapper& rhs) const
 	{
-		if (std::isnan(rhs.val) or std::isnan(val) or std::isinf(rhs.val) or std::isinf(val)) {
+		if (std::isnan(rhs.val.real()) or std::isnan(val.real()) or std::isinf(rhs.val.real()) or std::isinf(val.real()) or std::isnan(rhs.val.imag())
+		    or std::isnan(val.imag()) or std::isinf(rhs.val.imag()) or std::isinf(val.imag())) {
 			throw std::runtime_error("cannot compare NaN, Inf numbers.");
 		}
 	}
@@ -164,41 +210,9 @@ public:
 		return is;
 	}
 
-
-	// support Complex numbers - start
-	// this typedef is the only reason for this class. It's not possible to conditionally declare or not declare a typedef using SFINAE techniques.
-	using value_type = ThinRealWrapper<NonComplex>;
-	// constructor from two ThinComplexWrapper arguments
-	template <typename OtherType, typename = EnableIfComplexConvertible<OtherType>>
-	ThinComplexWrapper(const ThinRealWrapper<OtherType>& v1, const ThinRealWrapper<OtherType>& v2)
-	        BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedComplex>::value)
-	        : val(static_cast<OtherType>(v1), static_cast<OtherType>(v2))
-	{
-	}
-	// move/copy constructor from two arguments
-	template <typename OtherType, typename = EnableIfComplexConvertible<OtherType>>
-	ThinComplexWrapper(OtherType&& moveVal_1, OtherType&& moveVal_2) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedComplex>::value)
-	        : val(std::forward<OtherType>(moveVal_1), std::forward<OtherType>(moveVal_2))
-	{
-	}
+	// member functions specific to Complex type, as in https://en.cppreference.com/w/cpp/numeric/complex
 	template <typename OtherType = WrappedComplex, typename = EnableIfIsComplex<OtherType>> NonComplex real() const { return val.real(); };
 	template <typename OtherType = WrappedComplex, typename = EnableIfIsComplex<OtherType>> NonComplex imag() const { return val.imag(); };
-	template <typename OtherType, typename = EnableIfNonComplex<OtherType>> operator ThinComplexWrapper<std::complex<OtherType>>() const
-	{
-		return ThinComplexWrapper<std::complex<OtherType>>(val, static_cast<const OtherType&>(0));
-	}
-#ifndef YADE_IGNORE_IEEE_INFINITY_NAN
-	template <typename OtherType = WrappedComplex, typename boost::enable_if<boost::is_complex<OtherType>, int>::type = 0>
-	void check(const ThinComplexWrapper& rhs) const
-	{
-		if (std::isnan(rhs.val.real()) or std::isnan(val.real()) or std::isinf(rhs.val.real()) or std::isinf(val.real()) or std::isnan(rhs.val.imag())
-		    or std::isnan(val.imag()) or std::isinf(rhs.val.imag()) or std::isinf(val.imag())) {
-			throw std::runtime_error("cannot compare NaN, Inf numbers.");
-		}
-	}
-#endif
-	// support Complex numbers - end
-
 };
 
 }

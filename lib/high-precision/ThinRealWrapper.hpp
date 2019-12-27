@@ -49,13 +49,6 @@
 
 namespace yade {
 
-template <typename T> struct RealPart {
-	typedef T type;
-};
-template <typename T> struct RealPart<std::complex<T>> {
-	typedef T type;
-};
-
 template <typename WrappedReal>
 #ifdef YADE_IGNORE_IEEE_INFINITY_NAN
 class ThinRealWrapper
@@ -69,14 +62,9 @@ private:
 	WrappedReal val;
 
 	// detect types which are convertible to WrappedReal
-	static constexpr bool IsComplex                                = boost::is_complex<WrappedReal>::value;
-	using NonComplex                                               = typename RealPart<WrappedReal>::type;
-	template <typename OtherType> using EnableIfConvertible        = std::enable_if_t<std::is_convertible<OtherType, WrappedReal>::value>;
-	template <typename OtherType> using EnableIfNonComplex         = std::enable_if_t<(not boost::is_complex<OtherType>::value)>;
-	template <typename OtherType> using EnableIfIsComplex          = std::enable_if_t<boost::is_complex<OtherType>::value>;
-	template <typename OtherType> using EnableIfComplexConvertible = std::enable_if_t<IsComplex and (std::is_convertible<OtherType, NonComplex>::value)>;
+	template <typename OtherType> using EnableIfConvertible = std::enable_if_t<std::is_convertible<OtherType, WrappedReal>::value>;
 
-	static_assert(IsComplex == false, "WrappedReal cannot be complex");
+	static_assert(boost::is_complex<WrappedReal>::value == false, "WrappedReal cannot be complex");
 
 public:
 	// default constructor
@@ -94,14 +82,14 @@ public:
 
 	// NOTE: copy and assignment constructors are implemened below as templated move/copy constructors.
 
-	// move/copy constructor from OtherType which is_convertible o WrappedReal
+	// move/copy constructor from OtherType which is_convertible to WrappedReal
 	template <typename OtherType, typename = EnableIfConvertible<OtherType>>
 	ThinRealWrapper(OtherType&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
 	        : val(static_cast<WrappedReal>(std::forward<OtherType>(moveVal)))
 	{
 	}
 
-	// move/copy assignment from OtherType which is_convertible o WrappedReal
+	// move/copy assignment from OtherType which is_convertible to WrappedReal
 	template <typename OtherType, typename = EnableIfConvertible<OtherType>>
 	ThinRealWrapper& operator=(OtherType&& moveVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
 	{
@@ -111,7 +99,7 @@ public:
 
 	// conversion operator to other types
 	template <typename OtherType, typename = EnableIfConvertible<OtherType>> explicit operator OtherType() const { return static_cast<OtherType>(val); }
-	explicit operator const WrappedReal&() const { return val; }
+	explicit                                                                          operator const WrappedReal&() const { return val; }
 
 	// https://en.cppreference.com/w/cpp/language/cast_operator
 	explicit operator WrappedReal*() { return &val; };
@@ -146,9 +134,9 @@ public:
 #ifdef YADE_IGNORE_IEEE_INFINITY_NAN
 	bool operator==(const ThinRealWrapper& rhs) const { return val == rhs.val; }
 #else
-	template <typename OtherType = WrappedReal, typename boost::disable_if<boost::is_complex<OtherType>, int>::type = 0>
 	void check(const ThinRealWrapper& rhs) const
 	{
+		// boost::partially_ordered takes into account that some numbers cannot be compared with each other
 		if (std::isnan(rhs.val) or std::isnan(val) or std::isinf(rhs.val) or std::isinf(val)) {
 			throw std::runtime_error("cannot compare NaN, Inf numbers.");
 		}
@@ -183,40 +171,6 @@ public:
 		is >> v.val;
 		return is;
 	}
-
-
-	// support Complex numbers - start
-	// constructor from two ThinRealWrapper arguments
-	template <typename OtherType, typename = EnableIfComplexConvertible<OtherType>>
-	ThinRealWrapper(const ThinRealWrapper<OtherType>& v1, const ThinRealWrapper<OtherType>& v2)
-	        BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
-	        : val(static_cast<OtherType>(v1), static_cast<OtherType>(v2))
-	{
-	}
-	// move/copy constructor from two arguments
-	template <typename OtherType, typename = EnableIfComplexConvertible<OtherType>>
-	ThinRealWrapper(OtherType&& moveVal_1, OtherType&& moveVal_2) BOOST_NOEXCEPT_IF(boost::has_nothrow_move<WrappedReal>::value)
-	        : val(std::forward<OtherType>(moveVal_1), std::forward<OtherType>(moveVal_2))
-	{
-	}
-	template <typename OtherType = WrappedReal, typename = EnableIfIsComplex<OtherType>> NonComplex real() const { return val.real(); };
-	template <typename OtherType = WrappedReal, typename = EnableIfIsComplex<OtherType>> NonComplex imag() const { return val.imag(); };
-	template <typename OtherType, typename = EnableIfNonComplex<OtherType>> operator ThinRealWrapper<std::complex<OtherType>>() const
-	{
-		return ThinRealWrapper<std::complex<OtherType>>(val, static_cast<const OtherType&>(0));
-	}
-#ifndef YADE_IGNORE_IEEE_INFINITY_NAN
-	template <typename OtherType = WrappedReal, typename boost::enable_if<boost::is_complex<OtherType>, int>::type = 0>
-	void check(const ThinRealWrapper& rhs) const
-	{
-		if (std::isnan(rhs.val.real()) or std::isnan(val.real()) or std::isinf(rhs.val.real()) or std::isinf(val.real()) or std::isnan(rhs.val.imag())
-		    or std::isnan(val.imag()) or std::isinf(rhs.val.imag()) or std::isinf(val.imag())) {
-			throw std::runtime_error("cannot compare NaN, Inf numbers.");
-		}
-	}
-#endif
-	// support Complex numbers - end
-
 };
 
 }
