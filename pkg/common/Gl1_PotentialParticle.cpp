@@ -505,7 +505,7 @@ void PotentialParticleVTKRecorder::action()
 		transformFilter->SetTransform(transform);
 		transform->PostMultiply();
 
-		transform->Translate(centre[0], centre[1], centre[2]);
+		transform->VTK_TRANSLATE(centre[0], centre[1], centre[2]);
 		//transform->RotateWXYZ(angle,xAxis, yAxis, zAxis);
 		//transformFilter->Update();
 		appendFilter->AddInputConnection(transformFilter->GetOutputPort());

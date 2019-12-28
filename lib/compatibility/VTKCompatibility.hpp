@@ -28,6 +28,8 @@ And use a macro in these places:
 // it seems that VTK only accepts double, so let's convert it. Some precision is lost.
 // But it is not calculations. It is only for recording of resuls.
 
+#define VTK_TRANSLATE(val1, val2, val3) Translate((static_cast<double>(val1)), (static_cast<double>(val2)), (static_cast<double>(val3)))
+
 #define INSERT_NEXT_POINT(val1, val2, val3) InsertNextPoint((static_cast<double>(val1)), (static_cast<double>(val2)), (static_cast<double>(val3)))
 
 #define INSERT_NEXT_VALUE(val1) InsertNextValue((static_cast<double>(val1)))

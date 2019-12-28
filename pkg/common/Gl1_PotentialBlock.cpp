@@ -499,7 +499,7 @@ void PotentialBlockVTKRecorderTunnel::action()
 			vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
 			transformFilter->SetTransform( transform );
 			transform->PostMultiply();
-			transform->Translate (centre[0], centre[1],centre[2]);
+			transform->VTK_TRANSLATE (centre[0], centre[1],centre[2]);
 			//#endif
 			appendFilterID->AddInputConnection(transformFilter-> GetOutputPort());
 			//polydata->DeleteCells();
@@ -706,7 +706,7 @@ void PotentialBlockVTKRecorderTunnel::action()
 		transformFilter->SetTransform(transform);
 		transform->PostMultiply();
 
-		transform->Translate(centre[0], centre[1], centre[2]);
+		transform->VTK_TRANSLATE(centre[0], centre[1], centre[2]);
 		//transform->RotateWXYZ(angle,xAxis, yAxis, zAxis);
 		//transformFilter->Update();
 		appendFilter->AddInputConnection(transformFilter->GetOutputPort());
@@ -1101,7 +1101,7 @@ void PotentialBlockVTKRecorder::action()
 		transformFilter->SetTransform(transform);
 		transform->PostMultiply();
 
-		transform->Translate(centre[0], centre[1], centre[2]);
+		transform->VTK_TRANSLATE(centre[0], centre[1], centre[2]);
 		//transform->RotateWXYZ(angle,xAxis, yAxis, zAxis);
 		//transformFilter->Update();
 		appendFilter->AddInputConnection(transformFilter->GetOutputPort());
