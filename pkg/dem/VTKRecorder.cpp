@@ -510,10 +510,10 @@ void VTKRecorder::action(){
 		for(const auto & b :  *scene->bodies){
 			if (b) {
 				if(!scene->isPeriodic) {
-					intrBodyPos->InsertNextPoint(b->state->pos[0],b->state->pos[1],b->state->pos[2]);
+					intrBodyPos->INSERT_NEXT_POINT(b->state->pos[0],b->state->pos[1],b->state->pos[2]);
 				} else {
 					Vector3r pos=scene->cell->wrapShearedPt(b->state->pos,wrapCellDist[b->id]);
-					intrBodyPos->InsertNextPoint(pos[0],pos[1],pos[2]);
+					intrBodyPos->INSERT_NEXT_POINT(pos[0],pos[1],pos[2]);
 				}
 				bIdVector.insert (std::pair<Body::id_t,Body::id_t>(b->id,curId));
 				curId++;
@@ -561,10 +561,10 @@ void VTKRecorder::action(){
 				// A,B are the "fake" bodies outside the cell for id1 and id2 respectively, p1,p2 are the displayed points
 				// distance in cell units for shifting A away from p1; negated value is shift of B away from p2
 				Vector3r ptA(p01+scene->cell->hSize*(wrapCellDist[I->getId2()]-I->cellDist).cast<Real>());
-				const vtkIdType idPtA=intrBodyPos->InsertNextPoint(ptA[0],ptA[1],ptA[2]);
+				const vtkIdType idPtA=intrBodyPos->INSERT_NEXT_POINT(ptA[0],ptA[1],ptA[2]);
 
 				Vector3r ptB(p02+scene->cell->hSize*(wrapCellDist[I->getId1()]-I->cellDist).cast<Real>());
-				const vtkIdType idPtB=intrBodyPos->InsertNextPoint(ptB[0],ptB[1],ptB[2]);
+				const vtkIdType idPtB=intrBodyPos->INSERT_NEXT_POINT(ptB[0],ptB[1],ptB[2]);
 
 				vtkSmartPointer<vtkLine> line1B(vtkSmartPointer<vtkLine>::New());
 				line1B->GetPointIds()->SetId(0,setId2Line);
@@ -579,37 +579,37 @@ void VTKRecorder::action(){
 			const GenericSpheresContact* geom = YADE_CAST<GenericSpheresContact*>(I->geom.get());
 			// gives _signed_ scalar of normal force, following the convention used in the respective constitutive law
 			Real fn=phys->normalForce.dot(geom->normal);
-			Real fs[3]={ (Real) std::abs(phys->shearForce[0]), (Real) std::abs(phys->shearForce[1]), (Real) std::abs(phys->shearForce[2])};
+			double fs[3]= ARRAY_3_DOUBLE( (math::abs(phys->shearForce[0])), (math::abs(phys->shearForce[1])), (math::abs(phys->shearForce[2])) );
 			// add the value once for each interaction object that we created (might be 2 for the periodic boundary)
 			for(int i=0; i<numAddValues; i++){
 				intrAbsForceT->INSERT_NEXT_TUPLE(fs);
 				if(recActive[REC_WPM]) {
 					const WirePhys* wirephys = dynamic_cast<WirePhys*>(I->phys.get());
 					if (wirephys!=NULL && wirephys->isLinked) {
-						wpmLimitFactor->InsertNextValue(wirephys->limitFactor);
-						wpmNormalForce->InsertNextValue(fn);
-						intrForceN->InsertNextValue(NaN);
+						wpmLimitFactor->INSERT_NEXT_VALUE(wirephys->limitFactor);
+						wpmNormalForce->INSERT_NEXT_VALUE(fn);
+						intrForceN->INSERT_NEXT_VALUE(NaN);
 					}
 					else {
-						intrForceN->InsertNextValue(fn);
-						wpmNormalForce->InsertNextValue(NaN);
-						wpmLimitFactor->InsertNextValue(NaN);
+						intrForceN->INSERT_NEXT_VALUE(fn);
+						wpmNormalForce->INSERT_NEXT_VALUE(NaN);
+						wpmLimitFactor->INSERT_NEXT_VALUE(NaN);
 					}
 				}
 				else if (recActive[REC_JCFPM]){
 					const JCFpmPhys* jcfpmphys = YADE_CAST<JCFpmPhys*>(I->phys.get());
-					intrIsCohesive->InsertNextValue(jcfpmphys->isCohesive);
-					intrIsOnJoint->InsertNextValue(jcfpmphys->isOnJoint);
-					intrForceN->InsertNextValue(fn);
-					eventNumber->InsertNextValue(jcfpmphys->eventNumber);
+					intrIsCohesive->INSERT_NEXT_VALUE(jcfpmphys->isCohesive);
+					intrIsOnJoint->INSERT_NEXT_VALUE(jcfpmphys->isOnJoint);
+					intrForceN->INSERT_NEXT_VALUE(fn);
+					eventNumber->INSERT_NEXT_VALUE(jcfpmphys->eventNumber);
 				} else {
-					intrForceN->InsertNextValue(fn);
+					intrForceN->INSERT_NEXT_VALUE(fn);
 				}
 #ifdef YADE_LIQMIGRATION
 				if (recActive[REC_LIQ]) {
 					const ViscElCapPhys* capphys = YADE_CAST<ViscElCapPhys*>(I->phys.get());
-					liqVol->InsertNextValue(capphys->Vb);
-					liqVolNorm->InsertNextValue(capphys->Vb/capphys->Vmax);
+					liqVol->INSERT_NEXT_VALUE(capphys->Vb);
+					liqVolNorm->INSERT_NEXT_VALUE(capphys->Vb/capphys->Vmax);
 				}
 #endif
 			}
@@ -648,41 +648,41 @@ void VTKRecorder::action(){
 				if(skipNondynamic && b->state->blockedDOFs==State::DOF_ALL) continue;
 					vtkIdType pid[1];
 					Vector3r pos(scene->isPeriodic ? scene->cell->wrapShearedPt(b->state->pos) : b->state->pos);
-					pid[0] = spheresPos->InsertNextPoint(pos[0], pos[1], pos[2]);
+					pid[0] = spheresPos->INSERT_NEXT_POINT(pos[0], pos[1], pos[2]);
 					spheresCells->InsertNextCell(1,pid);
-					radii->InsertNextValue(sphere->radius);
+					radii->INSERT_NEXT_VALUE(sphere->radius);
 				if (recActive[REC_BSTRESS]) {
 					const Matrix3r& bStress = bStresses[b->getId()];
 					Eigen::SelfAdjointEigenSolver<Matrix3r> solver(bStress); // bStress is probably not symmetric (= self-adjoint for real matrices), but the solver still works, considering only one half of bStress. Which is good since existence of (real) eigenvalues is not sure for not symmetric bStress..
 					Matrix3r dirAll = solver.eigenvectors();
 					Vector3r eigenVal = solver.eigenvalues(); // cf http://eigen.tuxfamily.org/dox/classEigen_1_1SelfAdjointEigenSolver.html#a30caf3c3884a7f4a46b8ec94efd23c5e to be sure that eigenVal[i] * dirAll.col(i) = bStress * dirAll.col(i) and that eigenVal[0] <= eigenVal[1] <= eigenVal[2]
-					spheresSigI->InsertNextValue(eigenVal[2]);
-					spheresSigII->InsertNextValue(eigenVal[1]);
-					spheresSigIII->InsertNextValue(eigenVal[0]);
-					Real dirI[3] { (Real) dirAll(0,2), (Real) dirAll(1,2), (Real) dirAll(2,2) };
-					Real dirII[3] { (Real) dirAll(0,1), (Real) dirAll(1,1), (Real) dirAll(2,1) };
-					Real dirIII[3] { (Real) dirAll(0,0), (Real) dirAll(1,0), (Real) dirAll(2,0) };
+					spheresSigI->INSERT_NEXT_VALUE(eigenVal[2]);
+					spheresSigII->INSERT_NEXT_VALUE(eigenVal[1]);
+					spheresSigIII->INSERT_NEXT_VALUE(eigenVal[0]);
+					double dirI[3]   ARRAY_3_DOUBLE(  dirAll(0,2),  dirAll(1,2),  dirAll(2,2) );
+					double dirII[3]  ARRAY_3_DOUBLE(  dirAll(0,1),  dirAll(1,1),  dirAll(2,1) );
+					double dirIII[3] ARRAY_3_DOUBLE(  dirAll(0,0),  dirAll(1,0),  dirAll(2,0) );
 					spheresDirI->INSERT_NEXT_TUPLE(dirI);
 					spheresDirII->INSERT_NEXT_TUPLE(dirII);
 					spheresDirIII->INSERT_NEXT_TUPLE(dirIII);
 				}
-				if (recActive[REC_ID]) spheresId->InsertNextValue(b->getId());
-				if (recActive[REC_MASK]) spheresMask->InsertNextValue(GET_MASK(b));
-				if (recActive[REC_MASS]) spheresMass->InsertNextValue(b->state->mass);
+				if (recActive[REC_ID]) spheresId->INSERT_NEXT_VALUE(b->getId());
+				if (recActive[REC_MASK]) spheresMask->INSERT_NEXT_VALUE(GET_MASK(b));
+				if (recActive[REC_MASS]) spheresMass->INSERT_NEXT_VALUE(b->state->mass);
 			#ifdef YADE_MPI
-				if (recActive[REC_SUBDOMAIN]) spheresSubdomain->InsertNextValue(b->subdomain); 
+				if (recActive[REC_SUBDOMAIN]) spheresSubdomain->INSERT_NEXT_VALUE(b->subdomain); 
 			#endif 
 				
 			#ifdef THERMAL
 				if (recActive[REC_TEMP]) {
 					auto* thState = b->state.get();
-					spheresTemp->InsertNextValue(thState->temp);
+					spheresTemp->INSERT_NEXT_VALUE(thState->temp);
 				}
 			#endif
-				if (recActive[REC_CLUMPID]) clumpId->InsertNextValue(b->clumpId);
+				if (recActive[REC_CLUMPID]) clumpId->INSERT_NEXT_VALUE(b->clumpId);
 				if (recActive[REC_COLORS]){
 					const Vector3r& color = sphere->color;
-					Real c[3] = { (Real) color[0], (Real) color[1], (Real) color[2]};
+					double c[3] = ARRAY_3_DOUBLE( color[0], color[1], color[2] );
 					spheresColors->INSERT_NEXT_TUPLE(c);
 				}
 				if(recActive[REC_VELOCITY]){
@@ -692,22 +692,22 @@ void VTKRecorder::action(){
 					} else {
 						vel = b->state->vel;
 					}
-					Real v[3] = { (Real) vel[0], (Real) vel[1], (Real) vel[2] };
+					double v[3] = ARRAY_3_DOUBLE( vel[0], vel[1], vel[2] );
 					spheresLinVelVec->INSERT_NEXT_TUPLE(v);
-					spheresLinVelLen->InsertNextValue(vel.norm());
+					spheresLinVelLen->INSERT_NEXT_VALUE(vel.norm());
 					const Vector3r& angVel = b->state->angVel;
-					Real av[3] = { (Real) angVel[0], (Real) angVel[1], (Real) angVel[2] };
+					double av[3] = ARRAY_3_DOUBLE( angVel[0], angVel[1], angVel[2] );
 					spheresAngVelVec->INSERT_NEXT_TUPLE(av);
-					spheresAngVelLen->InsertNextValue(angVel.norm());
+					spheresAngVelLen->INSERT_NEXT_VALUE(angVel.norm());
 				}
 				if(recActive[REC_STRESS]){
 					const Vector3r& stress = bodyStates[b->getId()].normStress;
 					const Vector3r& shear = bodyStates[b->getId()].shearStress;
-					Real n[3] = { (Real)  stress[0], (Real) stress[1], (Real) stress[2] };
-					Real s[3] = { (Real)  shear [0], (Real) shear [1], (Real) shear [2] };
+					double n[3] = ARRAY_3_DOUBLE( stress[0],  stress[1],  stress[2] );
+					double s[3] = ARRAY_3_DOUBLE( shear [0],  shear [1],  shear [2] );
 					spheresNormalStressVec->INSERT_NEXT_TUPLE(n);
 					spheresShearStressVec->INSERT_NEXT_TUPLE(s);
-					spheresNormalStressNorm->InsertNextValue(stress.norm());
+					spheresNormalStressNorm->INSERT_NEXT_VALUE(stress.norm());
 				}
 				if(recActive[REC_LUBRICATION]){
 					const Matrix3r& ncs = NCStresses[b->getId()];
@@ -716,11 +716,11 @@ void VTKRecorder::action(){
 					const Matrix3r& sls = SLStresses[b->getId()];
 					const Matrix3r& nps = NPStresses[b->getId()];
 					
-					Real nc[9]={ (Real) ncs(0,0), (Real) ncs(0,1), (Real) ncs(0,2), (Real) ncs(1,0), (Real) ncs(1,1), (Real) ncs(1,2), (Real) ncs(2,0), (Real) ncs(2,1), (Real) ncs(2,2)};
-					Real sc[9]={ (Real) scs(0,0), (Real) scs(0,1), (Real) scs(0,2), (Real) scs(1,0), (Real) scs(1,1), (Real) scs(1,2), (Real) scs(2,0), (Real) scs(2,1), (Real) scs(2,2)};
-					Real nl[9]={ (Real) nls(0,0), (Real) nls(0,1), (Real) nls(0,2), (Real) nls(1,0), (Real) nls(1,1), (Real) nls(1,2), (Real) nls(2,0), (Real) nls(2,1), (Real) nls(2,2)};
-					Real sl[9]={ (Real) sls(0,0), (Real) sls(0,1), (Real) sls(0,2), (Real) sls(1,0), (Real) sls(1,1), (Real) sls(1,2), (Real) sls(2,0), (Real) sls(2,1), (Real) sls(2,2)};
-					Real np[9]={ (Real) nps(0,0), (Real) nps(0,1), (Real) nps(0,2), (Real) nps(1,0), (Real) nps(1,1), (Real) nps(1,2), (Real) nps(2,0), (Real) nps(2,1), (Real) nps(2,2)};
+					double nc[9]=ARRAY_9_DOUBLE( ncs(0,0), ncs(0,1), ncs(0,2), ncs(1,0), ncs(1,1), ncs(1,2), ncs(2,0), ncs(2,1), ncs(2,2));
+					double sc[9]=ARRAY_9_DOUBLE( scs(0,0), scs(0,1), scs(0,2), scs(1,0), scs(1,1), scs(1,2), scs(2,0), scs(2,1), scs(2,2));
+					double nl[9]=ARRAY_9_DOUBLE( nls(0,0), nls(0,1), nls(0,2), nls(1,0), nls(1,1), nls(1,2), nls(2,0), nls(2,1), nls(2,2));
+					double sl[9]=ARRAY_9_DOUBLE( sls(0,0), sls(0,1), sls(0,2), sls(1,0), sls(1,1), sls(1,2), sls(2,0), sls(2,1), sls(2,2));
+					double np[9]=ARRAY_9_DOUBLE( nps(0,0), nps(0,1), nps(0,2), nps(1,0), nps(1,1), nps(1,2), nps(2,0), nps(2,1), nps(2,2));
 					
 					spheresLubricationNormalContactStress->INSERT_NEXT_TUPLE(nc);
 					spheresLubricationShearContactStress->INSERT_NEXT_TUPLE(sc);
@@ -732,56 +732,56 @@ void VTKRecorder::action(){
 					scene->forces.sync();
 					const Vector3r& f = scene->forces.getForce(b->getId());
 					const Vector3r& t = scene->forces.getTorque(b->getId());
-					Real ff[3] = { (Real)  f[0], (Real) f[1], (Real) f[2] };
-					Real tt[3] = { (Real)  t[0], (Real) t[1], (Real) t[2] };
+					double ff[3] = ARRAY_3_DOUBLE( f[0], f[1], f[2] );
+					double tt[3] = ARRAY_3_DOUBLE( t[0], t[1], t[2] );
 					Real fn = f.norm();
 					Real tn = t.norm();
-					spheresForceLen->InsertNextValue(fn);
-					spheresTorqueLen->InsertNextValue(tn);
+					spheresForceLen->INSERT_NEXT_VALUE(fn);
+					spheresTorqueLen->INSERT_NEXT_VALUE(tn);
 					spheresForceVec->INSERT_NEXT_TUPLE(ff);
 					spheresTorqueVec->INSERT_NEXT_TUPLE(tt);
 				}
 
 				if (recActive[REC_CPM]){
-					cpmDamage->InsertNextValue(YADE_PTR_CAST<CpmState>(b->state)->normDmg);
+					cpmDamage->INSERT_NEXT_VALUE(YADE_PTR_CAST<CpmState>(b->state)->normDmg);
 					const Matrix3r& ss=YADE_PTR_CAST<CpmState>(b->state)->stress;
 					//Real s[3]={ss[0],ss[1],ss[2]};
-					Real s[9]={ (Real) ss(0,0), (Real) ss(0,1), (Real) ss(0,2), (Real) ss(1,0), (Real) ss(1,1), (Real) ss(1,2), (Real) ss(2,0), (Real) ss(2,1), (Real) ss(2,2)};
+					double s[9]=ARRAY_9_DOUBLE( ss(0,0), ss(0,1), ss(0,2), ss(1,0), ss(1,1), ss(1,2), ss(2,0), ss(2,1), ss(2,2));
 					cpmStress->INSERT_NEXT_TUPLE(s);
 				}
 
 				if (recActive[REC_JCFPM]){
-					nbCracks->InsertNextValue(YADE_PTR_CAST<JCFpmState>(b->state)->nbBrokenBonds);
-					jcfpmDamage->InsertNextValue(YADE_PTR_CAST<JCFpmState>(b->state)->damageIndex);
+					nbCracks->INSERT_NEXT_VALUE(YADE_PTR_CAST<JCFpmState>(b->state)->nbBrokenBonds);
+					jcfpmDamage->INSERT_NEXT_VALUE(YADE_PTR_CAST<JCFpmState>(b->state)->damageIndex);
 				}
 				
 				if (recActive[REC_COORDNUMBER]){
-					spheresCoordNumb->InsertNextValue(b->coordNumber());
+					spheresCoordNumb->INSERT_NEXT_VALUE(b->coordNumber());
 				}
 #ifdef YADE_SPH
                                 if (recActive[REC_SPH]){
-					spheresRhoSPH->InsertNextValue(b->state->rho);
-					spheresPressSPH->InsertNextValue(b->state->press);
-					spheresCoordNumbSPH->InsertNextValue(b->coordNumber());
+					spheresRhoSPH->INSERT_NEXT_VALUE(b->state->rho);
+					spheresPressSPH->INSERT_NEXT_VALUE(b->state->press);
+					spheresCoordNumbSPH->INSERT_NEXT_VALUE(b->coordNumber());
                                 }
 #endif
 
 #ifdef YADE_DEFORM
                                 if (recActive[REC_DEFORM]){
 					const Sphere* sphereDef = dynamic_cast<Sphere*>(b->shape.get());
-					spheresRealRad->InsertNextValue(b->state->dR + sphereDef->radius);
+					spheresRealRad->INSERT_NEXT_VALUE(b->state->dR + sphereDef->radius);
                                 }
 #endif
 
 #ifdef YADE_LIQMIGRATION
 				if (recActive[REC_LIQ]) {
-					spheresLiqVol->InsertNextValue(b->state->Vf);
+					spheresLiqVol->INSERT_NEXT_VALUE(b->state->Vf);
 					const Real tmpVolIter = liqVolIterBody(b);
-					spheresLiqVolIter->InsertNextValue(tmpVolIter);
-					spheresLiqVolTotal->InsertNextValue(tmpVolIter + b->state->Vf);
+					spheresLiqVolIter->INSERT_NEXT_VALUE(tmpVolIter);
+					spheresLiqVolTotal->INSERT_NEXT_VALUE(tmpVolIter + b->state->Vf);
 				}
 #endif
-				if (recActive[REC_MATERIALID]) spheresMaterialId->InsertNextValue(b->material->id);
+				if (recActive[REC_MATERIALID]) spheresMaterialId->INSERT_NEXT_VALUE(b->material->id);
 				continue;
 			}
 		} // end rec sphere.
@@ -795,39 +795,39 @@ void VTKRecorder::action(){
 				vtkIdType nbPoints=facetsPos->GetNumberOfPoints();
 				for (int i=0;i<3;++i){
 					Vector3r globalPos = pos + facetAxisT * localPos[i];
-					facetsPos->InsertNextPoint(globalPos[0], globalPos[1], globalPos[2]);
+					facetsPos->INSERT_NEXT_POINT(globalPos[0], globalPos[1], globalPos[2]);
 					tri->GetPointIds()->SetId(i,nbPoints+i);
 				}
 				facetsCells->InsertNextCell(tri);
 				if (recActive[REC_COLORS]){
 					const Vector3r& color = facet->color;
-					Real c[3] = { (Real) color[0], (Real) color[1], (Real) color[2]};
+					double c[3] = ARRAY_3_DOUBLE( color[0], color[1], color[2]);
 				facetsColors->INSERT_NEXT_TUPLE(c);
 				}
 				if(recActive[REC_STRESS]){
 					const Vector3r& stress = bodyStates[b->getId()].normStress+bodyStates[b->getId()].shearStress;
-					Real s[3] = { (Real) stress[0], (Real) stress[1], (Real) stress[2] };
+					double s[3] = ARRAY_3_DOUBLE( stress[0], stress[1], stress[2] );
 					facetsStressVec->INSERT_NEXT_TUPLE(s);
-					facetsStressLen->InsertNextValue(stress.norm());
+					facetsStressLen->INSERT_NEXT_VALUE(stress.norm());
 				}
 				if(recActive[REC_FORCE]){
 					scene->forces.sync();
 					const Vector3r& f = scene->forces.getForce(b->getId());
 					const Vector3r& t = scene->forces.getTorque(b->getId());
-					Real ff[3] = { (Real)  f[0], (Real) f[1], (Real) f[2] };
-					Real tt[3] = { (Real)  t[0], (Real) t[1], (Real) t[2] };
+					double ff[3] = ARRAY_3_DOUBLE( f[0], f[1], f[2] );
+					double tt[3] = ARRAY_3_DOUBLE( t[0], t[1], t[2] );
 					Real fn = f.norm();
 					Real tn = t.norm();
-					facetsForceLen->InsertNextValue(fn);
-					facetsTorqueLen->InsertNextValue(tn);
+					facetsForceLen->INSERT_NEXT_VALUE(fn);
+					facetsTorqueLen->INSERT_NEXT_VALUE(tn);
 					facetsForceVec->INSERT_NEXT_TUPLE(ff);
 					facetsTorqueVec->INSERT_NEXT_TUPLE(tt);
 				}
 				
-				if (recActive[REC_MATERIALID]) facetsMaterialId->InsertNextValue(b->material->id);
-				if (recActive[REC_MASK]) facetsMask->InsertNextValue(GET_MASK(b));
+				if (recActive[REC_MATERIALID]) facetsMaterialId->INSERT_NEXT_VALUE(b->material->id);
+				if (recActive[REC_MASK]) facetsMask->INSERT_NEXT_VALUE(GET_MASK(b));
 				if (recActive[REC_COORDNUMBER]){
-					facetsCoordNumb->InsertNextValue(b->coordNumber());
+					facetsCoordNumb->INSERT_NEXT_VALUE(b->coordNumber());
 				}
 				continue;
 			}
@@ -879,30 +879,30 @@ void VTKRecorder::action(){
 				for(int i=0; i<6; i++){
 					if (recActive[REC_COLORS]){
 						const Vector3r& color = box->color;
-						Real c[3] = { (Real) color[0], (Real) color[1], (Real) color[2]};
+						double c[3] = ARRAY_3_DOUBLE( color[0], color[1], color[2] );
 						boxesColors->INSERT_NEXT_TUPLE(c);
 					}
 					if(recActive[REC_STRESS]){
 						const Vector3r& stress = bodyStates[b->getId()].normStress+bodyStates[b->getId()].shearStress;
-						Real s[3] = { (Real) stress[0], (Real) stress[1], (Real) stress[2] };
+						double s[3] = ARRAY_3_DOUBLE( stress[0], stress[1], stress[2] );
 						boxesStressVec->INSERT_NEXT_TUPLE(s);
-						boxesStressLen->InsertNextValue(stress.norm());
+						boxesStressLen->INSERT_NEXT_VALUE(stress.norm());
 					}
 					if(recActive[REC_FORCE]){
 						scene->forces.sync();
 						const Vector3r& f = scene->forces.getForce(b->getId());
 						const Vector3r& t = scene->forces.getTorque(b->getId());
-						Real ff[3] = { (Real) f[0], (Real) f[1], (Real) f[2] };
-						Real tt[3] = { (Real) t[0], (Real) t[1], (Real) t[2] };
+						double ff[3] = ARRAY_3_DOUBLE( f[0], f[1], f[2] );
+						double tt[3] = ARRAY_3_DOUBLE( t[0], t[1], t[2] );
 						Real fn = f.norm();
 						Real tn = t.norm();
 						boxesForceVec->INSERT_NEXT_TUPLE(ff);
 						boxesTorqueVec->INSERT_NEXT_TUPLE(tt);
-						boxesForceLen->InsertNextValue(fn);
-						boxesTorqueLen->InsertNextValue(tn);
+						boxesForceLen->INSERT_NEXT_VALUE(fn);
+						boxesTorqueLen->INSERT_NEXT_VALUE(tn);
 					}
-					if (recActive[REC_MATERIALID]) boxesMaterialId->InsertNextValue(b->material->id);
-					if (recActive[REC_MASK]) boxesMask->InsertNextValue(GET_MASK(b));
+					if (recActive[REC_MATERIALID]) boxesMaterialId->INSERT_NEXT_VALUE(b->material->id);
+					if (recActive[REC_MASK]) boxesMask->INSERT_NEXT_VALUE(GET_MASK(b));
 				}
 				continue;
 			}
@@ -923,14 +923,14 @@ void VTKRecorder::action(){
 		Vector3r v5 = hSize*Vector3r(0,1,0);
 		Vector3r v6 = hSize*Vector3r(1,1,0);
 		Vector3r v7 = hSize*Vector3r(1,0,0);
-		pericellPoints->InsertNextPoint(v0[0],v0[1],v0[2]);
-		pericellPoints->InsertNextPoint(v1[0],v1[1],v1[2]);
-		pericellPoints->InsertNextPoint(v2[0],v2[1],v2[2]);
-		pericellPoints->InsertNextPoint(v3[0],v3[1],v3[2]);
-		pericellPoints->InsertNextPoint(v4[0],v4[1],v4[2]);
-		pericellPoints->InsertNextPoint(v5[0],v5[1],v5[2]);
-		pericellPoints->InsertNextPoint(v6[0],v6[1],v6[2]);
-		pericellPoints->InsertNextPoint(v7[0],v7[1],v7[2]);
+		pericellPoints->INSERT_NEXT_POINT(v0[0],v0[1],v0[2]);
+		pericellPoints->INSERT_NEXT_POINT(v1[0],v1[1],v1[2]);
+		pericellPoints->INSERT_NEXT_POINT(v2[0],v2[1],v2[2]);
+		pericellPoints->INSERT_NEXT_POINT(v3[0],v3[1],v3[2]);
+		pericellPoints->INSERT_NEXT_POINT(v4[0],v4[1],v4[2]);
+		pericellPoints->INSERT_NEXT_POINT(v5[0],v5[1],v5[2]);
+		pericellPoints->INSERT_NEXT_POINT(v6[0],v6[1],v6[2]);
+		pericellPoints->INSERT_NEXT_POINT(v7[0],v7[1],v7[2]);
 		vtkSmartPointer<vtkHexahedron> h = vtkSmartPointer<vtkHexahedron>::New();
 		vtkIdList* l = h->GetPointIds();
 		for (int i=0; i<8; i++) {
@@ -1331,16 +1331,16 @@ void VTKRecorder::action(){
 				while ( std::getline(file, line)) {/* writes into string "line", a line of file "file". To go along diff. lines*/
 					file >> iter >> time >> p0 >> p1 >> p2 >> type >> size >> n0 >> n1 >> n2 >> nrg >> onJnt;
 					vtkIdType pid[1];
-					pid[0] = crackPos->InsertNextPoint(p0, p1, p2);
+					pid[0] = crackPos->INSERT_NEXT_POINT(p0, p1, p2);
 					crackCells->InsertNextCell(1,pid);
-                                        crackIter->InsertNextValue(iter);
-                                        crackTime->InsertNextValue(time);
-					crackType->InsertNextValue(type);
-					crackSize->InsertNextValue(size);
-					Real n[3] = { n0, n1, n2 };
+                                        crackIter->INSERT_NEXT_VALUE(iter);
+                                        crackTime->INSERT_NEXT_VALUE(time);
+					crackType->INSERT_NEXT_VALUE(type);
+					crackSize->INSERT_NEXT_VALUE(size);
+					double n[3] = ARRAY_3_DOUBLE( n0, n1, n2 );
 				crackNorm->INSERT_NEXT_TUPLE(n);
-                                        crackNrg->InsertNextValue(nrg);
-                                        crackOnJnt->InsertNextValue(onJnt);
+                                        crackNrg->INSERT_NEXT_VALUE(nrg);
+                                        crackOnJnt->INSERT_NEXT_VALUE(onJnt);
 				}
 			}
 			 file.close();
@@ -1386,13 +1386,13 @@ void VTKRecorder::action(){
 				while ( std::getline(file, line)) {/* writes into string "line", a line of file "file". To go along diff. lines*/
 					file >> i >> p0 >> p1 >> p2 >> moment >> numInts >> eventNum >> time;
 					vtkIdType pid[1];
-					pid[0] = momentPos->InsertNextPoint(p0, p1, p2);
+					pid[0] = momentPos->INSERT_NEXT_POINT(p0, p1, p2);
 					momentCells->InsertNextCell(1,pid);
-					momentSize->InsertNextValue(moment);
-					momentiter->InsertNextValue(i);
-					momenttime->InsertNextValue(time);
-					momentNumInts->InsertNextValue(numInts);
-					momentEventNum->InsertNextValue(eventNum);
+					momentSize->INSERT_NEXT_VALUE(moment);
+					momentiter->INSERT_NEXT_VALUE(i);
+					momenttime->INSERT_NEXT_VALUE(time);
+					momentNumInts->INSERT_NEXT_VALUE(numInts);
+					momentEventNum->INSERT_NEXT_VALUE(eventNum);
 				}
 			}
 			 file.close();
@@ -1487,16 +1487,16 @@ void VTKRecorder::addWallVTK (vtkSmartPointer<vtkQuad>& boxes, vtkSmartPointer<v
 	//Function for exporting walls of boxes
 	vtkIdType nbPoints=boxesPos->GetNumberOfPoints();
 
-	boxesPos->InsertNextPoint(W1[0], W1[1], W1[2]);
+	boxesPos->INSERT_NEXT_POINT(W1[0], W1[1], W1[2]);
 	boxes->GetPointIds()->SetId(0,nbPoints+0);
 
-	boxesPos->InsertNextPoint(W2[0], W2[1], W2[2]);
+	boxesPos->INSERT_NEXT_POINT(W2[0], W2[1], W2[2]);
 	boxes->GetPointIds()->SetId(1,nbPoints+1);
 
-	boxesPos->InsertNextPoint(W3[0], W3[1], W3[2]);
+	boxesPos->INSERT_NEXT_POINT(W3[0], W3[1], W3[2]);
 	boxes->GetPointIds()->SetId(2,nbPoints+2);
 
-	boxesPos->InsertNextPoint(W4[0], W4[1], W4[2]);
+	boxesPos->INSERT_NEXT_POINT(W4[0], W4[1], W4[2]);
 	boxes->GetPointIds()->SetId(3,nbPoints+3);
 };
 #undef GET_MASK
