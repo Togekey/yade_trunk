@@ -15,24 +15,12 @@
 #ifndef YADE_THIN_COMPLEX_WRAPPER_HPP
 #define YADE_THIN_COMPLEX_WRAPPER_HPP
 
-#include <boost/config.hpp>
-#include <boost/move/traits.hpp>
-#include <boost/operators.hpp>
-#include <boost/type_traits/conditional.hpp>
-#include <boost/type_traits/has_nothrow_assign.hpp>
-#include <boost/type_traits/has_nothrow_constructor.hpp>
-#include <boost/type_traits/has_nothrow_copy.hpp>
-#include <boost/type_traits/is_complex.hpp>
-#include <cmath>
-#include <iostream>
-#include <limits>
-#include <sstream>
-#include <stdexcept>
-#include <type_traits>
+#include "ThinRealWrapper.hpp"
 
 // it is possible to #define YADE_IGNORE_IEEE_INFINITY_NAN  ← about that see https://www.boost.org/doc/libs/1_71_0/libs/utility/operators.htm#ordering
 
 namespace yade {
+namespace math {
 
 template <typename T> struct RealPart {
 	typedef T type;
@@ -215,7 +203,9 @@ public:
 	template <typename OtherType = WrappedComplex, typename = EnableIfIsComplex<OtherType>> NonComplex imag() const { return val.imag(); };
 };
 
-}
+} // namespace math
+} // namespace yade
+
 
 #endif
 

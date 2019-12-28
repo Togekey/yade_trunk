@@ -55,7 +55,7 @@ template <typename T1, typename T2> struct std_pair_to_python_converter {
 std::pair<Real, int> frexp_c_test(const Real& x)
 {
 	int  i   = 0;
-	Real ret = ::yade::frexp(x, &i);
+	Real ret = ::yade::math::frexp(x, &i);
 	return std::pair<Real, int> { ret, i };
 }
 
@@ -63,9 +63,9 @@ std::pair<Real, Real> modf_c_test(const Real& x)
 {
 	Real r = 0;
 #if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
-	Real ret = ::yade::modf(x, r);
+	Real ret = ::yade::math::modf(x, r);
 #else
-	Real ret      = ::yade::modf(x, &r);
+	Real ret      = ::yade::math::modf(x, &r);
 #endif
 	return std::pair<Real, Real> { ret, r };
 }
@@ -77,7 +77,7 @@ std::pair<Real, long> remquo_c_test(const Real& x, const Real& y)
 #else
 	int  i        = 0;
 #endif
-	Real ret = ::yade::remquo(x, y, &i);
+	Real ret = ::yade::math::remquo(x, y, &i);
 	return std::pair<Real, long> { ret, i };
 }
 
@@ -92,7 +92,7 @@ struct Var {
 	void    setComplex(Complex val) { valueComplex = val; };
 };
 
-void compareVec(const std::vector<Real>& vec, const UnderlyingReal* array)
+void compareVec(const std::vector<Real>& vec, const ::yade::math::UnderlyingReal* array)
 {
 	for (size_t i = 0; i < vec.size(); i++) {
 		if (vec[i] != array[i]) {
@@ -104,7 +104,7 @@ void compareVec(const std::vector<Real>& vec, const UnderlyingReal* array)
 
 #include <boost/range/combine.hpp>
 // this funcction simulates some external library which works on C-arrays.
-void multVec(UnderlyingReal* array, const UnderlyingReal& fac, size_t s)
+void multVec(::yade::math::UnderlyingReal* array, const ::yade::math::UnderlyingReal& fac, size_t s)
 {
 	for (size_t i = 0; i < s; i++)
 		array[i] *= fac;
@@ -116,11 +116,11 @@ void testArray()
 	std::vector<Real> vec {};
 	int               i = 1000;
 	while (i-- > 0)
-		vec.push_back(random01());
-	compareVec(vec, constVectorData(vec));
+		vec.push_back(math::random01());
+	compareVec(vec, math::constVectorData(vec));
 	auto copy = vec;
 	Real fac  = 3.33;
-	multVec(vectorData(vec), static_cast<UnderlyingReal>(fac), vec.size());
+	multVec(math::vectorData(vec), static_cast<::yade::math::UnderlyingReal>(fac), vec.size());
 	for (auto a : boost::combine(copy, vec)) {
 		if (a.get<0>() * fac != a.get<1>()) {
 			std::cerr << __PRETTY_FUNCTION__ << " failed test\n";
@@ -270,11 +270,11 @@ try {
 #endif
 
 	// check overload (and namespace) resolution for all math functions. As a side effect they are exported to python, and can be unit-tested.
-#define YADE_PYEXPORT_MATH_1(func) py::def(#func, static_cast<Real (*)(const Real&)>(&::yade::func), (py::arg("x")));
-#define YADE_PYEXPORT_MATH_1_MREF(func) py::def(#func, static_cast<Real (*)(Real)>(&::yade::func), (py::arg("x")));
-#define YADE_PYEXPORT_MATH_1_COMPLEX(func) py::def(#func, static_cast<Complex (*)(const Complex&)>(&::yade::func), (py::arg("x")));
-#define YADE_PYEXPORT_MATH_1_COMPLEX_TO_REAL(func) py::def(#func, static_cast<Real (*)(const Complex&)>(&::yade::func), (py::arg("x")));
-#define YADE_PYEXPORT_MATH_1_INT(func) py::def(#func, static_cast<int (*)(const Real&)>(&::yade::func), (py::arg("x")));
+#define YADE_PYEXPORT_MATH_1(func) py::def(#func, static_cast<Real (*)(const Real&)>(&::yade::math::func), (py::arg("x")));
+#define YADE_PYEXPORT_MATH_1_MREF(func) py::def(#func, static_cast<Real (*)(Real)>(&::yade::math::func), (py::arg("x")));
+#define YADE_PYEXPORT_MATH_1_COMPLEX(func) py::def(#func, static_cast<Complex (*)(const Complex&)>(&::yade::math::func), (py::arg("x")));
+#define YADE_PYEXPORT_MATH_1_COMPLEX_TO_REAL(func) py::def(#func, static_cast<Real (*)(const Complex&)>(&::yade::math::func), (py::arg("x")));
+#define YADE_PYEXPORT_MATH_1_INT(func) py::def(#func, static_cast<int (*)(const Real&)>(&::yade::math::func), (py::arg("x")));
 	// FIXED: maybe registering the complex versions first will solve the problem that they are used when Real ones should be used - Yes.
 	// Complex versions are registered first
 	YADE_PYEXPORT_MATH_1_COMPLEX(sin)
@@ -343,8 +343,12 @@ try {
 #undef YADE_PYEXPORT_MATH_1_COMPLEX_TO_REAL
 #undef YADE_PYEXPORT_MATH_1_INT
 
-#define YADE_PYEXPORT_MATH_2(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&)>(&::yade::func), (py::arg("x"), "y"));
-#define YADE_PYEXPORT_MATH_2_CREF(func) py::def(#func, static_cast<const Real& (*)(const Real&, const Real&)>(&::yade::func), (py::arg("x"), "y"),py::return_value_policy<py::copy_const_reference>());
+#define YADE_PYEXPORT_MATH_2(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&)>(&::yade::math::func), (py::arg("x"), "y"));
+#define YADE_PYEXPORT_MATH_2_CREF(func)                                                                                                                        \
+	py::def(#func,                                                                                                                                         \
+	        static_cast<const Real& (*)(const Real&, const Real&)>(&::yade::math::func),                                                                   \
+	        (py::arg("x"), "y"),                                                                                                                           \
+	        py::return_value_policy<py::copy_const_reference>());
 	YADE_PYEXPORT_MATH_2(atan2)
 	//YADE_PYEXPORT_MATH_2(beta) // since C++17
 	//YADE_PYEXPORT_MATH_2(cyl_bessel_i) // since C++17
@@ -359,11 +363,11 @@ try {
 #undef YADE_PYEXPORT_MATH_2
 #undef YADE_PYEXPORT_MATH_2_CREF
 
-#define YADE_PYEXPORT_MATH_2_TYPE1(func, FirstType) py::def(#func, static_cast<Real (*)(FirstType, const Real&)>(&::yade::func), (py::arg("x"), "y"));
+#define YADE_PYEXPORT_MATH_2_TYPE1(func, FirstType) py::def(#func, static_cast<Real (*)(FirstType, const Real&)>(&::yade::math::func), (py::arg("x"), "y"));
 	//YADE_PYEXPORT_MATH_2_TYPE1(sph_bessel, unsigned) // since C++17
 #undef YADE_PYEXPORT_MATH_2_TYPE1
 
-#define YADE_PYEXPORT_MATH_2_TYPE2(func, SecondType) py::def(#func, static_cast<Real (*)(const Real&, SecondType)>(&::yade::func), (py::arg("x"), "y"));
+#define YADE_PYEXPORT_MATH_2_TYPE2(func, SecondType) py::def(#func, static_cast<Real (*)(const Real&, SecondType)>(&::yade::math::func), (py::arg("x"), "y"));
 	YADE_PYEXPORT_MATH_2_TYPE2(ldexp, int)
 #undef YADE_PYEXPORT_MATH_2_TYPE2
 
@@ -373,7 +377,7 @@ try {
 	py::def("frexp", frexp_c_test, (py::arg("x")));
 	py::def("modf", modf_c_test, (py::arg("x")));
 
-#define YADE_PYEXPORT_MATH_3(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&, const Real&)>(&::yade::func), (py::arg("x"), "y", "z"));
+#define YADE_PYEXPORT_MATH_3(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&, const Real&)>(&::yade::math::func), (py::arg("x"), "y", "z"));
 	YADE_PYEXPORT_MATH_3(fma)
 #undef YADE_PYEXPORT_MATH_3
 

@@ -227,7 +227,7 @@ template <typename T> inline std::string num_to_string(const std::complex<T>& nu
 #ifdef YADE_THIN_REAL_WRAPPER_HPP
 template <> inline std::string num_to_string<::yade::Complex>(const ::yade::Complex& num, int)
 {
-	return num_to_string(static_cast<std::complex<UnderlyingReal>>(num));
+	return num_to_string(static_cast<std::complex<::yade::math::UnderlyingReal>>(num));
 }
 #endif
 

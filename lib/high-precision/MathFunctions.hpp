@@ -29,6 +29,7 @@
 #include <complex>
 #include <cstdlib>
 #include <limits>
+#include <utility>
 
 #ifndef YADE_REAL_MATH_NAMESPACE
 #error "This file cannot be included alone, include Real.hpp instead"
@@ -57,6 +58,9 @@
 
 #define YADE_WRAP_FUNC_2_TYPE2(func, SecondType)                                                                                                               \
 	inline Real func(const Real& a, SecondType b) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<const UnderlyingReal&>(a), b); }
+
+#define YADE_WRAP_FUNC_2_TYPE2_STD_CAST(func, SecondType)                                                                                                      \
+	inline Real func(const Real& a, SecondType b) { return ::std::func(static_cast<const UnderlyingReal&>(a), static_cast<const UnderlyingReal&>(b)); }
 
 #ifdef YADE_THIN_REAL_WRAPPER_HPP
 #define YADE_WRAP_FUNC_2_TYPE2_CAST(func, SecondType, CastType)                                                                                                \
@@ -109,143 +113,148 @@
 
 
 namespace yade {
+namespace math {
+	/********************************************************************************************/
+	/**********************            trigonometric functions             **********************/
+	/********************************************************************************************/
 
-/********************************************************************************************/
-/**********************            trigonometric functions             **********************/
-/********************************************************************************************/
+	YADE_WRAP_FUNC_1(sin)
+	YADE_WRAP_FUNC_1(sinh)
+	YADE_WRAP_FUNC_1(cos)
+	YADE_WRAP_FUNC_1(cosh)
+	YADE_WRAP_FUNC_1(tan)
+	YADE_WRAP_FUNC_1(tanh)
 
-YADE_WRAP_FUNC_1(sin)
-YADE_WRAP_FUNC_1(sinh)
-YADE_WRAP_FUNC_1(cos)
-YADE_WRAP_FUNC_1(cosh)
-YADE_WRAP_FUNC_1(tan)
-YADE_WRAP_FUNC_1(tanh)
+	/**********************                    Complex                     *********************/
+	// add more complex functions as necessary, but remember to add them in py/high-precision/_math.cpp, py/tests/testMath.py and py/tests/testMathHelper.py
+	YADE_WRAP_FUNC_1_COMPLEX(sin)
+	YADE_WRAP_FUNC_1_COMPLEX(sinh)
+	YADE_WRAP_FUNC_1_COMPLEX(cos)
+	YADE_WRAP_FUNC_1_COMPLEX(cosh)
+	YADE_WRAP_FUNC_1_COMPLEX(tan)
+	YADE_WRAP_FUNC_1_COMPLEX(tanh)
 
-/**********************                    Complex                     *********************/
-// add more complex functions as necessary, but remember to add them in py/high-precision/_math.cpp, py/tests/testMath.py and py/tests/testMathHelper.py
-YADE_WRAP_FUNC_1_COMPLEX(sin)
-YADE_WRAP_FUNC_1_COMPLEX(sinh)
-YADE_WRAP_FUNC_1_COMPLEX(cos)
-YADE_WRAP_FUNC_1_COMPLEX(cosh)
-YADE_WRAP_FUNC_1_COMPLEX(tan)
-YADE_WRAP_FUNC_1_COMPLEX(tanh)
+	/********************************************************************************************/
+	/**********************        inverse trigonometric functions         **********************/
+	/********************************************************************************************/
 
-/********************************************************************************************/
-/**********************        inverse trigonometric functions         **********************/
-/********************************************************************************************/
+	YADE_WRAP_FUNC_1(asin)
+	YADE_WRAP_FUNC_1(asinh)
+	YADE_WRAP_FUNC_1(acos)
+	YADE_WRAP_FUNC_1(acosh)
+	YADE_WRAP_FUNC_1(atan)
+	YADE_WRAP_FUNC_1(atanh)
+	YADE_WRAP_FUNC_2(atan2)
 
-YADE_WRAP_FUNC_1(asin)
-YADE_WRAP_FUNC_1(asinh)
-YADE_WRAP_FUNC_1(acos)
-YADE_WRAP_FUNC_1(acosh)
-YADE_WRAP_FUNC_1(atan)
-YADE_WRAP_FUNC_1(atanh)
-YADE_WRAP_FUNC_2(atan2)
+	/********************************************************************************************/
+	/**********************   logarithm, exponential and power functions   **********************/
+	/********************************************************************************************/
 
-/********************************************************************************************/
-/**********************   logarithm, exponential and power functions   **********************/
-/********************************************************************************************/
+	YADE_WRAP_FUNC_1(log)
+	YADE_WRAP_FUNC_1(log10)
+	YADE_WRAP_FUNC_1(log1p)
+	YADE_WRAP_FUNC_1(log2)
+	YADE_WRAP_FUNC_1(logb)
+	YADE_WRAP_FUNC_1(ilogb)
 
-YADE_WRAP_FUNC_1(log)
-YADE_WRAP_FUNC_1(log10)
-YADE_WRAP_FUNC_1(log1p)
-YADE_WRAP_FUNC_1(log2)
-YADE_WRAP_FUNC_1(logb)
-YADE_WRAP_FUNC_1(ilogb)
+	YADE_WRAP_FUNC_2_TYPE2(ldexp, int)
+	YADE_WRAP_FUNC_2_TYPE2(frexp, int*) // that's original C signature of this function
 
-YADE_WRAP_FUNC_2_TYPE2(ldexp, int)
-YADE_WRAP_FUNC_2_TYPE2(frexp, int*) // that's original C signature of this function
+	YADE_WRAP_FUNC_1(exp)
+	YADE_WRAP_FUNC_1(exp2)
+	YADE_WRAP_FUNC_1(expm1)
 
-YADE_WRAP_FUNC_1(exp)
-YADE_WRAP_FUNC_1(exp2)
-YADE_WRAP_FUNC_1(expm1)
+	YADE_WRAP_FUNC_2(pow)
+	YADE_WRAP_FUNC_1(sqrt)
+	YADE_WRAP_FUNC_1(cbrt)
 
-YADE_WRAP_FUNC_2(pow)
-YADE_WRAP_FUNC_1(sqrt)
-YADE_WRAP_FUNC_1(cbrt)
+	YADE_WRAP_FUNC_2(hypot)
+	//YADE_WRAP_FUNC_3(hypot) // since C++17, could be very useful for us
 
-YADE_WRAP_FUNC_2(hypot)
-//YADE_WRAP_FUNC_3(hypot) // since C++17, could be very useful for us
+	/**********************                    Complex                     *********************/
+	// add more complex functions as necessary, but remember to add them in py/high-precision/_math.cpp, py/tests/testMath.py and py/tests/testMathHelper.py
+	YADE_WRAP_FUNC_1_COMPLEX(exp)
+	YADE_WRAP_FUNC_1_COMPLEX(log)
 
-/**********************                    Complex                     *********************/
-// add more complex functions as necessary, but remember to add them in py/high-precision/_math.cpp, py/tests/testMath.py and py/tests/testMathHelper.py
-YADE_WRAP_FUNC_1_COMPLEX(exp)
-YADE_WRAP_FUNC_1_COMPLEX(log)
+	/********************************************************************************************/
+	/**********************    min, max, abs, sign, floor, ceil, etc...    **********************/
+	/********************************************************************************************/
 
-/********************************************************************************************/
-/**********************    min, max, abs, sign, floor, ceil, etc...    **********************/
-/********************************************************************************************/
-
-// Both must be found by automatic lookup: the ones from ::std and the ones that accept non-double Real types.
-using ::std::min;
-using ::std::max;
-using ::std::abs;
-using ::std::fabs;
+	// Both must be found by automatic lookup: the ones from ::std and the ones that accept non-double Real types.
+	using ::std::abs;
+	using ::std::fabs;
+	using ::std::max;
+	using ::std::min;
 #if (YADE_REAL_BIT > 64)
-YADE_WRAP_FUNC_1(abs)
-YADE_WRAP_FUNC_1_RENAME(fabs, abs)
+	YADE_WRAP_FUNC_2_TYPE2_STD_CAST(min, const double&)
+	YADE_WRAP_FUNC_2_TYPE2_STD_CAST(max, const double&)
+	YADE_WRAP_FUNC_2_TYPE2_STD_CAST(min, const Real&)
+	YADE_WRAP_FUNC_2_TYPE2_STD_CAST(max, const Real&)
+	YADE_WRAP_FUNC_1(abs)
+	YADE_WRAP_FUNC_1_RENAME(fabs, abs)
 #endif
-template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
-template <typename T> int sign(T val) { return (T(0) < val) - (val < T(0)); }
-YADE_WRAP_FUNC_1(floor)
-YADE_WRAP_FUNC_1(ceil)
-YADE_WRAP_FUNC_1(round)
-YADE_WRAP_FUNC_1(rint)
-YADE_WRAP_FUNC_1(trunc)
+	template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
+	template <typename T> int sign(T val) { return (T(0) < val) - (val < T(0)); }
+	YADE_WRAP_FUNC_1(floor)
+	YADE_WRAP_FUNC_1(ceil)
+	YADE_WRAP_FUNC_1(round)
+	YADE_WRAP_FUNC_1(rint)
+	YADE_WRAP_FUNC_1(trunc)
 
 #ifndef YADE_IGNORE_IEEE_INFINITY_NAN
-YADE_WRAP_FUNC_1(isnan)
-YADE_WRAP_FUNC_1(isinf)
+	YADE_WRAP_FUNC_1(isnan)
+	YADE_WRAP_FUNC_1(isinf)
+	YADE_WRAP_FUNC_1(isfinite)
 #endif
 
-/**********************                    Complex                     *********************/
-// add more complex functions as necessary, but remember to add them in py/high-precision/_math.cpp and py/tests/testMath.py
-YADE_WRAP_FUNC_1_COMPLEX_STD(conj)
-YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(abs)
-YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD(real)
-YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD(imag)
+	/**********************                    Complex                     *********************/
+	// add more complex functions as necessary, but remember to add them in py/high-precision/_math.cpp and py/tests/testMath.py
+	YADE_WRAP_FUNC_1_COMPLEX_STD(conj)
+	YADE_WRAP_FUNC_1_COMPLEX_TO_REAL(abs)
+	YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD(real)
+	YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD(imag)
 
-/********************************************************************************************/
-/**********************        integer division and remainder          **********************/
-/********************************************************************************************/
+	/********************************************************************************************/
+	/**********************        integer division and remainder          **********************/
+	/********************************************************************************************/
 
-YADE_WRAP_FUNC_2(fmod)
-YADE_WRAP_FUNC_2(remainder)
+	YADE_WRAP_FUNC_2(fmod)
+	YADE_WRAP_FUNC_2(remainder)
 
 #if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
-YADE_WRAP_FUNC_2_TYPE2_CAST(modf, Real&, NotUsed)
+	YADE_WRAP_FUNC_2_TYPE2_CAST(modf, Real&, NotUsed)
 #else
-YADE_WRAP_FUNC_2_TYPE2_CAST(modf, Real*, UnderlyingReal*)
+	YADE_WRAP_FUNC_2_TYPE2_CAST(modf, Real*, UnderlyingReal*)
 #endif
 
-YADE_WRAP_FUNC_3(fma)
+	YADE_WRAP_FUNC_3(fma)
 #if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
-YADE_WRAP_FUNC_3_TYPE31(remquo, long*)
+	YADE_WRAP_FUNC_3_TYPE31(remquo, long*)
 #else
-YADE_WRAP_FUNC_3_TYPE3(remquo, int*)
+	YADE_WRAP_FUNC_3_TYPE3(remquo, int*)
 #endif
 
-/********************************************************************************************/
-/**********************         special mathematical functions         **********************/
-/********************************************************************************************/
+	/********************************************************************************************/
+	/**********************         special mathematical functions         **********************/
+	/********************************************************************************************/
 
-YADE_WRAP_FUNC_1(erf)
-YADE_WRAP_FUNC_1(erfc)
-YADE_WRAP_FUNC_1(lgamma)
+	YADE_WRAP_FUNC_1(erf)
+	YADE_WRAP_FUNC_1(erfc)
+	YADE_WRAP_FUNC_1(lgamma)
 // workaround broken tgamma for boost::float128
 #if (YADE_REAL_BIT <= 128) and (YADE_REAL_BIT > 80)
-static_assert(std::is_same<UnderlyingReal, boost::multiprecision::float128>::value, "Incorrect type, please file a bug report.");
-inline Real tgamma(const Real& a)
-{
-	if (a >= 0) {
-		return YADE_REAL_MATH_NAMESPACE::tgamma(static_cast<UnderlyingReal>(a));
-	} else {
-		return abs(YADE_REAL_MATH_NAMESPACE::tgamma(static_cast<UnderlyingReal>(a)))
-		        * ((static_cast<unsigned long long>(floor(abs(a))) % 2 == 0) ? -1 : 1);
+	static_assert(std::is_same<UnderlyingReal, boost::multiprecision::float128>::value, "Incorrect type, please file a bug report.");
+	inline Real tgamma(const Real& a)
+	{
+		if (a >= 0) {
+			return YADE_REAL_MATH_NAMESPACE::tgamma(static_cast<UnderlyingReal>(a));
+		} else {
+			return abs(YADE_REAL_MATH_NAMESPACE::tgamma(static_cast<UnderlyingReal>(a)))
+			        * ((static_cast<unsigned long long>(floor(abs(a))) % 2 == 0) ? -1 : 1);
+		}
 	}
-}
 #else
-YADE_WRAP_FUNC_1(tgamma)
+	YADE_WRAP_FUNC_1(tgamma)
 #endif
 
 // These will be available in C++17, we could use the ones from boost, if they become necessary.
@@ -263,35 +272,55 @@ YADE_WRAP_FUNC_1(tgamma)
 
 // Some old C library functions need pointer to C-array, this is for compatibility between ThinRealWrapper and UnderlyingReal
 #ifdef YADE_THIN_REAL_WRAPPER_HPP
-static_assert(sizeof(Real) == sizeof(UnderlyingReal), "This compiler introduced padding. This breaks binary compatibility");
-static_assert(sizeof(yade::Complex) == sizeof(std::complex<UnderlyingReal>), "This compiler introduced padding, which breaks binary compatibility");
+	static_assert(sizeof(Real) == sizeof(UnderlyingReal), "This compiler introduced padding. This breaks binary compatibility");
+	static_assert(sizeof(Complex) == sizeof(std::complex<UnderlyingReal>), "This compiler introduced padding, which breaks binary compatibility");
 
-static inline const UnderlyingReal* constVectorData(const std::vector<Real>& v) { return v.data()->operator const UnderlyingReal*(); }
-static inline UnderlyingReal*       vectorData(std::vector<Real>& v) { return v.data()->operator UnderlyingReal*(); }
+	static inline const UnderlyingReal* constVectorData(const std::vector<Real>& v) { return v.data()->operator const UnderlyingReal*(); }
+	static inline UnderlyingReal*       vectorData(std::vector<Real>& v) { return v.data()->operator UnderlyingReal*(); }
 #else
-static inline const UnderlyingReal* constVectorData(const std::vector<Real>& v) { return v.data(); }
-static inline UnderlyingReal*       vectorData(std::vector<Real>& v) { return v.data(); }
+	static inline const UnderlyingReal* constVectorData(const std::vector<Real>& v) { return v.data(); }
+	static inline UnderlyingReal*       vectorData(std::vector<Real>& v) { return v.data(); }
 #endif
 
-/********************************************************************************************/
-/**********************                     random                     **********************/
-/********************************************************************************************/
+	/********************************************************************************************/
+	/**********************                     random                     **********************/
+	/********************************************************************************************/
 
-// These random functions are necessary for Eigen library to for example write in python: Vector3.Random()
-// generate random number [0,1)
-static inline Real random01()
-{
+	// These random functions are necessary for Eigen library to for example write in python: Vector3.Random()
+	// generate random number [0,1)
+	static inline Real random01()
+	{
 #if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
-	return ::mpfr::random();
+		return ::mpfr::random();
 #else
-        static ::boost::random::mt19937 gen;
-        return ::boost::random::generate_canonical<Real, std::numeric_limits<Real>::digits>(gen);
+                static ::boost::random::mt19937 gen;
+                return ::boost::random::generate_canonical<::yade::math::Real, std::numeric_limits<::yade::math::Real>::digits>(gen);
 #endif
+	}
+
+	static inline Real unitRandom() { return random01(); }
+	static inline Real random() { return random01() * 2 - 1; }
+
+
+	/********************************************************************************************/
+	/**********************                      CGAL                      **********************/
+	/********************************************************************************************/
+
+#if (YADE_REAL_BIT > 64)
+	template <typename A> std::pair<A, A> to_interval_target(const ::yade::math::Real& a)
+	{
+		// TODO: use frexp, ldexp, scalbn to properly calculate the lower and upper bounds in double
+		//       that's for CGAL inexact predicates.
+		return ::std::make_pair(A(a - ::std::numeric_limits<::yade::math::Real>::epsilon()), A(a + std::numeric_limits<::yade::math::Real>::epsilon()));
+	}
+#endif
+
 }
-
-static inline Real unitRandom() { return random01(); }
-static inline Real random() { return random01() * 2 - 1; }
-
+// do we want such alias?
+//namespace m = ::yade::math;
+//namespace mth = ::yade::math;
+using ::std::max;
+using ::std::min;
 }
 
 #undef YADE_WRAP_FUNC_1
@@ -299,6 +328,7 @@ static inline Real random() { return random01() * 2 - 1; }
 #undef YADE_WRAP_FUNC_2
 #undef YADE_WRAP_FUNC_2_TYPE2
 #undef YADE_WRAP_FUNC_2_TYPE2_CAST
+#undef YADE_WRAP_FUNC_2_TYPE2_STD_CAST
 #undef YADE_WRAP_FUNC_2_TYPE1
 #undef YADE_WRAP_FUNC_3
 #undef YADE_WRAP_FUNC_3_TYPE3

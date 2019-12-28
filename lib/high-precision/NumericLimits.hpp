@@ -9,13 +9,17 @@
 #ifndef YADE_REAL_NUMERIC_LIMITS_HPP
 #define YADE_REAL_NUMERIC_LIMITS_HPP
 
-// Note: include this file only for ::yade::ThinRealWrapper<UnderlyingReal>
+#include <type_traits>
+
+// Note: include this file only for ThinRealWrapper<UnderlyingReal>
 #ifndef YADE_THIN_REAL_WRAPPER_HPP
 #error "This file cannot be included without ThinRealWrapper.hpp, include Real.hpp instead"
 #endif
 
 namespace std {
-template <> struct numeric_limits<::yade::ThinRealWrapper<UnderlyingReal>> {
+template <> struct numeric_limits<::yade::math::ThinRealWrapper<::yade::math::UnderlyingReal>> {
+	using UnderlyingReal = ::yade::math::UnderlyingReal;
+	using ThinWrapper = ::yade::math::ThinRealWrapper<UnderlyingReal>;
 	constexpr static const auto& is_specialized    = std::numeric_limits<UnderlyingReal>::is_specialized;
 	constexpr static const auto& is_signed         = std::numeric_limits<UnderlyingReal>::is_signed;
 	constexpr static const auto& is_integer        = std::numeric_limits<UnderlyingReal>::is_integer;
@@ -39,18 +43,22 @@ template <> struct numeric_limits<::yade::ThinRealWrapper<UnderlyingReal>> {
 	constexpr static const auto& max_exponent10    = std::numeric_limits<UnderlyingReal>::max_exponent10;
 	constexpr static const auto& traps             = std::numeric_limits<UnderlyingReal>::traps;
 	constexpr static const auto& tinyness_before   = std::numeric_limits<UnderlyingReal>::tinyness_before;
-	static inline auto           min() { return static_cast<::yade::ThinRealWrapper<UnderlyingReal>>(std::numeric_limits<UnderlyingReal>::min()); }
-	static inline auto           lowest() { return static_cast<::yade::ThinRealWrapper<UnderlyingReal>>(std::numeric_limits<UnderlyingReal>::lowest()); }
-	static inline auto           max() { return static_cast<::yade::ThinRealWrapper<UnderlyingReal>>(std::numeric_limits<UnderlyingReal>::max()); }
-	static inline auto           epsilon() { return static_cast<::yade::ThinRealWrapper<UnderlyingReal>>(std::numeric_limits<UnderlyingReal>::epsilon()); }
-	static inline auto           round_error() { return static_cast<::yade::ThinRealWrapper<UnderlyingReal>>(std::numeric_limits<UnderlyingReal>::round_error()); }
-	static inline auto           infinity() { return static_cast<::yade::ThinRealWrapper<UnderlyingReal>>(std::numeric_limits<UnderlyingReal>::infinity()); }
-	static inline auto           quiet_NaN() { return static_cast<::yade::ThinRealWrapper<UnderlyingReal>>(std::numeric_limits<UnderlyingReal>::quiet_NaN()); }
-	static inline auto           signaling_NaN() { return static_cast<::yade::ThinRealWrapper<UnderlyingReal>>(std::numeric_limits<UnderlyingReal>::signaling_NaN()); }
-	static inline auto           denorm_min() { return static_cast<::yade::ThinRealWrapper<UnderlyingReal>>(std::numeric_limits<UnderlyingReal>::denorm_min()); }
+	static inline auto           min() { return static_cast<ThinWrapper>(std::numeric_limits<UnderlyingReal>::min()); }
+	static inline auto           lowest() { return static_cast<ThinWrapper>(std::numeric_limits<UnderlyingReal>::lowest()); }
+	static inline auto           max() { return static_cast<ThinWrapper>(std::numeric_limits<UnderlyingReal>::max()); }
+	static inline auto           epsilon() { return static_cast<ThinWrapper>(std::numeric_limits<UnderlyingReal>::epsilon()); }
+	static inline auto           round_error() { return static_cast<ThinWrapper>(std::numeric_limits<UnderlyingReal>::round_error()); }
+	static inline auto           infinity() { return static_cast<ThinWrapper>(std::numeric_limits<UnderlyingReal>::infinity()); }
+	static inline auto           quiet_NaN() { return static_cast<ThinWrapper>(std::numeric_limits<UnderlyingReal>::quiet_NaN()); }
+	static inline auto           signaling_NaN() { return static_cast<ThinWrapper>(std::numeric_limits<UnderlyingReal>::signaling_NaN()); }
+	static inline auto           denorm_min() { return static_cast<ThinWrapper>(std::numeric_limits<UnderlyingReal>::denorm_min()); }
 	// constexpr static const auto& float_round_style = std::numeric_limits<UnderlyingReal>::float_round_style ;
 	// constexpr static const auto& float_denorm_style= std::numeric_limits<UnderlyingReal>::float_denorm_style;
 };
+
+template <> struct is_floating_point<::yade::math::ThinRealWrapper<::yade::math::UnderlyingReal>> : std::true_type {
+};
+
 }
 
 #endif
