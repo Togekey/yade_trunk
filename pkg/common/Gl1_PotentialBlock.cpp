@@ -641,7 +641,7 @@ void PotentialBlockVTKRecorderTunnel::action()
 			}
 		}
 
-		sample->SetModelBounds(1.5 * xmin, 1.5 * xmax, 1.5 * ymin, 1.5 * ymax, 1.5 * zmin, 1.5 * zmax);
+		sample->SetModelBounds(SIX_DOUBLES(1.5 * xmin, 1.5 * xmax, 1.5 * ymin, 1.5 * ymax, 1.5 * zmin, 1.5 * zmax));
 		//sample->SetModelBounds(pb->minAabb.x(), pb->maxAabb.x(), pb->minAabb.y(), pb->maxAabb.y(), pb->minAabb.z(), pb->maxAabb.z());
 		int sampleXno = sampleX;
 		int sampleYno = sampleY;
@@ -1037,7 +1037,7 @@ void PotentialBlockVTKRecorder::action()
 			}
 		}
 
-		sample->SetModelBounds(xmin, xmax, ymin, ymax, zmin, zmax);
+		sample->SetModelBounds(SIX_DOUBLES(xmin, xmax, ymin, ymax, zmin, zmax));
 		//sample->SetModelBounds(pb->minAabb.x(), pb->maxAabb.x(), pb->minAabb.y(), pb->maxAabb.y(), pb->minAabb.z(), pb->maxAabb.z());
 		int sampleXno = sampleX;
 		int sampleYno = sampleY;
