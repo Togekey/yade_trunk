@@ -5,6 +5,8 @@
 
 #ifdef YADE_POTENTIAL_BLOCKS
 
+#include <lib/compatibility/DoubleCompatibility.hpp>
+
 #include "Ig2_PB_PB_ScGeom.hpp"
 #include <pkg/dem/ScGeom.hpp>
 //#include <pkg/dem/PotentialBlock.hpp>
@@ -1045,22 +1047,22 @@ model2.setColumnUpper(1,  COIN_DBL_MAX);
 model2.setColumnUpper(2,  COIN_DBL_MAX);
 model2.setColumnUpper(3,  COIN_DBL_MAX);
 
-Real rowLower[numberRows];
-Real rowUpper[numberRows];
+double rowLower[numberRows];
+double rowUpper[numberRows];
 
 // Rows
-for( int i=0; i<planeNoA;   i++ ){ rowUpper[i]            = s1->d[i] + s1->r + Q1pos1(i,0); }
-for( int i=0; i<planeNoB;   i++ ){ rowUpper[planeNoA + i] = s2->d[i] + s2->r + Q2pos2(i,0); }
+for( int i=0; i<planeNoA;   i++ ){ rowUpper[i]            = static_cast<double>( s1->d[i] + s1->r + Q1pos1(i,0) ); }
+for( int i=0; i<planeNoB;   i++ ){ rowUpper[planeNoA + i] = static_cast<double>( s2->d[i] + s2->r + Q2pos2(i,0) ); }
 for( int k=0; k<numberRows; k++ ){ rowLower[k] = -COIN_DBL_MAX; }
 
 for( int i=0; i < planeNoA; i++ ){
 	int rowIndex[] = {0, 1, 2, 3};
-	Real rowValue[] = {AQ1(i,0), AQ1(i,1), AQ1(i,2), -1.0};
+	double rowValue[] = ARRAY_4_DOUBLE(AQ1(i,0), AQ1(i,1), AQ1(i,2), -1.0);
 	model2.addRow(4, rowIndex, rowValue,rowLower[i], rowUpper[i]);
 }
 for( int i=0; i < planeNoB; i++ ){
 	int rowIndex[] = {0, 1, 2, 3};
-	Real rowValue[] = {AQ2(i,0), AQ2(i,1), AQ2(i,2), -1.0};
+	double rowValue[] = ARRAY_4_DOUBLE(AQ2(i,0), AQ2(i,1), AQ2(i,2), -1.0);
 	model2.addRow(4, rowIndex, rowValue,rowLower[planeNoA+i], rowUpper[planeNoA+i]);
 }
 
@@ -1072,7 +1074,7 @@ model2.setLogLevel(0);
    //model2.writeMps("a.mps");
 
           // Alternatively getColSolution()
-          Real * columnPrimal = model2.primalColumnSolution();
+          double* columnPrimal = model2.primalColumnSolution();
 
     xGlobal = Vector3r(columnPrimal[0],columnPrimal[1],columnPrimal[2])/rescale;
     contactPoint = xGlobal;

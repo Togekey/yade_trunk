@@ -4,6 +4,9 @@
 /* The numerical library is changed from CPLEX to CLP because subscription to the academic initiative is required to use CPLEX for free */
 #ifdef YADE_POTENTIAL_BLOCKS
 
+
+#include <lib/compatibility/DoubleCompatibility.hpp>
+
 #include <core/Clump.hpp>
 #include <pkg/dem/KnKsPBLaw.hpp>
 
@@ -1690,11 +1693,11 @@ bool BlockGen::contactDetectionLPCLPglobal(struct Discontinuity joint, struct Bl
 	model2.setColumnUpper(2, COIN_DBL_MAX);
 	model2.setColumnUpper(3, COIN_DBL_MAX);
 
-	Real rowLower[numberRows]; //TODO: Check whether to replace C array with std::vector<>
-	Real rowUpper[numberRows]; //TODO: Check whether to replace C array with std::vector<>
+	double rowLower[numberRows]; //TODO: Check whether to replace C array with std::vector<> - that would be great, but first replace model2.addRow with something that can take argument std::vector<Real>
+	double rowUpper[numberRows]; //TODO: Check whether to replace C array with std::vector<>
 
 	// Rows
-	rowLower[0] = joint.a*joint.centre.x() + joint.b*joint.centre.y() + joint.c*joint.centre.z() + joint.d; //3 plane = 0
+	rowLower[0] = static_cast<double>( joint.a*joint.centre.x() + joint.b*joint.centre.y() + joint.c*joint.centre.z() + joint.d ); //3 plane = 0
 	for(int i=0; i<planeNoA; i++  ){
 		rowLower[1+i] = -COIN_DBL_MAX;
 	};
@@ -1702,28 +1705,28 @@ bool BlockGen::contactDetectionLPCLPglobal(struct Discontinuity joint, struct Bl
 		rowLower[1+planeNoA+i] =-COIN_DBL_MAX;
 	};
 
-	rowUpper[0] = joint.a*joint.centre.x() + joint.b*joint.centre.y() + joint.c*joint.centre.z() + joint.d; //3 plane = 0
+	rowUpper[0] = static_cast<double>( joint.a*joint.centre.x() + joint.b*joint.centre.y() + joint.c*joint.centre.z() + joint.d ); //3 plane = 0
 	for(int i=0; i<planeNoA; i++  ){
-		rowUpper[1+i] = block.d[i] + block.r;
+		rowUpper[1+i] = static_cast<double>( block.d[i] + block.r );
 	};
 	for(int i=0; i<persistenceNoA; i++ ){
-		rowUpper[1+planeNoA+i] = joint.persistence_d[i] +( joint.persistence_a[i]*joint.centre.x() + joint.persistence_b[i]*joint.centre.y() + joint.persistence_c[i]*joint.centre.z()); //joint.persistence_d[i] ;
+		rowUpper[1+planeNoA+i] = static_cast<double>( joint.persistence_d[i] +( joint.persistence_a[i]*joint.centre.x() + joint.persistence_b[i]*joint.centre.y() + joint.persistence_c[i]*joint.centre.z()) ); //joint.persistence_d[i] ;
 	};
 
 
 	int row1Index[] = {0, 1, 2};
-	Real row1Value[] = {joint.a, joint.b, joint.c};
+	double row1Value[] = ARRAY_3_DOUBLE(joint.a, joint.b, joint.c);
 	model2.addRow(3, row1Index, row1Value,rowLower[0], rowUpper[0]);
 
 	for (int i = 0; i < planeNoA;i++){
 		int rowIndex[] = {0, 1, 2, 3};
-		Real rowValue[] = {block.a[i], block.b[i], block.c[i], -1.0};
+		double rowValue[] = ARRAY_4_DOUBLE(block.a[i], block.b[i], block.c[i], -1.0);
 		model2.addRow(4, rowIndex, rowValue,rowLower[1+i], rowUpper[1+i]);
 	}
 
 	for (int i = 0; i < persistenceNoA;i++){
 		int rowIndex[] = {0, 1, 2, 3};
-		Real rowValue[] = {joint.persistence_a[i], joint.persistence_b[i], joint.persistence_c[i], -1.0};
+		double rowValue[] = ARRAY_4_DOUBLE(joint.persistence_a[i], joint.persistence_b[i], joint.persistence_c[i], -1.0);
 		model2.addRow(4, rowIndex, rowValue,rowLower[1+planeNoA+i], rowUpper[1+planeNoA+i]);
 	}
 
@@ -1735,7 +1738,7 @@ bool BlockGen::contactDetectionLPCLPglobal(struct Discontinuity joint, struct Bl
 
 
 		// Alternatively getColSolution()
-		Real * columnPrimal = model2.primalColumnSolution();
+		double * columnPrimal = model2.primalColumnSolution();
 
 		xlocalA = columnPrimal[0];
 		ylocalA = columnPrimal[1];
@@ -1784,9 +1787,9 @@ bool BlockGen::contactBoundaryLPCLP(struct Discontinuity joint, struct Block blo
 	model2.resize(0, numberColumns);
 
 	// Columns - objective was packed
-	model2.setObjectiveCoefficient(0, joint.a);
-	model2.setObjectiveCoefficient(1, joint.b);
-	model2.setObjectiveCoefficient(2, joint.c);
+	model2.setObjectiveCoefficient(0, static_cast<double>( joint.a ));
+	model2.setObjectiveCoefficient(1, static_cast<double>( joint.b ));
+	model2.setObjectiveCoefficient(2, static_cast<double>( joint.c ));
 	model2.setColumnLower(0, -COIN_DBL_MAX);
 	model2.setColumnLower(1, -COIN_DBL_MAX);
 	model2.setColumnLower(2, -COIN_DBL_MAX);
@@ -1794,18 +1797,18 @@ bool BlockGen::contactBoundaryLPCLP(struct Discontinuity joint, struct Block blo
 	model2.setColumnUpper(1, COIN_DBL_MAX);
 	model2.setColumnUpper(2, COIN_DBL_MAX);
 
-	Real rowLower[numberRows]; //TODO: Check whether to replace C array with std::vector<>
-	Real rowUpper[numberRows]; //TODO: Check whether to replace C array with std::vector<>
+	double rowLower[numberRows]; //TODO: Check whether to replace C array with std::vector<> - that would be great, but first replace model2.addRow with something that can take argument std::vector<Real>
+	double rowUpper[numberRows]; //TODO: Check whether to replace C array with std::vector<>
 
 	// Rows
 	for(int i=0; i<planeNoA; i++  ){
-		rowUpper[i] = block.d[i]+block.r;
+		rowUpper[i] = static_cast<double>( block.d[i]+block.r );
 		rowLower[i] = -COIN_DBL_MAX;
 	}
 
 	for (int i = 0; i < planeNoA;i++){
 		int rowIndex[] = {0, 1, 2};
-		Real rowValue[] = {block.a[i], block.b[i], block.c[i]};
+		double rowValue[] = ARRAY_3_DOUBLE(block.a[i], block.b[i], block.c[i]);
 		model2.addRow(3, rowIndex, rowValue,rowLower[i], rowUpper[i]);
 	}
 	model2.scaling(0);
@@ -1817,7 +1820,7 @@ bool BlockGen::contactBoundaryLPCLP(struct Discontinuity joint, struct Block blo
 	//model2.writeMps("contactBoundary.mps");
 
 		// Alternatively getColSolution()
-		Real * columnPrimal = model2.primalColumnSolution();
+		double * columnPrimal = model2.primalColumnSolution();
 
 		xGlobalA = Vector3r(columnPrimal[0],columnPrimal[1],columnPrimal[2]);
 		touchingPt = xGlobalA;
@@ -1996,20 +1999,20 @@ bool BlockGen::checkRedundancyLPCLP(struct Discontinuity joint, struct Block blo
 		       int numberElements = numberRows * numberColumns;
 		       // Arrays will be set to default values
 		      model2.resize(numberRows, numberColumns);
-		      Real * elements = new Real [numberElements]; //TODO: Check whether to replace C array with std::vector<>
+		      double * elements = new double [numberElements]; //TODO: Check whether to replace C array with std::vector<> - This would be great. But CoinPackedMatrix accepts pointers only. Is there another library that can calculate the same thing?
 		      CoinBigIndex * starts = new CoinBigIndex [numberColumns+1];
 		      int * rows = new int [numberElements]; //TODO: Check whether to replace C array with std::vector<>
 		      int * lengths = new int[numberColumns]; //TODO: Check whether to replace C array with std::vector<>
 		       // Now fill in - totally unsafe but ....
-		       Real * columnLower = model2.columnLower();
-		       Real * columnUpper = model2.columnUpper();
-		       Real * objective = model2.objective();
-		       Real * rowLower = model2.rowLower();
-		       Real * rowUpper = model2.rowUpper();
+		       double * columnLower = model2.columnLower();
+		       double * columnUpper = model2.columnUpper();
+		       double * objective = model2.objective();
+		       double * rowLower = model2.rowLower();
+		       double * rowUpper = model2.rowUpper();
 			// Columns - objective was packed
-			  objective[0] = -joint.a;
-			  objective[1] = -joint.b;
-			  objective[2] = -joint.c;
+			  objective[0] = static_cast<double>( -joint.a );
+			  objective[1] = static_cast<double>( -joint.b );
+			  objective[2] = static_cast<double>( -joint.c );
 		        for (int k = 0; k < numberColumns; k++){
 			    columnLower[k]= -COIN_DBL_MAX;
 			    columnUpper[k] = COIN_DBL_MAX;
@@ -2017,7 +2020,7 @@ bool BlockGen::checkRedundancyLPCLP(struct Discontinuity joint, struct Block blo
 		       // Rows
 			for(int i=0; i<planeNoA; i++  ){
 				rowLower[i]= -COIN_DBL_MAX;
-			    rowUpper[i] = block.d[i]+block.r;
+			    rowUpper[i] = static_cast<double>( block.d[i]+block.r );
 			}
 
 		       // assign to matrix
@@ -2029,7 +2032,7 @@ bool BlockGen::checkRedundancyLPCLP(struct Discontinuity joint, struct Block blo
 	  starts[0] = 0;
 	  CoinBigIndex put = 0;
 	  for(int i=0; i < planeNoA; i++){
-		elements[put] = (block.a[i]);  rows[put] = (i);
+		elements[put] = static_cast<double>(block.a[i]);  rows[put] = (i);
 		put++;
 	  }
 	  lengths[0] = planeNoA;
@@ -2038,7 +2041,7 @@ bool BlockGen::checkRedundancyLPCLP(struct Discontinuity joint, struct Block blo
 	  /* column 1 yA*/
 	  starts[1] = put;
 	  for(int i=0; i < planeNoA; i++){
-		elements[put] =(block.b[i]);  rows[put] = (i);
+		elements[put] =static_cast<double>(block.b[i]);  rows[put] = (i);
 		put++;
 	  }
 	  lengths[1] = planeNoA;
@@ -2047,7 +2050,7 @@ bool BlockGen::checkRedundancyLPCLP(struct Discontinuity joint, struct Block blo
 	   /* column 2 zA*/
 	  starts[2] = put;
 	  for(int i=0; i < planeNoA; i++){
-		elements[put] =(block.c[i]);  rows[put] = (i);
+		elements[put] =static_cast<double>(block.c[i]);  rows[put] = (i);
 		put++;
 	  }
 	  lengths[2] = planeNoA;
@@ -2068,7 +2071,7 @@ bool BlockGen::checkRedundancyLPCLP(struct Discontinuity joint, struct Block blo
 		  //int numberColumns = model2.numberColumns();
 
 		  // Alternatively getColSolution()
-		  Real * columnPrimal = model2.primalColumnSolution();
+		  double * columnPrimal = model2.primalColumnSolution();
 
 	    xGlobalA = Vector3r(columnPrimal[0],columnPrimal[1],columnPrimal[2]);
 	     touchingPt = xGlobalA;
@@ -2130,8 +2133,8 @@ Real BlockGen::inscribedSphereCLP(struct Block block, Vector3r& initialPoint, bo
 	model2.setColumnUpper(2, COIN_DBL_MAX);
 	model2.setColumnUpper(3, COIN_DBL_MAX);
 
-	Real rowLower[numberRows]; //TODO: Check whether to replace C array with std::vector<>
-	Real rowUpper[numberRows]; //TODO: Check whether to replace C array with std::vector<>
+	double rowLower[numberRows]; //TODO: Check whether to replace C array with std::vector<>
+	double rowUpper[numberRows]; //TODO: Check whether to replace C array with std::vector<>
 	if(twoDimension == true){ model2.setColumnLower(1, 0.0);model2.setColumnUpper(1, 0.0);}
 
 	int planeIndex[planeNoA]; //TODO: Check whether to replace C array with std::vector<>
@@ -2143,7 +2146,7 @@ Real BlockGen::inscribedSphereCLP(struct Block block, Vector3r& initialPoint, bo
 						continue;
 					}
 				}
-				rowUpper[counter] = block.d[i]+block.r;
+				rowUpper[counter] = static_cast<double>( block.d[i]+block.r );
 				planeIndex[counter] = i;
 				counter++;
 			}
@@ -2155,7 +2158,7 @@ Real BlockGen::inscribedSphereCLP(struct Block block, Vector3r& initialPoint, bo
 
 	for (int i = 0; i < planeNoA;i++){
 		int rowIndex[] = {0, 1, 2, 3};
-		Real rowValue[] = {block.a[planeIndex[i]], block.b[planeIndex[i]], block.c[planeIndex[i]], 1.0};
+		double rowValue[] = ARRAY_4_DOUBLE(block.a[planeIndex[i]], block.b[planeIndex[i]], block.c[planeIndex[i]], 1.0);
 		model2.addRow(4, rowIndex, rowValue,rowLower[i], rowUpper[i]);
 	}
 
@@ -2169,7 +2172,7 @@ Real BlockGen::inscribedSphereCLP(struct Block block, Vector3r& initialPoint, bo
 		// Print column solution
 
 		// Alternatively getColSolution()
-		Real * columnPrimal = model2.primalColumnSolution();
+		double * columnPrimal = model2.primalColumnSolution();
 
 		xlocalA = columnPrimal[0];
 		ylocalA = columnPrimal[1];

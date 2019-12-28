@@ -278,8 +278,8 @@ void RockBolt::action()
 			Vector3r                       globalPoint1 = state1->ori * localCoordinates[2 * i] + state1->pos;
 			Vector3r                       globalPoint2 = state1->ori * localCoordinates[2 * i + 1] + state1->pos;
 			vtkSmartPointer<vtkLineSource> lineSource   = vtkSmartPointer<vtkLineSource>::New();
-			Real                           p0[3]        = { globalPoint1[0], globalPoint1[1], globalPoint1[2] };
-			Real                           p1[3]        = { globalPoint2[0], globalPoint2[1], globalPoint2[2] };
+			double                         p0[3]        = ARRAY_3_DOUBLE(globalPoint1[0], globalPoint1[1], globalPoint1[2]);
+			double                         p1[3]        = ARRAY_3_DOUBLE(globalPoint2[0], globalPoint2[1], globalPoint2[2]);
 			lineSource->SetPoint1(p0);
 			lineSource->SetPoint2(p1);
 			appendFilter->AddInputConnection(lineSource->GetOutputPort());
@@ -295,8 +295,8 @@ void RockBolt::action()
 				State*                         state2          = Body::byId(blockIDs[i + 1], scene)->state.get();
 				Vector3r                       globalPoint3    = state2->ori * localCoordinates[2 * i + 2] + state2->pos;
 				vtkSmartPointer<vtkLineSource> lineSourceJoint = vtkSmartPointer<vtkLineSource>::New();
-				Real                           p2[3]           = { globalPoint2[0], globalPoint2[1], globalPoint2[2] };
-				Real                           p3[3]           = { globalPoint3[0], globalPoint3[1], globalPoint3[2] };
+				double                         p2[3]           = ARRAY_3_DOUBLE(globalPoint2[0], globalPoint2[1], globalPoint2[2]);
+				double                         p3[3]           = ARRAY_3_DOUBLE(globalPoint3[0], globalPoint3[1], globalPoint3[2]);
 				lineSourceJoint->SetPoint1(p2);
 				lineSourceJoint->SetPoint2(p3);
 				appendFilter->AddInputConnection(lineSourceJoint->GetOutputPort());
@@ -463,42 +463,42 @@ bool RockBolt::installBolts(
 		model2.setColumnLower(k, -COIN_DBL_MAX);
 		model2.setColumnUpper(k, COIN_DBL_MAX);
 	}
-	model2.setColumnLower(3, openingRad);
-	model2.setColumnUpper(3, length);
+	model2.setColumnLower(3, static_cast<double>(openingRad));
+	model2.setColumnUpper(3, static_cast<double>(length));
 	model2.setColumnLower(4, -COIN_DBL_MAX);
 	model2.setColumnUpper(4, COIN_DBL_MAX);
 	// Rows
-	Real rowLower[numberRows];
-	Real rowUpper[numberRows];
+	double rowLower[numberRows];
+	double rowUpper[numberRows];
 
-	rowLower[0] = startingPt.x();
-	rowLower[1] = startingPt.y();
-	rowLower[2] = startingPt.z();
+	rowLower[0] = static_cast<double>(startingPt.x());
+	rowLower[1] = static_cast<double>(startingPt.y());
+	rowLower[2] = static_cast<double>(startingPt.z());
 
-	rowUpper[0] = startingPt.x();
-	rowUpper[1] = startingPt.y();
-	rowUpper[2] = startingPt.z();
+	rowUpper[0] = static_cast<double>(startingPt.x());
+	rowUpper[1] = static_cast<double>(startingPt.y());
+	rowUpper[2] = static_cast<double>(startingPt.z());
 
 	for (int k = 0; k < planeNoA; k++) {
 		rowLower[3 + k] = -COIN_DBL_MAX;
-		rowUpper[3 + k] = s1->d[k] + s1->r + Q1pos1(k, 0);
+		rowUpper[3 + k] = static_cast<double>(s1->d[k] + s1->r + Q1pos1(k, 0));
 	}
 
-	int  row1Index[] = { 0, 3 };
-	Real row1Value[] = { 1.0, -1.0 * direction.x() };
+	int    row1Index[] = { 0, 3 };
+	double row1Value[] = ARRAY_2_DOUBLE(1.0, -1.0 * direction.x());
 	model2.addRow(2, row1Index, row1Value, rowLower[0], rowUpper[0]);
 
-	int  row2Index[] = { 1, 3 };
-	Real row2Value[] = { 1.0, -1.0 * direction.y() };
+	int    row2Index[] = { 1, 3 };
+	double row2Value[] = ARRAY_2_DOUBLE(1.0, -1.0 * direction.y());
 	model2.addRow(2, row2Index, row2Value, rowLower[1], rowUpper[1]);
 
-	int  row3Index[] = { 2, 3 };
-	Real row3Value[] = { 1.0, -1.0 * direction.z() };
+	int    row3Index[] = { 2, 3 };
+	double row3Value[] = ARRAY_2_DOUBLE(1.0, -1.0 * direction.z());
 	model2.addRow(2, row3Index, row3Value, rowLower[2], rowUpper[2]);
 
 	for (int i = 0; i < planeNoA; i++) {
-		int  rowIndex[] = { 0, 1, 2, 4 };
-		Real rowValue[] = { AQ1(i, 0), AQ1(i, 1), AQ1(i, 2), -1.0 };
+		int    rowIndex[] = { 0, 1, 2, 4 };
+		double rowValue[] = ARRAY_4_DOUBLE(AQ1(i, 0), AQ1(i, 1), AQ1(i, 2), -1.0);
 		model2.addRow(4, rowIndex, rowValue, rowLower[3 + i], rowUpper[3 + i]);
 	}
 
@@ -506,7 +506,7 @@ bool RockBolt::installBolts(
 	model2.setLogLevel(0);
 	model2.primal();
 
-	Real* columnPrimal = model2.primalColumnSolution();
+	double* columnPrimal = model2.primalColumnSolution();
 
 
 	Vector3r temp  = Vector3r(columnPrimal[0], columnPrimal[1], columnPrimal[2]);
@@ -574,38 +574,38 @@ bool RockBolt::intersectPlane(
 	}
 
 	// Rows
-	Real rowLower[numberRows];
-	Real rowUpper[numberRows];
+	double rowLower[numberRows];
+	double rowUpper[numberRows];
 
-	rowLower[0] = startingPt.x();
-	rowLower[1] = startingPt.y();
-	rowLower[2] = startingPt.z();
-	rowLower[3] = planeD;
-	rowUpper[0] = startingPt.x();
-	rowUpper[1] = startingPt.y();
-	rowUpper[2] = startingPt.z();
-	rowUpper[3] = planeD;
+	rowLower[0] = static_cast<double>(startingPt.x());
+	rowLower[1] = static_cast<double>(startingPt.y());
+	rowLower[2] = static_cast<double>(startingPt.z());
+	rowLower[3] = static_cast<double>(planeD);
+	rowUpper[0] = static_cast<double>(startingPt.x());
+	rowUpper[1] = static_cast<double>(startingPt.y());
+	rowUpper[2] = static_cast<double>(startingPt.z());
+	rowUpper[3] = static_cast<double>(planeD);
 
-	int  row1Index[] = { 0, 3 };
-	Real row1Value[] = { 1.0, -1.0 * direction.x() };
+	int    row1Index[] = { 0, 3 };
+	double row1Value[] = ARRAY_2_DOUBLE(1.0, -1.0 * direction.x());
 	model2.addRow(2, row1Index, row1Value, rowLower[0], rowUpper[0]);
 
-	int  row2Index[] = { 1, 3 };
-	Real row2Value[] = { 1.0, -1.0 * direction.y() };
+	int    row2Index[] = { 1, 3 };
+	double row2Value[] = ARRAY_2_DOUBLE(1.0, -1.0 * direction.y());
 	model2.addRow(2, row2Index, row2Value, rowLower[1], rowUpper[1]);
 
-	int  row3Index[] = { 2, 3 };
-	Real row3Value[] = { 1.0, -1.0 * direction.z() };
+	int    row3Index[] = { 2, 3 };
+	double row3Value[] = ARRAY_2_DOUBLE(1.0, -1.0 * direction.z());
 	model2.addRow(2, row3Index, row3Value, rowLower[2], rowUpper[2]);
 
-	int  row4Index[] = { 0, 1, 2 };
-	Real row4Value[] = { plane.x(), plane.y(), plane.z() };
+	int    row4Index[] = { 0, 1, 2 };
+	double row4Value[] = ARRAY_3_DOUBLE(plane.x(), plane.y(), plane.z());
 	model2.addRow(3, row4Index, row4Value, rowLower[3], rowUpper[3]);
 
 	model2.scaling(0);
 	model2.setLogLevel(0);
 	model2.primal();
-	Real* columnPrimal = model2.primalColumnSolution();
+	double* columnPrimal = model2.primalColumnSolution();
 
 	Vector3r temp  = Vector3r(columnPrimal[0], columnPrimal[1], columnPrimal[2]);
 	intersectionPt = temp; //state1->ori.conjugate()*(temp-state1->pos);
