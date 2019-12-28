@@ -1274,7 +1274,7 @@ Vector3r Ig2_PB_PB_ScGeom::getNormal(const shared_ptr<Shape>& cm1, const State& 
 		 fdz =  s1->c[minNo]; //2.0*z; //
 	}
 	///////////////////// Assembling rotation matrix Qt for particle 1 //////////////////////////////
-	Matrix3r Q1=Eigen::Matrix3d::Zero();
+	Matrix3r Q1=Matrix3r::Zero();
 	//if(state1.ori==Quaternionr(1,0,0,0)){
 	//	Q1.setIdentity();
 	//}else{
@@ -1535,8 +1535,8 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
   /*b1*/
 #if 0
-  Eigen::MatrixXd b1=Eigen::MatrixXd::Zero(3+planeNoA,1);
-  Eigen::Vector3d b1temp = QAs*posA;
+  MatrixXr b1=MatrixXr::Zero(3+planeNoA,1);
+  Vector3r b1temp = QAs*posA;
   b1[0] = -b1temp[0];		b1[1]= -b1temp[1];	b1[2] = -b1temp[2];
 #endif
 
@@ -1550,8 +1550,8 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
   /*b2*/
 #if 0
-  Eigen::MatrixXd b2=Eigen::MatrixXd::Zero(3+planeNoB,1);
-  Eigen::Vector3d b2temp = QBs*posB;
+  MatrixXr b2=MatrixXr::Zero(3+planeNoB,1);
+  Vector3r b2temp = QBs*posB;
   b2[0] = -b2temp[0];		b2[1]= -b2temp[1];	b2[2] = -b2temp[2];
 #endif
 

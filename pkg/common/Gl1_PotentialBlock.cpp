@@ -258,8 +258,8 @@ YADE_PLUGIN((Gl1_PotentialBlock));
 //		Real r = pp.r;
 //		int planeNo = pp.a.size();
 
-//		//Eigen::Vector3d xori(x,y,z);
-//		//Eigen::Vector3d xlocal = rotationMatrix*xori;
+//		//Vector3r xori(x,y,z);
+//		//Vector3r xlocal = rotationMatrix*xori;
 //		//rotationMatrix*xori;
 //		//xlocal[0] = rotationMatrix(0,0)*xori[0] + rotationMatrix(0,1)*xori[1] + rotationMatrix(0,2)*xori[2];
 //		//xlocal[1] = rotationMatrix(1,0)*xori[0] + rotationMatrix(1,1)*xori[1] + rotationMatrix(1,2)*xori[2];
@@ -315,11 +315,11 @@ Real ImpFuncPB::FunctionValue(Real x[3])
 	vector<Real> p;
 	Real         pSum2 = 0.0;
 	if (clump == false) {
-		Eigen::Vector3d xori(x[0], x[1], x[2]);
-		Eigen::Vector3d xlocal = rotationMatrix * xori;
-		xlocal[0]              = rotationMatrix(0, 0) * x[0] + rotationMatrix(0, 1) * x[1] + rotationMatrix(0, 2) * x[2];
-		xlocal[1]              = rotationMatrix(1, 0) * x[0] + rotationMatrix(1, 1) * x[1] + rotationMatrix(1, 2) * x[2];
-		xlocal[2]              = rotationMatrix(2, 0) * x[0] + rotationMatrix(2, 1) * x[1] + rotationMatrix(2, 2) * x[2];
+		Vector3r xori(x[0], x[1], x[2]);
+		Vector3r xlocal = rotationMatrix * xori;
+		xlocal[0]       = rotationMatrix(0, 0) * x[0] + rotationMatrix(0, 1) * x[1] + rotationMatrix(0, 2) * x[2];
+		xlocal[1]       = rotationMatrix(1, 0) * x[0] + rotationMatrix(1, 1) * x[1] + rotationMatrix(1, 2) * x[2];
+		xlocal[2]       = rotationMatrix(2, 0) * x[0] + rotationMatrix(2, 1) * x[1] + rotationMatrix(2, 2) * x[2];
 		//std::cout<<"rotationMatrix: "<<endl<<rotationMatrix<<endl;
 		//x[0]=xlocal[0]; x[1]=xlocal[1]; x[2]=xlocal[2];
 
@@ -336,9 +336,9 @@ Real ImpFuncPB::FunctionValue(Real x[3])
 		Real f = (pSum2 - 1.0 * pow(r, 2));
 		return f;
 	} else {
-		Eigen::Vector3d xori(x[0], x[1], x[2]);
-		Eigen::Vector3d clumpMemberCentre(clumpMemberCentreX, clumpMemberCentreY, clumpMemberCentreZ);
-		Eigen::Vector3d xlocal = xori - clumpMemberCentre;
+		Vector3r xori(x[0], x[1], x[2]);
+		Vector3r clumpMemberCentre(clumpMemberCentreX, clumpMemberCentreY, clumpMemberCentreZ);
+		Vector3r xlocal = xori - clumpMemberCentre;
 		//xlocal[0] = rotationMatrix[0]*x[0] + rotationMatrix[3]*x[1] + rotationMatrix[6]*x[2];
 		//xlocal[1] = rotationMatrix[1]*x[0] + rotationMatrix[4]*x[1] + rotationMatrix[7]*x[2];
 		//xlocal[2] = rotationMatrix[2]*x[0] + rotationMatrix[5]*x[1] + rotationMatrix[8]*x[2];

@@ -369,7 +369,7 @@ bool BlockGen::generate(string& /*message*/)
 				Real strikeRad = strike/180.0*Mathr::PI;
 				Vector3r Nstrike = Vector3r(cos(strikeRad), sin(strikeRad), 0.0);
 				Vector3r Ndip = planeNormal.cross(Nstrike); Ndip.normalize();
-				Matrix3r Qp=Eigen::Matrix3d::Zero();
+				Matrix3r Qp=Matrix3r::Zero();
 				Qp (0,0) = Nstrike.x(); Qp(0,1) = Ndip.x(); Qp(0,2) = planeNormal.x();
 				Qp (1,0) = Nstrike.y();	Qp(1,1) = Ndip.y(); Qp(1,2) = planeNormal.y();
 				Qp (2,0) = Nstrike.z(); Qp(2,1) = Ndip.z(); Qp(2,2) = planeNormal.z();
@@ -419,7 +419,7 @@ bool BlockGen::generate(string& /*message*/)
 					std::cout << "Ndip: " << Ndip << endl;
 				}
 
-				Matrix3r Qp=Eigen::Matrix3d::Zero();
+				Matrix3r Qp=Matrix3r::Zero();
 				Qp (0,0) = Nstrike.x(); Qp(0,1) = Ndip.x(); Qp(0,2)=planeNormal.x();
 				Qp (1,0) = Nstrike.y(); Qp(1,1) = Ndip.y(); Qp(1,2) = planeNormal.y();
 				Qp (2,0) = Nstrike.z(); Qp(2,1) = Ndip.z(); Qp(2,2) = planeNormal.z();
