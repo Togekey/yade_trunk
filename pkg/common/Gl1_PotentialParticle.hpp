@@ -67,7 +67,7 @@ public:
 	Real            k;
 	Real            r;
 	Real            R;
-	Eigen::Matrix3d rotationMatrix;
+	Matrix3r        rotationMatrix;
 	bool            clump;
 	Real            clumpMemberCentreX;
 	Real            clumpMemberCentreY;
@@ -75,19 +75,30 @@ public:
 	// Description
 	// Evaluate function
 	Real FunctionValue(Real x[3]);
-	Real EvaluateFunction(Real x[3])
+#if (YADE_REAL_BIT != 64)
+	// unfortunately vtkImplicitFunction only works with double. The VTK library would need to be patched.
+	// The workaround is to convert double arguments to Real. Precision is lost along the way.
+	double FunctionValue(double x[3])
+	{
+		Real r[3] = { x[0], x[1], x[2] };
+		return static_cast<double>(FunctionValue(r));
+	}
+#endif
+	virtual double EvaluateFunction(double x[3])
 	{
 		//return this->vtkImplicitFunction::EvaluateFunction(x);
 		return FunctionValue(x);
 	};
 
-	Real EvaluateFunction(Real x, Real y, Real z) { return this->vtkImplicitFunction::EvaluateFunction(x, y, z); };
+	virtual double EvaluateFunction(double x, double y, double z) { return this->vtkImplicitFunction::EvaluateFunction(x, y, z); };
 
 
 	// Description
 	// Evaluate gradient for function
-	void EvaluateGradient(
-	        Real /*x*/[3], Real /*n*/[3]) {}; // FIXME - better use Vector3r here instead of Real[3] (here I only fix the unused parameter warning).
+	virtual void EvaluateGradient(
+	        double /*x*/[3], double /*n*/[3]) {}; // FIXME - better use Vector3r here instead of Real[3] (here I only fix the unused parameter warning).
+	//                                                 ↑     you would need to change the virtual function signature in file vtkImplicitFunction.h in VTK library.
+	//                                                       VTK library would need a patch. / Janek
 
 	// If you need to set parameters, add methods here
 

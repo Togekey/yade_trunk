@@ -385,7 +385,7 @@ void PotentialParticleVTKRecorder::action()
 			blockId->InsertNextValue(b->getId());
 			vtkIdType pid[1];
 			Vector3r  pos(b->state->pos);
-			pid[0] = pbPosID->InsertNextPoint(pos[0], pos[1], pos[2]);
+			pid[0] = pbPosID->INSERT_NEXT_POINT(pos[0], pos[1], pos[2]);
 			pbIdCells->InsertNextCell(1, pid);
 
 			countID++;
@@ -515,7 +515,7 @@ void PotentialParticleVTKRecorder::action()
 		if (REC_VELOCITY == true) {
 			vtkIdType pid[1];
 			Vector3r  pos(b->state->pos);
-			pid[0] = pbPos->InsertNextPoint(pos[0], pos[1], pos[2]);
+			pid[0] = pbPos->INSERT_NEXT_POINT(pos[0], pos[1], pos[2]);
 			pbCells->InsertNextCell(1, pid);
 			const Vector3r& vel = b->state->vel;
 			float           v[3]; //v = { vel[0],vel[1],vel[2] };
@@ -596,7 +596,7 @@ void PotentialParticleVTKRecorder::action()
 			const ScGeom*   geom = YADE_CAST<ScGeom*>(I->geom.get());
 			vtkIdType       pid[1];
 			Vector3r        pos(geom->contactPoint);
-			pid[0] = pbContactPoint->InsertNextPoint(pos[0], pos[1], pos[2]);
+			pid[0] = pbContactPoint->INSERT_NEXT_POINT(pos[0], pos[1], pos[2]);
 			pbCellsContact->InsertNextCell(1, pid);
 			//intrBodyPos->InsertNextPoint(geom->contactPoint[0],geom->contactPoint[1],geom->contactPoint[2]);
 			// gives _signed_ scalar of normal force, following the convention used in the respective constitutive law
