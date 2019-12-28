@@ -384,8 +384,8 @@ void RockLiningGlobal::action()
 			Vector3r                       globalPoint1 = state1->pos;
 			Vector3r                       globalPoint2 = state2->pos;
 			vtkSmartPointer<vtkLineSource> lineSource   = vtkSmartPointer<vtkLineSource>::New();
-			Real                           p0[3]        = { globalPoint1[0], globalPoint1[1], globalPoint1[2] };
-			Real                           p1[3]        = { globalPoint2[0], globalPoint2[1], globalPoint2[2] };
+			double                         p0[3]        = ARRAY_3_DOUBLE( globalPoint1[0], globalPoint1[1], globalPoint1[2] );
+			double                         p1[3]        = ARRAY_3_DOUBLE( globalPoint2[0], globalPoint2[1], globalPoint2[2] );
 			lineSource->SetPoint1(p0);
 			lineSource->SetPoint2(p1);
 			appendFilter->AddInputConnection(lineSource->GetOutputPort());
@@ -393,7 +393,7 @@ void RockLiningGlobal::action()
 			/* try to draw forces */
 			vtkIdType pid[1];
 			Vector3r  midPoint = globalPoint1; //  0.5*(globalPoint1+globalPoint2);
-			pid[0]             = liningNode->InsertNextPoint(midPoint[0], midPoint[1], midPoint[2]);
+			pid[0]             = liningNode->INSERT_NEXT_POINT(midPoint[0], midPoint[1], midPoint[2]);
 			liningNodeCells->InsertNextCell(1, pid);
 			Vector3r plotDirection = midPoint;
 			plotDirection.normalize();
