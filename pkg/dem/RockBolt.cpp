@@ -285,9 +285,9 @@ void RockBolt::action()
 			appendFilter->AddInputConnection(lineSource->GetOutputPort());
 
 			vtkIdType pid2[1];
-			pid2[0] = boltNodalPoints->InsertNextPoint(globalPoint1[0], globalPoint1[1], globalPoint1[2]);
+			pid2[0] = boltNodalPoints->INSERT_NEXT_POINT(globalPoint1[0], globalPoint1[1], globalPoint1[2]);
 			boltNodalPointsCells->InsertNextCell(1, pid2);
-			pid2[0] = boltNodalPoints->InsertNextPoint(globalPoint2[0], globalPoint2[1], globalPoint2[2]);
+			pid2[0] = boltNodalPoints->INSERT_NEXT_POINT(globalPoint2[0], globalPoint2[1], globalPoint2[2]);
 			boltNodalPointsCells->InsertNextCell(1, pid2);
 
 			if (i < blockNo - 1) {
@@ -305,7 +305,7 @@ void RockBolt::action()
 				/* try to draw forces */
 				vtkIdType pid[1];
 				Vector3r  midPoint = 0.5 * (globalPoint2 + globalPoint3);
-				pid[0]             = boltNode->InsertNextPoint(midPoint[0], midPoint[1], midPoint[2]);
+				pid[0]             = boltNode->INSERT_NEXT_POINT(midPoint[0], midPoint[1], midPoint[2]);
 				boltNodeCells->InsertNextCell(1, pid);
 				Vector3r plotDirection = boltDirection.cross(Vector3r(0, 1, 0));
 				if (plotDirection.dot(Vector3r(1, 0, 0)) < 0.0) {
