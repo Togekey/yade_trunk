@@ -12,6 +12,7 @@ And use a macro in these places:
 #pragma once
 
 #ifdef YADE_VTK
+#include <lib/compatibility/DoubleCompatibility.hpp>
 #include <vtkVersion.h>
 
 // fix InsertNextTupleValue → InsertNextTuple name change
@@ -30,18 +31,6 @@ And use a macro in these places:
 #define INSERT_NEXT_POINT(val1, val2, val3) InsertNextPoint((static_cast<double>(val1)), (static_cast<double>(val2)), (static_cast<double>(val3)))
 
 #define INSERT_NEXT_VALUE(val1) InsertNextValue((static_cast<double>(val1)))
-
-#define ARRAY_3_DOUBLE(val1, val2, val3)                                                                                                                       \
-	{                                                                                                                                                      \
-		(static_cast<double>(val1)), (static_cast<double>(val2)), (static_cast<double>(val3))                                                          \
-	}
-
-#define ARRAY_9_DOUBLE(val1, val2, val3, val4, val5, val6, val7, val8, val9)                                                                                   \
-	{                                                                                                                                                      \
-		(static_cast<double>(val1)), (static_cast<double>(val2)), (static_cast<double>(val3)), (static_cast<double>(val4)),                            \
-		        (static_cast<double>(val5)), (static_cast<double>(val6)), (static_cast<double>(val7)), (static_cast<double>(val8)),                    \
-		        (static_cast<double>(val9)),                                                                                                           \
-	}
 
 // (and others in the future)
 #endif
