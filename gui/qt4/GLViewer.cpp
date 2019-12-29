@@ -11,6 +11,7 @@
 #include"GLViewer.hpp"
 #include"OpenGLManager.hpp"
 
+#include<lib/compatibility/DoubleCompatibility.hpp>
 #include<lib/opengl/OpenGLWrapper.hpp>
 #include<core/Body.hpp>
 #include<core/Scene.hpp>
@@ -130,7 +131,7 @@ void GLViewer::startClipPlaneManipulation(int planeNo){
 	mouseMovesManipulatedFrame(xyPlaneConstraint.get());
 	manipulatedClipPlane=planeNo;
 	const Se3r se3(renderer->clipPlaneSe3[planeNo]);
-	manipulatedFrame()->setPositionAndOrientation(qglviewer::Vec(se3.position[0],se3.position[1],se3.position[2]),qglviewer::Quaternion(se3.orientation.x(),se3.orientation.y(),se3.orientation.z(),se3.orientation.w()));
+	manipulatedFrame()->setPositionAndOrientation(qglviewer::Vec(THREE_DOUBLES(se3.position[0],se3.position[1],se3.position[2])),qglviewer::Quaternion(FOUR_DOUBLES(se3.orientation.x(),se3.orientation.y(),se3.orientation.z(),se3.orientation.w())));
 	string grp=strBoundGroup();
 	displayMessage("Manipulating clip plane #"+boost::lexical_cast<string>(planeNo+1)+(grp.empty()?grp:" (bound planes:"+grp+")"));
 }
@@ -189,7 +190,7 @@ void GLViewer::keyPressEvent(QKeyEvent *e)
 		}
 		else if(manipulatedClipPlane>=0 && manipulatedClipPlane!=planeId) {
 			const Quaternionr& o=renderer->clipPlaneSe3[planeId].orientation;
-			manipulatedFrame()->setOrientation(qglviewer::Quaternion(o.x(),o.y(),o.z(),o.w()));
+			manipulatedFrame()->setOrientation(qglviewer::Quaternion(FOUR_DOUBLES(o.x(),o.y(),o.z(),o.w())));
 			displayMessage("Copied orientation from plane #1");
 		}
 	}
@@ -220,7 +221,7 @@ void GLViewer::keyPressEvent(QKeyEvent *e)
 			Body::byId(Body::id_t(selection))->state->blockedDOFs=State::DOF_ALL;
 			Quaternionr& q = Body::byId(selection)->state->ori;
 			Vector3r&    v = Body::byId(selection)->state->pos;
-			manipulatedFrame()->setPositionAndOrientation(qglviewer::Vec(v[0],v[1],v[2]),qglviewer::Quaternion(q.x(),q.y(),q.z(),q.w()));
+			manipulatedFrame()->setPositionAndOrientation(qglviewer::Vec(THREE_DOUBLES(v[0],v[1],v[2])),qglviewer::Quaternion(FOUR_DOUBLES(q.x(),q.y(),q.z(),q.w())));
 			mouseMovesManipulatedFrame();}
 	}
 	else if (e->key() == Qt::Key_T) camera()->setType(camera()->type()==qglviewer::Camera::ORTHOGRAPHIC ? qglviewer::Camera::PERSPECTIVE : qglviewer::Camera::ORTHOGRAPHIC);
@@ -231,7 +232,7 @@ void GLViewer::keyPressEvent(QKeyEvent *e)
 			/* here, we must update both manipulatedFrame orientation and renderer->clipPlaneSe3 orientation in the same way */
 			Quaternionr& ori=renderer->clipPlaneSe3[manipulatedClipPlane].orientation;
 			ori=Quaternionr(AngleAxisr(Mathr::PI,Vector3r(0,1,0)))*ori; 
-			manipulatedFrame()->setOrientation(qglviewer::Quaternion(qglviewer::Vec(0,1,0),Mathr::PI)*manipulatedFrame()->orientation());
+			manipulatedFrame()->setOrientation(qglviewer::Quaternion(qglviewer::Vec(0,1,0),static_cast<double>(Mathr::PI))*manipulatedFrame()->orientation());
 			displayMessage("Plane #"+boost::lexical_cast<string>(manipulatedClipPlane+1)+" reversed.");
 		}
 		else {
@@ -259,7 +260,7 @@ void GLViewer::keyPressEvent(QKeyEvent *e)
 		else{ // align clipping normal plane with world axis
 			// x: (0,1,0),pi/2; y: (0,0,1),pi/2; z: (1,0,0),0
 			qglviewer::Vec axis(0,0,0); axis[(axisIdx+1)%3]=1; Real angle=axisIdx==2?0:Mathr::PI/2;
-			manipulatedFrame()->setOrientation(qglviewer::Quaternion(axis,angle));
+			manipulatedFrame()->setOrientation(qglviewer::Quaternion(axis,static_cast<double>(angle)));
 		}
 	}
 	else if(e->key()==Qt::Key_Period) gridSubdivide = !gridSubdivide;
@@ -306,8 +307,8 @@ void GLViewer::centerPeriodic(){
 	Vector3r halfSize=.5*scene->cell->getSize();
 	Real radius=math::max(halfSize[0],math::max(halfSize[1],halfSize[2]));
 	LOG_DEBUG("Periodic scene center="<<center<<", halfSize="<<halfSize<<", radius="<<radius);
-	setSceneCenter(qglviewer::Vec(center[0],center[1],center[2]));
-	setSceneRadius(radius*1.5);
+	setSceneCenter(qglviewer::Vec(THREE_DOUBLES(center[0],center[1],center[2])));
+	setSceneRadius(static_cast<double>(radius*1.5));
 	showEntireScene();
 }
 
@@ -339,8 +340,8 @@ void GLViewer::centerMedianQuartile(){
 		interQuart[i]=*(coords[i].begin()+3*nBodies/4)-*(coords[i].begin()+nBodies/4);
 	}
 	LOG_DEBUG("Median position is"<<median<<", inter-quartile distance is "<<interQuart);
-	setSceneCenter(qglviewer::Vec(median[0],median[1],median[2]));
-	setSceneRadius(2*(interQuart[0]+interQuart[1]+interQuart[2])/3.);
+	setSceneCenter(qglviewer::Vec(THREE_DOUBLES(median[0],median[1],median[2])));
+	setSceneRadius(static_cast<double>(2*(interQuart[0]+interQuart[1]+interQuart[2])/3.));
 	showEntireScene();
 }
 
@@ -373,8 +374,8 @@ void GLViewer::centerScene(){
 	Vector3r halfSize = (max-min)*0.5;
 	Real radius=math::max(halfSize[0],math::max(halfSize[1],halfSize[2])); if(radius<=0) radius=1;
 	LOG_DEBUG("Scene center="<<center<<", halfSize="<<halfSize<<", radius="<<radius);
-	setSceneCenter(qglviewer::Vec(center[0],center[1],center[2]));
-	setSceneRadius(radius*1.5);
+	setSceneCenter(qglviewer::Vec(THREE_DOUBLES(center[0],center[1],center[2])));
+	setSceneRadius(static_cast<double>(radius*1.5));
 	showEntireScene();
 }
 
@@ -468,23 +469,19 @@ void GLViewer::initFromDOMElement(const QDomElement& element){
 
 boost::posix_time::ptime GLViewer::getLastUserEvent(){return last_user_event;};
 
-#if QGLVIEWER_VERSION>=0x020603
-qreal YadeCamera::zNear() const
-#else
-float YadeCamera::zNear() const
-#endif
+YadeCamera::QGLCompatDouble YadeCamera::zNear() const
 {
-  double z = distanceToSceneCenter() - zClippingCoefficient()*sceneRadius()*(1.f-2*cuttingDistance);
+  Real z = distanceToSceneCenter() - zClippingCoefficient()*sceneRadius()*(1.f-2*cuttingDistance);
 
   // Prevents negative or null zNear values.
-  const double zMin = zNearCoefficient() * zClippingCoefficient() * sceneRadius();
+  const Real zMin = zNearCoefficient() * zClippingCoefficient() * sceneRadius();
   if (z < zMin)
 /*    switch (type())
       {
       case Camera::PERSPECTIVE  :*/ z = zMin; /*break;
       case Camera::ORTHOGRAPHIC : z = 0.0;  break;
       }*/
-  return z;
+  return static_cast<QGLCompatDouble>(z);
 }
 
 QString GLViewer::helpString() const

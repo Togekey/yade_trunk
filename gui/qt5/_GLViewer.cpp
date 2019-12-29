@@ -1,5 +1,6 @@
 #include "GLViewer.hpp"
 #include "OpenGLManager.hpp"
+#include <lib/compatibility/DoubleCompatibility.hpp>
 #include <lib/base/AliasNamespaces.hpp>
 #include <lib/base/Logging.hpp>
 #include <lib/pyutil/doc_opts.hpp>
@@ -18,7 +19,7 @@ qglviewer::Vec tuple2vec(py::tuple t)
 		py::extract<Real> e(t[i]);
 		if (!e.check())
 			throw invalid_argument("Element #" + boost::lexical_cast<string>(i) + " is not a number");
-		ret[i] = e();
+		ret[i] = static_cast<qreal>(e());
 	}
 	return ret;
 };
@@ -65,7 +66,7 @@ public:
 	void set_##property(const Vector3r& t)                                                                                                                 \
 	{                                                                                                                                                      \
 		GLV;                                                                                                                                           \
-		setter(qglviewer::Vec(t[0], t[1], t[2]));                                                                                                      \
+		setter(qglviewer::Vec(THREE_DOUBLES(t[0], t[1], t[2])));                                                                                                      \
 	}
 	VEC_GET_SET(upVector, glv->camera()->upVector, glv->camera()->setUpVector);
 	VEC_GET_SET(lookAt, glv->camera()->position() + glv->camera()->viewDirection, glv->camera()->lookAt);
@@ -118,7 +119,7 @@ public:
 	void set_##property(Real r)                                                                                                                            \
 	{                                                                                                                                                      \
 		GLV;                                                                                                                                           \
-		setter(r);                                                                                                                                     \
+		setter(static_cast<qreal>(r));                                                                                                                 \
 	}                                                                                                                                                      \
 	Real get_##property()                                                                                                                                  \
 	{                                                                                                                                                      \
@@ -129,12 +130,12 @@ public:
 	void fitAABB(const Vector3r& min, const Vector3r& max)
 	{
 		GLV;
-		glv->camera()->fitBoundingBox(qglviewer::Vec(min[0], min[1], min[2]), qglviewer::Vec(max[0], max[1], max[2]));
+		glv->camera()->fitBoundingBox(qglviewer::Vec(THREE_DOUBLES(min[0], min[1], min[2])), qglviewer::Vec(THREE_DOUBLES(max[0], max[1], max[2])));
 	}
 	void fitSphere(const Vector3r& center, Real radius)
 	{
 		GLV;
-		glv->camera()->fitSphere(qglviewer::Vec(center[0], center[1], center[2]), radius);
+		glv->camera()->fitSphere(qglviewer::Vec(THREE_DOUBLES(center[0], center[1], center[2])), static_cast<double>(radius));
 	}
 	void showEntireScene()
 	{

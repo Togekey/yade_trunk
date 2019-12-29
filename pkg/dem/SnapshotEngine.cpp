@@ -10,7 +10,7 @@ CREATE_LOGGER(SnapshotEngine);
 void SnapshotEngine::action(){
 	if(!OpenGLManager::self) throw logic_error("No OpenGLManager instance?!");
 	if(OpenGLManager::self->views.size()==0){
-		int viewNo=OpenGLManager::self->waitForNewView(deadTimeout);
+		int viewNo=OpenGLManager::self->waitForNewView(static_cast<double>(deadTimeout));
 		if(viewNo<0){
 			if(!ignoreErrors) throw runtime_error("SnapshotEngine: Timeout waiting for new 3d view.");
 			else {
