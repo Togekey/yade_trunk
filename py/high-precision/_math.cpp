@@ -182,7 +182,7 @@ try {
 	//ArbitraryReal_from_python<Real>();
 	//py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
 
-	py::class_<Var>("Var").add_property("val", &Var::get, &Var::set).add_property("cpl", &Var::getComplex, &Var::setComplex);
+	py::class_<Var>("Var").add_property("val", &Var::get, &Var::set).add_property("cpl", &Var::getComplex, &Var::setComplex, "The ``Var`` class is used to test to/from python converters for arbitrary precision ``Real``. It has one ``Real`` (``val``) and one ``Complex`` (``cpl``) variable to test reading from and writing to.");
 
 	py::scope().attr("defprec")  = defprec;
 	py::scope().attr("max_exp2") = max_exp2;
