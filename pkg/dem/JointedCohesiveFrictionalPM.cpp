@@ -10,6 +10,7 @@ Yade Technical Archive. DOI: 10.5281/zenodo.1202039 */
 #include<pkg/dem/ScGeom.hpp>
 #include<core/Omega.hpp>
 #include<pkg/common/Sphere.hpp>
+#include <boost/random/weibull_distribution.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -605,8 +606,8 @@ void Ip2_JCFpmMat_JCFpmMat_JCFpmPhys::go(const shared_ptr<Material>& b1, const s
 
 void Ip2_JCFpmMat_JCFpmMat_JCFpmPhys::distributeCrossSectionsWeibull(shared_ptr<JCFpmPhys> contactPhysics, Real R1, Real R2){
 	std::random_device rd;
-	std::mt19937 e2(rd());
-	std::weibull_distribution<Real> weibullDistribution(xSectionWeibullShapeParameter, xSectionWeibullScaleParameter);
+	::boost::random::mt19937 e2(rd());
+	::boost::random::weibull_distribution<Real> weibullDistribution(xSectionWeibullShapeParameter, xSectionWeibullScaleParameter);
 	Real correction = weibullDistribution(e2);
 	if (correction < weibullCutOffMin) correction = weibullCutOffMin;
 	else if (correction > weibullCutOffMax) correction = weibullCutOffMax;
