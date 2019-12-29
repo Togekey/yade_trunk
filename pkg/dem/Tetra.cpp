@@ -45,8 +45,8 @@ void Bo1_Tetra_Aabb::go(const shared_ptr<Shape>& ig, shared_ptr<Bound>& bv, cons
 	//Quaternionr invRot=se3.orientation.conjugate();   //The variable set but not used
 	Vector3r v_g[4]; for(int i=0; i<4; i++) v_g[i]=se3.orientation*t->v[i]; // vertices in global coordinates
 	#define __VOP(op,ix) op(v_g[0][ix],op(v_g[1][ix],op(v_g[2][ix],v_g[3][ix])))
-		aabb->min=se3.position+Vector3r(__VOP(std::min,0),__VOP(std::min,1),__VOP(std::min,2));
-		aabb->max=se3.position+Vector3r(__VOP(std::max,0),__VOP(std::max,1),__VOP(std::max,2));
+		aabb->min=se3.position+Vector3r(__VOP(math::min,0),__VOP(math::min,1),__VOP(math::min,2));
+		aabb->max=se3.position+Vector3r(__VOP(math::max,0),__VOP(math::max,1),__VOP(math::max,2));
 	#undef __VOP
 }
 
@@ -664,7 +664,7 @@ bool Ig2_Tetra_Tetra_TTetraGeom::go(const shared_ptr<Shape>& cm1,const shared_pt
 			#define v1 iABinfo[i].V[1]
 			#define v2 iABinfo[i].V[2]
 			#define v3 iABinfo[i].V[3]
-			Real dV=std::abs(Vector3r(v1-v0).Dot((v2-v0).Cross(v3-v0)))/6.;
+			Real dV=math::abs(Vector3r(v1-v0).Dot((v2-v0).Cross(v3-v0)))/6.;
 			V+=dV;
 			Sg+=dV*(v0+v1+v2+v3)*.25;
 			vector<Vector3r> t; t.push_back(v0); t.push_back(v1); t.push_back(v2); t.push_back(v3);
@@ -1068,7 +1068,7 @@ Matrix3r TetrahedronInertiaTensor(const vector<Vector3r>& v){
 	// Jacobian of transformation to the reference 4hedron
 	Real detJ=(x2-x1)*(y3-y1)*(z4-z1)+(x3-x1)*(y4-y1)*(z2-z1)+(x4-x1)*(y2-y1)*(z3-z1)
 		-(x2-x1)*(y4-y1)*(z3-z1)-(x3-x1)*(y2-y1)*(z4-z1)-(x4-x1)*(y3-y1)*(z2-z1);
-	detJ=std::abs(detJ);
+	detJ=math::abs(detJ);
 	Real a=detJ*(y1*y1+y1*y2+y2*y2+y1*y3+y2*y3+
 		y3*y3+y1*y4+y2*y4+y3*y4+y4*y4+z1*z1+z1*z2+
 		z2*z2+z1*z3+z2*z3+z3*z3+z1*z4+z2*z4+z3*z4+z4*z4)/60.;
@@ -1176,9 +1176,9 @@ Quaternionr TetrahedronWithLocalAxesPrincipal(shared_ptr<Body>& tetraBody){
 
 
 Real TetrahedronSignedVolume(const Vector3r v[4]) { return (Vector3r(v[3])-Vector3r(v[0])).dot((Vector3r(v[3])-Vector3r(v[1])).cross(Vector3r(v[3])-Vector3r(v[2])))/6.; }
-Real TetrahedronVolume(const Vector3r v[4]) { return std::abs(TetrahedronSignedVolume(v)); }
+Real TetrahedronVolume(const Vector3r v[4]) { return math::abs(TetrahedronSignedVolume(v)); }
 Real TetrahedronSignedVolume(const vector<Vector3r>& v) { return Vector3r(v[1]-v[0]).dot(Vector3r(v[2]-v[0]).cross(v[3]-v[0]))/6.; }
-Real TetrahedronVolume(const vector<Vector3r>& v) { return std::abs(TetrahedronSignedVolume(v)); }
+Real TetrahedronVolume(const vector<Vector3r>& v) { return math::abs(TetrahedronSignedVolume(v)); }
 #ifdef YADE_CGAL
 Real TetrahedronVolume(const CGAL::Point_3<CGAL::Cartesian<Real> >* v[4]) {
 	Vector3r vv[4];
@@ -1211,7 +1211,7 @@ bool Law2_TTetraSimpleGeom_NormPhys_Simple::go(shared_ptr<IGeom>& ig, shared_ptr
 		return false;
 	}
 	Real& un=geom->penetrationVolume;
-	phys->normalForce=phys->kn*std::max(un,(Real) 0)*geom->normal;
+	phys->normalForce=phys->kn*math::max(un,(Real) 0)*geom->normal;
 
 	State* de1 = Body::byId(id1,scene)->state.get();
 	State* de2 = Body::byId(id2,scene)->state.get();

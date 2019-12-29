@@ -50,12 +50,12 @@ void PeriIsoCompressor::action(){
 		Real sigAvg=(sigma[0]+sigma[1]+sigma[2])/3., avgArea=(cellArea[0]+cellArea[1]+cellArea[2])/3., avgSize=(cellSize[0]+cellSize[1]+cellSize[2])/3.;
 		Real avgGrow=1e-4*(sigmaGoal-sigAvg)*avgArea/(avgStiffness>0?avgStiffness:1);
 		Real maxToAvg=maxSize/avgSize;
-		if(std::abs(maxToAvg*avgGrow)>maxDisplPerStep) avgGrow=Mathr::Sign(avgGrow)*maxDisplPerStep/maxToAvg;
+		if(math::abs(maxToAvg*avgGrow)>maxDisplPerStep) avgGrow=Mathr::Sign(avgGrow)*maxDisplPerStep/maxToAvg;
 		Real okGrow=-(minSize-2.1*maxSpan)/maxToAvg;
 		if(avgGrow<okGrow) throw runtime_error("Unable to shring cell due to maximum body size (although required by stress condition). Increase particle rigidity, increase total sample dimensions, or decrease goal stress.");
 		// avgGrow=max(avgGrow,-(minSize-2.1*maxSpan)/maxToAvg);
 		if(avgStiffness>0) { sigma+=(avgGrow*avgStiffness)*Vector3r::Ones(); sigAvg+=avgGrow*avgStiffness; }
-		if(std::abs((sigAvg-sigmaGoal)/sigmaGoal)>5e-3) allStressesOK=false;
+		if(math::abs((sigAvg-sigmaGoal)/sigmaGoal)>5e-3) allStressesOK=false;
 		cellGrow=(avgGrow/avgSize)*cellSize;
 	}
 	else{ // handle each dimension separately
@@ -65,11 +65,11 @@ void PeriIsoCompressor::action(){
 			// FIXME: that is why the fixup 1e-4 is needed here
 			// FIXME: or perhaps maxDisplaPerStep=1e-2*charLen is too big??
 			cellGrow[axis]=1e-4*(sigmaGoal-sigma[axis])*cellArea[axis]/(avgStiffness>0?avgStiffness:1);  // FIXME: wrong dimensions? See PeriTriaxController
-			if(std::abs(cellGrow[axis])>maxDisplPerStep) cellGrow[axis]=Mathr::Sign(cellGrow[axis])*maxDisplPerStep;
+			if(math::abs(cellGrow[axis])>maxDisplPerStep) cellGrow[axis]=Mathr::Sign(cellGrow[axis])*maxDisplPerStep;
 			cellGrow[axis]=max(cellGrow[axis],-(cellSize[axis]-2.1*maxSpan));
 			// crude way of predicting sigma, for steps when it is not computed from intrs
 			if(avgStiffness>0) sigma[axis]+=cellGrow[axis]*avgStiffness; // FIXME: dimensions
-			if(std::abs((sigma[axis]-sigmaGoal)/sigmaGoal)>5e-3) allStressesOK=false;
+			if(math::abs((sigma[axis]-sigmaGoal)/sigmaGoal)>5e-3) allStressesOK=false;
 		}
 	}
 	TRVAR4(cellGrow,sigma,sigmaGoal,avgStiffness);
@@ -115,7 +115,7 @@ void PeriTriaxController::strainStressStiffUpdate(){
 		Vector3r branch=Body::byId(I->getId2(),scene)->state->pos + scene->cell->hSize*I->cellDist.cast<Real>() -Body::byId(I->getId1(),scene)->state->pos;
 		stressTensor+=f*branch.transpose();
 		if( !dynCell ){
-			for ( int i=0; i<3; i++ ) sumStiff[i]+=std::abs ( gsc->normal[i] ) *nsi->kn+ ( 1-std::abs ( gsc->normal[i] ) ) *nsi->ks;
+			for ( int i=0; i<3; i++ ) sumStiff[i]+=math::abs ( gsc->normal[i] ) *nsi->kn+ ( 1-math::abs ( gsc->normal[i] ) ) *nsi->ks;
 			n++;}
 	}
 	// Divide by volume as in stressTensor=sum(fi*lj)/Volume (Love equation)
@@ -156,7 +156,7 @@ void PeriTriaxController::action()
 	if(doUpdate || min(stiff[0],min(stiff[1],stiff[2])) <=0 || dynCell){ strainStressStiffUpdate(); }
 
 	// set mass to be sum of masses, if not set by the user
-	if(dynCell && std::isnan(mass)){
+	if(dynCell && math::isnan(mass)){
 		mass=0; for(const auto & b :  *scene->bodies){ if(b && b->state) mass+=b->state->mass; }
 		LOG_INFO("Setting cell mass to "<<mass<<" automatically.");}
 	bool allOk=true;
@@ -184,7 +184,7 @@ void PeriTriaxController::action()
 		// steady evolution with fluctuations; see TriaxialStressController
 		if (!dynCell) strain_rate=(1-growDamping)*strain_rate+.8*prevGrow[axis];
 		// limit maximum strain rate
-		if (std::abs(strain_rate)>maxStrainRate[axis]) strain_rate = Mathr::Sign(strain_rate)*maxStrainRate[axis];
+		if (math::abs(strain_rate)>maxStrainRate[axis]) strain_rate = Mathr::Sign(strain_rate)*maxStrainRate[axis];
 		// do not shrink below minimum cell size (periodic collider condition), although it is suboptimal WRT resulting stress
 		strain_rate=max(strain_rate,-(cellSize[axis]-2.1*maxBodySpan[axis])/scene->dt);
 
@@ -195,13 +195,13 @@ void PeriTriaxController::action()
 		// signal if condition not satisfied
 		if(stressMask&(1<<axis)){
 			Real curr=stress[axis];
-			if((goal[axis]!=0 && std::abs((curr-goal[axis])/goal[axis])>relStressTol) || std::abs(curr-goal[axis])>absStressTol) allOk=false;
+			if((goal[axis]!=0 && math::abs((curr-goal[axis])/goal[axis])>relStressTol) || math::abs(curr-goal[axis])>absStressTol) allOk=false;
 		}else{
 			Real curr=strain[axis];
 			// since strain is prescribed exactly, tolerances need just to accomodate rounding issues
-			if((goal[axis]!=0 && std::abs((curr-goal[axis])/goal[axis])>1e-6) || std::abs(curr-goal[axis])>1e-6){
+			if((goal[axis]!=0 && math::abs((curr-goal[axis])/goal[axis])>1e-6) || math::abs(curr-goal[axis])>1e-6){
 				allOk=false;
-				if(doUpdate) LOG_DEBUG("Strain not OK; "<<std::abs(curr-goal[axis])<<">1e-6");}
+				if(doUpdate) LOG_DEBUG("Strain not OK; "<<math::abs(curr-goal[axis])<<">1e-6");}
 		}
 	}
 	// update stress and strain
@@ -287,7 +287,7 @@ void Peri3dController::action(){
 				// convert relative progress values of ##Path to absolute values
 				PATH_OP_OP(i,j,0) *= 1./PATH_OP_OP(i,pathSizes[i]-1,0);
 				// convert relative stress/strain values of ##Path to absolute stress strain values
-				if (std::abs(PATH_OP_OP(i,pathSizes[i]-1,1)) >= 1e-9) { // the final value is not 0 (otherwise always absolute values are considered)
+				if (math::abs(PATH_OP_OP(i,pathSizes[i]-1,1)) >= 1e-9) { // the final value is not 0 (otherwise always absolute values are considered)
 					PATH_OP_OP(i,j,1) *= goal(i)/PATH_OP_OP(i,pathSizes[i]-1,1);
 				}
 			}

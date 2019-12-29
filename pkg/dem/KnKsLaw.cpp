@@ -165,10 +165,10 @@ bool Law2_SCG_KnKsPhys_KnKsLaw::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& ip,
 			phys->prevSigma = phys->knVol*un;
 		}
 		//}
-		phys->normalForce = phys->prevSigma*std::max(pow(10,-15),phys->contactArea)*geom->normal;
+		phys->normalForce = phys->prevSigma*math::max(pow(10,-15),phys->contactArea)*geom->normal;
 	}
 
-	phys->kn = phys->knVol*std::max(pow(10,-15),phys->contactArea);
+	phys->kn = phys->knVol*math::max(pow(10,-15),phys->contactArea);
 
 	if((un <0.0 && fabs(phys->prevSigma)>phys->tension && phys->tensionBroken == false /* first time tension is broken */) || (un<0.0 && phys->tensionBroken==true)) {
 		if (neverErase) {
@@ -199,9 +199,9 @@ bool Law2_SCG_KnKsPhys_KnKsLaw::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& ip,
 		} else {
 			Ks = phys->ksVol;
 		}
-		shearForce -= Ks*shearIncrement*std::max(pow(10,-15),phys->contactArea);
+		shearForce -= Ks*shearIncrement*math::max(pow(10,-15),phys->contactArea);
 	}
-	phys->ks = phys->ksVol*std::max(pow(10,-15),phys->contactArea);
+	phys->ks = phys->ksVol*math::max(pow(10,-15),phys->contactArea);
 
 
 //	const shared_ptr<Body>& b1=Body::byId(id1,scene);
@@ -248,7 +248,7 @@ bool Law2_SCG_KnKsPhys_KnKsLaw::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& ip,
 	/* Water pressure, heat effect */
 
 	/* strength degradation */
-//	const Real PI = std::atan(1.0)*4;
+//	const Real PI = math::atan(1.0)*4;
 	Real tan_effective_phi = 0.0;
 
 
@@ -273,12 +273,12 @@ bool Law2_SCG_KnKsPhys_KnKsLaw::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& ip,
 		Real fN = phys->normalForce.norm();
 		if(phys->intactRock == true) {
 			if (phys->cohesionBroken == true && allowBreakage == true) {
-				maxFs = std::max( fN,0.0)*tan_effective_phi;
+				maxFs = math::max( fN,0.0)*tan_effective_phi;
 			} else {
-				Real cohesiveForce = phys->cohesion*std::max(pow(10,-15),phys->contactArea);
-				maxFs = cohesiveForce+std::max( fN,0.0)*tan_effective_phi;
+				Real cohesiveForce = phys->cohesion*math::max(pow(10,-15),phys->contactArea);
+				maxFs = cohesiveForce+math::max( fN,0.0)*tan_effective_phi;
 			}
-		} else {	maxFs = std::max( fN,0.0)*tan_effective_phi; }
+		} else {	maxFs = math::max( fN,0.0)*tan_effective_phi; }
 	}
 
 	/* ********************************************************************************************************************* */
@@ -349,7 +349,7 @@ bool Law2_SCG_KnKsPhys_KnKsLaw::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& ip,
 	}
 
 	Vector3r force = -phys->normalForce-dampedShearForce;
-	if(std::isnan(force.norm())) {//FIXME: Check who necessarry this output is or else comment out this branch
+	if(math::isnan(force.norm())) {//FIXME: Check who necessarry this output is or else comment out this branch
 		std::cout<<"shearForce: "<<shearForce<<", normalForce: "<<phys->normalForce<<", viscousNormal: "<<phys->normalViscous<<", viscousShear: "<<phys->shearViscous<<", geom normal: "<<geom->normal<<", effective_phi: "<<phys->effective_phi<<", shearIncrement: "<<shearIncrement<<", cs: "<<cs<<", incidentVs: "<<incidentVs<<", id1: "<<id1<<", id2: "<<id2<<", phys->mobilizedShear: "<<phys->mobilizedShear<<endl;
 	}
 	scene->forces.addForce(id1,force);
@@ -401,12 +401,12 @@ void Ip2_FrictMat_FrictMat_KnKsPhys::go(const shared_ptr<Material>& b1, const sh
 	contactPhysics->cohesionBroken = cohesionBroken;
 	contactPhysics->tensionBroken = tensionBroken;
 //	contactPhysics->unitWidth2D = unitWidth2D;
-	contactPhysics->frictionAngle		= std::min(fa,fb);
+	contactPhysics->frictionAngle		= math::min(fa,fb);
 	if(!useFaceProperties) {
-		contactPhysics->phi_r = std::min(fa,fb)/Mathr::PI*180.0;
+		contactPhysics->phi_r = math::min(fa,fb)/Mathr::PI*180.0;
 		contactPhysics->phi_b = contactPhysics->phi_r;
 	}
-//	contactPhysics->tanFrictionAngle	= std::tan(contactPhysics->frictionAngle);
+//	contactPhysics->tanFrictionAngle	= math::tan(contactPhysics->frictionAngle);
 	//contactPhysics->initialOrientation1	= Body::byId(interaction->getId1())->state->ori;
 	//contactPhysics->initialOrientation2	= Body::byId(interaction->getId2())->state->ori;
 	contactPhysics->prevNormal 		= scg->normal; //This is also done in the Contact Law.  It is not redundant because this class is only called ONCE!

@@ -11,7 +11,7 @@ class FlatGridCollider: public Collider{
 		Vector3r mn, mx;
 		Real step;
 		// convert point into its integral coordinates (can be outside grid, use fitGrid to coords inside)
-		Vector3i pt2int(const Vector3r& pt){ Vector3i ret; for(int i=0;i<3;i++)ret[i]=int(std::floor((pt[i]-mn[1])/step)); return ret; }
+		Vector3i pt2int(const Vector3r& pt){ Vector3i ret; for(int i=0;i<3;i++)ret[i]=int(math::floor((pt[i]-mn[1])/step)); return ret; }
 		std::vector<idVector> data;
 		// force integral coordinate inside (0,sz-1)
 		int fit(int i, int sz) const { return max(0,min(i,sz-1)); }

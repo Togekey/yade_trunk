@@ -52,7 +52,7 @@ bool P_volume_centroid(Polyhedron P, Real * volume, Vector3r * centroid){
 			++hfc0;
 			B = C;
 			C = FromCGALPoint(hfc0->next()->vertex()->point());
- 			vtet = std::abs((basepoint-C).dot((A-C).cross(B-C)))/6.;
+ 			vtet = math::abs((basepoint-C).dot((A-C).cross(B-C)))/6.;
 			*volume += vtet;
 			*centroid = *centroid + (basepoint+A+B+C) / 4. * vtet;
 		}
@@ -92,7 +92,7 @@ Matrix3r TetraInertiaTensor(Vector3r av,Vector3r bv,Vector3r cv,Vector3r dv){
 						-(x2-x1)*(y4-y1)*(z3-z1)
 						-(x3-x1)*(y2-y1)*(z4-z1)
 						-(x4-x1)*(y3-y1)*(z2-z1);
-	detJ=std::abs(detJ);
+	detJ=math::abs(detJ);
 	const Real a=detJ*(y1*y1+y1*y2+y2*y2+y1*y3+y2*y3+
 		y3*y3+y1*y4+y2*y4+y3*y4+y4*y4+z1*z1+z1*z2+
 		z2*z2+z1*z3+z2*z3+z3*z3+z1*z4+z2*z4+z3*z4+z4*z4)/60.;
@@ -418,7 +418,7 @@ Vector3r SolveLinSys3x3(Matrix3r A, Vector3r y){
 Polyhedron ConvexHull(vector<CGALpoint> &planes){
 	Polyhedron Int;
 	for (const auto p : planes) {
-		if (std::isnan(p.x()) || std::isnan(p.y()) || std::isnan(p.z())) return Int;
+		if (math::isnan(p.x()) || math::isnan(p.y()) || math::isnan(p.z())) return Int;
 	}
 	if (planes.size()>3) CGAL::convex_hull_3(planes.begin(), planes.end(), Int);
 	return Int;
@@ -645,8 +645,8 @@ Polyhedron Polyhedron_Polyhedron_intersection(Polyhedron A, Polyhedron B, CGALpo
 			for (Polyhedron::Facet_iterator fIter = B.facets_begin(); fIter != B.facets_end() && !intersection_found; fIter++){
 				dist_S = Oriented_squared_distance(fIter->plane(), eIter->vertex()->point());
 				dist_T = Oriented_squared_distance(fIter->plane(), eIter->opposite()->vertex()->point());
-				if (dist_S*dist_T >= 0 || std::abs(dist_S)<lim2 || std::abs(dist_T)<lim2) continue;
-				inside = eIter->vertex()->point() + (eIter->opposite()->vertex()->point()-eIter->vertex()->point())*sqrt(std::abs(dist_S))/(sqrt(std::abs(dist_S))+sqrt(std::abs(dist_T)));
+				if (dist_S*dist_T >= 0 || math::abs(dist_S)<lim2 || math::abs(dist_T)<lim2) continue;
+				inside = eIter->vertex()->point() + (eIter->opposite()->vertex()->point()-eIter->vertex()->point())*sqrt(math::abs(dist_S))/(sqrt(math::abs(dist_S))+sqrt(math::abs(dist_T)));
 				// the fact that edge intersects the facet (not only its plane) is not explicitely checked, it sufices to check that the resulting point is inside both polyhedras
 				Plane p1 = fIter->plane();
 				Plane p2 = eIter->facet()->plane();
@@ -697,7 +697,7 @@ Polyhedron Polyhedron_Polyhedron_intersection(Polyhedron A, Polyhedron B, CGALpo
 		const auto pX = -pi->a()/pi->d();
 		const auto pY = -pi->b()/pi->d();
 		const auto pZ = -pi->c()/pi->d();
-		if (std::isnan(pX) || std::isnan(pY) || std::isnan(pZ)) {
+		if (math::isnan(pX) || math::isnan(pY) || math::isnan(pZ)) {
 			Polyhedron IntersectionEmpty;
 			return IntersectionEmpty;
 		} else {
@@ -756,7 +756,7 @@ Real maxDistancePoints (const std::vector<Vector3r> & v) {
 	Real maxDistance = 0.;
 	for (unsigned int i = 0; i < v.size(); ++i) {
 		for (unsigned int j = i+1; j < v.size(); ++j) {
-			maxDistance = std::max(maxDistance, (v[i] - v[j]).norm());
+			maxDistance = math::max(maxDistance, (v[i] - v[j]).norm());
 		}
 	}
 	return maxDistance;

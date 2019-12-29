@@ -31,7 +31,7 @@ if (vertices.empty() and (not a.empty())) { // i.e. if the particle is not initi
 	Vector3r planeNormVec;
 	for (int i=0; i<planeNo; i++){
 		planeNormVec = Vector3r(a[i],b[i],c[i]);
-		if ( std::abs(planeNormVec.norm() - 1.0 ) > 1e-3) { /* Normalize only if the normal vectors are not normalized already */
+		if ( math::abs(planeNormVec.norm() - 1.0 ) > 1e-3) { /* Normalize only if the normal vectors are not normalized already */
 //		if (planeNormVec.norm() > 1+1e-3) { /* Normalize only if the normal vectors are not normalized already */
 			a[i] /= planeNormVec.norm();
 			b[i] /= planeNormVec.norm();
@@ -84,9 +84,9 @@ if (vertices.empty() and (not a.empty())) { // i.e. if the particle is not initi
 	calculateInertia(centr, Ixx, Iyy, Izz, Ixy, Ixz, Iyz); //Calculate volume & centroid
 
 	// An attempt to eliminate rounding errors from the calculation of vertices/volume/inertia
-	if ( std::abs( centr.x() )/R < 1e-6 ) { centr.x()=0; }
-	if ( std::abs( centr.y() )/R < 1e-6 ) { centr.y()=0; }
-	if ( std::abs( centr.z() )/R < 1e-6 ) { centr.z()=0; }
+	if ( math::abs( centr.x() )/R < 1e-6 ) { centr.x()=0; }
+	if ( math::abs( centr.y() )/R < 1e-6 ) { centr.y()=0; }
+	if ( math::abs( centr.z() )/R < 1e-6 ) { centr.z()=0; }
 
 	// If the particle is not centered to its centroid, center (translate) the face equations around the centroid and recalculate vertices, volume & inertia
 	if (centr.norm()/R > 1e-6) {
@@ -100,7 +100,7 @@ if (vertices.empty() and (not a.empty())) { // i.e. if the particle is not initi
 	}
 
 /* ------------------------------------------------------------------------------------------------------------------------------ */
-	if ( std::abs(Ixy) + std::abs(Ixz) + std::abs(Iyz)<1e-15 ) {
+	if ( math::abs(Ixy) + math::abs(Ixz) + math::abs(Iyz)<1e-15 ) {
 		inertia = Vector3r(Ixx,Iyy,Izz);
 	} else { //rotate the planes to the principal axes if they are not already rotated
 		if( fabs(Ixx) < pow(10,-15) ){Ixx = 0.0;} //TODO: Check whether I should keep/modify these or if there is a case where they introduce bugs

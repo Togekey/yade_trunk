@@ -53,17 +53,17 @@ void Ip2_FrictMat_FrictMat_MindlinPhys::go(const shared_ptr<Material>& b1,const 
 	Real Gb = Eb/(2*(1+Vb));
 	Real G = (Ga+Gb)/2; // average of shear modulus
 	Real V = (Va+Vb)/2; // average of poisson's ratio
-	Real E = Ea*Eb/((1.-std::pow(Va,2))*Eb+(1.-std::pow(Vb,2))*Ea); // Young modulus
+	Real E = Ea*Eb/((1.-math::pow(Va,2))*Eb+(1.-math::pow(Vb,2))*Ea); // Young modulus
 	Real R = Da*Db/(Da+Db); // equivalent radius
 	Real Rmean = (Da+Db)/2.; // mean radius
 	Real Kno = 4./3.*E*sqrt(R); // coefficient for normal stiffness
 	Real Kso = 2*sqrt(4*R)*G/(2-V); // coefficient for shear stiffness
-	Real frictionAngle = (!frictAngle) ? std::min(fa,fb) : (*frictAngle)(mat1->id,mat2->id,mat1->frictionAngle,mat2->frictionAngle);
+	Real frictionAngle = (!frictAngle) ? math::min(fa,fb) : (*frictAngle)(mat1->id,mat2->id,mat1->frictionAngle,mat2->frictionAngle);
 
 	Real Adhesion = 4.*Mathr::PI*R*gamma; // calculate adhesion force as predicted by DMT theory
 
 	/* pass values calculated from above to MindlinPhys */
-	contactPhysics->tangensOfFrictionAngle = std::tan(frictionAngle); 
+	contactPhysics->tangensOfFrictionAngle = math::tan(frictionAngle); 
 	//contactPhysics->prevNormal = scg->normal; // used to compute relative rotation
 	contactPhysics->kno = Kno; // this is just a coeff
 	contactPhysics->kso = Kso; // this is just a coeff
@@ -125,8 +125,8 @@ Real Law2_ScGeom_MindlinPhys_Mindlin::normElastEnergy()
 		ScGeom* scg = dynamic_cast<ScGeom*>(I->geom.get());
 		MindlinPhys* phys = dynamic_cast<MindlinPhys*>(I->phys.get());
 		if (phys) {
-			if (includeAdhesion) {normEnergy += (std::pow(scg->penetrationDepth,5./2.)*2./5.*phys->kno - phys->adhesionForce*scg->penetrationDepth);}
-			else {normEnergy += std::pow(scg->penetrationDepth,5./2.)*2./5.*phys->kno;} // work done in the normal direction. NOTE: this is the integral
+			if (includeAdhesion) {normEnergy += (math::pow(scg->penetrationDepth,5./2.)*2./5.*phys->kno - phys->adhesionForce*scg->penetrationDepth);}
+			else {normEnergy += math::pow(scg->penetrationDepth,5./2.)*2./5.*phys->kno;} // work done in the normal direction. NOTE: this is the integral
 			}
 	}
 	return normEnergy;
@@ -162,7 +162,7 @@ bool Law2_ScGeom_MindlinPhys_MindlinDeresiewitz::go(shared_ptr<IGeom>& ig, share
 	phys->normalForce=Fn*geom->normal;
 	// exactly zero would not work with the shear formulation, and would give zero shear force anyway
 	if(Fn==0) return true;
-	//phys->kn=3./2.*phys->kno*std::pow(uN,0.5); // update stiffness, not needed
+	//phys->kn=3./2.*phys->kno*math::pow(uN,0.5); // update stiffness, not needed
 
 	// contact radius
 	Real R=geom->radius1*geom->radius2/(geom->radius1+geom->radius2);
@@ -203,11 +203,11 @@ bool Law2_ScGeom_MindlinPhys_HertzWithLinearShear::go(shared_ptr<IGeom>& ig, sha
 	// normal force
 	Real Fn=phys->kno*pow(uN,3/2.);
 	phys->normalForce=Fn*geom->normal;
-	//phys->kn=3./2.*phys->kno*std::pow(uN,0.5); // update stiffness, not needed
+	//phys->kn=3./2.*phys->kno*math::pow(uN,0.5); // update stiffness, not needed
 	
 	// shear force
 	Vector3r& Fs=geom->rotate(phys->shearForce);
-	Real ks= nonLin>0 ? phys->kso*std::pow(uN,0.5) : phys->kso;
+	Real ks= nonLin>0 ? phys->kso*math::pow(uN,0.5) : phys->kso;
 	Vector3r shearIncrement;
 	if(nonLin>1){
 		State *de1=Body::byId(id1,scene)->state.get(), *de2=Body::byId(id2,scene)->state.get();	
@@ -272,7 +272,7 @@ bool Law2_ScGeom_MindlinPhys_Mindlin::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys
 	/* Hertz-Mindlin's formulation (PFC) 
 	Note that the normal stiffness here is a secant value (so as it is cannot be used in the GSTS)
 	In the first place we get the normal force and then we store kn to be passed to the GSTS */
-	Real Fn = phys->kno*std::pow(uN,1.5); // normal Force (scalar)
+	Real Fn = phys->kno*math::pow(uN,1.5); // normal Force (scalar)
 	if (includeAdhesion) {
 			Fn -= phys->adhesionForce; // include adhesion force to account for the effect of Van der Waals interactions
 			phys->isAdhesive = (Fn<0); // set true the bool to count the number of adhesive contacts
@@ -288,13 +288,13 @@ bool Law2_ScGeom_MindlinPhys_Mindlin::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys
 	/* TANGENTIAL NORMAL STIFFNESS */
 	/*******************************/
 	
-	phys->kn = 3./2.*phys->kno*std::pow(uN,0.5); // here we store the value of kn to compute the time step
+	phys->kn = 3./2.*phys->kno*math::pow(uN,0.5); // here we store the value of kn to compute the time step
 	
 	/******************************/
 	/* TANGENTIAL SHEAR STIFFNESS */
 	/******************************/
 	
-	phys->ks = phys->kso*std::pow(uN,0.5); // get tangential stiffness (this is a tangent value, so we can pass it to the GSTS)
+	phys->ks = phys->kso*math::pow(uN,0.5); // get tangential stiffness (this is a tangent value, so we can pass it to the GSTS)
 
 	/************************/
 	/* DAMPING COEFFICIENTS */
@@ -560,17 +560,17 @@ void Ip2_FrictMat_FrictMat_MindlinCapillaryPhys::go( const shared_ptr<Material>&
 	Real Gb = Eb/(2*(1+Vb));
 	Real G = (Ga+Gb)/2; // average of shear modulus
 	Real V = (Va+Vb)/2; // average of poisson's ratio
-	Real E = Ea*Eb/((1.-std::pow(Va,2))*Eb+(1.-std::pow(Vb,2))*Ea); // Young modulus
+	Real E = Ea*Eb/((1.-math::pow(Va,2))*Eb+(1.-math::pow(Vb,2))*Ea); // Young modulus
 	Real R = Da*Db/(Da+Db); // equivalent radius
 	Real Rmean = (Da+Db)/2.; // mean radius
 	Real Kno = 4./3.*E*sqrt(R); // coefficient for normal stiffness
 	Real Kso = 2*sqrt(4*R)*G/(2-V); // coefficient for shear stiffness
-	Real frictionAngle = std::min(fa,fb);
+	Real frictionAngle = math::min(fa,fb);
 
 	Real Adhesion = 4.*Mathr::PI*R*gamma; // calculate adhesion force as predicted by DMT theory
 
 	/* pass values calculated from above to MindlinCapillaryPhys */
-	contactPhysics->tangensOfFrictionAngle = std::tan(frictionAngle); 
+	contactPhysics->tangensOfFrictionAngle = math::tan(frictionAngle); 
 	//mindlinPhys->prevNormal = scg->normal; // used to compute relative rotation
 	contactPhysics->kno = Kno; // this is just a coeff
 	contactPhysics->kso = Kso; // this is just a coeff

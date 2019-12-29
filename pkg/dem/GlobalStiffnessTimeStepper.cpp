@@ -76,8 +76,8 @@ void GlobalStiffnessTimeStepper::findTimeStepFromBody(const shared_ptr<Body>& bo
 		if (Rstiffness.z()!=0) {dtz = sdec->inertia.z()/Rstiffness.z();  computedSomething = true;}
 		else dtz = Mathr::MAX_REAL;
 		
-		Real Rdt =  std::min( std::min (dtx, dty), dtz );//Rdt = smallest squared eigenperiod for elastic rotational motions
-		dt = 1.41044*timestepSafetyCoefficient*std::sqrt(std::min(dt,Rdt));//1.41044 = sqrt(2)
+		Real Rdt =  math::min( math::min (dtx, dty), dtz );//Rdt = smallest squared eigenperiod for elastic rotational motions
+		dt = 1.41044*timestepSafetyCoefficient*math::sqrt(math::min(dt,Rdt));//1.41044 = sqrt(2)
 	}
 	
 	//Viscous 
@@ -100,11 +100,11 @@ void GlobalStiffnessTimeStepper::findTimeStepFromBody(const shared_ptr<Body>& bo
 			dtz_visc = sdec->inertia.z()/Rviscosity.z();  computedSomething = true;}
 		else dtz_visc = Mathr::MAX_REAL;
 	
-		Real Rdt_visc =  std::min( std::min (dtx_visc, dty_visc), dtz_visc );//Rdt = smallest squared eigenperiod for viscous rotational motions
-		dt_visc = 2*timestepSafetyCoefficient*std::min(dt_visc,Rdt_visc);
+		Real Rdt_visc =  math::min( math::min (dtx_visc, dty_visc), dtz_visc );//Rdt = smallest squared eigenperiod for viscous rotational motions
+		dt_visc = 2*timestepSafetyCoefficient*math::min(dt_visc,Rdt_visc);
 
 		//Take the minimum between the elastic and viscous minimum eigenperiod. 
-		dt = std::min(dt,dt_visc);
+		dt = math::min(dt,dt_visc);
 	}
 
 	//if there is a target dt, then we apply density scaling on the body, the inertia used in Newton will be mass/scaling, the weight is unmodified
@@ -114,7 +114,7 @@ void GlobalStiffnessTimeStepper::findTimeStepFromBody(const shared_ptr<Body>& bo
 		newDt=targetDt;
 	}
 	//else we update dt normaly
-	else {newDt = std::min(dt,newDt);}   
+	else {newDt = math::min(dt,newDt);}   
 }
 
 bool GlobalStiffnessTimeStepper::isActivated()
@@ -195,7 +195,7 @@ void GlobalStiffnessTimeStepper::computeStiffnesses(Scene* rb){
 		if (fn==0) continue;//Is it a problem with some laws? I still don't see why.
 		
 		//Diagonal terms of the translational stiffness matrix
-		Vector3r diag_stiffness = Vector3r(std::pow(normal.x(),2),std::pow(normal.y(),2),std::pow(normal.z(),2));
+		Vector3r diag_stiffness = Vector3r(math::pow(normal.x(),2),math::pow(normal.y(),2),math::pow(normal.z(),2));
 		diag_stiffness *= kn-ks;
 		diag_stiffness = diag_stiffness + Vector3r(1,1,1)*ks;
 
@@ -203,14 +203,14 @@ void GlobalStiffnessTimeStepper::computeStiffnesses(Scene* rb){
 		// Vector3r branch1 = currentContactGeometry->normal*currentContactGeometry->radius1;
 		// Vector3r branch2 = currentContactGeometry->normal*currentContactGeometry->radius2;
 		Vector3r diag_Rstiffness =
-			Vector3r(std::pow(normal.y(),2)+std::pow(normal.z(),2),
-				std::pow(normal.x(),2)+std::pow(normal.z(),2),
-				std::pow(normal.x(),2)+std::pow(normal.y(),2));
+			Vector3r(math::pow(normal.y(),2)+math::pow(normal.z(),2),
+				math::pow(normal.x(),2)+math::pow(normal.z(),2),
+				math::pow(normal.x(),2)+math::pow(normal.y(),2));
 		diag_Rstiffness *= ks;
 		
 		// If contact moments are present, add the diagonal of (n⊗n*k_twist + (I-n⊗n)*k_roll = (k_twist-k_roll)*n⊗n + I*k_roll ) :
 		Vector3r kr = (static_cast<NormShearPhys *> (contact->phys.get()))->getRotStiffness(); //get the vector (k_twist,k_roll,k_roll)
-		Vector3r nn (std::pow(normal.x(),2),std::pow(normal.y(),2),std::pow(normal.z(),2));//n⊗n 
+		Vector3r nn (math::pow(normal.x(),2),math::pow(normal.y(),2),math::pow(normal.z(),2));//n⊗n 
 		Vector3r diag_Mstiffness= (kr[0]-kr[1])*nn + Vector3r(1,1,1)*kr[1];
 
 		stiffnesses [contact->getId1()]+=diag_stiffness;
@@ -223,14 +223,14 @@ void GlobalStiffnessTimeStepper::computeStiffnesses(Scene* rb){
 			ViscElPhys* viscPhys = YADE_CAST<ViscElPhys*>(contact->phys.get()); assert(viscPhys);
 			Real& cn=viscPhys->cn; Real& cs=viscPhys->cs;
 			//Diagonal terms of the translational viscous matrix
-			Vector3r diag_viscosity = Vector3r(std::pow(normal.x(),2),std::pow(normal.y(),2),std::pow(normal.z(),2));
+			Vector3r diag_viscosity = Vector3r(math::pow(normal.x(),2),math::pow(normal.y(),2),math::pow(normal.z(),2));
 			diag_viscosity *= cn-cs;
 			diag_viscosity = diag_viscosity + Vector3r(1,1,1)*cs;
 			//diagonal terms of the rotational viscous matrix
 			Vector3r diag_Rviscosity =
-				Vector3r(std::pow(normal.y(),2)+std::pow(normal.z(),2),
-					std::pow(normal.x(),2)+std::pow(normal.z(),2),
-					std::pow(normal.x(),2)+std::pow(normal.y(),2));
+				Vector3r(math::pow(normal.y(),2)+math::pow(normal.z(),2),
+					math::pow(normal.x(),2)+math::pow(normal.z(),2),
+					math::pow(normal.x(),2)+math::pow(normal.y(),2));
 			diag_Rviscosity *= cs;			
 			
 			// Add the contact stiffness matrix to the two particles one

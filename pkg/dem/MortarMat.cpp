@@ -27,10 +27,10 @@ void Ip2_MortarMat_MortarMat_MortarPhys::go(const shared_ptr<Material>& material
 			_CPATTR(ellAspect);
 			_CPATTR(neverDamage);
 		#undef _CPATTR
-		phys->tangensOfFrictionAngle = std::tan(mat1->frictionAngle);
+		phys->tangensOfFrictionAngle = math::tan(mat1->frictionAngle);
 	} else {
 		// averaging over both materials
-		#define _MINATTR(a) phys->a=std::min(mat1->a,mat2->a)
+		#define _MINATTR(a) phys->a=math::min(mat1->a,mat2->a)
 		#define _AVGATTR(a) phys->a=.5*(mat1->a+mat2->a)
 			_MINATTR(tensileStrength);
 			_MINATTR(compressiveStrength);
@@ -39,13 +39,13 @@ void Ip2_MortarMat_MortarMat_MortarPhys::go(const shared_ptr<Material>& material
 		#undef _AVGATTR
 		#undef _MINATTR
 		phys->neverDamage = mat1->neverDamage || mat2->neverDamage;
-		phys->tangensOfFrictionAngle = std::tan(.5*(mat1->frictionAngle+mat2->frictionAngle));
+		phys->tangensOfFrictionAngle = math::tan(.5*(mat1->frictionAngle+mat2->frictionAngle));
 	}
 	//
 	const Real& r1 = geom->refR1;
 	const Real& r2 = geom->refR2;
-	Real minRad = r1 <= 0 ? r2 : r2 <= 0 ? r1 : std::min(r1,r2);
-	phys->crossSection = std::pow(minRad,2);
+	Real minRad = r1 <= 0 ? r2 : r2 <= 0 ? r1 : math::min(r1,r2);
+	phys->crossSection = math::pow(minRad,2);
 	const Real& E1 = mat1->young;
 	const Real& E2 = mat2->young;
 	const Real& n1 = mat1->poisson;
@@ -64,7 +64,7 @@ MortarPhys::~MortarPhys(){};
 bool MortarPhys::failureCondition(Real sigmaN, Real sigmaT) {
 	bool cond1 = sigmaN - tensileStrength > 0;
 	bool cond2 = sigmaT + sigmaN*tangensOfFrictionAngle - cohesion > 0;
-	bool cond3 = std::pow(sigmaN,2) + std::pow(ellAspect*sigmaT,2) - std::pow(compressiveStrength,2) > 0;
+	bool cond3 = math::pow(sigmaN,2) + math::pow(ellAspect*sigmaT,2) - math::pow(compressiveStrength,2) > 0;
 	return cond1 || cond2 || cond3;
 }
 

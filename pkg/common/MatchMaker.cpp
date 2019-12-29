@@ -15,7 +15,7 @@ Real MatchMaker::operator()(int id1, int id2, Real val1, Real val2) const {
 	if ( foundMatchItem != matchSet.end() ) {
 		return foundMatchItem->second;
 	} else {
-		if(fbNeedsValues && (std::isnan(val1) || std::isnan(val2))) {
+		if(fbNeedsValues && (math::isnan(val1) || math::isnan(val2))) {
 			throw std::invalid_argument("MatchMaker: no match for ("+boost::lexical_cast<string>(id1)+
 			","+boost::lexical_cast<string>(id2)+"), and values required for algo computation '"+
 			algo+"' not specified.");

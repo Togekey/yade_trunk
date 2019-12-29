@@ -304,7 +304,7 @@ void GLViewer::centerPeriodic(){
 	assert(scene->isPeriodic);
 	Vector3r center=.5*scene->cell->getSize();
 	Vector3r halfSize=.5*scene->cell->getSize();
-	Real radius=std::max(halfSize[0],std::max(halfSize[1],halfSize[2]));
+	Real radius=math::max(halfSize[0],math::max(halfSize[1],halfSize[2]));
 	LOG_DEBUG("Periodic scene center="<<center<<", halfSize="<<halfSize<<", radius="<<radius);
 	setSceneCenter(qglviewer::Vec(center[0],center[1],center[2]));
 	setSceneRadius(radius*1.5);
@@ -353,8 +353,8 @@ void GLViewer::centerScene(){
 	if(not(rb->bound)){ rb->updateBound();}
 	
 	min=rb->bound->min; max=rb->bound->max;
-	bool hasNan=(std::isnan(min[0])||std::isnan(min[1])||std::isnan(min[2])||std::isnan(max[0])||std::isnan(max[1])||std::isnan(max[2]));
-	Real minDim=std::min(max[0]-min[0],std::min(max[1]-min[1],max[2]-min[2]));
+	bool hasNan=(math::isnan(min[0])||math::isnan(min[1])||math::isnan(min[2])||math::isnan(max[0])||math::isnan(max[1])||math::isnan(max[2]));
+	Real minDim=math::min(max[0]-min[0],math::min(max[1]-min[1],max[2]-min[2]));
 	if(minDim<=0 || hasNan){
 		// Aabb is not yet calculated...
 		LOG_DEBUG("scene's bound not yet calculated or has zero or nan dimension(s), attempt get that from bodies' positions.");
@@ -365,13 +365,13 @@ void GLViewer::centerScene(){
 			max=max.cwiseMax(b->state->pos);
 			min=min.cwiseMin(b->state->pos);
 		}
-		if(std::isinf(min[0])||std::isinf(min[1])||std::isinf(min[2])||std::isinf(max[0])||std::isinf(max[1])||std::isinf(max[2])){ LOG_DEBUG("No min/max computed from bodies either, setting cube (-1,-1,-1)×(1,1,1)"); min=-Vector3r::Ones(); max=Vector3r::Ones(); }
+		if(math::isinf(min[0])||math::isinf(min[1])||math::isinf(min[2])||math::isinf(max[0])||math::isinf(max[1])||math::isinf(max[2])){ LOG_DEBUG("No min/max computed from bodies either, setting cube (-1,-1,-1)×(1,1,1)"); min=-Vector3r::Ones(); max=Vector3r::Ones(); }
 	} else {LOG_DEBUG("Using scene's Aabb");}
 
 	LOG_DEBUG("Got scene box min="<<min<<" and max="<<max);
 	Vector3r center = (max+min)*0.5;
 	Vector3r halfSize = (max-min)*0.5;
-	Real radius=std::max(halfSize[0],std::max(halfSize[1],halfSize[2])); if(radius<=0) radius=1;
+	Real radius=math::max(halfSize[0],math::max(halfSize[1],halfSize[2])); if(radius<=0) radius=1;
 	LOG_DEBUG("Scene center="<<center<<", halfSize="<<halfSize<<", radius="<<radius);
 	setSceneCenter(qglviewer::Vec(center[0],center[1],center[2]));
 	setSceneRadius(radius*1.5);

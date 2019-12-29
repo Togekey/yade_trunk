@@ -95,7 +95,7 @@ bool Ig2_Polyhedra_Polyhedra_PolyhedraGeom::go(
 	Vector3r centroid;	
 	P_volume_centroid(Int, &volume, &centroid);
 	
- 	if(std::isnan(volume) || volume<=1E-25 || volume > min(A->GetVolume(),B->GetVolume())) {
+ 	if(math::isnan(volume) || volume<=1E-25 || volume > min(A->GetVolume(),B->GetVolume())) {
 		bang->equivalentPenetrationDepth=0;
 		bang->penetrationVolume=min(A->GetVolume(),B->GetVolume());
 		bang->normal = (A->GetVolume()>B->GetVolume() ? 1 : -1)*(se32.position+shift2-se31.position);
@@ -115,7 +115,7 @@ bool Ig2_Polyhedra_Polyhedra_PolyhedraGeom::go(
 	
 	if((se32.position+shift2-centroid).dot(normal)<0) normal*=-1;	
 	
-	Real area = std::pow(volume,2./3.);
+	Real area = math::pow(volume,2./3.);
 	// store calculated stuff in bang; some is redundant
 	bang->equivalentCrossSection=area;
 	bang->contactPoint=centroid;
@@ -208,7 +208,7 @@ bool Ig2_Wall_Polyhedra_PolyhedraGeom::go(const shared_ptr<Shape>& shape1,const 
 	Real volume;
 	Vector3r centroid;
 	P_volume_centroid(Int, &volume, &centroid);
-	if(std::isnan(volume) || volume<=1E-25 || volume > B->GetVolume())  {bang->equivalentPenetrationDepth=0; return true;}
+	if(math::isnan(volume) || volume<=1E-25 || volume > B->GetVolume())  {bang->equivalentPenetrationDepth=0; return true;}
 	if (!Is_inside_Polyhedron(PB, ToCGALPoint(centroid)))  {bang->equivalentPenetrationDepth=0; return true;}
 
 	//calculate area of projection of Intersection into the normal plane
@@ -304,7 +304,7 @@ bool Ig2_Facet_Polyhedra_PolyhedraGeom::go(const shared_ptr<Shape>& shape1,const
 	Real volume;
 	Vector3r centroid;
 	P_volume_centroid(Int, &volume, &centroid);
-	if(std::isnan(volume) || volume<=1E-25 || volume > B->GetVolume()) {bang->equivalentPenetrationDepth=0; return true;}
+	if(math::isnan(volume) || volume<=1E-25 || volume > B->GetVolume()) {bang->equivalentPenetrationDepth=0; return true;}
 	if (!Is_inside_Polyhedron(PB, ToCGALPoint(centroid)))  {bang->equivalentPenetrationDepth=0; return true;}
 	
 	//find normal direction

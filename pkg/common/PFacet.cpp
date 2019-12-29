@@ -106,7 +106,7 @@ bool Ig2_Sphere_PFacet_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 	scm->trueInt=-1;
 	
 	
-	if (std::abs(dist)>(PFacetradius+sphereRadius) && !c->isReal() && !force) { // no contact, but only if there was no previous contact; ortherwise, the constitutive law is responsible for setting Interaction::isReal=false
+	if (math::abs(dist)>(PFacetradius+sphereRadius) && !c->isReal() && !force) { // no contact, but only if there was no previous contact; ortherwise, the constitutive law is responsible for setting Interaction::isReal=false
 		TIMING_DELTAS_CHECKPOINT("Ig2_Sphere_PFacet_ScGridCoGeom");
 		return false;
 	}
@@ -203,8 +203,8 @@ bool Ig2_Sphere_PFacet_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 			Vector3r branch = spherePos - gridNo1St->pos;
 			Vector3r branchN = spherePos - gridNo2St->pos;
 			for(int i=0;i<3;i++){
-				if(std::abs(branch[i])<1e-14) branch[i]=0.0;
-				if(std::abs(branchN[i])<1e-14) branchN[i]=0.0;
+				if(math::abs(branch[i])<1e-14) branch[i]=0.0;
+				if(math::abs(branchN[i])<1e-14) branchN[i]=0.0;
 			}
 			Real relPos = branch.dot(segt)/(len*len);			
 			bool SGr=true;
@@ -217,7 +217,7 @@ bool Ig2_Sphere_PFacet_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 						Vector3r segtCandidate2 = GC->node2->state->pos - gridNo1St->pos;
 						Vector3r segtPrev = segtCandidate1.norm()>segtCandidate2.norm() ? segtCandidate1:segtCandidate2;
 						for(int j=0;j<3;j++){
-							if(std::abs(segtPrev[j])<1e-14) segtPrev[j]=0.0;
+							if(math::abs(segtPrev[j])<1e-14) segtPrev[j]=0.0;
 						}
 						Real relPosPrev = (branch.dot(segtPrev))/(segtPrev.norm()*segtPrev.norm());
 						// ... and check whether the sphere projection is before the neighbours connections too.
@@ -259,7 +259,7 @@ bool Ig2_Sphere_PFacet_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 						Vector3r segtCandidate2 = GC->node2->state->pos - gridNo2St->pos;
 						Vector3r segtNext = segtCandidate1.norm()>segtCandidate2.norm() ? segtCandidate1:segtCandidate2;
 						for(int j=0;j<3;j++){
-							if(std::abs(segtNext[j])<1e-14) segtNext[j]=0.0;
+							if(math::abs(segtNext[j])<1e-14) segtNext[j]=0.0;
 						}
 						
 						Real relPosNext = (branchN.dot(segtNext))/(segtNext.norm()*segtNext.norm());
@@ -298,7 +298,7 @@ bool Ig2_Sphere_PFacet_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 						Vector3r segtCandidate2 = GC->node2->state->pos - gridNo1St->pos;
 						Vector3r segtPrev = segtCandidate1.norm()>segtCandidate2.norm() ? segtCandidate1:segtCandidate2;
 						for(int j=0;j<3;j++){
-							if(std::abs(segtPrev[j])<1e-14) segtPrev[j]=0.0;
+							if(math::abs(segtPrev[j])<1e-14) segtPrev[j]=0.0;
 						}
 						Real relPosPrev = (branch.dot(segtPrev))/(segtPrev.norm()*segtPrev.norm());
 						if(relPosPrev<=0){ //the sphere projection is inside the current Connection and outide this neighbour connection.
@@ -335,7 +335,7 @@ bool Ig2_Sphere_PFacet_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 						Vector3r segtCandidate2 = GC->node2->state->pos - gridNo2St->pos;
 						Vector3r segtNext = segtCandidate1.norm()>segtCandidate2.norm() ? segtCandidate1:segtCandidate2;
 						for(int j=0;j<3;j++){
-							if(std::abs(segtNext[j])<1e-14) segtNext[j]=0.0;
+							if(math::abs(segtNext[j])<1e-14) segtNext[j]=0.0;
 						}
 						Real relPosNext = (branchN.dot(segtNext))/(segtNext.norm()*segtNext.norm());
 						if(relPosNext<=0){ //the sphere projection is inside the current Connection and outside this neighbour connection.
@@ -426,7 +426,7 @@ bool Ig2_Sphere_PFacet_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 		}
 	}
 	if(isintriangle){
-		penetrationDepth = sphereRadius + PFacetradius - std::abs(dist);
+		penetrationDepth = sphereRadius + PFacetradius - math::abs(dist);
 		normal.normalize();
 		if (penetrationDepth>0 || c->isReal() ){
 			if(isNew) c->geom=scm;
@@ -653,17 +653,17 @@ bool Ig2_PFacet_PFacet_ScGeom::go( const shared_ptr<Shape>& cm1, const shared_pt
 		Body::id_t c2 =-1;	
 	  
 		
-		if(std::abs(normal1seg21seg11)==1){c1=ids2[0];c2=ids1[0];}
-		if(std::abs(normal1seg21seg12)==1){c1=ids2[0];c2=ids1[1];}
-		if(std::abs(normal1seg21seg13)==1){c1=ids2[0];c2=ids1[2];}
+		if(math::abs(normal1seg21seg11)==1){c1=ids2[0];c2=ids1[0];}
+		if(math::abs(normal1seg21seg12)==1){c1=ids2[0];c2=ids1[1];}
+		if(math::abs(normal1seg21seg13)==1){c1=ids2[0];c2=ids1[2];}
 		
-		if(std::abs(normal1seg22seg11)==1){c1=ids2[1];c2=ids1[0];}
-		if(std::abs(normal1seg22seg12)==1){c1=ids2[1];c2=ids1[1];}
-		if(std::abs(normal1seg22seg13)==1){c1=ids2[1];c2=ids1[2];}
+		if(math::abs(normal1seg22seg11)==1){c1=ids2[1];c2=ids1[0];}
+		if(math::abs(normal1seg22seg12)==1){c1=ids2[1];c2=ids1[1];}
+		if(math::abs(normal1seg22seg13)==1){c1=ids2[1];c2=ids1[2];}
 		
-		if(std::abs(normal1seg23seg11)==1){c1=ids2[2];c2=ids1[0];}
-		if(std::abs(normal1seg23seg12)==1){c1=ids2[2];c2=ids1[1];}
-		if(std::abs(normal1seg23seg13)==1){c1=ids2[2];c2=ids1[2];}
+		if(math::abs(normal1seg23seg11)==1){c1=ids2[2];c2=ids1[0];}
+		if(math::abs(normal1seg23seg12)==1){c1=ids2[2];c2=ids1[1];}
+		if(math::abs(normal1seg23seg13)==1){c1=ids2[2];c2=ids1[2];}
 
 		if(	(isintriangle1==false) && (isintriangle2==false)  && (isintriangle3==false) && (isintriangle4==false) && (isintriangle5==false)  && (isintriangle6==false)){
 			if((c1!=-1)and (c2!=-1) and(Body::byId(c1)->getGroupMask()!=0)and(Body::byId(c2)->getGroupMask()!=0)){

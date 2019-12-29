@@ -145,7 +145,7 @@ bool Law2_ScGeom_WirePhys_WirePM::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& i
 
 	/* compute a limit value to check how far the interaction is from failing */
 	Real limitFactor = 0.;
-	if (Fn < 0.) limitFactor = std::abs(D/(DFValues.back()(0)));
+	if (Fn < 0.) limitFactor = math::abs(D/(DFValues.back()(0)));
 	phys->limitFactor = limitFactor;
 
 	State* st1 = Body::byId(id1,scene)->state.get();

@@ -118,10 +118,10 @@ bool Ig2_GridConnection_GridConnection_GridCoGridCoGeom::go( const shared_ptr<Sh
 		Vector3r pB=B-dist*(N/(N.norm()));	//"pB" is the projection of the point "B" in the plane defined by his normal vector "N".
 		//Now we have pB, so we will compute the intersection of two segments into a plane.
 		int b0, b1; //2 base vectors used to compute the segment intersection. For more accuracy and to avoid det==0, don't choose the axis where N is max.
-		if(std::abs(N[0])<std::abs(N[1]) || std::abs(N[0])<std::abs(N[2])){b0=0 ; b1=std::abs(N[1])<std::abs(N[2])?1:2;}
+		if(math::abs(N[0])<math::abs(N[1]) || math::abs(N[0])<math::abs(N[2])){b0=0 ; b1=math::abs(N[1])<math::abs(N[2])?1:2;}
 		else { b0=1;b1=2;}
 		Real det=a[b0]*b[b1]-a[b1]*b[b0];
-		if (std::abs(det)>1e-14){
+		if (math::abs(det)>1e-14){
 			//Now compute k and m, who are the parameters (relative position on the connections) of the intersection on conn1 ("A" and "a") and conn2 ("B" and "b") respectively.
 			k = (b[b1]*(pB[b0]-A[b0])+b[b0]*(A[b1]-pB[b1]))/det;
 			m = (a[b0]*(-pB[b1]+A[b1])+a[b1]*(pB[b0]-A[b0]))/det;
@@ -224,8 +224,8 @@ bool Ig2_Sphere_GridConnection_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 	Vector3r branch = spherePos - gridNo1St->pos;
 	Vector3r branchN = spherePos - gridNo2St->pos;
 	for(int i=0;i<3;i++){
-		if(std::abs(branch[i])<1e-14) branch[i]=0.0;
-		if(std::abs(branchN[i])<1e-14) branchN[i]=0.0;
+		if(math::abs(branch[i])<1e-14) branch[i]=0.0;
+		if(math::abs(branchN[i])<1e-14) branchN[i]=0.0;
 	}
 	Real relPos = branch.dot(segt)/(len*len);
 	if(scm->isDuplicate==2 && scm->trueInt!=c->id2)return true;	//the contact will be deleted into the Law, no need to compute here.
@@ -254,7 +254,7 @@ bool Ig2_Sphere_GridConnection_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 				Vector3r segtCandidate2 = GC->node2->state->pos - gridNo1St->pos;
 				Vector3r segtPrev = segtCandidate1.norm()>segtCandidate2.norm() ? segtCandidate1:segtCandidate2;
 				for(int j=0;j<3;j++){
-					if(std::abs(segtPrev[j])<1e-14) segtPrev[j]=0.0;
+					if(math::abs(segtPrev[j])<1e-14) segtPrev[j]=0.0;
 				}
 				Real relPosPrev = (branch.dot(segtPrev))/(segtPrev.norm()*segtPrev.norm());
 				// ... and check whether the sphere projection is before the neighbours connections too.
@@ -291,7 +291,7 @@ bool Ig2_Sphere_GridConnection_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 				Vector3r segtCandidate2 = GC->node2->state->pos - gridNo2St->pos;
 				Vector3r segtNext = segtCandidate1.norm()>segtCandidate2.norm() ? segtCandidate1:segtCandidate2;
 				for(int j=0;j<3;j++){
-					if(std::abs(segtNext[j])<1e-14) segtNext[j]=0.0;
+					if(math::abs(segtNext[j])<1e-14) segtNext[j]=0.0;
 				}
 				Real relPosNext = (branchN.dot(segtNext))/(segtNext.norm()*segtNext.norm());
 				if(relPosNext<=0){ //if the sphere projection is outside both the current Connection AND this neighbouring connection, then create the interaction if the neighbour did not already do it before.
@@ -326,7 +326,7 @@ bool Ig2_Sphere_GridConnection_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 				Vector3r segtCandidate2 = GC->node2->state->pos - gridNo1St->pos;
 				Vector3r segtPrev = segtCandidate1.norm()>segtCandidate2.norm() ? segtCandidate1:segtCandidate2;
 				for(int j=0;j<3;j++){
-					if(std::abs(segtPrev[j])<1e-14) segtPrev[j]=0.0;
+					if(math::abs(segtPrev[j])<1e-14) segtPrev[j]=0.0;
 				}
 				Real relPosPrev = (branch.dot(segtPrev))/(segtPrev.norm()*segtPrev.norm());
 				if(relPosPrev<=0){ //the sphere projection is inside the current Connection and outide this neighbour connection.
@@ -358,7 +358,7 @@ bool Ig2_Sphere_GridConnection_ScGridCoGeom::go(	const shared_ptr<Shape>& cm1,
 				Vector3r segtCandidate2 = GC->node2->state->pos - gridNo2St->pos;
 				Vector3r segtNext = segtCandidate1.norm()>segtCandidate2.norm() ? segtCandidate1:segtCandidate2;
 				for(int j=0;j<3;j++){
-					if(std::abs(segtNext[j])<1e-14) segtNext[j]=0.0;
+					if(math::abs(segtNext[j])<1e-14) segtNext[j]=0.0;
 				}
 				Real relPosNext = (branchN.dot(segtNext))/(segtNext.norm()*segtNext.norm());
 				if(relPosNext<=0){ //the sphere projection is inside the current Connection and outide this neighbour connection.
@@ -441,13 +441,13 @@ bool Law2_ScGridCoGeom_FrictPhys_CundallStrack::go(shared_ptr<IGeom>& ig, shared
 		}
 	}
 	Real& un=geom->penetrationDepth;
-	phys->normalForce=phys->kn*std::max(un,(Real) 0)*geom->normal;
+	phys->normalForce=phys->kn*math::max(un,(Real) 0)*geom->normal;
 // 	std::cout<< "phys->shearForce1= "<<phys->shearForce<<std::endl;
 	Vector3r& shearForce = geom->rotate(phys->shearForce);
 // 	std::cout<< "phys->shearForce2= "<<phys->shearForce<<", geom->shearIncrement()= "<<geom->shearIncrement()<<", phys->ks= "<<phys->ks<<std::endl;
 	const Vector3r& shearDisp = geom->shearIncrement();
 	shearForce -= phys->ks*shearDisp;
-	Real maxFs = phys->normalForce.squaredNorm()*std::pow(phys->tangensOfFrictionAngle,2);
+	Real maxFs = phys->normalForce.squaredNorm()*math::pow(phys->tangensOfFrictionAngle,2);
 	
 // 	std::cout<< "shearForce3= "<<shearForce<<" ,phys->normalForce="<<phys->normalForce<<std::endl;
 	
@@ -533,7 +533,7 @@ bool Law2_ScGridCoGeom_CohFrictPhys_CundallStrack::go(shared_ptr<IGeom>& ig, sha
 		Real maxFs = phys->shearAdhesion;
 		if (!phys->cohesionDisablesFriction || maxFs==0)
 			maxFs += Fn*phys->tangensOfFrictionAngle;
-		maxFs = std::max((Real) 0, maxFs);
+		maxFs = math::max((Real) 0, maxFs);
 		if (Fs  > maxFs) {//Plasticity condition on shear force
 			if (phys->fragile && !phys->cohesionBroken) {
 				phys->SetBreakingState();
@@ -574,12 +574,12 @@ bool Law2_GridCoGridCoGeom_FrictPhys_CundallStrack::go(shared_ptr<IGeom>& ig, sh
 			phys->normalForce = Vector3r::Zero();}
 		else return false;}
 	Real& un=geom->penetrationDepth;
-	phys->normalForce=phys->kn*std::max(un,(Real) 0)*geom->normal;
+	phys->normalForce=phys->kn*math::max(un,(Real) 0)*geom->normal;
 
 	Vector3r& shearForce = geom->rotate(phys->shearForce);
 	const Vector3r& shearDisp = geom->shearIncrement();
 	shearForce -= phys->ks*shearDisp;
-	Real maxFs = phys->normalForce.squaredNorm()*std::pow(phys->tangensOfFrictionAngle,2);
+	Real maxFs = phys->normalForce.squaredNorm()*math::pow(phys->tangensOfFrictionAngle,2);
 
 	if (!scene->trackEnergy  && !traceEnergy){//Update force but don't compute energy terms (see below))
 		// PFC3d SlipModel, is using friction angle. CoulombCriterion

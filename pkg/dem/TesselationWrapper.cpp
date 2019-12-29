@@ -119,7 +119,7 @@ void build_triangulation_with_ids(const shared_ptr<BodyContainer>& bodies, Tesse
 		else {
 			v->info().setId((unsigned int) p->second);
 			//Vh->info().isFictious = false;//false is the default
-			Tes.maxId = std::max(Tes.maxId,(int) p->second);
+			Tes.maxId = math::max(Tes.maxId,(int) p->second);
 			Tes.vertexHandles[p->second]=v;
 			hint=v->cell();
 			++TW.n_spheres;
@@ -180,8 +180,6 @@ bool TesselationWrapper::insert(double x, double y, double z, double rad, unsign
 
 void TesselationWrapper::checkMinMax(double x, double y, double z, double rad)
 {
-	using std::min;
-	using std::max;
 	Pmin = CGT::Point(min(Pmin.x(), x-rad), min(Pmin.y(), y-rad),  min(Pmin.z(), z-rad));
 	Pmax = CGT::Point(max(Pmax.x(), x+rad),  max(Pmax.y(), y+rad),  max(Pmax.z(), z+rad));
 }
@@ -357,7 +355,7 @@ boost::python::dict TesselationWrapper::getVolPoroDef(bool deformation)
  			//id[]=V_it->info().id()
  			//if(!b) continue;
  			const Body::id_t id = V_it->info().id();
- 			Real sphereVol = 4.188790 * std::pow ( ( V_it->point().weight() ),1.5 );// 4/3*PI*R³ = 4.188...*R³
+ 			Real sphereVol = 4.188790 * math::pow ( ( V_it->point().weight() ),1.5 );// 4/3*PI*R³ = 4.188...*R³
  			vol[id]=V_it->info().v();
  			poro[id]=(V_it->info().v() - sphereVol)/V_it->info().v();
 			if (deformation) MATRIX3R_TO_NUMPY(mma.analyser->ParticleDeformation[id],def[id]);

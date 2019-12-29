@@ -139,7 +139,7 @@ void ThreeDTriaxialEngine::setContactProperties(Real frictionDegree)
 		FrictPhys* contactPhysics = YADE_CAST<FrictPhys*>((ii)->phys.get());
 		Real fa = sdec1->frictionAngle;
 		Real fb = sdec2->frictionAngle;
-		contactPhysics->tangensOfFrictionAngle		= std::tan(std::min(fa,fb));
+		contactPhysics->tangensOfFrictionAngle		= math::tan(math::min(fa,fb));
 	}
 }
 

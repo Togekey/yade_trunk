@@ -49,8 +49,8 @@ void Ip2_FrictViscoMat_FrictViscoMat_FrictViscoPhys::go(const shared_ptr<Materia
 	Real Kn = (kn) ? (*kn)(mat1->id,mat2->id) : 2.*Ea*Ra*Eb*Rb/(Ea*Ra+Eb*Rb);
 	Real Ks = (kRatio) ? (*kRatio)(mat1->id,mat2->id)*Kn : 2.*Ea*Ra*Va*Eb*Rb*Vb/(Ea*Ra*Va+Eb*Rb*Vb);
 	
-	Real frictionAngle = (!frictAngle) ? std::min(mat1->frictionAngle,mat2->frictionAngle) : (*frictAngle)(mat1->id,mat2->id,mat1->frictionAngle,mat2->frictionAngle);
-	contactPhysics->tangensOfFrictionAngle = std::tan(frictionAngle);
+	Real frictionAngle = (!frictAngle) ? math::min(mat1->frictionAngle,mat2->frictionAngle) : (*frictAngle)(mat1->id,mat2->id,mat1->frictionAngle,mat2->frictionAngle);
+	contactPhysics->tangensOfFrictionAngle = math::tan(frictionAngle);
 	contactPhysics->kn = Kn;
 	contactPhysics->ks = Ks;
 
@@ -106,8 +106,8 @@ void Ip2_FrictMat_FrictViscoMat_FrictViscoPhys::go(const shared_ptr<Material>& b
 	Real Kn = (kn) ? (*kn)(mat1->id,mat2->id) : 2.*Ea*Ra*Eb*Rb/(Ea*Ra+Eb*Rb);
 	Real Ks = (kRatio) ? (*kRatio)(mat1->id,mat2->id)*Kn : 2.*Ea*Ra*Va*Eb*Rb*Vb/(Ea*Ra*Va+Eb*Rb*Vb);
 	
-	Real frictionAngle = (!frictAngle) ? std::min(mat1->frictionAngle,mat2->frictionAngle) : (*frictAngle)(mat1->id,mat2->id,mat1->frictionAngle,mat2->frictionAngle);
-	contactPhysics->tangensOfFrictionAngle = std::tan(frictionAngle);
+	Real frictionAngle = (!frictAngle) ? math::min(mat1->frictionAngle,mat2->frictionAngle) : (*frictAngle)(mat1->id,mat2->id,mat1->frictionAngle,mat2->frictionAngle);
+	contactPhysics->tangensOfFrictionAngle = math::tan(frictionAngle);
 	contactPhysics->kn = Kn;
 	contactPhysics->ks = Ks;
 
@@ -171,7 +171,7 @@ bool Law2_ScGeom_FrictViscoPhys_CundallStrackVisco::go(shared_ptr<IGeom>& ig, sh
 		else return false;
 	}
 	Real& un=geom->penetrationDepth;
-	phys->normalForce = phys->kn*std::max(un,(Real) 0) * geom->normal;
+	phys->normalForce = phys->kn*math::max(un,(Real) 0) * geom->normal;
 	
 	/************************/
 	/* DAMPING CONTRIBUTION */
@@ -194,7 +194,7 @@ bool Law2_ScGeom_FrictViscoPhys_CundallStrackVisco::go(shared_ptr<IGeom>& ig, sh
 	Vector3r& shearForce = geom->rotate(phys->shearForce);
 	const Vector3r& shearDisp = geom->shearIncrement();
 	shearForce -= phys->ks*shearDisp;
-	Real maxFs = phys->normalForce.squaredNorm()*std::pow(phys->tangensOfFrictionAngle,2);
+	Real maxFs = phys->normalForce.squaredNorm()*math::pow(phys->tangensOfFrictionAngle,2);
 
 	if (!scene->trackEnergy  && !traceEnergy){//Update force but don't compute energy terms (see below))
 		// PFC3d SlipModel, is using friction angle. CoulombCriterion

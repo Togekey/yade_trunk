@@ -181,7 +181,7 @@ bool Law2_ScGeom6D_InelastCohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig,
 	Real Fs = shearForce.norm();
 	Real maxFs = phys->shearAdhesion;
 	if (maxFs==0)maxFs = Fn*phys->tangensOfFrictionAngle;
-	maxFs = std::max((Real) 0, maxFs);
+	maxFs = math::max((Real) 0, maxFs);
 	if (Fs  > maxFs) {//Plasticity condition on shear force
 		if (!phys->cohesionBroken) {
 			phys->cohesionBroken=1;
@@ -199,14 +199,14 @@ bool Law2_ScGeom6D_InelastCohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig,
 		Real twistM=twist*phys->ktw; //elastic twist moment.
 		bool sgnChanged=0; //whether the twist moment just passed the equilibrium state.
 		if(!contact->isFresh(scene) && phys->moment_twist.dot(twistM*geom->normal)<0)sgnChanged=1;
-		if(std::abs(twist)>phys->maxTwist){
+		if(math::abs(twist)>phys->maxTwist){
 			phys->cohesionBroken=1;
 			twistM=0;
 		}
 		else{
-			if(std::abs(twistM)>phys->maxElTw || phys->onPlastTw){ //plastic deformation.
+			if(math::abs(twistM)>phys->maxElTw || phys->onPlastTw){ //plastic deformation.
 				phys->onPlastTw=1;
-				if(std::abs(phys->maxCrpRchdTw[0])>std::abs(twist)){ //unloading/reloading
+				if(math::abs(phys->maxCrpRchdTw[0])>math::abs(twist)){ //unloading/reloading
 					twistM = phys->kTwUnld*(twist-phys->maxCrpRchdTw[0])+phys->maxCrpRchdTw[1];
 				}
 				else{//creep loading.

@@ -59,7 +59,7 @@ Matrix3r Shop::flipCell(const Matrix3r& _flip){
 		bool hasNonzero=false;
 		for(int i=0; i<3; i++) for(int j=0; j<3; j++) {
 			if(i==j){ flip(i,j)=0; continue; }
-			flip(i,j)=-int(std::floor(hSize.col(j).dot(hSize.col(i))/hSize.col(i).dot(hSize.col(i))));
+			flip(i,j)=-int(math::floor(hSize.col(j).dot(hSize.col(i))/hSize.col(i).dot(hSize.col(i))));
 			if(flip(i,j)!=0) hasNonzero=true;
 		}
 		if(!hasNonzero) {LOG_TRACE("No flip necessary."); return Matrix3r::Zero();}
@@ -112,7 +112,7 @@ Vector3r Shop::totalForceInVolume(Real& avgIsoStiffness, Scene* _rb){
 	FOREACH(const shared_ptr<Interaction>&I, *rb->interactions){
 		if(!I->isReal()) continue;
 		NormShearPhys* nsi=YADE_CAST<NormShearPhys*>(I->phys.get());
-		force+=Vector3r(std::abs(nsi->normalForce[0]+nsi->shearForce[0]),std::abs(nsi->normalForce[1]+nsi->shearForce[1]),std::abs(nsi->normalForce[2]+nsi->shearForce[2]));
+		force+=Vector3r(math::abs(nsi->normalForce[0]+nsi->shearForce[0]),math::abs(nsi->normalForce[1]+nsi->shearForce[1]),math::abs(nsi->normalForce[2]+nsi->shearForce[2]));
 		stiff+=(1/3.)*nsi->kn+(2/3.)*nsi->ks; // count kn in one direction and ks in the other two
 		n++;
 	}

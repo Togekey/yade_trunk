@@ -33,7 +33,7 @@ void Ip2_FrictMat_FrictMat_CapillaryPhys::go( const shared_ptr<Material>& b1 //F
 			Real Kn = 2*Ea*Da*Eb*Db/(Ea*Da+Eb*Db);//harmonic average of two stiffnesses
 			Real Ks = 2*Ea*Da*Va*Eb*Db*Vb/(Ea*Da*Va+Eb*Db*Va);//harmonic average of two stiffnesses with ks=V*kn for each sphere
 
-			contactPhysics->tangensOfFrictionAngle = std::tan(std::min(fa,fb));
+			contactPhysics->tangensOfFrictionAngle = math::tan(math::min(fa,fb));
 			contactPhysics->kn = Kn;
 			contactPhysics->ks = Ks;
 		}

@@ -172,8 +172,8 @@ void ServoPIDController::apply(const vector<Body::id_t>& ids){
     
     curVel = (pTerm + iTerm + dTerm);             // Calculate current velocity
     
-    if (std::abs(curVel) > std::abs(maxVelocity)) {
-      curVel*=std::abs(maxVelocity)/std::abs(curVel);
+    if (math::abs(curVel) > math::abs(maxVelocity)) {
+      curVel*=math::abs(maxVelocity)/math::abs(curVel);
     }
     
     iterPrevStart = scene->iter;

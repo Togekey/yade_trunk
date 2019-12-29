@@ -398,17 +398,17 @@ bool Ig2_ChainedCylinder_ChainedCylinder_ScGeom6D::go(	const shared_ptr<Shape>& 
 		Vector3r N=a.cross(b);
 		Vector3r normal;
 		if(N.norm()>1e-14){
-			dist=std::abs(N.dot(B-A)/(N.norm()));	//distance between the two LINES.
+			dist=math::abs(N.dot(B-A)/(N.norm()));	//distance between the two LINES.
 			//But we need to check that the intersection point is inside the two SEGMENTS ...
 			//Projection of B to have a common plan between the two segments.
 			Vector3r projB1=B+dist*(N/(N.norm())) , projB2=B-dist*(N/(N.norm()));
 			Real distB1A=(projB1-A).norm() , distB2A=(projB2-A).norm() ;
 			Vector3r projB=(distB1A<=distB2A)*projB1 + (distB1A>distB2A)*projB2;
 			int b1=0, b2=1; //base vectors used to compute the segment intersection (if N is aligned with an axis, we can't use this axis)
-			if(std::abs(N[1])<1e-14 && std::abs(N[2])<1e-14){b1=1;b2=2;}
-			if(std::abs(N[0])<1e-14 && std::abs(N[2])<1e-14){b1=0;b2=2;}
+			if(math::abs(N[1])<1e-14 && math::abs(N[2])<1e-14){b1=1;b2=2;}
+			if(math::abs(N[0])<1e-14 && math::abs(N[2])<1e-14){b1=0;b2=2;}
 			Real det=a[b1]*b[b2]-a[b2]*b[b1];
-			if(std::abs(det)>1e-14){	//Check if the two segments are intersected (using k and m)
+			if(math::abs(det)>1e-14){	//Check if the two segments are intersected (using k and m)
 				k = (b[b2]*(projB[b1]-A[b1])+b[b1]*(A[b2]-projB[b2]))/det;
 				m = (a[b1]*(-projB[b2]+A[b2])+a[b2]*(projB[b1]-A[b1]))/det;
 				if( k<0.0 || k>=1.0 || m<0.0 || m>=1.0 ) {	//so they are not intersected
@@ -452,7 +452,7 @@ bool Ig2_ChainedCylinder_ChainedCylinder_ScGeom6D::go(	const shared_ptr<Shape>& 
 		
 		ChainedCylinder *cc1=static_cast<ChainedCylinder*>(cm1.get());
 		ChainedCylinder *cc2=static_cast<ChainedCylinder*>(cm2.get());
-		if(std::isnan(dist)){ //now if we didn't found a suitable distance because the segments don't cross each other, we try to find a sphere-cylinder distance.
+		if(math::isnan(dist)){ //now if we didn't found a suitable distance because the segments don't cross each other, we try to find a sphere-cylinder distance.
 			Vector3r pointsToCheck[4]={A,A+a,B,B+b}; Real resultDist=dist, resultProj=dist ; int whichCaseIsCloser=-1 ;
 			for (int i=0;i<4;i++){  //loop on the 4 cylinder's extremities and look at the extremity-cylinder distance
 				Vector3r S=pointsToCheck[i], C=(i<2)?B:A, vec=(i<2)?b:a; Vector3r CS=S-C;
@@ -460,7 +460,7 @@ bool Ig2_ChainedCylinder_ChainedCylinder_ScGeom6D::go(	const shared_ptr<Shape>& 
 				if(d<0.) resultDist=CS.norm();
 				else if(d>vec.norm()) resultDist=(C+vec-S).norm();
 				else resultDist=(CS.cross(vec)).norm()/(vec.norm());
-				if(dist>resultDist or std::isnan(dist)){dist=resultDist ; whichCaseIsCloser=i; resultProj=d;}
+				if(dist>resultDist or math::isnan(dist)){dist=resultDist ; whichCaseIsCloser=i; resultProj=d;}
 			}
 			//we know which extremity may be in contact (i), so k and m are computed to generate the right fictiousStates.
 			insideCyl1=1 ; insideCyl2=1;
@@ -676,12 +676,12 @@ bool Law2_CylScGeom_FrictPhys_CundallStrack::go(shared_ptr<IGeom>& ig, shared_pt
 			if (geom->isDuplicate==2) return false;}
 	}
 	Real& un=geom->penetrationDepth;
-	phys->normalForce=phys->kn*std::max(un,(Real) 0)*geom->normal;
+	phys->normalForce=phys->kn*math::max(un,(Real) 0)*geom->normal;
 
 	Vector3r& shearForce = geom->rotate(phys->shearForce);
 	const Vector3r& shearDisp = geom->shearIncrement();
 	shearForce -= phys->ks*shearDisp;
-	Real maxFs = phys->normalForce.squaredNorm()*std::pow(phys->tangensOfFrictionAngle,2);
+	Real maxFs = phys->normalForce.squaredNorm()*math::pow(phys->tangensOfFrictionAngle,2);
 
 	if (!scene->trackEnergy){//Update force but don't compute energy terms (see below))
 		// PFC3d SlipModel, is using friction angle. CoulombCriterion
@@ -762,7 +762,7 @@ bool Law2_CylScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, sha
         Real maxFs = currentContactPhysics->shearAdhesion;
         if (!currentContactPhysics->cohesionDisablesFriction || maxFs==0)
             maxFs += Fn*currentContactPhysics->tangensOfFrictionAngle;
-        maxFs = std::max((Real) 0, maxFs);
+        maxFs = math::max((Real) 0, maxFs);
         if (Fs  > maxFs) {//Plasticity condition on shear force
             if (currentContactPhysics->fragile && !currentContactPhysics->cohesionBroken) {
                 currentContactPhysics->SetBreakingState();
@@ -838,7 +838,7 @@ bool Law2_ChCylGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, sha
         Real maxFs = currentContactPhysics->shearAdhesion;
         if (!currentContactPhysics->cohesionDisablesFriction || maxFs==0)
             maxFs += Fn*currentContactPhysics->tangensOfFrictionAngle;
-        maxFs = std::max((Real) 0, maxFs);
+        maxFs = math::max((Real) 0, maxFs);
         if (Fs  > maxFs) {//Plasticity condition on shear force
             if (currentContactPhysics->fragile && !currentContactPhysics->cohesionBroken) {
                 currentContactPhysics->SetBreakingState();

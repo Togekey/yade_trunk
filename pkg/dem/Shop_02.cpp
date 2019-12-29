@@ -88,7 +88,7 @@ boost::tuple<Real,Real,Real> Shop::spiralProject(const Vector3r& pt, Real dH_dTh
 	else theta=0;
 	Real hRef=dH_dTheta*(theta-theta0);
 	long period;
-	if(std::isnan(periodStart)){
+	if(math::isnan(periodStart)){
 		Real h=Shop::periodicWrap(pt[axis]-hRef,hRef-Mathr::PI*dH_dTheta,hRef+Mathr::PI*dH_dTheta,&period);
 		return boost::make_tuple(r,h,theta);
 	}
@@ -244,7 +244,7 @@ py::tuple Shop::normalShearStressTensors(bool compressionPositive, bool splitNor
 		Real N=(compressionPositive?-1:1)*phys->normalForce.dot(n);
 		// Real R=(Body::byId(I->getId2(),scene)->state->pos+cellHsize*I->cellDist.cast<Real>()-Body::byId(I->getId1(),scene)->state->pos).norm();
 		Real R=.5*(geom->refR1+geom->refR2);
-		Real Fsplit=(!std::isnan(thresholdForce))?thresholdForce:Fmean;
+		Real Fsplit=(!math::isnan(thresholdForce))?thresholdForce:Fmean;
 		if (compressionPositive?(N<Fsplit):(N>Fsplit)){
 			for(int i=0; i<3; i++) for(int j=i; j<3; j++){
 				sigNStrong(i,j)+=R*N*n[i]*n[j];}
@@ -307,7 +307,7 @@ void Shop::fabricTensor(Real& Fmean, Matrix3r& fabric, Matrix3r& fabricStrong, M
 	fabricStrong=Matrix3r::Zero(); 
 	fabricWeak=Matrix3r::Zero(); 
 	int nStrong(0), nWeak(0); // number of strong and weak contacts respectively
-	if (!splitTensor & !std::isnan(thresholdForce)) {LOG_WARN("The bool splitTensor should be set to True if you specified a threshold value for the contact force, otherwise the function will return only the fabric tensor and not the two separate contributions.");}
+	if (!splitTensor & !math::isnan(thresholdForce)) {LOG_WARN("The bool splitTensor should be set to True if you specified a threshold value for the contact force, otherwise the function will return only the fabric tensor and not the two separate contributions.");}
 	FOREACH(const shared_ptr<Interaction>& I, *scene->interactions){
 		if(!I->isReal()) continue;
 		GenericSpheresContact* geom=YADE_CAST<GenericSpheresContact*>(I->geom.get());
@@ -317,7 +317,7 @@ void Shop::fabricTensor(Real& Fmean, Matrix3r& fabric, Matrix3r& fabricStrong, M
 		const Vector3r& n=geom->normal;
 		Real  f=-phys->normalForce.dot(n);
 		// slipt the tensor according to the mean contact force or a threshold value if this is given
-		Real Fsplit=(!std::isnan(thresholdForce))?thresholdForce:Fmean;
+		Real Fsplit=(!math::isnan(thresholdForce))?thresholdForce:Fmean;
 		if (f<Fsplit){ // strong contact network is defined from contacts with the greatest compressive forces
 			for(int i=0; i<3; i++) for(int j=i; j<3; j++){
 				fabricStrong(i,j)+=n[i]*n[j];
@@ -341,7 +341,7 @@ void Shop::fabricTensor(Real& Fmean, Matrix3r& fabric, Matrix3r& fabricStrong, M
 	Matrix3r fabricTot(Matrix3r::Zero()); 
 	int q(0);
 	if(!count){ // compute only if there are some interactions
-		q=int(std::round(nStrong*1./count));
+		q=int(math::round(nStrong*1./count));
 		fabricTot=(1-q)*fabricWeak+q*fabricStrong;
 	}
 }
@@ -447,7 +447,7 @@ py::tuple Shop::getStressProfile(Real volume, int nCell, Real dz, Real zRef, vec
 	//Dynamic contribution to the stress tensor
 	//
 	for(const auto & b : *Omega::instance().getScene()->bodies){
-		int Np = int(std::floor((b->state->pos[2]-zRef)/dz));	//Define the layer number with 0 corresponding to zRef
+		int Np = int(math::floor((b->state->pos[2]-zRef)/dz));	//Define the layer number with 0 corresponding to zRef
 		if ((Np>=0)&&(Np<nCell)){	//To avoid non defined vPartAverage
 			//Velocity fluctuation wrt the average field
 			Vector3r vFluct = b->state->vel - Vector3r(vPartAverageX[Np],vPartAverageY[Np],vPartAverageZ[Np]); 
@@ -472,8 +472,8 @@ py::tuple Shop::getStressProfile(Real volume, int nCell, Real dz, Real zRef, vec
 
 		if ((b1->state->blockedDOFs!=State::DOF_ALL)||(b2->state->blockedDOFs!=State::DOF_ALL)){// to remove annoying contribution from the fixed particles
 			//Layers in which the particle center is contained
-			int Np1 = int(std::floor((b1->state->pos[2] - zRef)/dz));
-			int Np2 = int(std::floor((b2->state->pos[2] - zRef)/dz));
+			int Np1 = int(math::floor((b1->state->pos[2] - zRef)/dz));
+			int Np2 = int(math::floor((b2->state->pos[2] - zRef)/dz));
 			//Vector between the two centers, from 2 to 1
 			Vector3r branch = b1->state->pos -b2->state->pos;
 			if (isPeriodic) branch -= scene->cell->hSize*I->cellDist.cast<Real>();//to handle periodicity
@@ -556,8 +556,8 @@ py::tuple Shop::getStressProfile_contact(Real volume, int nCell, Real dz, Real z
 
 		if ((b1->state->blockedDOFs!=State::DOF_ALL)||(b2->state->blockedDOFs!=State::DOF_ALL)){// to remove annoying contribution from the fixed particles
 			//Layers in which the particle center is contained
-			int Np1 = int(std::floor((b1->state->pos[2] - zRef)/dz));
-			int Np2 = int(std::floor((b2->state->pos[2] - zRef)/dz));
+			int Np1 = int(math::floor((b1->state->pos[2] - zRef)/dz));
+			int Np2 = int(math::floor((b2->state->pos[2] - zRef)/dz));
 			//Vector between the two centers, from 2 to 1
 			Vector3r branch = b1->state->pos -b2->state->pos;
 			if (isPeriodic) branch -= scene->cell->hSize*I->cellDist.cast<Real>();//to handle periodicity
@@ -643,10 +643,10 @@ py::tuple Shop::getDepthProfiles(Real vCell, int nCell, Real dz, Real zRef,bool 
 			if (sphere->radius!=radiusPy) continue;
 		} //select diameters asked
                 const Real zPos = b->state->pos[dir]-zRef;
-		int Np = int(std::floor(zPos/dz));	//Define the layer number with 0 corresponding to zRef. Let the z position wrt to zero, that way all z altitude are positive. (otherwise problem with volPart evaluation)
+		int Np = int(math::floor(zPos/dz));	//Define the layer number with 0 corresponding to zRef. Let the z position wrt to zero, that way all z altitude are positive. (otherwise problem with volPart evaluation)
 
-		minZ= int(std::floor((zPos-s->radius)/dz));
-		maxZ= int(std::floor((zPos+s->radius)/dz));
+		minZ= int(math::floor((zPos-s->radius)/dz));
+		maxZ= int(math::floor((zPos+s->radius)/dz));
 		deltaCenter = zPos - Np*dz;
 	
 		// Loop over the cell in which the particle is contained
@@ -707,7 +707,7 @@ py::tuple Shop::getDepthProfiles_center(Real vCell, int nCell, Real dz, Real zRe
 			if (sphere->radius!=radiusPy) continue;
 		} //select diameters asked
 		const Real zPos = b->state->pos[2]-zRef;
-		int Np = int(std::floor(zPos/dz));	//Define the layer number with 0 corresponding to zRef. Let the z position wrt to zero, that way all z altitude are positive. (otherwise problem with volPart evaluation)
+		int Np = int(math::floor(zPos/dz));	//Define the layer number with 0 corresponding to zRef. Let the z position wrt to zero, that way all z altitude are positive. (otherwise problem with volPart evaluation)
 
 		if ((Np>=0)&&(Np<nCell)){
 			volPart =4./3.* Mathr::PI*pow(s->radius,3);
@@ -821,7 +821,7 @@ void Shop::setContactFriction(Real angleRad){
 		FrictPhys* contactPhysics = YADE_CAST<FrictPhys*>((ii)->phys.get());
 		const Real& fa = sdec1->frictionAngle;
 		const Real& fb = sdec2->frictionAngle;
-		contactPhysics->tangensOfFrictionAngle = std::tan(std::min(fa,fb));
+		contactPhysics->tangensOfFrictionAngle = math::tan(math::min(fa,fb));
 	}
 }
 

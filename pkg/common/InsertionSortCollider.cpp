@@ -365,11 +365,11 @@ void InsertionSortCollider::action()
 				continue;
 			minR = min(s->radius, minR);
 		}
-		if (std::isinf(minR))
+		if (math::isinf(minR))
 			LOG_WARN("verletDist is set to 0 because no spheres were found. It will result in suboptimal performances, consider setting a positive "
 			         "verletDist in your script.");
 		// if no spheres, disable stride
-		verletDist = std::isinf(minR) ? 0 : std::abs(verletDist) * minR;
+		verletDist = math::isinf(minR) ? 0 : math::abs(verletDist) * minR;
 	}
 	// if interactions are dirty, force reinitialization
 	if (scene->interactions->dirty) {
@@ -439,6 +439,10 @@ void InsertionSortCollider::action()
 					BBji.coord = cellWrap(BBji.coord, 0, BBj.cellDim, BBji.period);
 				// for each body, copy its minima and maxima, for quick checks of overlaps later
 				//bounds have been all updated when j==0, we can safely copy them here when j==1
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+// this is to remove warning about manipulating raw memory
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
 				if (bv) {
 					if (BBji.flags.isMin && j == 1)
 						memcpy(&minima[3 * id], &bv->min, 3 * sizeof(Real));
@@ -447,6 +451,7 @@ void InsertionSortCollider::action()
 					memcpy(&minima[3 * id], &maxVect, 3 * sizeof(Real));
 					memcpy(&maxima[3 * id], &maxVect, 3 * sizeof(Real));
 				}
+#pragma GCC diagnostic pop
 			} else {
 				BBj[i].flags.hasBB = false; /* for vanished body, keep the coordinate as-is, to minimize inversions. */
 #ifdef YADE_MPI
@@ -739,7 +744,7 @@ bool InsertionSortCollider::spatialOverlapPeri(Body::id_t id1, Body::id_t id2, S
 				throw runtime_error(__FILE__ ": Body larger than half of the cell size encountered.");
 			}
 		}
-		int period1 = int(std::floor(lmax));
+		int period1 = int(math::floor(lmax));
 
 		//overlap around zero, on the "+" side
 		if ((lmin - period1) <= overlapTolerance) {

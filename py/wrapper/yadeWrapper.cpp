@@ -392,7 +392,7 @@ public:
 			}
 
 			//get pointer lists of spheres, that should be replaced:
-			int                      numReplaceTmp = int(std::round(num * amounts[ii]));
+			int                      numReplaceTmp = int(math::round(num * amounts[ii]));
 			vector<shared_ptr<Body>> bpListTmp(numReplaceTmp);
 			int                      a = 0, c = 0; //counters
 			vector<int>              posTmp;

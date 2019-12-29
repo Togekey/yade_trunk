@@ -171,9 +171,9 @@ void SplitPolyTauMax::action()
 			// S2 = eVals[S2_i];      // commented out to remove warning about unused variable - Janek
 
 			// Taus
-			// const Real T1 = 0.5 * std::abs(S2 - S3);  // commented out to remove warning about unused variable - Janek
-			const Real T2 = 0.5 * std::abs(S1 - S3);  // Max
-			// const Real T3 = 0.5 * std::abs(S1 - S2);  // commented out to remove warning about unused variable - Janek
+			// const Real T1 = 0.5 * math::abs(S2 - S3);  // commented out to remove warning about unused variable - Janek
+			const Real T2 = 0.5 * math::abs(S1 - S3);  // Max
+			// const Real T3 = 0.5 * math::abs(S1 - S2);  // commented out to remove warning about unused variable - Janek
 
 			if ((m->GetStrengthTau() > 0) && (T2 > (getStrength(p->GetVolume(),m->GetStrengthTau())*1000))) {
 				//Split direction, tangential
@@ -183,7 +183,7 @@ void SplitPolyTauMax::action()
 			} else {
 				// Set absolute values for normal stresses
 				Vector3r eValsAbs = Vector3r::Zero();
-				for (unsigned short i=0; i < 3; i++) eValsAbs[i]=std::abs(eVals[i]);
+				for (unsigned short i=0; i < 3; i++) eValsAbs[i]=math::abs(eVals[i]);
 
 				S1 = eValsAbs.maxCoeff(&S1_i);
 				if (S1 > getStrength(p->GetVolume(),m->GetStrength()*1000)) {
@@ -213,7 +213,7 @@ void SplitPolyTauMax::action()
 
 inline bool isPolyhedraBroken (const Real & Sigma0, const Real & Sigma, const Real & V0, const Real & V, unsigned int m, const Real & P) {
 	// [Gladky2017], eq. (6)
-	const Real failureProbability = 1 - exp(-V/V0 * (std::pow((Sigma/Sigma0),m)));
+	const Real failureProbability = 1 - exp(-V/V0 * (math::pow((Sigma/Sigma0),m)));
 	if (failureProbability > P) {
 		return true;
 	} else {
@@ -285,7 +285,7 @@ void SplitPolyMohrCoulomb::action() {
 					SigmaV = -S3;
 				} else if (S1 > 0 and S3 > 0) {
 					if (P>0) {
-						BodyBroken = isPolyhedraBroken(std::abs(SigmaCZ), S1, V0, V, M, P);
+						BodyBroken = isPolyhedraBroken(math::abs(SigmaCZ), S1, V0, V, M, P);
 					} else {
 						if (S1 > SigmaCZ) {
 							BodyBroken = true;
@@ -295,13 +295,13 @@ void SplitPolyMohrCoulomb::action() {
 				} else {
 					const Real SigmaT = S1 - SigmaCZ/SigmaCD*S3;
 					if (P>0) {
-						BodyBroken = isPolyhedraBroken(std::abs(SigmaCZ), std::abs(SigmaT), V0, V, M, P);
+						BodyBroken = isPolyhedraBroken(math::abs(SigmaCZ), math::abs(SigmaT), V0, V, M, P);
 					} else {
 						if (SigmaT >= SigmaCZ) {
 							BodyBroken = true;
 						}
 					}
-					SigmaV = std::abs(SigmaT);
+					SigmaV = math::abs(SigmaT);
 				}
 				//==================================
 				fileS	<<b->id<<"\t"

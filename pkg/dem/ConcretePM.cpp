@@ -51,14 +51,14 @@ void Ip2_CpmMat_CpmMat_CpmPhys::go(const shared_ptr<Material>& pp1, const shared
 
 	// check unassigned values
 	if (!mat1->neverDamage) {
-		assert(!std::isnan(mat1->sigmaT));
-		assert(!std::isnan(mat1->epsCrackOnset));
-		assert(!std::isnan(mat1->relDuctility));
+		assert(!math::isnan(mat1->sigmaT));
+		assert(!math::isnan(mat1->epsCrackOnset));
+		assert(!math::isnan(mat1->relDuctility));
 	}
 	if (!mat2->neverDamage) {
-		assert(!std::isnan(mat2->sigmaT));
-		assert(!std::isnan(mat2->epsCrackOnset));
-		assert(!std::isnan(mat2->relDuctility));
+		assert(!math::isnan(mat2->sigmaT));
+		assert(!math::isnan(mat2->epsCrackOnset));
+		assert(!math::isnan(mat2->relDuctility));
 	}
 
 	cpmPhys->damLaw = mat1->damLaw;
@@ -130,7 +130,7 @@ Real CpmPhys::solveBeta(const Real c, const Real N){
 		#endif
 		Real aux = c*exp(N*ret)+exp(ret);
 		f = log(aux);
-		if (std::abs(f) < maxError) return ret;
+		if (math::abs(f) < maxError) return ret;
 		Real df = (c*N*exp(N*ret)+exp(ret))/aux;
 		ret -= f/df;
 	}
@@ -197,7 +197,7 @@ Real CpmPhys::funcGInv(const Real& omega, const Real& epsCrackOnset, const Real&
 				dfg = CpmPhys::funcGDKappa(ret,epsCrackOnset,epsFracture,neverDamage,damLaw);
 				decr = fg/dfg;
 				ret -= decr;
-				if (std::abs(decr/epsCrackOnset) < tol) {
+				if (math::abs(decr/epsCrackOnset) < tol) {
 					return ret;
 				}
 			}
@@ -230,7 +230,7 @@ void CpmPhys::setRelResidualStrength(Real r) {
 		df = e0i*(1-g-k*dg);
 		decr = f/df;
 		k -= decr;
-		if (std::abs(decr) < tol) {
+		if (math::abs(decr) < tol) {
 			kappaD = k;
 			omega = CpmPhys::funcG(k,epsCrackOnset,epsFracture,neverDamage,damLaw);
 			relResidualStrength = r;
@@ -284,7 +284,7 @@ Real Law2_ScGeom_CpmPhys_Cpm::elasticEnergy() {
 
 #ifdef YADE_DEBUG
 	#define CPM_YADE_DEBUG_A \
-		if(std::isnan(epsN)){\
+		if(math::isnan(epsN)){\
 			/*LOG_FATAL("refLength="<<geom->refLength<<"; pos1="<<geom->se31.position<<"; pos2="<<geom->se32.position<<"; displacementN="<<geom->displacementN());*/ \
 			throw runtime_error("!! epsN==NaN !!");\
 		}
@@ -294,8 +294,8 @@ Real Law2_ScGeom_CpmPhys_Cpm::elasticEnergy() {
 
 
 #define YADE_VERIFY(condition) if(!(condition)){LOG_FATAL("Verification `"<<#condition<<"' failed!"); LOG_FATAL("in interaction #"<<I->getId1()<<"+#"<<I->getId2()); Omega::instance().saveSimulation("/tmp/verificationFailed.xml"); throw;}
-#define NNAN(a) YADE_VERIFY(!std::isnan(a));
-#define NNANV(v) YADE_VERIFY(!std::isnan(v[0])); assert(!std::isnan(v[1])); assert(!std::isnan(v[2]));
+#define NNAN(a) YADE_VERIFY(!math::isnan(a));
+#define NNANV(v) YADE_VERIFY(!math::isnan(v[0])); assert(!math::isnan(v[1])); assert(!math::isnan(v[2]));
 
 bool Law2_ScGeom_CpmPhys_Cpm::go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I){
 	TIMING_DELTAS_START();
@@ -315,7 +315,7 @@ bool Law2_ScGeom_CpmPhys_Cpm::go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _p
 		if (b1index == sphereIndex && b2index == sphereIndex) { // both bodies are spheres
 			const Vector3r& pos1 = Body::byId(I->id1,scene)->state->pos;
 			const Vector3r& pos2 = Body::byId(I->id2,scene)->state->pos;
-			Real minRad = (geom->refR1 <= 0? geom->refR2 : (geom->refR2 <=0? geom->refR1 : std::min(geom->refR1,geom->refR2)));
+			Real minRad = (geom->refR1 <= 0? geom->refR2 : (geom->refR2 <=0? geom->refR1 : math::min(geom->refR1,geom->refR2)));
 			Vector3r shift2 = scene->isPeriodic? Vector3r(scene->cell->hSize*I->cellDist.cast<Real>()) : Vector3r::Zero();
 			phys->refLength = (pos2 - pos1 + shift2).norm();
 			phys->crossSection = Mathr::PI*pow(minRad,2);
@@ -392,9 +392,9 @@ bool Law2_ScGeom_CpmPhys_Cpm::go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _p
 		/* simplified public model */
 		epsN += phys->isoPrestress/E;
 		/* very simplified version of the constitutive law */
-		Real xi2 = std::pow(phys->equivStrainShearContrib,2);
-		Real epsNorm = std::sqrt(std::pow(std::max(epsN-epsNPl,0.),2)+xi2*epsT.squaredNorm());
-		kappaD = std::max(epsNorm,kappaD); /* internal variable, max positive strain (non-decreasing) */
+		Real xi2 = math::pow(phys->equivStrainShearContrib,2);
+		Real epsNorm = math::sqrt(math::pow(math::max(epsN-epsNPl,0.),2)+xi2*epsT.squaredNorm());
+		kappaD = math::max(epsNorm,kappaD); /* internal variable, max positive strain (non-decreasing) */
 		omega = isCohesive? phys->funcG(kappaD,epsCrackOnset,epsFracture,neverDamage,damLaw) : 1.; /* damage variable (non-decreasing, as funcG is also non-decreasing) */
 		sigmaN = (1-(epsN-epsNPl>0?omega:0))*E*(epsN-epsNPl); /* damage taken in account in tension only */
 		if((epsSoft<0) && (epsN-epsNPl<epsSoft)){ /* plastic slip in compression */
@@ -402,7 +402,7 @@ bool Law2_ScGeom_CpmPhys_Cpm::go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _p
 			if(sigmaNSoft>sigmaN){ /*assert(sigmaNSoft>sigmaN);*/ epsNPl+=(sigmaN-sigmaNSoft)/E; sigmaN=sigmaNSoft; }
 		}
 		sigmaT = G*(epsT-epsTPl); /* trial stress */
-		Real yieldSigmaT = std::max((Real)0.,undamagedCohesion*(1-omega)-sigmaN*tanFrictionAngle); /* Mohr-Coulomb law with damage */
+		Real yieldSigmaT = math::max((Real)0.,undamagedCohesion*(1-omega)-sigmaN*tanFrictionAngle); /* Mohr-Coulomb law with damage */
 		if (sigmaT.squaredNorm() > yieldSigmaT*yieldSigmaT) {
 			Real scale = yieldSigmaT/sigmaT.norm();
 			sigmaT *= scale; /* stress return */
@@ -599,7 +599,7 @@ void CpmStateUpdater::update(Scene* _scene){
 		if (!phys->isCohesive) continue;
 		bodyStats[id1].nCohLinks++; bodyStats[id1].dmgSum += (1-phys->relResidualStrength); // bodyStats[id1].epsPlSum += phys->epsPlSum;
 		bodyStats[id2].nCohLinks++; bodyStats[id2].dmgSum += (1-phys->relResidualStrength); // bodyStats[id2].epsPlSum += phys->epsPlSum;
-		maxOmega = std::max(maxOmega,phys->omega);
+		maxOmega = math::max(maxOmega,phys->omega);
 		avgRelResidual += phys->relResidualStrength;
 		nAvgRelResidual += 1;
 		for (int i=0; i<3; i++) {

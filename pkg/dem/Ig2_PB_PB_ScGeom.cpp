@@ -65,7 +65,7 @@ bool Ig2_PB_PB_ScGeom::go(const shared_ptr<Shape>& cm1,const shared_ptr<Shape>& 
 	shared_ptr<ScGeom> scm;
 	shared_ptr<KnKsPBPhys> phys;
 
-	Real stepBisection = 0.001*std::min(s1->R,s2->R);
+	Real stepBisection = 0.001*math::min(s1->R,s2->R);
 	if( stepBisection < pow(10,-6) ){ std::cout<<"R1: "<<s1->R<<", R2: "<<s2->R<<", stepBisection: "<<stepBisection<<", id1: "<<c->getId1()<<", id2: "<<c->getId2()<<endl; }
 
 	bool contact = false;   // Whether contact is established, using: startingPointFeasibilityCLP
@@ -129,15 +129,15 @@ bool Ig2_PB_PB_ScGeom::go(const shared_ptr<Shape>& cm1,const shared_ptr<Shape>& 
 		if (contact == true || c->isReal() || force){
 			if (contact){
 				scm->precompute(state1,state2,scene,c,avgNormal,!(hasGeom),shift2,false /* avoidGranularRatcheting */); //Assign contact point and normal after precompute!!!!
-				scm->contactPoint = contactPt; scm->penetrationDepth=overlap; if(std::isnan(avgNormal.norm())){std::cout<<"avgNormal: "<<avgNormal<<endl;}
+				scm->contactPoint = contactPt; scm->penetrationDepth=overlap; if(math::isnan(avgNormal.norm())){std::cout<<"avgNormal: "<<avgNormal<<endl;}
 				scm->normal = avgNormal;
 				if(hasPhys){
 //					phys->normal = avgNormal;
 					/*phys->ptOnP1 = contactPt; */ phys->ptOnP1 = ptOnP1; phys->ptOnP2 = ptOnP2;// phys->initial1 = scm->contactPoint;
 	//				phys->gap = scm->penetrationDepth;
-					phys->tension = std::max(s1->tension[0],s2->tension[0]);
-					phys->cohesion = std::max(s1->cohesion[0],s2->cohesion[0]);
-					phys->jointLength = std::max(s1->liningLength,s2->liningLength);
+					phys->tension = math::max(s1->tension[0],s2->tension[0]);
+					phys->cohesion = math::max(s1->cohesion[0],s2->cohesion[0]);
+					phys->jointLength = math::max(s1->liningLength,s2->liningLength);
 					phys->contactArea = phys->jointLength*unitWidth2D;
 				}
 			}else{
@@ -272,15 +272,15 @@ bool Ig2_PB_PB_ScGeom::go(const shared_ptr<Shape>& cm1,const shared_ptr<Shape>& 
 						/* phys->JRC = JRC2; phys->JCS = JSC2; phys->sigmaC = sigmaC2; phys->asperity = asperity2; */
 						/* phys->lambda0 = lambda02; phys->heatCapacities = heatCapacity2; phys->hwater = hwater2; */
 					}else{
-						phys->phi_b = std::min(phi_b1,phi_b2);
-						phys->phi_r = std::min(phi_r1,phi_r2);
-						phys->cohesion = std::min(cohesion1,cohesion2);
-						phys->tension = std::min(tension1,tension2);
-						phys->jointType = std::max(jointType1,jointType2);
+						phys->phi_b = math::min(phi_b1,phi_b2);
+						phys->phi_r = math::min(phi_r1,phi_r2);
+						phys->cohesion = math::min(cohesion1,cohesion2);
+						phys->tension = math::min(tension1,tension2);
+						phys->jointType = math::max(jointType1,jointType2);
 						/*phys->JRC = 0.5*(JRC1+JRC2); phys->JCS = 0.5*(JSC1+JSC2); */
 						/*phys->sigmaC = 0.5*(sigmaC1 + sigmaC2); phys->asperity = 0.5*(asperity1+asperity2); */
-						/*phys->lambda0 = std::max(lambda01,lambda02); phys->hwater = std::max(hwater1,hwater2); */
-						/*phys->heatCapacities = std::max(heatCapacity1,heatCapacity2); */
+						/*phys->lambda0 = math::max(lambda01,lambda02); phys->hwater = math::max(hwater1,hwater2); */
+						/*phys->heatCapacities = math::max(heatCapacity1,heatCapacity2); */
 						phys->intactRock = true;
 						if(intactRock1==false || intactRock2 == false){ phys->intactRock = false;}
 					}
@@ -291,7 +291,7 @@ bool Ig2_PB_PB_ScGeom::go(const shared_ptr<Shape>& cm1,const shared_ptr<Shape>& 
 			scm->precompute(state1,state2,scene,c,avgNormal,!(hasGeom),shift2,false /* avoidGranularRatcheting */); //Assign contact point and normal after precompute!!!!
 			scm->contactPoint = contactPt;
 			scm->penetrationDepth=penetrationDepth;
-			if(std::isnan(avgNormal.norm())){std::cout<<"avgNormal: "<<avgNormal<<endl;}
+			if(math::isnan(avgNormal.norm())){std::cout<<"avgNormal: "<<avgNormal<<endl;}
 			scm->normal = avgNormal;
 
 			TIMING_DELTAS_CHECKPOINT("After contact normal, overlap, area");
@@ -362,13 +362,13 @@ Real Ig2_PB_PB_ScGeom::evaluatePhys(const shared_ptr<Shape>& cm1, const State& s
 //			asperity += s1->asperity[i];
 //			lambda0 +=s1->lambda0[i];
 
-//			hwater = std::max(hwater,s1->hwater[i]);
-//			heatCapacity =std::max(heatCapacity, s1->heatCapacity[i]);
-			phi_b = std::min(phi_b,s1->phi_b[i]);
-			phi_r = std::min(phi_r,s1->phi_r[i]);
-			tension = std::min(tension,s1->tension[i]);
-			cohesion = std::min(cohesion,s1->cohesion[i]);
-			jointType = std::max(jointType,s1->jointType[i]);
+//			hwater = math::max(hwater,s1->hwater[i]);
+//			heatCapacity =math::max(heatCapacity, s1->heatCapacity[i]);
+			phi_b = math::min(phi_b,s1->phi_b[i]);
+			phi_r = math::min(phi_r,s1->phi_r[i]);
+			tension = math::min(tension,s1->tension[i]);
+			cohesion = math::min(cohesion,s1->cohesion[i]);
+			jointType = math::max(jointType,s1->jointType[i]);
 
 			if(s1->intactRock[i] == false){intactRock = false;}
 			activeNo++;
@@ -433,7 +433,7 @@ Real Ig2_PB_PB_ScGeom::getAreaPolygon2(const shared_ptr<Shape>& cm1, const State
 	Real areaTri = 0.0;
 	//PotentialBlock *s1=static_cast<PotentialBlock*>(cm1.get());
 	//PotentialBlock *s2=static_cast<PotentialBlock*>(cm2.get());
-	Real bisectionStepSize = 1.0;//*std::min(s1->R, s2->R);
+	Real bisectionStepSize = 1.0;//*math::min(s1->R, s2->R);
 
 	if(!twoD){ //3D contact - search counter-clockwise
 		int countParticleA = 0, countParticleB = 0; 
@@ -629,7 +629,7 @@ Real Ig2_PB_PB_ScGeom::getAreaPolygon2(const shared_ptr<Shape>& cm1, const State
 		jointLength = (ptOnBoundary1- ptOnBoundary2).norm();
 
 
-		if( std::isnan(jointLength) ) {jointLength = 1.0; /*std::min(s1->R,s2->R);*/} //FIXME: It's best we output a warning if this happens. Instead of setting the jointLength equal to 1.0,  we can alternativelly set it equal to its previous value or to the distance "R" of the smallest particle, as in the comment above.
+		if( math::isnan(jointLength) ) {jointLength = 1.0; /*math::min(s1->R,s2->R);*/} //FIXME: It's best we output a warning if this happens. Instead of setting the jointLength equal to 1.0,  we can alternativelly set it equal to its previous value or to the distance "R" of the smallest particle, as in the comment above.
 
 		areaTri = unitWidth2D*jointLength; //Contact area of 2-D contact
 	}
@@ -849,7 +849,7 @@ bool Ig2_PB_PB_ScGeom::customSolveAnalyticCentre(const shared_ptr<Shape>& cm1, c
 			/* U */
 			for( int j=1; j<=varNo ; j++){
 				blasStep[j-1]=-blasGrad[j-1];
-				for (int i=std::max(1,j-KD); i<=j ; i++){
+				for (int i=math::max(1,j-KD); i<=j ; i++){
 					HessianChol[j-1][KD+1+i-j-1] = blasHess[(i-1)+varNo*(j-1)]; //H(i-1,j-1);
 				}
 			}
@@ -1358,7 +1358,7 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
   Matrix3r QB = state2.ori.conjugate().toRotationMatrix(); /*direction cosine */
 
-  int blas3 = 3; char blasNT = 'N'; char blasT= 'T'; int blas1planeNoA = std::max(1,planeNoA); int blas1planeNoB = std::max(1,planeNoB); int blas1planeNoAB = std::max(1,planeNoAB); Real blas0 = 0.0; Real blas1 = 1.0; Real blasNeg1 = -1.0;
+  int blas3 = 3; char blasNT = 'N'; char blasT= 'T'; int blas1planeNoA = math::max(1,planeNoA); int blas1planeNoB = math::max(1,planeNoB); int blas1planeNoAB = math::max(1,planeNoAB); Real blas0 = 0.0; Real blas1 = 1.0; Real blasNeg1 = -1.0;
 
   Real blasQA[9];   Real blasQB[9];
   Real blasPosA[3]; Real blasPosB[3];
@@ -1596,13 +1596,13 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
    noElements = planeNoA;
   dcopy_(&noElements, &blasD1[0], &incx, &blasBTempU[0], &incx);
   //transA = 'N';	blasM = planeNoA;   blasN = 3;
-  //blasLDA = std::max(1,planeNoA);      blasAlpha = 1.0;   blasBeta = 1.0;
+  //blasLDA = math::max(1,planeNoA);      blasAlpha = 1.0;   blasBeta = 1.0;
   //dgemv_(&transA, &blasM, &blasN, &blasAlpha, &blasP1Q[0], &blasLDA,&blasPosA[0], &incx, &blasBeta, &blasBTempU[0], &incy);
   dgemv_(&blasNT, &planeNoA, &blas3, &blas1, &blasP1Q[0], &blas1planeNoA,&blasPosA[0], &incx, &blas1, &blasBTempU[0], &incy);
   noElements = planeNoB;
   dcopy_(&noElements, &blasD2[0], &incx, &blasBTempL[0], &incx);
   //transA = 'N';	blasM = planeNoB;   blasN = 3;
-  //blasLDA = std::max(1,planeNoB);      blasAlpha = 1.0;   blasBeta = 1.0;
+  //blasLDA = math::max(1,planeNoB);      blasAlpha = 1.0;   blasBeta = 1.0;
   //dgemv_(&transA, &blasM, &blasN, &blasAlpha, &blasP2Q[0], &blasLDA,&blasPosB[0], &incx, &blasBeta, &blasBTempL[0], &incy);
   dgemv_(&blasNT, &planeNoB, &blas3, &blas1, &blasP2Q[0], &blas1planeNoB,&blasPosB[0], &incx, &blas1, &blasBTempL[0], &incy);
   for (int i=0; i<planeNoA; i++){
@@ -1698,7 +1698,7 @@ memset(blasDL,0.0,sizeof(blasDL));
   	//noElements = 3+planeNoB;
   	blasW2dot = ddot_(&planeNoB3, &blasW2[0], &incx, &blasW2[0], &incy);
 
-s = std::max(sqrt(fabs(blasW1dot)),sqrt(fabs(blasW2dot)))+0.1;
+s = math::max(sqrt(fabs(blasW1dot)),sqrt(fabs(blasW2dot)))+0.1;
 blasX[3]=s;
 #endif
 
@@ -1741,7 +1741,7 @@ while(totalIter<500){
 	noElements = planeNoAB;
   	dcopy_(&noElements, &blasBL[0], &incx, &blasWL[0], &incy);
 	//transA = 'N';	blasN = varNo;
-	//blasM = planeNoAB;     blasLDA = std::max(1,planeNoAB);      blasAlpha = -1.0;   blasBeta = 1.0;
+	//blasM = planeNoAB;     blasLDA = math::max(1,planeNoAB);      blasAlpha = -1.0;   blasBeta = 1.0;
 	//dgemv_(&transA, &blasM, &blasN, &blasAlpha, &blasAL[0], &blasLDA, &blasX[0], &incx, &blasBeta, &blasWL[0], &incy);
 	dgemv_(&blasNT, &planeNoAB, &varNo, &blasNeg1, &blasAL[0], &blas1planeNoAB, &blasX[0], &incx, &blas1, &blasWL[0], &incy);
 
@@ -1773,7 +1773,7 @@ while(totalIter<500){
 	dgemv_(&blasT, &planeNoB3, &varNo, &blasAlpha, &blasA2[0], &planeNoB3, &blasW2[0], &incx, &blasBeta, &blasGB[0], &incy);
 
 /* gL */
-  	//transA = 'T'; blasM = planeNoAB;   blasLDA = std::max(1,planeNoAB);      blasAlpha = 1.0;   blasBeta = 0.0;
+  	//transA = 'T'; blasM = planeNoAB;   blasLDA = math::max(1,planeNoAB);      blasAlpha = 1.0;   blasBeta = 0.0;
   	//dgemv_(&transA, &blasM, &blasN, &blasAlpha, &blasAL[0], &blasLDA, &blasVL[0], &incx, &blasBeta, &blasGL[0], &incy);
 	dgemv_(&blasT, &planeNoAB, &varNo, &blas1, &blasAL[0], &blas1planeNoAB, &blasVL[0], &incx, &blas0, &blasGL[0], &incy);
 
@@ -1800,13 +1800,13 @@ while(totalIter<500){
 	dgemm_(&blasNT, &blasT, &varNo, &varNo, &blasK, &blas1, &blasGB[0], &varNo, &blasGB[0], &varNo, &blasBeta, &blasHB[0], &varNo);
 
 
-	/* HL */  //Eigen::MatrixXd HL1 = AL.transpose()*DL*AL;
+	/* HL */  //MatrixXr HL1 = AL.transpose()*DL*AL;
 	//transA = 'T';   transB = 'N';   blasM = varNo;   blasN = planeNoAB;   blasK = planeNoAB;
-        //blasLDA = std::max(1,blasK);   blasLDB = std::max(1,blasK);     blasAlpha = 1.0;   blasBeta = 0.0; blasLDC = blasM;
+        //blasLDA = math::max(1,blasK);   blasLDB = math::max(1,blasK);     blasAlpha = 1.0;   blasBeta = 0.0; blasLDC = blasM;
 	//dgemm_(&transA, &transB, &blasM, &blasN, &blasK, &blasAlpha, &blasAL[0], &blasLDA, &blasDL[0], &blasLDB, &blasBeta, &blasADAtemp[0], &blasLDC);
 	dgemm_(&blasT, &blasNT, &varNo, &planeNoAB, &planeNoAB, &blas1, &blasAL[0], &blas1planeNoAB, &blasDL[0], &blas1planeNoAB, &blas0, &blasADAtemp[0], &varNo);
     	//transA = 'N';   transB = 'N';   blasM = varNo;   blasN = varNo;   blasK = planeNoAB;
-        //blasLDA = blasM;   blasLDB = std::max(1,blasK);     blasAlpha = 1.0;   blasBeta = 0.0;  blasLDC = blasM;
+        //blasLDA = blasM;   blasLDB = math::max(1,blasK);     blasAlpha = 1.0;   blasBeta = 0.0;  blasLDC = blasM;
 	//dgemm_(&transA, &transB, &blasM, &blasN, &blasK, &blasAlpha, &blasADAtemp[0], &blasLDA, &blasAL[0], &blasLDB, &blasBeta, &blasHL[0], &blasLDC);
 	dgemm_(&blasNT, &blasNT, &varNo, &varNo, &planeNoAB, &blas1, &blasADAtemp[0], &varNo, &blasAL[0], &blas1planeNoAB, &blas0, &blasHL[0], &varNo);
 
@@ -1834,7 +1834,7 @@ while(totalIter<500){
 	/* U */
 	for( int j=1; j<=varNo ; j++){
 		blasStep[j-1]=-blasGrad[j-1];
-	    	for (int i=std::max(1,j-KD); i<=j ; i++){
+	    	for (int i=math::max(1,j-KD); i<=j ; i++){
 			HessianChol[j-1][KD+1+i-j-1]    = blasHess[(i-1)+varNo*(j-1)]; //H(i-1,j-1);
 	    	}
 	}
@@ -1903,7 +1903,7 @@ while(totalIter<500){
   //wL = bL - AL*x;
   	dcopy_(&planeNoAB, &blasBL[0], &incx, &blasWL[0], &incy);
 	//blasAlpha = -1.0;
-	//blasM=planeNoAB; blasN=varNo; blasLDA=std::max(1,planeNoAB);
+	//blasM=planeNoAB; blasN=varNo; blasLDA=math::max(1,planeNoAB);
 	//dgemv_(&transA, &blasM, &blasN, &blasAlpha, &blasAL[0], &blasLDA, &blasNewX[0], &incx, &blasBeta, &blasWL[0], &incy);
 	dgemv_(&transA, &planeNoAB, &varNo, &blasNeg1, &blasAL[0], &blas1planeNoAB, &blasNewX[0], &incx, &blas1, &blasWL[0], &incy);
 
@@ -1948,7 +1948,7 @@ while(totalIter<500){
 
   	dcopy_(&planeNoAB, &blasBL[0], &incx, &blasWL[0], &incy);
 	// blasAlpha = -1.0;
-	//blasM = planeNoAB;   blasLDA = std::max(1,planeNoAB);     blasN = varNo;    blasAlpha = -1.0;    blasBeta = 1.0;
+	//blasM = planeNoAB;   blasLDA = math::max(1,planeNoAB);     blasN = varNo;    blasAlpha = -1.0;    blasBeta = 1.0;
 	//dgemv_(&transA, &blasM, &blasN, &blasAlpha, &blasAL[0], &blasLDA, &blasNewX[0], &incx, &blasBeta, &blasWL[0], &incy);
 	dgemv_(&blasNT, &planeNoAB, &varNo, &blasNeg1, &blasAL[0], &blas1planeNoAB, &blasNewX[0], &incx, &blas1, &blasWL[0], &incy);
  	if(planeNoAB>0){
@@ -2015,7 +2015,7 @@ while(totalIter<500){
   	//wL = bL - AL*x;
 	//noElements = planeNoAB;
   	dcopy_(&planeNoAB, &blasBL[0], &incx, &blasWL[0], &incy);
-	//blasM = planeNoAB;   blasLDA = std::max(1,planeNoAB);     blasN = varNo;    blasAlpha = -1.0;    blasBeta = 1.0;
+	//blasM = planeNoAB;   blasLDA = math::max(1,planeNoAB);     blasN = varNo;    blasAlpha = -1.0;    blasBeta = 1.0;
 	//dgemv_(&transA, &blasM, &blasN, &blasAlpha, &blasAL[0], &blasLDA, &blasNewX[0], &incx, &blasBeta, &blasWL[0], &incy);
 	dgemv_(&blasNT, &planeNoAB, &varNo, &blasNeg1, &blasAL[0], &blas1planeNoAB, &blasNewX[0], &incx, &blas1, &blasWL[0], &incy);
 
@@ -2062,7 +2062,7 @@ while(totalIter<500){
 //timingDeltas->checkpoint("newton");
             return true;
         }
-        t = std::min(t*mu, (2.0*m+1.0)/tol);
+        t = math::min(t*mu, (2.0*m+1.0)/tol);
         iter = 0;
         totalIter = totalIter+1;
   }

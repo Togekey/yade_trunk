@@ -43,7 +43,7 @@ void Subdomain::setMinMax()
 				// if periodic, find the period of minbound, find size, wrap minbound based on period and add size to get maxbound (of body)
 				Vector3r inVsz = Vector3r(1./scene->cell->getSize()[0],1./scene->cell->getSize()[1],1./scene->cell->getSize()[2]);
 				Vector3i period(Vector3i::Zero()); 
-				for (int i=0; i != 3; ++i) { period[i] = (int)(std::floor(b->state->pos[i]*inVsz[i]));  }
+				for (int i=0; i != 3; ++i) { period[i] = (int)(math::floor(b->state->pos[i]*inVsz[i]));  }
 				Vector3r wMax; Vector3r wMin; 
 				for (int i=0; i != 3; ++i) {
 					wMin[i] = (period[i]) != 0 ? (b->bound->min[i]/period[i]) : (b->bound->min[i]);  
@@ -587,7 +587,7 @@ Real Subdomain::boundOnAxis(Bound& b, const Vector3r& direction, bool min) const
 {
 	Vector3r size = b.max-b.min;
 	Real extremum = 0;
-	for (unsigned k=0; k<3; k++) extremum += std::abs(size[k]*direction[k]);// this is equivalent to taking the vertex maximizing projected length
+	for (unsigned k=0; k<3; k++) extremum += math::abs(size[k]*direction[k]);// this is equivalent to taking the vertex maximizing projected length
 	if (min) extremum = -extremum; 
 	extremum+= (b.max+b.min).dot(direction);// should be *0.5 to be center of the box, but since we use 'size' instead of half-size everything is doubled, neutral in terms of ordering the boxes
 	return 0.5*extremum;

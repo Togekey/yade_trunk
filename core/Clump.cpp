@@ -161,7 +161,7 @@ void Clump::updateProperties(const shared_ptr<Body>& clumpBody, unsigned int dis
 		//get volume and inertia tensor using regular cubic cell array inside bounding box of the clump:
 		Real dx = rMin/discretization; 	//edge length of cell
 		Real dv = pow(dx,3);		//volume of cell
-		long nCells=long(std::round((aabb.sizes()/dx).prod()));
+		long nCells=long(math::round((aabb.sizes()/dx).prod()));
 		if(nCells>1e7) LOG_WARN("Clump::updateProperties: Cell array has "<<nCells<<" cells. Integrate inertia may take a while ...");
 		Vector3r x;			//position vector (center) of cell
 		for(x.x()=aabb.min().x()+dx/2.; x.x()<aabb.max().x(); x.x()+=dx){

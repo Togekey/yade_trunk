@@ -46,7 +46,7 @@ bool Law2_ScGeom_JCFpmPhys_JointedCohesiveFrictionalPM::go(shared_ptr<IGeom>& ig
 	  if ((smoothJoint) && (phys->isOnJoint)) {
 	    phys->jointNormal = geom->normal.dot(phys->jointNormal)*phys->jointNormal; //to set the joint normal colinear with the interaction normal
 	    phys->jointNormal.normalize();
-	    phys->initD = std::abs((b1->state->pos - b2->state->pos).dot(phys->jointNormal)); // to set the initial gap as the equilibrium gap
+	    phys->initD = math::abs((b1->state->pos - b2->state->pos).dot(phys->jointNormal)); // to set the initial gap as the equilibrium gap
 	  } else { 
 	    phys->initD = geom->penetrationDepth; 
 	  }
@@ -64,7 +64,7 @@ bool Law2_ScGeom_JCFpmPhys_JointedCohesiveFrictionalPM::go(shared_ptr<IGeom>& ig
 	      return true;
 	      }
 	  } else { 
-	    D = phys->initD - std::abs((b1->state->pos - b2->state->pos).dot(phys->jointNormal)); 
+	    D = phys->initD - math::abs((b1->state->pos - b2->state->pos).dot(phys->jointNormal)); 
 	  }
 	} else { 
 	  D = geom->penetrationDepth - phys->initD; 
@@ -108,7 +108,7 @@ bool Law2_ScGeom_JCFpmPhys_JointedCohesiveFrictionalPM::go(shared_ptr<IGeom>& ig
 	    }
 	  }
 	  
-	  if ( phys->isCohesive && (phys->FnMax>0) && (std::abs(D)>Dtensile) ) {
+	  if ( phys->isCohesive && (phys->FnMax>0) && (math::abs(D)>Dtensile) ) {
 	    
 	    nbTensCracks++;
 	    phys->isCohesive = 0;
@@ -449,7 +449,7 @@ void Law2_ScGeom_JCFpmPhys_JointedCohesiveFrictionalPM::computeTemporalWindow
 	const Real velocityP1 = sqrt(elasticMat1->young/elasticMat1->density);
 	const Real velocityP2 = sqrt(elasticMat2->young/elasticMat2->density);
 
-	phys->temporalWindow = int(std::floor(spatialWindow/(max(velocityP1, velocityP2)*scene->dt)));
+	phys->temporalWindow = int(math::floor(spatialWindow/(max(velocityP1, velocityP2)*scene->dt)));
 }
 	
 	
@@ -524,15 +524,15 @@ void Ip2_JCFpmMat_JCFpmMat_JCFpmPhys::go(const shared_ptr<Material>& b1, const s
 	
 	// cohesive properties
 	///to set if the contact is cohesive or not
-	if ( ((cohesiveTresholdIteration < 0) || (scene->iter < cohesiveTresholdIteration)) && (std::min(SigT1,SigT2)>0 || std::min(Coh1,Coh2)>0) && (yade1->type == yade2->type)){ 
+	if ( ((cohesiveTresholdIteration < 0) || (scene->iter < cohesiveTresholdIteration)) && (math::min(SigT1,SigT2)>0 || math::min(Coh1,Coh2)>0) && (yade1->type == yade2->type)){ 
 	  contactPhysics->isCohesive=true;
 	  st1->nbInitBonds++;
 	  st2->nbInitBonds++;
 	}
 	
 	if ( contactPhysics->isCohesive ) {
-	  contactPhysics->FnMax = std::min(SigT1,SigT2)*contactPhysics->crossSection;
-	  contactPhysics->FsMax = std::min(Coh1,Coh2)*contactPhysics->crossSection;
+	  contactPhysics->FnMax = math::min(SigT1,SigT2)*contactPhysics->crossSection;
+	  contactPhysics->FsMax = math::min(Coh1,Coh2)*contactPhysics->crossSection;
 	}
 	// do we need that?
 // 	else {
@@ -541,7 +541,7 @@ void Ip2_JCFpmMat_JCFpmMat_JCFpmPhys::go(const shared_ptr<Material>& b1, const s
 // 	}
 	
         // frictional properties      
-        contactPhysics->isCohesive? contactPhysics->tanFrictionAngle = std::tan(std::min(f1,f2)) : contactPhysics->tanFrictionAngle = std::tan(std::min(rf1,rf2));
+        contactPhysics->isCohesive? contactPhysics->tanFrictionAngle = math::tan(math::min(f1,f2)) : contactPhysics->tanFrictionAngle = math::tan(math::min(rf1,rf2));
 
 	/// +++ Jointed interactions ->NOTE: geom->normal is oriented from 1 to 2 / jointNormal from plane to sphere 
 	if ( st1->onJoint && st2->onJoint )
@@ -579,17 +579,17 @@ void Ip2_JCFpmMat_JCFpmMat_JCFpmPhys::go(const shared_ptr<Material>& b1, const s
 			Real jSigT1	= yade1->jointTensileStrength;
 			Real jSigT2	= yade2->jointTensileStrength;
 			
-			contactPhysics->tanFrictionAngle = std::tan(std::min(jf1,jf2));
+			contactPhysics->tanFrictionAngle = math::tan(math::min(jf1,jf2));
 			
 			//contactPhysics->kn = jointNormalStiffness*2.*R1*R2/(R1+R2); // very first expression from Luc
 			//contactPhysics->kn = (jkn1+jkn2)/2.0*2.*R1*R2/(R1+R2); // after putting jointNormalStiffness in material
 			contactPhysics->kn = ( jkn1 + jkn2 ) /2.0 * contactPhysics->crossSection; // for a size independant expression
 			contactPhysics->ks = ( jks1 + jks2 ) /2.0 * contactPhysics->crossSection; // for a size independant expression
 			
-			contactPhysics->tanDilationAngle = std::tan(std::min(jdil1,jdil2));
+			contactPhysics->tanDilationAngle = math::tan(math::min(jdil1,jdil2));
 		  
 			///to set if the contact is cohesive or not
-			if ( ((cohesiveTresholdIteration < 0) || (scene->iter < cohesiveTresholdIteration)) && (std::min(jcoh1,jcoh2)>0 || std::min(jSigT1,jSigT2)>0) ) {
+			if ( ((cohesiveTresholdIteration < 0) || (scene->iter < cohesiveTresholdIteration)) && (math::min(jcoh1,jcoh2)>0 || math::min(jSigT1,jSigT2)>0) ) {
                             contactPhysics->isCohesive=true;
                             st1->nbInitBonds++;
                             st2->nbInitBonds++;
@@ -597,8 +597,8 @@ void Ip2_JCFpmMat_JCFpmMat_JCFpmPhys::go(const shared_ptr<Material>& b1, const s
 			else { contactPhysics->isCohesive=false; contactPhysics->FnMax=0; contactPhysics->FsMax=0; }
 		  
 			if ( contactPhysics->isCohesive ) {
-                            contactPhysics->FnMax = std::min(jSigT1,jSigT2)*contactPhysics->crossSection;
-                            contactPhysics->FsMax = std::min(jcoh1,jcoh2)*contactPhysics->crossSection;
+                            contactPhysics->FnMax = math::min(jSigT1,jSigT2)*contactPhysics->crossSection;
+                            contactPhysics->FsMax = math::min(jcoh1,jcoh2)*contactPhysics->crossSection;
 			}
 	}
 	interaction->phys = contactPhysics;

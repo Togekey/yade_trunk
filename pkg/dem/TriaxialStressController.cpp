@@ -89,7 +89,7 @@ void TriaxialStressController::controlExternalStress(int wall, Vector3r resultan
 	   {
 			translation /= stiffness[wall];
 			if(log) TRVAR2(translation,wall_max_vel*scene->dt)
-			translation = std::min( std::abs(translation), wall_max_vel*scene->dt ) * Mathr::Sign(translation);
+			translation = math::min( math::abs(translation), wall_max_vel*scene->dt ) * Mathr::Sign(translation);
 	   }
 	   else translation = wall_max_vel * Mathr::Sign(translation)*scene->dt;
 	}
@@ -213,11 +213,11 @@ void TriaxialStressController::action()
 		if (isARadiusControlIteration) {
 			Real sigma_iso_ = bool(stressMask & 1)*goal1 +  bool(stressMask & 2)*goal2 +  bool(stressMask & 4)*goal3;
 			sigma_iso_ /=  bool(stressMask & 1) +  bool(stressMask & 2) +  bool(stressMask & 4);
-			if (std::abs(sigma_iso_)<=std::abs(meanStress)) maxMultiplier = finalMaxMultiplier;
+			if (math::abs(sigma_iso_)<=math::abs(meanStress)) maxMultiplier = finalMaxMultiplier;
 			if (meanStress==0) previousMultiplier = maxMultiplier;
 			else {
 				//     		previousMultiplier = 1+0.7*(sigma_iso-s)*(previousMultiplier-1.f)/(s-previousStress); // = (Dsigma/apparentModulus)*0.7
-				//     		previousMultiplier = std::max(2-maxMultiplier, std::min(previousMultiplier, maxMultiplier));
+				//     		previousMultiplier = math::max(2-maxMultiplier, math::min(previousMultiplier, maxMultiplier));
 			  if (sigma_iso_ < 0) // compressive case: we have to increase radii if meanStress > sigma_iso_, considering that sigma_iso_ < 0. We end with the same expression as before sign change
 			    previousMultiplier = 1.+(sigma_iso_-meanStress)/sigma_iso_*(maxMultiplier-1.); // = (Dsigma/apparentModulus)*0.7
 			  else // tensile case: we have to increase radii if meanStress > sigma_iso_ too. But here sigma_iso_ > 0 => another expression

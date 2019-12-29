@@ -84,9 +84,9 @@ void GeneralIntegratorInsertionSortCollider::action(){
 				if(!s) continue;
 				minR=min(s->radius,minR);
 			}
-			if (std::isinf(minR)) LOG_ERROR("verletDist is set to 0 because no spheres were found. It will result in suboptimal performances, consider setting a positive verletDist in your script.");
+			if (math::isinf(minR)) LOG_ERROR("verletDist is set to 0 because no spheres were found. It will result in suboptimal performances, consider setting a positive verletDist in your script.");
 			// if no spheres, disable stride
-			verletDist=std::isinf(minR) ? 0 : std::abs(verletDist)*minR;
+			verletDist=math::isinf(minR) ? 0 : math::abs(verletDist)*minR;
 		}
 		
 		// update bounds via boundDispatcher
@@ -150,6 +150,10 @@ void GeneralIntegratorInsertionSortCollider::action(){
 		}
 	// for each body, copy its minima and maxima, for quick checks of overlaps later
 	BOOST_STATIC_ASSERT(sizeof(Vector3r)==3*sizeof(Real));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+// this is to remove warning about manipulating raw memory
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
 	for(size_t id=0; id<nBodies; id++){
 		const shared_ptr<Body>& b=Body::byId(id,scene);
 		if(b){
@@ -158,6 +162,7 @@ void GeneralIntegratorInsertionSortCollider::action(){
 			else{ const Vector3r& pos=b->state->pos; memcpy(&minima[3*id],&pos,3*sizeof(Real)); memcpy(&maxima[3*id],&pos,3*sizeof(Real)); }
 		} else { memset(&minima[3*id],0,3*sizeof(Real)); memset(&maxima[3*id],0,3*sizeof(Real)); }
 	}
+#pragma GCC diagnostic pop
 
 	ISC_CHECKPOINT("copy");
 

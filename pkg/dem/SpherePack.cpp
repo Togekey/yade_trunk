@@ -132,7 +132,7 @@ long SpherePack::makeCloud(
 		LOG_WARN("hSize can be defined only for periodic cells.");
 	Real     volume   = hSize.determinant();
 	Matrix3r invHsize = hSize.inverse();
-	Real area = std::abs(size[0] * size[2] + size[0] * size[1] + size[1] * size[2]); //2 terms will be null if one coordinate is 0, the other is the area
+	Real area = math::abs(size[0] * size[2] + size[0] * size[1] + size[1] * size[2]); //2 terms will be null if one coordinate is 0, the other is the area
 	if (!volume) {
 		if (hSizeFound)
 			throw invalid_argument("The period defined by hSize has null length in at least one direction, this is not supported. Define flat "
@@ -299,7 +299,7 @@ long SpherePack::makeCloud(
 					} else { //not aligned, find closest neighbor in a cube of size 1, then transform distance to cartesian coordinates
 						Vector3r c1c2 = invHsize * (pack[j].c - c);
 						for (int axis = 0; axis < 3; axis++) {
-							if (std::abs(c1c2[axis]) < std::abs(c1c2[axis] - Mathr::Sign(c1c2[axis])))
+							if (math::abs(c1c2[axis]) < math::abs(c1c2[axis] - Mathr::Sign(c1c2[axis])))
 								dr[axis] = c1c2[axis];
 							else
 								dr[axis] = c1c2[axis] - Mathr::Sign(c1c2[axis]);
@@ -712,7 +712,7 @@ void SpherePack::scale(Real scale)
 	cellSize *= scale;
 	for (auto& s : pack) {
 		s.c = scale * (s.c - mid) + mid;
-		s.r *= std::abs(scale);
+		s.r *= math::abs(scale);
 	}
 }
 

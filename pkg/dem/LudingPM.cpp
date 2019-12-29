@@ -77,7 +77,7 @@ void Ip2_LudingMat_LudingMat_LudingPhys::go(const shared_ptr<Material>& b1, cons
   
   
   
-  phys->tangensOfFrictionAngle = std::tan(std::min(mat1->frictionAngle, mat2->frictionAngle)); 
+  phys->tangensOfFrictionAngle = math::tan(math::min(mat1->frictionAngle, mat2->frictionAngle)); 
   
   phys->shearForce = Vector3r(0,0,0);
   phys->DeltMax = 0.0;
@@ -135,7 +135,7 @@ bool Law2_ScGeom_LudingPhys_Basic::go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys
     
   if (Delt > phys.DeltMax) {
     phys.DeltMax  = Delt;
-    phys.DeltNull  = std::min((1.0 - phys.k1/phys.k2)*phys.DeltMax, phys.DeltPNull);  // [Luding2008], equation over Fig 1
+    phys.DeltNull  = math::min((1.0 - phys.k1/phys.k2)*phys.DeltMax, phys.DeltPNull);  // [Luding2008], equation over Fig 1
                                                                                       // [Singh2013], equation (8)
   }
   
@@ -154,7 +154,7 @@ bool Law2_ScGeom_LudingPhys_Basic::go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys
     if ((Delt - phys.DeltPrev) < 0) {
       forceHys = -phys.kc*Delt;
       phys.DeltMax = Delt*(phys.k2 + phys.kc)/(phys.k2 - phys.k1);                     // [Singh2013], equation (9)
-      phys.DeltNull  = std::min((1.0 - phys.k1/phys.k2)*phys.DeltMax, phys.DeltPNull);  // [Luding2008], equation over Fig 1
+      phys.DeltNull  = math::min((1.0 - phys.k1/phys.k2)*phys.DeltMax, phys.DeltPNull);  // [Luding2008], equation over Fig 1
                                                                                         // [Singh2013], equation (8)
     } else {
       forceHys = k2DeltTtmp;
@@ -196,7 +196,7 @@ bool Law2_ScGeom_LudingPhys_Basic::go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys
   phys.normalForce = (forceHys + phys.G0 * normalVelocity)*geom.normal;
   
   
-  const Real maxFs = phys.normalForce.squaredNorm() * std::pow(phys.tangensOfFrictionAngle,2);
+  const Real maxFs = phys.normalForce.squaredNorm() * math::pow(phys.tangensOfFrictionAngle,2);
   if( shearForce.squaredNorm() > maxFs )
   {
     const Real ratio = sqrt(maxFs) / shearForce.norm();

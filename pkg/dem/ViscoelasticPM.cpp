@@ -16,7 +16,7 @@
 
 namespace yade { // Cannot have #include directive inside.
 
-using std::isfinite;
+using math::isfinite;
 YADE_PLUGIN((ViscElMat)(ViscElPhys)(Ip2_ViscElMat_ViscElMat_ViscElPhys)(Law2_ScGeom_ViscElPhys_Basic));
 
 /* ViscElMat */
@@ -145,7 +145,7 @@ bool computeForceTorqueViscEl(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys
 			}
 		}
 		
-		const Real maxFs = phys.normalForce.squaredNorm() * std::pow(phys.tangensOfFrictionAngle,2);
+		const Real maxFs = phys.normalForce.squaredNorm() * math::pow(phys.tangensOfFrictionAngle,2);
 		if( shearForce.squaredNorm() > maxFs )
 		{
 			// Then Mohr-Coulomb is violated (so, we slip), 
@@ -228,10 +228,10 @@ void Ip2_ViscElMat_ViscElMat_ViscElPhys::Calculate_ViscElMat_ViscElMat_ViscElPhy
     // Thanks to Dominik Boemer for pointing this out
     // http://www.mail-archive.com/yade-users@lists.launchpad.net/msg08741.html
 
-		if (std::abs(cn1) <= Mathr::ZERO_TOLERANCE ) cn1=0;
-		if (std::abs(cn2) <= Mathr::ZERO_TOLERANCE ) cn2=0;
-		if (std::abs(cs1) <= Mathr::ZERO_TOLERANCE ) cs1=0;
-		if (std::abs(cs2) <= Mathr::ZERO_TOLERANCE ) cs2=0;
+		if (math::abs(cn1) <= Mathr::ZERO_TOLERANCE ) cn1=0;
+		if (math::abs(cn2) <= Mathr::ZERO_TOLERANCE ) cn2=0;
+		if (math::abs(cs1) <= Mathr::ZERO_TOLERANCE ) cs1=0;
+		if (math::abs(cs2) <= Mathr::ZERO_TOLERANCE ) cs2=0;
 	} else if ((isfinite(mat1->kn)) and (isfinite(mat1->ks)) and (isfinite(mat1->cn)) and (isfinite(mat1->cs))) {
 		//Set parameters explicitly
 		kn1 = mat1->kn;
@@ -277,9 +277,9 @@ void Ip2_ViscElMat_ViscElMat_ViscElPhys::Calculate_ViscElMat_ViscElMat_ViscElPhy
 	}
 
 	if (frictAngle) {
-		phys->tangensOfFrictionAngle = std::tan((*frictAngle)(mat1->id,mat2->id));
+		phys->tangensOfFrictionAngle = math::tan((*frictAngle)(mat1->id,mat2->id));
 	} else {
-		phys->tangensOfFrictionAngle = std::tan(std::min(mat1->frictionAngle, mat2->frictionAngle));
+		phys->tangensOfFrictionAngle = math::tan(math::min(mat1->frictionAngle, mat2->frictionAngle));
 	}
 	phys->shearForce = Vector3r(0,0,0);
 	

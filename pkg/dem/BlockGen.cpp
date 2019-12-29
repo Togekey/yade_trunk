@@ -291,7 +291,7 @@ bool BlockGen::generate(string& /*message*/)
 				}
 				planeNormal = Vector3r(a/l,b/l,c/l); //save for later
 				//std::cout<<"planeNormal: "<<planeNormal<<endl;
-				int number = int(std::round(boundarySize/spacing));
+				int number = int(math::round(boundarySize/spacing));
 				for(int j=1; j<=number/2.0 /* -1 */; j++){
 					joint.push_back(Discontinuity(firstBlockCentre));
 					int i = joint.size()-1;

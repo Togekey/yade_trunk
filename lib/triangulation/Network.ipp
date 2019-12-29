@@ -18,7 +18,6 @@ namespace yade { // Cannot have #include directive inside.
 
 namespace CGT {
 	
-using std::abs;
 
 // 	template<class Tesselation> const Real Network<Tesselation>::FAR = 50000;
 	template<class Tesselation> const Real Network<Tesselation>::ONE_THIRD = 1.0/3.0;
@@ -533,7 +532,7 @@ void Network<Tesselation>::addBoundingPlane (CVector Normal, int id_wall)
 {
 // 	  Tesselation& Tes = T[currentTes];
 	  //FIXME: pre-condition: the normal is axis-aligned
-	  int Coordinate = int(std::round(std::abs(Normal[0])))*0 + int(std::round(std::abs(Normal[1])))*1 + int(std::round(std::abs(Normal[2])))*2;
+	  int Coordinate = int(math::round(math::abs(Normal[0])))*0 + int(math::round(math::abs(Normal[1])))*1 + int(math::round(math::abs(Normal[2])))*2;
 	  
 	  Real pivot = Normal[Coordinate]<0 ? 
 	  cornerMax.x()*abs(Normal[0])+cornerMax.y()*abs(Normal[1])+cornerMax.z()*abs(Normal[2]) : cornerMin.x()*abs(Normal[0])+cornerMin.y()*abs(Normal[1])+cornerMin.z()*abs(Normal[2]);
@@ -550,7 +549,7 @@ void Network<Tesselation>::addBoundingPlane (Real center[3], Real thickness, CVe
 {
 	  Tesselation& Tes = T[currentTes];
 	  
-	  int Coordinate = int(std::round(std::abs(Normal[0])))*0 + int(std::round(std::abs(Normal[1])))*1 + int(std::round(std::abs(Normal[2])))*2;
+	  int Coordinate = int(math::round(math::abs(Normal[0])))*0 + int(math::round(math::abs(Normal[1])))*1 + int(math::round(math::abs(Normal[2])))*2;
 	  
 	  Tes.insert((center[0]+Normal[0]*thickness/2)*(1-abs(Normal[0])) + (center[0]+Normal[0]*thickness/2-Normal[0]*FAR*(cornerMax.y()-cornerMin.y()))*abs(Normal[0]),
 		     (center[1]+Normal[1]*thickness/2)*(1-abs(Normal[1])) + (center[1]+Normal[1]*thickness/2-Normal[1]*FAR*(cornerMax.y()-cornerMin.y()))*abs(Normal[1]),
@@ -728,12 +727,12 @@ void Network<Tesselation>::setAlphaBoundary(Real alpha,bool fixed)
 			if (as.is_infinite(outerCell) or fixed) {
 				Sphere sph; bool b; CVector n;
 				T[currentTes].circumCenter(f.first,f.second,alpha,b,sph,n);
-				if (std::isnan(sph.point().x()) or std::isnan(sph.point().y()) or std::isnan(sph.point().z())){ cerr << "skipping isnan point" <<endl; continue;}
+				if (math::isnan(sph.point().x()) or math::isnan(sph.point().y()) or math::isnan(sph.point().z())){ cerr << "skipping isnan point" <<endl; continue;}
 				unsigned int id = T[currentTes].vertexHandles.size();
 				VertexHandle Vh = T[currentTes].Triangulation().insert(Sphere(sph.point(), alpha)); //, pow(2*alphaRad-deltaAlpha,2)));
 				if ( Vh!=NULL ) {Vh->info().isAlpha=true; Vh->info().setId(id);Vh->info().isFictious = false;
 					T[currentTes].vertexHandles.push_back(Vh);
-					T[currentTes].maxId = std::max ( T[currentTes].maxId, (int) id );
+					T[currentTes].maxId = math::max ( T[currentTes].maxId, (int) id );
 				} else  { cerr << " : __Vh==NULL, convex__ :(" << endl;}
 			} else {
 				if(!outerCell->info().isAlpha){
@@ -745,7 +744,7 @@ void Network<Tesselation>::setAlphaBoundary(Real alpha,bool fixed)
 					if ( Vh!=NULL ) {Vh->info().isAlpha=true; Vh->info().setId(id);Vh->info().isFictious = false;}
 					else { cerr << " : __Vh==NULL, concave__ :(" << endl;}
 					T[currentTes].vertexHandles.push_back(Vh);
-					T[currentTes].maxId = std::max ( T[currentTes].maxId, (int) id );
+					T[currentTes].maxId = math::max ( T[currentTes].maxId, (int) id );
 				}
 			}
 		}

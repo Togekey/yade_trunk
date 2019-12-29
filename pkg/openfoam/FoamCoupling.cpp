@@ -456,7 +456,7 @@ void FoamCoupling::sendBodyData(){
 		const shared_ptr<FluidDomainBbox> flbox = YADE_PTR_CAST<FluidDomainBbox>(flbody->shape); 
 			if (flbox->hasIntersection){
 				
-				std::vector<double> prtData(10*flbox->bIds.size(), 1e-50);
+				std::vector<Real> prtData(10*flbox->bIds.size(), 1e-50);
 				for (unsigned int i=0; i != flbox->bIds.size(); ++i){
 					const shared_ptr<Body>& b = (*scene->bodies)[flbox->bIds[i]]; 
 					if (isPeriodic){

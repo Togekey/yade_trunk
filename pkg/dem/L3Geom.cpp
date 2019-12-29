@@ -57,7 +57,7 @@ bool Ig2_Sphere_Sphere_L3Geom::genericGo(bool is6Dof, const shared_ptr<Shape>& s
 
 	const Real& r1=s1->cast<Sphere>().radius; const Real& r2=s2->cast<Sphere>().radius;
 	Vector3r relPos=state2.pos+shift2-state1.pos;
-	Real unDistSq=relPos.squaredNorm()-pow(std::abs(distFactor)*(r1+r2),2);
+	Real unDistSq=relPos.squaredNorm()-pow(math::abs(distFactor)*(r1+r2),2);
 	if (unDistSq>0 && !I->isReal() && !force) return false;
 
 	// contact exists, go ahead
@@ -88,7 +88,7 @@ void Ig2_Sphere_Sphere_L3Geom::handleSpheresLikeContact(const shared_ptr<Interac
 		// g.trsf.setFromTwoVectors(Vector3r::UnitX(),g.normal); // quaternion just from the X-axis; does not seem to work for some reason?!
 		const Vector3r& locX(g.normal);
 		// initial local y-axis orientation, in the xz or xy plane, depending on which component is larger to avoid singularities
-		Vector3r locY=normal.cross(std::abs(normal[1])<std::abs(normal[2])?Vector3r::UnitY():Vector3r::UnitZ()); locY-=locX*locY.dot(locX); locY.normalize();
+		Vector3r locY=normal.cross(math::abs(normal[1])<math::abs(normal[2])?Vector3r::UnitY():Vector3r::UnitZ()); locY-=locX*locY.dot(locX); locY.normalize();
 		Vector3r locZ=normal.cross(locY);
 		g.trsf.row(0)=locX; g.trsf.row(1)=locY; g.trsf.row(2)=locZ;
 		g.u=Vector3r(uN,0,0); // zero shear displacement
@@ -150,7 +150,7 @@ void Ig2_Sphere_Sphere_L3Geom::handleSpheresLikeContact(const shared_ptr<Interac
       currTrsf.row(2)=currTrsf.row(0).cross(currTrsf.row(1));
       currTrsf.row(2).normalize();
     #ifdef YADE_DEBUG
-      if(std::abs(currTrsf.determinant()-1)>.05){
+      if(math::abs(currTrsf.determinant()-1)>.05){
         LOG_ERROR("##"<<I->getId1()<<"+"<<I->getId2()<<", |trsf|="<<currTrsf.determinant());
         g.trsf=currTrsf;
         throw runtime_error("Transformation matrix far from orthonormal.");
@@ -197,7 +197,7 @@ bool Ig2_Wall_Sphere_L3Geom::go(const shared_ptr<Shape>& s1, const shared_ptr<Sh
 	if(scene->isPeriodic) throw std::logic_error("Ig2_Wall_Sphere_L3Geom does not handle periodic boundary conditions.");
 	const Real& radius=s2->cast<Sphere>().radius; const int& ax(s1->cast<Wall>().axis); const int& sense(s1->cast<Wall>().sense);
 	Real dist=state2.pos[ax]+shift2[ax]-state1.pos[ax]; // signed "distance" between centers
-	if(!I->isReal() && std::abs(dist)>radius && !force) { return false; }// wall and sphere too far from each other
+	if(!I->isReal() && math::abs(dist)>radius && !force) { return false; }// wall and sphere too far from each other
 	// contact point is sphere center projected onto the wall
 	Vector3r contPt=state2.pos+shift2; contPt[ax]=state1.pos[ax];
 	Vector3r normal=Vector3r::Zero();
@@ -222,7 +222,7 @@ bool Ig2_Facet_Sphere_L3Geom::go(const shared_ptr<Shape>& s1, const shared_ptr<S
 		Vector3r cogLine=state1.ori.conjugate()*(state2.pos+shift2-state1.pos); // connect centers of gravity
 		Vector3r normal=facet.normal; // trial contact normal
 		Real planeDist=normal.dot(cogLine);
-		if(std::abs(planeDist)>radius && !I->isReal() && !force) return false; // sphere too far
+		if(math::abs(planeDist)>radius && !I->isReal() && !force) return false; // sphere too far
 		if(planeDist<0){normal*=-1; planeDist*=-1; }
 		Vector3r planarPt=cogLine-planeDist*normal; // project sphere center to the facet plane
 		Vector3r contactPt; // facet's point closes to the sphere

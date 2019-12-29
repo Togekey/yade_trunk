@@ -99,7 +99,7 @@ class FoamCoupling : public GlobalEngine {
 		
 		std::vector<int> bodyList;  // 'global' all Ids across all procs which are in coupling. Used in serial mode  coupling. 
 		std::vector<double> hydroForce; 
-		std::vector<double> particleData;
+		std::vector<Real> particleData;
 		std::vector<int>  procList; 
 		//std::vector<Body::id_t> fluidDomains; 
 		std::vector<std::pair<Body::id_t, std::vector<Body::id_t> > > sharedIds; 

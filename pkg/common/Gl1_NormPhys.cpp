@@ -32,10 +32,10 @@ namespace yade { // Cannot have #include directive inside.
 		Real fnNorm=np->normalForce.dot(geom->normal);
 		if((signFilter>0 && fnNorm<0) || (signFilter<0 && fnNorm>0)) return;
 		int fnSign=fnNorm>0?1:-1;
-		fnNorm=std::abs(fnNorm);
+		fnNorm=math::abs(fnNorm);
 		Real radiusScale=1.;
 		// weak/strong fabric, only used if maxWeakFn is set
-		if(!std::isnan(maxWeakFn)){
+		if(!math::isnan(maxWeakFn)){
 			if(fnNorm*fnSign<maxWeakFn){ // weak fabric
 				if(weakFilter>0) return;
 				radiusScale=weakScale;

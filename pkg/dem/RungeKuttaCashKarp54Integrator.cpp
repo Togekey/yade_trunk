@@ -1,4 +1,5 @@
 #ifdef YADE_ODEINT
+#include<lib/high-precision/Real.hpp>
 #include<pkg/dem/RungeKuttaCashKarp54Integrator.hpp>
 #include<core/Scene.hpp>
 

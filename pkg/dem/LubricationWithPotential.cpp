@@ -27,7 +27,7 @@ bool Law2_ScGeom_PotentialLubricationPhys::go(shared_ptr<IGeom>& iGeom, shared_p
     // inititalization
 	if(phys->u == -1. ) {
         phys->u = -geom->penetrationDepth;
-        phys->delta = std::log(phys->u);
+        phys->delta = math::log(phys->u);
     }
 
     // Normal part
@@ -70,14 +70,14 @@ bool Law2_ScGeom_PotentialLubricationPhys::solve_normalForce(Real const& un, Rea
     Real const ga(phys.kn*a);
     Real d1(pDelta - 1.), d2(pDelta + 1.),d;
     
-    auto objf = [&,this](Real delta) -> Real { return potential->potential(a*std::exp(delta),phys)/ga + (1.-std::exp(pDelta - delta))/dt - un + std::exp(delta); };
+    auto objf = [&,this](Real delta) -> Real { return potential->potential(a*math::exp(delta),phys)/ga + (1.-math::exp(pDelta - delta))/dt - un + math::exp(delta); };
     Real F1(objf(d1)),F2(objf(d2)),F;
     
     // Seek to interval containing the zero
     Real inc = (F1 < 0.) ? 1. : -1;
 	inc = (F1 < F2) ? inc : -inc;
     
-    while(F1*F2 >= 0 && std::isfinite(F1) && std::isfinite(F2)) {
+    while(F1*F2 >= 0 && math::isfinite(F1) && math::isfinite(F2)) {
         LOG_TRACE("d1="<<d1<<" d2="<<d2<<" F1="<<F1<<" F2="<<F2);
         d1 += inc;
         d2 += inc;
@@ -85,7 +85,7 @@ bool Law2_ScGeom_PotentialLubricationPhys::solve_normalForce(Real const& un, Rea
         F2 = objf(d2);
     }
     
-    if(!std::isfinite(F1) || !std::isfinite(F2)) {
+    if(!math::isfinite(F1) || !math::isfinite(F2)) {
         // Reset and search other way
         LOG_DEBUG("Wrong direction");
         d1 = pDelta - 1.;
@@ -94,7 +94,7 @@ bool Law2_ScGeom_PotentialLubricationPhys::solve_normalForce(Real const& un, Rea
         F2 = objf(d2);
         inc = -inc;
         
-        while(F1*F2 >= 0 && std::isfinite(F1) && std::isfinite(F2)) {
+        while(F1*F2 >= 0 && math::isfinite(F1) && math::isfinite(F2)) {
             LOG_TRACE("d1="<<d1<<" d2="<<d2<<" F1="<<F1<<" F2="<<F2);
             d1 += inc;
             d2 += inc;
@@ -103,7 +103,7 @@ bool Law2_ScGeom_PotentialLubricationPhys::solve_normalForce(Real const& un, Rea
         }
     }
     
-    if(!std::isfinite(F1) || !std::isfinite(F2)) {
+    if(!math::isfinite(F1) || !math::isfinite(F2)) {
         LOG_ERROR("Unable to find a start point. Abandon. d1="<<d1<<" d2="<<d2<<" F1="<<F1<<" F2="<<F2);
         return false;
     }
@@ -119,12 +119,12 @@ bool Law2_ScGeom_PotentialLubricationPhys::solve_normalForce(Real const& un, Rea
         d = (d1 + d2)/2.;
         F = objf(d);
         
-        if(!std::isfinite(F)) {
+        if(!math::isfinite(F)) {
             LOG_ERROR("Objective function return non-real value. Abandon. d="<<d<<" F="<<F);
             return false;
         }
         
-        if(std::abs(F) < SolutionTol) break;
+        if(math::abs(F) < SolutionTol) break;
         
         if(F*F1 < 0) {
             d2 = d;
@@ -136,9 +136,9 @@ bool Law2_ScGeom_PotentialLubricationPhys::solve_normalForce(Real const& un, Rea
     } while (--i);
     
     // Apply
-    Real up = std::exp(d);
+    Real up = math::exp(d);
     phys.delta = d;
-    phys.u = a*std::exp(d);
+    phys.u = a*math::exp(d);
     phys.prevDotU = un - up - potential->potential(phys.u,phys)/ga; // dotu'/u'
     
     return true;
@@ -160,7 +160,7 @@ CREATE_LOGGER(GenericPotential);
 
 Real CundallStrackPotential::potential(Real const& u, LubricationPhys const& phys) const
 {
-    return std::min(0.,-alpha*phys.kn*(phys.eps*phys.a-u));
+    return math::min(0.,-alpha*phys.kn*(phys.eps*phys.a-u));
 }
 
 void CundallStrackPotential::applyPotential(Real const& u, LubricationPhys& phys, Vector3r const& n)
@@ -194,7 +194,7 @@ CREATE_LOGGER(CundallStrackAdhesivePotential);
 
 Real LinExponentialPotential::potential(Real const& u, LubricationPhys const& phys) const
 {
-    return std::min(0.,-alpha*phys.kn*(phys.eps*phys.a-u)) + LinExpPotential(u/phys.a);
+    return math::min(0.,-alpha*phys.kn*(phys.eps*phys.a-u)) + LinExpPotential(u/phys.a);
 }
 
 void LinExponentialPotential::applyPotential(Real const& u, LubricationPhys & phys, Vector3r const& n)
@@ -226,7 +226,7 @@ void LinExponentialPotential::computeParametersFromF0(Real const& F_0, Real cons
     k = k_;
     xe = x_e;
     F0 = F_0;
-    x0 = (xe - std::sqrt(rho))/2.;    
+    x0 = (xe - math::sqrt(rho))/2.;    
     Fe = LinExpPotential(xe);
     
 }
@@ -243,24 +243,24 @@ void LinExponentialPotential::computeParametersFromF0Fe(Real const& x_e, Real co
     
     xe = x_e;
     
-    k = (F_e/(xe*std::exp(-1)));
+    k = (F_e/(xe*math::exp(Real(-1))));
     x0 = 0.;
     F0 = F_0;
     Fe = F_e;
     
     for(int i(0);i<100;i++) {
         
-        x0 = (xe-std::sqrt(xe*xe+4.*F0*xe/k))/2.;
+        x0 = (xe-math::sqrt(xe*xe+4.*F0*xe/k))/2.;
         k = Fe*xe/((xe-x0)*(xe-x0)*exp(-xe/(xe-x0)));
         
         // Iteration quit if relative difference is below 1%.
-        if(std::sqrt((LinExpPotential(0)-F0)*(LinExpPotential(0)-F0)/(F0*F0) + (LinExpPotential(xe)-Fe)*(LinExpPotential(xe)-Fe)/(Fe*Fe)) < 0.01) break;
+        if(math::sqrt((LinExpPotential(0)-F0)*(LinExpPotential(0)-F0)/(F0*F0) + (LinExpPotential(xe)-Fe)*(LinExpPotential(xe)-Fe)/(Fe*Fe)) < 0.01) break;
     }
 }
 
 Real LinExponentialPotential::LinExpPotential(Real const& u_) const
 {
-    return k*((xe - x0)/xe)*(u_-x0)*std::exp(-u_/(xe - x0));
+    return k*((xe - x0)/xe)*(u_-x0)*math::exp(-u_/(xe - x0));
 }
 
 CREATE_LOGGER(LinExponentialPotential);
