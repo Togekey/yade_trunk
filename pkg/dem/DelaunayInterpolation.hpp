@@ -6,7 +6,7 @@
 *************************************************************************/
 
 #pragma once
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <lib/base/AliasCGAL.hpp>
 #include <CGAL/Delaunay_triangulation_3.h>
 #include <CGAL/Triangulation_vertex_base_with_info_3.h>
 #include <CGAL/Cartesian.h>
@@ -112,7 +112,7 @@ namespace yade { // Cannot have #include directive inside.
 
 // FIXME - consider moving these (maybe with Triangulation_vertex_base_with_id_3 ?) into lib/base/AliasCGAL.hpp, preferably put them inside another namespace
 //namespace CGsomeName{
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef CGAL::Exact_Real_predicates_inexact_constructions_kernel K;
 typedef CGAL::Delaunay_triangulation_3<K>::Geom_traits		Traits;
 typedef CGAL::Triangulation_vertex_base_with_id_3<Traits>	Vb;
 typedef CGAL::Triangulation_cell_base_3<Traits>			Cb;
