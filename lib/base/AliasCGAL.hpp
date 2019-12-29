@@ -11,11 +11,11 @@
 
 #ifdef YADE_CGAL
 
+#include <lib/high-precision/CgalNumTraits.hpp>
 #include <CGAL/AABB_traits.h>
 #include <CGAL/AABB_tree.h>
 #include <CGAL/AABB_triangle_primitive.h>
 #include <CGAL/Delaunay_triangulation_3.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_items_with_id_3.h>
 #include <CGAL/Surface_mesh.h>
@@ -36,7 +36,7 @@ namespace yade {
 	// aliases in other namespace for exact kernel. Or maybe later rename namespace into struct, so that this can be used as template argument.
 	// We will see how this will need to evelove.
 //	namespace CGP {
-		using K              = CGAL::Exact_predicates_inexact_constructions_kernel;
+		using K              = CGAL::Exact_Real_predicates_inexact_constructions_kernel;
 		using Polyhedron     = CGAL::Polyhedron_3<K>;
 		using Mesh           = CGAL::Surface_mesh<K::Point_3>;
 		using Triangulation  = CGAL::Delaunay_triangulation_3<K>;
@@ -52,7 +52,7 @@ namespace yade {
 		using CGAL_AABB_tree = CGAL::AABB_tree<CGAL::AABB_traits<K,CGAL::AABB_triangle_primitive<K,std::vector<Triangle>::iterator>>>;
 //	}
 	// It would be perhaps useful to collect here similar stuff frmo other files.
-}
+} // namespace yade
 
 #endif
 
