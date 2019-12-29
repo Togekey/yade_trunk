@@ -8,7 +8,7 @@
 
 //Define basic types from CGAL templates
 #pragma once
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <lib/base/AliasCGAL.hpp>
 #include <CGAL/Cartesian.h>
 #include <CGAL/Regular_triangulation_3.h>
 #if CGAL_VERSION_NR < CGAL_VERSION_NUMBER(4,11,0)
@@ -44,7 +44,7 @@ inline void revertEdge (unsigned &i,unsigned &j){
 // FIXME - consider moving these into lib/base/AliasCGAL.hpp
 namespace CGT {
 //Robust kernel
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef CGAL::Exact_Real_predicates_inexact_constructions_kernel K;
 //A bit faster, but gives crash eventualy
 // typedef CGAL::Cartesian<double> K;
 
