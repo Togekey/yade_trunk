@@ -1885,7 +1885,7 @@ void  FlowBoundingSphere<Tesselation>::computeEdgesSurfaces()
 		//We eliminate edges that would be periodic replications or involving two bounding objects, i.e. the min id must be non-ghost and non-fictious
 		if (vi1.id()<vi2.id()) {if (vi1.isFictious || vi2.isGhost) continue;}
 		else if (vi2.isFictious || vi2.isGhost) continue;
-		double area = T[currentTes].computeVFacetArea(ed_it);
+		Real area = T[currentTes].computeVFacetArea(ed_it);
 		edgeSurfaces.push_back(area);
 		unsigned int id1 = vi1.id();
 		unsigned int id2 = vi2.id();

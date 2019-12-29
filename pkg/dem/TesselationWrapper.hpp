@@ -48,7 +48,7 @@ public:
 	#endif	
 	
 	Tesselation* Tes;
-	double mean_radius, inf;
+	Real mean_radius, inf;
 	bool rad_divided;
 	bool bounded;
 	CGT::Point Pmin;
@@ -71,7 +71,7 @@ public:
 	/// Add axis aligned bounding planes (modelised as spheres with (almost) infinite radius)
   	void 	addBoundingPlanes (void);
 	/// Force boudaries at positions not equal to precomputed ones
- 	void	addBoundingPlanes(double pminx, double pmaxx, double pminy, double pmaxy, double pminz, double pmaxz);
+ 	void	addBoundingPlanes(Real pminx, Real pmaxx, Real pminy, Real pmaxy, Real pminz, Real pmaxz);
 	///compute voronoi centers then stop (don't compute anything else)
  	void	computeTesselation (void);
  	void	computeTesselation( double pminx, double pmaxx, double pminy, double pmaxy, double pminz, double pmaxz);
@@ -90,8 +90,8 @@ public:
 	void	computeVolumes	(void);
 	void	computeDeformations (void) {mma.analyser->computeParticlesDeformation();}
 	///Get volume of the sphere inserted with indentifier "id""
-	double	Volume	(unsigned int id);
-	double	deformation (unsigned int id,unsigned int i,unsigned int j) {
+	Real	Volume	(unsigned int id);
+	Real	deformation (unsigned int id,unsigned int i,unsigned int j) {
 		if (!mma.analyser->ParticleDeformation.size()) {LOG_ERROR("compute deformations first"); return 0;}
 		if (mma.analyser->ParticleDeformation.size()<id) {LOG_ERROR("id out of bounds"); return 0;}
 		if (i<1 || i>3 || j<1 || j>3) {LOG_ERROR("tensor index must be between 1 and 3"); return 0;}

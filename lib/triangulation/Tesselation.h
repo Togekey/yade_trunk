@@ -145,7 +145,7 @@ public:
 	static Segment  Dual	(FiniteFacetsIterator &facet);	//G�n�re le segment dual d'une facette finie
 	static Real	Volume	(FiniteCellsIterator cell);
 	inline void 	AssignPartialVolume	(FiniteEdgesIterator& ed_it);
-	double		computeVFacetArea (FiniteEdgesIterator ed_it);
+	Real		computeVFacetArea (FiniteEdgesIterator ed_it);
 	void		ResetVCellVolumes	(void);
 	void		computeVolumes		(void);//compute volume each voronoi cell
 	void		computePorosity		(void);//compute volume and porosity of each voronoi cell

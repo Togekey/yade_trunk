@@ -168,7 +168,7 @@ void TesselationWrapper::insertSceneSpheres(bool reset)
 // 	clock.top("Triangulation");
 }
 
-double TesselationWrapper::Volume(unsigned int id) {return ((unsigned int) Tes->Max_id() >= id) ? Tes->Volume(id) : -1;}
+Real TesselationWrapper::Volume(unsigned int id) {return ((unsigned int) Tes->Max_id() >= id) ? Tes->Volume(id) : -1;}
 
 bool TesselationWrapper::insert(double x, double y, double z, double rad, unsigned int id)
 {
@@ -243,7 +243,7 @@ bool TesselationWrapper::nextFacet(std::pair<unsigned int,unsigned int>& facet)
 	return true;
 }
 
-void TesselationWrapper::addBoundingPlanes(double pminx, double pmaxx, double pminy, double pmaxy, double pminz, double pmaxz)
+void TesselationWrapper::addBoundingPlanes(Real pminx, Real pmaxx, Real pminy, Real pmaxy, Real pminz, Real pmaxz)
 {
 	if (!bounded) {
 		if (!rad_divided) {
@@ -349,9 +349,9 @@ boost::python::dict TesselationWrapper::getVolPoroDef(bool deformation)
 		int dim2[]={bodiesDim,9};
 		/// This is the code that needs numpy include
 		//numpy_boost<Body::id_t,1> id(dim1);
- 		numpy_boost<double,1> vol(dim1);
- 		numpy_boost<double,1> poro(dim1);
- 		numpy_boost<double,2> def(dim2);
+ 		numpy_boost<Real,1> vol(dim1);
+ 		numpy_boost<Real,1> poro(dim1);
+ 		numpy_boost<Real,2> def(dim2);
  		//for(const auto & b :  *scene->bodies){
  		for (RTriangulation::Finite_vertices_iterator  V_it = Tri.finite_vertices_begin(); V_it !=  Tri.finite_vertices_end(); V_it++) {
  			//id[]=V_it->info().id()

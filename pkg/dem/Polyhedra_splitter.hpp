@@ -16,7 +16,7 @@ namespace yade { // Cannot have #include directive inside.
 class PolyhedraSplitter : public PeriodicEngine{
 	public:
 		virtual void action();
-		double getStrength(const double & volume, const double & strength) const;
+		Real getStrength(const Real & volume, const Real & strength) const;
 		void Symmetrize(Matrix3r & bStress);
 
 	// clang-format off

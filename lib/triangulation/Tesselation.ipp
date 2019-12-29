@@ -988,7 +988,7 @@ Segment _Tesselation<TT>::Dual ( FiniteFacetsIterator &f_it )
 }
 
 template<class TT>
-double _Tesselation<TT>::computeVFacetArea ( FiniteEdgesIterator ed_it )
+Real _Tesselation<TT>::computeVFacetArea ( FiniteEdgesIterator ed_it )
 {
 	CellCirculator cell0 = Tri->incident_cells ( *ed_it );
 	CellCirculator cell2 = cell0;
