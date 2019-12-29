@@ -16,6 +16,7 @@
 // TODO: add docstrings to all these math functions.
 
 #include <lib/high-precision/Real.hpp>
+#include <lib/base/AliasCGAL.hpp>
 
 #include <Eigen/Core>
 #include <Eigen/src/Core/MathFunctions.h>
