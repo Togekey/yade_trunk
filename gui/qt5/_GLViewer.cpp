@@ -216,7 +216,7 @@ public:
 	}
 	void set_bgColor(const Vector3r& c)
 	{
-		QColor cc(int(std::round(255 * c[0])), int(std::round(255 * c[1])), int(std::round(255 * c[2])));
+		QColor cc(int(math::round(255 * c[0])), int(math::round(255 * c[1])), int(math::round(255 * c[2])));
 		GLV;
 		glv->setBackgroundColor(cc);
 	}

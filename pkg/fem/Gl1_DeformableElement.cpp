@@ -35,7 +35,7 @@ void Gl1_DeformableElement::go(const shared_ptr<Shape>& cm, const shared_ptr<Sta
 
 				   //Find the opposite vertex total indice sum equals to six therefore the last one is going to be 6-sum of indices
 				   // I accept it is very uncommon
-				   int oppositevertexindex=6-int(std::round(vertices.sum())); /// XXX: this is suspicious
+				   int oppositevertexindex=6-int(math::round(vertices.sum())); /// XXX: this is suspicious
 
 				   std::advance(i1,vertices[0]);
 				   std::advance(i2,vertices[1]);

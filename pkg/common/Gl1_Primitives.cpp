@@ -121,7 +121,7 @@ void Gl1_Sphere::go(const shared_ptr<Shape>& cm, const shared_ptr<State>& ,bool 
 	Real r=(static_cast<Sphere*>(cm.get()))->radius;
 	glColor3v(cm->color);
 	if (circleView) {
-			bool somethingChanged = (std::abs(quality-prevQuality)>0.001 || prevDisplayMode!="torus" || prevCircleAllowedRotationAxis!=circleAllowedRotationAxis);
+			bool somethingChanged = (math::abs(quality-prevQuality)>0.001 || prevDisplayMode!="torus" || prevCircleAllowedRotationAxis!=circleAllowedRotationAxis);
 			if (somethingChanged) {
 				prevCircleAllowedRotationAxis=circleAllowedRotationAxis;
 				prevDisplayMode="torus";
@@ -136,16 +136,16 @@ void Gl1_Sphere::go(const shared_ptr<Shape>& cm, const shared_ptr<State>& ,bool 
 					  case 'y':glRotatef(90,1,0,0);break;
 					  default:cerr<<"Error in Gl1_Sphere::go, circleAllowedRotationAxis should be \"x\", \"y\" or \"z\"."<<endl;
 				    }
-				    glutSolidTorus(0.5*circleRelThickness*r,r*(1.0-circleRelThickness/2.),int(std::round(quality*glutStacks)),int(std::round(quality*glutSlices))); //generate torus
+				    glutSolidTorus(0.5*circleRelThickness*r,r*(1.0-circleRelThickness/2.),int(math::round(quality*glutStacks)),int(math::round(quality*glutSlices))); //generate torus
 				  glEndList();
 			}
 			glCallList(glGlutSphereList);
 	} else {
 		if (wire || wire2) {
-			glutWireSphere(r,int(std::round(quality*glutSlices)),int(std::round(quality*glutStacks)));
+			glutWireSphere(r,int(math::round(quality*glutSlices)),int(math::round(quality*glutStacks)));
 		} else {
 			//Check if quality has been modified or if previous lists are invalidated (e.g. by creating a new qt view), then regenerate lists
-			bool somethingChanged = (std::abs(quality-prevQuality)>0.001 || glIsList(glStripedSphereList)!=GL_TRUE || prevDisplayMode!="sphere");
+			bool somethingChanged = (math::abs(quality-prevQuality)>0.001 || glIsList(glStripedSphereList)!=GL_TRUE || prevDisplayMode!="sphere");
 			if (somethingChanged) {
 				initStripedGlList();
 				initGlutGlList();
@@ -257,7 +257,7 @@ void Gl1_Sphere::initGlutGlList(){
 	glNewList(glGlutSphereList,GL_COMPILE);
 		glEnable(GL_LIGHTING);
 		glShadeModel(GL_SMOOTH);
-		glutSolidSphere(1.0,int(std::round(std::max(quality*glutSlices,(Real)2.))),int(std::round(std::max(quality*glutStacks,(Real)3.))));
+		glutSolidSphere(1.0,int(math::round(math::max(quality*glutSlices,(Real)2.))),int(math::round(math::max(quality*glutStacks,(Real)3.))));
 	glEndList();
 }
 
