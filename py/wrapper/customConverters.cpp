@@ -16,6 +16,7 @@
 #include <lib/base/Logging.hpp>
 #include <lib/base/Math.hpp>
 #include <lib/base/openmp-accu.hpp>
+#include <lib/high-precision/ToFromPythonConverter.hpp>
 #include <core/Engine.hpp>
 #include <pkg/common/Callbacks.hpp>
 #include <pkg/common/Dispatching.hpp>
@@ -79,15 +80,23 @@ struct custom_Se3r_from_seq {
 
 
 struct custom_OpenMPAccumulator_to_float {
+#if (YADE_REAL_BIT <= 64)
 	static PyObject* convert(const OpenMPAccumulator<Real>& acc) { return boost::python::incref(PyFloat_FromDouble(acc.get())); }
+#else
+	static PyObject* convert(const OpenMPAccumulator<Real>& acc) { return ArbitraryReal_to_python<Real>::convert(acc.get()); }
+#endif
 };
 struct custom_OpenMPAccumulator_from_float {
 	custom_OpenMPAccumulator_from_float()
 	{
 		boost::python::converter::registry::push_back(&convertible, &construct, boost::python::type_id<OpenMPAccumulator<Real>>());
 	}
+#if (YADE_REAL_BIT <= 64)
 	static void* convertible(PyObject* obj_ptr) { return PyFloat_Check(obj_ptr) ? obj_ptr : 0; }
-	static void  construct(PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
+#else
+	static void*     convertible(PyObject* obj_ptr) { return ArbitraryReal_from_python<Real>::convertible(obj_ptr); }
+#endif
+	static void construct(PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data)
 	{
 		void* storage = ((boost::python::converter::rvalue_from_python_storage<OpenMPAccumulator<Real>>*)(data))->storage.bytes;
 		new (storage) OpenMPAccumulator<Real>;
