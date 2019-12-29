@@ -524,12 +524,12 @@ bool Law2_ScGeom_CpmPhys_Cpm::go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _p
 				glRotate(aa.angle()*Mathr::RAD_TO_DEG,aa.axis()[0],aa.axis()[1],aa.axis()[2]);
 				glBegin(GL_POLYGON);
 					glColor3v(lineColor); 
-					glVertex3d(halfSize,0.,0.);
-					glVertex3d(.5*halfSize,.866*halfSize,0.);
-					glVertex3d(-.5*halfSize,.866*halfSize,0.);
-					glVertex3d(-halfSize,0.,0.);
-					glVertex3d(-.5*halfSize,-.866*halfSize,0.);
-					glVertex3d(.5*halfSize,-.866*halfSize,0.);
+					glVertex3(halfSize,0.,0.);
+					glVertex3(.5*halfSize,.866*halfSize,0.);
+					glVertex3(-.5*halfSize,.866*halfSize,0.);
+					glVertex3(-halfSize,0.,0.);
+					glVertex3(-.5*halfSize,-.866*halfSize,0.);
+					glVertex3(.5*halfSize,-.866*halfSize,0.);
 				glEnd();
 			glPopMatrix();
 		}

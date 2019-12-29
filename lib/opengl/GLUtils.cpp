@@ -56,7 +56,7 @@ void GLUtils::QGLViewer::drawArrow(const Vector3r& from, const Vector3r& to, dou
 	glTranslate(from[0],from[1],from[2]);
 	Quaternionr q(Quaternionr().setFromTwoVectors(Vector3r(0,0,1),to-from));
 	glMultMatrix(q.toRotationMatrix().data());
-	drawArrow((to-from).norm(), radius, nbSubdivisions);
+	drawArrow(static_cast<double>((to-from).norm()), radius, nbSubdivisions);
 	glPopMatrix();
 }
 
