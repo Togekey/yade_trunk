@@ -58,11 +58,11 @@ void Disp2DPropLoadEngine::action()
         	{
         		if ((*ii)->isReal())
                 	{
-				TotInt++;
+				TotInt+=1;
 				const shared_ptr<Body>& b1 = Body::byId( (*ii)->getId1() );
 				const shared_ptr<Body>& b2 = Body::byId( (*ii)->getId2() );
 				if ( (b1->isDynamic()) && (b2->isDynamic()) )
-					OnlySsInt++;
+					OnlySsInt+=1;
 			}
 		}
 	
@@ -188,11 +188,11 @@ void Disp2DPropLoadEngine::saveData()
         {
         	if ((*ii)->isReal())
                 {
-			TotInt++;
+			TotInt+=1;
 			const shared_ptr<Body>& b1 = Body::byId( (*ii)->getId1() );
 			const shared_ptr<Body>& b2 = Body::byId( (*ii)->getId2() );
 			if ( (b1->isDynamic()) && (b2->isDynamic()) )
-				OnlySsInt++;
+				OnlySsInt+=1;
 		}
 	}
 	
