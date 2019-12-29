@@ -176,7 +176,7 @@ YADE_PLUGIN((Gl1_PotentialBlock));
 //				PotentialBlock* cmbody = dynamic_cast<PotentialBlock*>(b->shape.get());
 //				if (!cmbody) continue;
 
-//					Eigen::Matrix3d rotation = b->state->ori.toRotationMatrix(); //*pb->oriAabb.conjugate();
+//					Matrix3r rotation = b->state->ori.toRotationMatrix(); //*pb->oriAabb.conjugate();
 //					int count = 0;
 //					for (int i=0; i<3; i++){
 //						for (int j=0; j<3; j++){
@@ -530,10 +530,10 @@ void PotentialBlockVTKRecorderTunnel::action()
 			function->R = pb->R;
 			function->r = pb->r;
 			function->k = pb->k;
-			//Eigen::Matrix3d directionCos = b->state->ori.conjugate().toRotationMatrix();  //FIXME
-			Eigen::Matrix3d rotation = b->state->ori.conjugate().toRotationMatrix(); //*pb->oriAabb.conjugate();
-			int             count    = 0;
-			function->clump          = false;
+			//Matrix3r directionCos = b->state->ori.conjugate().toRotationMatrix();  //FIXME
+			Matrix3r rotation = b->state->ori.conjugate().toRotationMatrix(); //*pb->oriAabb.conjugate();
+			int      count    = 0;
+			function->clump   = false;
 			for (int i = 0; i < 3; i++) {
 				for (int j = 0; j < 3; j++) {
 					//function->rotationMatrix[count] = directionCos(j,i);
@@ -580,8 +580,8 @@ void PotentialBlockVTKRecorderTunnel::action()
 				functionBool[i]->clumpMemberCentreY = clumpMember->state->pos.y() - b->state->pos.y();
 				functionBool[i]->clumpMemberCentreZ = clumpMember->state->pos.z() - b->state->pos.z();
 
-				//Eigen::Matrix3d directionCos = clumpMember->state->ori.conjugate().toRotationMatrix();  //FIXME
-				Eigen::Matrix3d rotation = clumpMember->state->ori.toRotationMatrix(); //*pbShape->oriAabb.conjugate();
+				//Matrix3r directionCos = clumpMember->state->ori.conjugate().toRotationMatrix();  //FIXME
+				Matrix3r rotation = clumpMember->state->ori.toRotationMatrix(); //*pbShape->oriAabb.conjugate();
 				for (unsigned int j = 0; j < pbShape->a.size(); j++) {
 					Vector3r plane = rotation * Vector3r(pbShape->a[j], pbShape->b[j], pbShape->c[j]);
 					Real     d     = pbShape->d
@@ -988,15 +988,15 @@ void PotentialBlockVTKRecorder::action()
 			countID++;
 		}
 		//vtkSmartPointer<ImpFuncPB> function = ImpFuncPB::New();
-		function->a                  = pb->a;
-		function->b                  = pb->b;
-		function->c                  = pb->c;
-		function->d                  = pb->d;
-		function->R                  = pb->R;
-		function->r                  = pb->r;
-		function->k                  = pb->k;
-		Eigen::Matrix3d directionCos = b->state->ori.conjugate().toRotationMatrix();
-		int             count        = 0;
+		function->a           = pb->a;
+		function->b           = pb->b;
+		function->c           = pb->c;
+		function->d           = pb->d;
+		function->R           = pb->R;
+		function->r           = pb->r;
+		function->k           = pb->k;
+		Matrix3r directionCos = b->state->ori.conjugate().toRotationMatrix();
+		int      count        = 0;
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 3; j++) {
 				//function->rotationMatrix[count] = directionCos(j,i);

@@ -155,7 +155,7 @@ public:
 	Real              k;
 	Real              r;
 	Real              R;
-	Eigen::Matrix3d   rotationMatrix;
+	Matrix3r          rotationMatrix;
 	bool              clump;
 	Real              clumpMemberCentreX;
 	Real              clumpMemberCentreY;

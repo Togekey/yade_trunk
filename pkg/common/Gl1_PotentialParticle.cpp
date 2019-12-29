@@ -260,11 +260,11 @@ Real ImpFunc::FunctionValue(Real x[3])
 	vector<Real> p;
 	Real         pSum2 = 0.0;
 	if (!clump) {
-		Eigen::Vector3d xori(x[0], x[1], x[2]);
-		Eigen::Vector3d xlocal = rotationMatrix * xori;
-		xlocal[0]              = rotationMatrix(0, 0) * x[0] + rotationMatrix(0, 1) * x[1] + rotationMatrix(0, 2) * x[2];
-		xlocal[1]              = rotationMatrix(1, 0) * x[0] + rotationMatrix(1, 1) * x[1] + rotationMatrix(1, 2) * x[2];
-		xlocal[2]              = rotationMatrix(2, 0) * x[0] + rotationMatrix(2, 1) * x[1] + rotationMatrix(2, 2) * x[2];
+		Vector3r xori(x[0], x[1], x[2]);
+		Vector3r xlocal = rotationMatrix * xori;
+		xlocal[0]       = rotationMatrix(0, 0) * x[0] + rotationMatrix(0, 1) * x[1] + rotationMatrix(0, 2) * x[2];
+		xlocal[1]       = rotationMatrix(1, 0) * x[0] + rotationMatrix(1, 1) * x[1] + rotationMatrix(1, 2) * x[2];
+		xlocal[2]       = rotationMatrix(2, 0) * x[0] + rotationMatrix(2, 1) * x[1] + rotationMatrix(2, 2) * x[2];
 		//std::cout<<"rotationMatrix: "<<endl<<rotationMatrix<<endl;
 		//x[0]=xlocal[0]; x[1]=xlocal[1]; x[2]=xlocal[2];
 
@@ -280,9 +280,9 @@ Real ImpFunc::FunctionValue(Real x[3])
 		Real f      = (1.0 - k) * (pSum2 / pow(r, 2) - 1.0) + k * (sphere / pow(R, 2) - 1.0);
 		return f;
 	} else {
-		Eigen::Vector3d xori(x[0], x[1], x[2]);
-		Eigen::Vector3d clumpMemberCentre(clumpMemberCentreX, clumpMemberCentreY, clumpMemberCentreZ);
-		Eigen::Vector3d xlocal = xori - clumpMemberCentre;
+		Vector3r xori(x[0], x[1], x[2]);
+		Vector3r clumpMemberCentre(clumpMemberCentreX, clumpMemberCentreY, clumpMemberCentreZ);
+		Vector3r xlocal = xori - clumpMemberCentre;
 		//xlocal[0] = rotationMatrix[0]*x[0] + rotationMatrix[3]*x[1] + rotationMatrix[6]*x[2];
 		//xlocal[1] = rotationMatrix[1]*x[0] + rotationMatrix[4]*x[1] + rotationMatrix[7]*x[2];
 		//xlocal[2] = rotationMatrix[2]*x[0] + rotationMatrix[5]*x[1] + rotationMatrix[8]*x[2];
@@ -391,15 +391,15 @@ void PotentialParticleVTKRecorder::action()
 			countID++;
 		}
 		//vtkSmartPointer<ImpFunc> function = ImpFunc::New();
-		function->a                  = pb->a;
-		function->b                  = pb->b;
-		function->c                  = pb->c;
-		function->d                  = pb->d;
-		function->R                  = pb->R;
-		function->r                  = pb->r;
-		function->k                  = pb->k;
-		Eigen::Matrix3d directionCos = b->state->ori.conjugate().toRotationMatrix();
-		int             count        = 0;
+		function->a           = pb->a;
+		function->b           = pb->b;
+		function->c           = pb->c;
+		function->d           = pb->d;
+		function->R           = pb->R;
+		function->r           = pb->r;
+		function->k           = pb->k;
+		Matrix3r directionCos = b->state->ori.conjugate().toRotationMatrix();
+		int      count        = 0;
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 3; j++) {
 				//function->rotationMatrix[count] = directionCos(j,i);
