@@ -641,11 +641,13 @@ void Split(const shared_ptr<Body> body, Vector3r direction, Vector3r point) { Sp
 
 //**********************************************************************************
 //distace of point from a plane (squared) with sign
-double Oriented_squared_distance2(Plane P, CGALpoint x)
+/* XXX: not used anywhere.
+Real Oriented_squared_distance2(Plane P, CGALpoint x)
 {
-	double h = P.a() * x.x() + P.b() * x.y() + P.c() * x.z() + P.d();
+	Real h = P.a() * x.x() + P.b() * x.y() + P.c() * x.z() + P.d();
 	return ((h > 0.) - (h < 0.)) * pow(h, 2) / (CGALvector(P.a(), P.b(), P.c())).squared_length();
 }
+*/
 
 //**********************************************************************************
 bool convexHull(vector<Vector3r> points)
