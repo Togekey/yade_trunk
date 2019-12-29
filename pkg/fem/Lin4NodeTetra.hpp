@@ -27,9 +27,9 @@ class Lin4NodeTetra: public DeformableElement {
 	public:
 
 		friend class If2_Lin4NodeTetra_LinIsoRayleighDampElast;
-		shared_ptr<Matrix> massMatrixInvProductstiffnessMatrix;
-		Matrix calculateStiffness(Real, Real ,Vector3r,Vector3r,Vector3r,Vector3r);
-		Matrix calculateMassMatrix(Real, Real);
+		shared_ptr<MatrixXr> massMatrixInvProductstiffnessMatrix;
+		MatrixXr calculateStiffness(Real, Real ,Vector3r,Vector3r,Vector3r,Vector3r);
+		MatrixXr calculateMassMatrix(Real, Real);
 		virtual ~Lin4NodeTetra();
 		void initialize(void);
 		Real getVolume(void){
@@ -44,7 +44,7 @@ class Lin4NodeTetra: public DeformableElement {
 			   std::advance(i2,2);
 			   std::advance(i3,3);
 
-			   Matrix J(4,4);
+			   MatrixXr J(4,4);
 			   Vector3r pos0=Vector3r(0,0,0);
 			   Vector3r pos1=i1->second.position-i0->second.position;
 			   Vector3r pos2=i2->second.position-i0->second.position;

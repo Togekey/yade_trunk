@@ -26,12 +26,12 @@ class PotentialBlock : public Shape {
 //		vector<Vertices> vertexStruct;
 //		vector<Edges> edgeStruct;
 
-//		Eigen::MatrixXd Amatrix;
-//		Eigen::MatrixXd Dmatrix;
+//		MatrixXr Amatrix;
+//		MatrixXr Dmatrix;
 		virtual ~PotentialBlock ();
 		void postLoad(PotentialBlock&);
 
-		Real getDet(const Eigen::MatrixXd A);
+		Real getDet(const MatrixXr A);
 		Real getSignedArea(const Vector3r pt1,const Vector3r pt2, const Vector3r pt3);
 		void calculateVertices();
 		void calculateInertia(Vector3r& centroid, Real& Ixx, Real& Iyy, Real& Izz,Real& Ixy, Real& Ixz, Real& Iyz);
@@ -86,8 +86,8 @@ class PotentialBlock : public Shape {
 //			((vector<Real>, heatCapacity, ,Attr::hidden, "Property for plane, rock joint"))
 //			((vector<Real>, rFactor, ,Attr::hidden, "(not used), individual factor for r"))
 		((vector<Vector3r>, vertices, ,(Attr::readonly),"Vertices |yupdate|"))
-		//((Eigen::MatrixXd , Amatrix, ,, "a "))
-		//((Eigen::MatrixXd , Dmatrix, ,, "b "))
+		//((MatrixXr , Amatrix, ,, "a "))
+		//((MatrixXr , Dmatrix, ,, "b "))
 //			((Real, waterVolume, ,, "volume of body submerged in water"))
 //			((vector<Vector3r>, verticesCD, ,, "vertices"))
 		((vector<Real>, a, ,, "List of a coefficients of plane normals"))

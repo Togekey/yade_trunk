@@ -39,7 +39,7 @@ class Ig2_PB_PB_ScGeom: public IGeomFunctor
 		void getPtOnParticle2(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, Vector3r previousPt, Vector3r searchDir, Vector3r& newlocalPoint);
 //		void getPtOnParticleArea(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, Vector3r previousPt, Vector3r normal, Vector3r& newlocalPoint);
 		bool getPtOnParticleAreaNormal(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, const Vector3r previousPt, const Vector3r prevDir, const int prevNo, Vector3r& newlocalPoint, Vector3r& newNormal, int& newNo);
-		Real getDet(const Eigen::MatrixXd A);
+		Real getDet(const MatrixXr A);
 		bool customSolve(const shared_ptr<Shape>& cm1, const State& state1, const shared_ptr<Shape>& cm2, const State& state2, const Vector3r& shift2, Vector3r &contactPt, bool warmstart);
 		Real evaluatePhys(const shared_ptr<Shape>& cm1,  const State& state1, const Vector3r& shift2, const Vector3r newTrial, Real& phi_b, Real& phi_r, /* Real& JRC, Real& JSC, */ Real& cohesion, /* Real& ks, Real& kn, */ Real& tension, /* Real &lambda0, Real &heatCapacity, Real &hwater, */ bool &intactRock, int &activePlanesNo, int &jointType);
 		Vector3r getNormal(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r& shift2, const Vector3r newTrial, const bool twoDimension);

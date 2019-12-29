@@ -123,7 +123,7 @@ class BlockGen : public FileGenerator {
 		};
 
 //			Real getSignedArea(const Vector3r pt1,const Vector3r pt2, const Vector3r pt3);
-//			Real getDet(const Eigen::MatrixXd A);
+//			Real getDet(const MatrixXr A);
 		bool createBlock(shared_ptr<Body>& body, struct BlockGen::Block block, int no);
 		bool contactDetectionLPCLPglobal(struct BlockGen::Discontinuity joint, struct BlockGen::Block block, Vector3r& touchingPt);
 		bool checkRedundancyLPCLP(struct BlockGen::Discontinuity joint, struct BlockGen::Block block, Vector3r& touchingPt);
@@ -131,7 +131,7 @@ class BlockGen : public FileGenerator {
 		bool contactBoundaryLPCLP(struct BlockGen::Discontinuity joint, struct BlockGen::Block block, Vector3r& touchingPt);
 
 		/* Functions that were not used */
-//			Real getCentroidTetrahedron(const Eigen::MatrixXd A); //not used
+//			Real getCentroidTetrahedron(const MatrixXr A); //not used
 //			bool contactDetection(struct BlockGen::Discontinuity joint, struct BlockGen::Block block, Vector3r& touchingPt); //not used
 //			bool contactDetectionLPCLP(struct BlockGen::Discontinuity joint, struct BlockGen::Block block, Vector3r& touchingPt); //not used
 //			bool startingPointFeasibility(struct BlockGen::Block block, Vector3r& initialPoint); //not used

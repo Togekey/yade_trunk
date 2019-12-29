@@ -97,7 +97,7 @@ void SoluteFlowEngine::soluteTransport ()
 	std::vector<ETriplet2> tripletList2;
 	Eigen::SparseLU<Eigen::SparseMatrix<double,Eigen::ColMajor>,Eigen::COLAMDOrdering<int> > eSolver2;	
 	// Prepare (copy) concentration vector
-	Eigen::VectorXd eb2(ncells); Eigen::VectorXd ex2(ncells);
+	VectorXr eb2(ncells); VectorXr ex2(ncells);
 	FOREACH(CellHandle& cell, solver->T[solver->currentTes].cellHandles){
 	  eb2[cell->info().id]=cell->info().solute();
 	}

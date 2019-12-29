@@ -428,19 +428,19 @@ bool RockBolt::installBolts(
 	Real s      = 0.0;
 	//bool converge = true;
 
-	Matrix3r        Q1 = (state1->ori.conjugate()).toRotationMatrix();
-	Eigen::MatrixXd A1 = Eigen::MatrixXd::Zero(planeNoA, 3);
+	Matrix3r Q1 = (state1->ori.conjugate()).toRotationMatrix();
+	MatrixXr A1 = MatrixXr::Zero(planeNoA, 3);
 	for (int i = 0; i < planeNoA; i++) {
 		A1(i, 0) = s1->a[i];
 		A1(i, 1) = s1->b[i];
 		A1(i, 2) = s1->c[i];
 	}
-	Eigen::MatrixXd AQ1 = A1 * Q1;
-	Eigen::MatrixXd pos1(3, 1);
-	pos1(0, 0)             = state1->pos.x();
-	pos1(1, 0)             = state1->pos.y();
-	pos1(2, 0)             = state1->pos.z();
-	Eigen::MatrixXd Q1pos1 = AQ1 * pos1;
+	MatrixXr AQ1 = A1 * Q1;
+	MatrixXr pos1(3, 1);
+	pos1(0, 0)      = state1->pos.x();
+	pos1(1, 0)      = state1->pos.y();
+	pos1(2, 0)      = state1->pos.z();
+	MatrixXr Q1pos1 = AQ1 * pos1;
 
 
 	ClpSimplex model2;

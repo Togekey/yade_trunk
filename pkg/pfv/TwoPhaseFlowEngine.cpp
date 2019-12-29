@@ -197,7 +197,7 @@ void TwoPhaseFlowEngine::computePoreBodyRadius()
       bool initialSign = false; //False = negative, true is positive
       bool first = true;
       
-      Eigen::MatrixXd M(6,6);
+      MatrixXr M(6,6);
       
       FOREACH(CellHandle& cell, solver->T[solver->currentTes].cellHandles){
 	//Distance between multiple particles, can be done more efficient
@@ -1899,8 +1899,8 @@ void TwoPhaseFlowEngine::solvePressure()
     
     //Define matrix, triplet list, and linear solver
     tripletList.clear(); // tripletList.resize(T_nnz);
-    Eigen::VectorXd residualsList(numberOfPores);
-    Eigen::VectorXd pressuresList(numberOfPores); //Solve aMatrix * pressuresList = residualsList
+    VectorXr residualsList(numberOfPores);
+    VectorXr pressuresList(numberOfPores); //Solve aMatrix * pressuresList = residualsList
     
     //define lists
     if((deformation && remesh) || firstDynTPF){

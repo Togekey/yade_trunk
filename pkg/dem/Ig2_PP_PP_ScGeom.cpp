@@ -501,7 +501,7 @@ Vector3r Ig2_PP_PP_ScGeom::getNormal(const shared_ptr<Shape>& cm1, const State& 
 	Real fdz = 2.0*(1.0-k) * pdzSum/pow(r,2) + 2.0*k*z/pow(R,2);
 
 	///////////////////// Assembling rotation matrix Qt for particle 1 //////////////////////////////
-	Matrix3r Q1=Eigen::Matrix3d::Zero();;
+	Matrix3r Q1=Matrix3r::Zero();;
 	//if(state1.ori==Quaternionr(1,0,0,0)){
 	//	Q1.setIdentity();
 	//}else{
@@ -689,8 +689,8 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
 	//Vector3r tempP1 = contactPt - posA;
 	//Vector3r localP1 = QA*tempP1;
-	/* P1Q */ //Eigen::MatrixXd P1 = Eigen::MatrixXd::Zero(planeNoA,3);
-	/*d1*/    //Eigen::MatrixXd d1 = Eigen::MatrixXd::Zero(planeNoA,1);
+	/* P1Q */ //MatrixXr P1 = MatrixXr::Zero(planeNoA,3);
+	/*d1*/    //MatrixXr d1 = MatrixXr::Zero(planeNoA,1);
 
 	Real blasP1[planeNoA*3];
 	Real blasD1[planeNoA];
@@ -711,9 +711,9 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 		blasP1[i+2*planeNoA] = s1->c[i];
 		blasD1[i] = s1->d[i];
 	}
-	//Eigen::MatrixXd P1Q = P1*QA;
+	//MatrixXr P1Q = P1*QA;
 	//transA = 'N'; transB = 'N'; blasM = planeNoA;  blasN = 3; blasK = 3;
-// blasLDA = std::max(1,blasM);  blasLDC = std::max(1,blasM); blasLDB = 3; blasAlpha=1.0; blasBeta = 0.0;
+// blasLDA = math::max(1,blasM);  blasLDC = math::max(1,blasM); blasLDB = 3; blasAlpha=1.0; blasBeta = 0.0;
 	//dgemm_(&transA, &transB, &blasM, &blasN, &blasK, &blasAlpha, &blasP1[0], &blasLDA, &blasQA[0], &blasLDB, &blasBeta, &blasP1Q[0], &blasLDC);
 	dgemm_(&blasNT, &blasNT, &planeNoA, &blas3, &blas3, &blas1, &blasP1[0], &blas1planeNoA, &blasQA[0], &blasLDB, &blas0, &blasP1Q[0], &blas1planeNoA);
 
@@ -732,8 +732,8 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
 	// Vector3r tempP2 = contactPt - posB;
 	// Vector3r localP2 = QB*tempP2;
-	/*P2Q*/ //Eigen::MatrixXd P2 = Eigen::MatrixXd::Zero(planeNoB,3);
-	/*d2*/  //Eigen::MatrixXd d2 = Eigen::MatrixXd::Zero(planeNoB,1);
+	/*P2Q*/ //MatrixXr P2 = MatrixXr::Zero(planeNoB,3);
+	/*d2*/  //MatrixXr d2 = MatrixXr::Zero(planeNoB,1);
 	Real blasP2[planeNoB*3];
 	Real blasD2[planeNoB];
 	Real blasP2Q[planeNoB*3];
@@ -752,29 +752,29 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 		blasP2[i+2*planeNoB] = s2->c[i];
 		blasD2[i] = s2->d[i];
 	}
-//Eigen::MatrixXd P2Q = P2*QB;
+//MatrixXr P2Q = P2*QB;
 	//transA = 'N'; transB = 'N'; blasM = planeNoB;    blasN = 3; blasK = 3;
-	//blasLDA = std::max(1,blasM);   blasLDC = std::max(1,blasM); blasLDB = 3; blasAlpha=1.0; blasBeta = 0.0;
+	//blasLDA = math::max(1,blasM);   blasLDC = math::max(1,blasM); blasLDB = 3; blasAlpha=1.0; blasBeta = 0.0;
 // dgemm_(&transA, &transB, &blasM, &blasN, &blasK, &blasAlpha, &blasP2[0], &blasLDA, &blasQB[0], &blasLDB, &blasBeta, &blasP2Q[0], &blasLDC);
 	dgemm_(&blasNT, &blasNT, &planeNoB, &blas3, &blas3, &blasAlpha, &blasP2[0], &blas1planeNoB, &blasQB[0], &blas3, &blasBeta, &blasP2Q[0], &blas1planeNoB);
 	Real sphereB  = (pow(blasLocalP2[0],2) + pow(blasLocalP2[1],2) + pow(blasLocalP2[2],2))/pow(RB,2);
 	Real sB = (1.0-kB)*(pertSumB2/pow(rB,2) - 1.0)+kB*(sphereB -1.0);
 	//sPert = fabs(fA-fB);
 
-	s = std::max(sqrt(fabs(sA+1.0)), sqrt(fabs(sB+1.0))) + sPert;  //sqrt(fA+fB+2.0)+sPert; //sqrt(std::max(fabs(fA+1.0), fabs(fB+1.0))) + sPert; //
+	s = math::max(sqrt(fabs(sA+1.0)), sqrt(fabs(sB+1.0))) + sPert;  //sqrt(fA+fB+2.0)+sPert; //sqrt(math::max(fabs(fA+1.0), fabs(fB+1.0))) + sPert; //
 	//x[3] = s;
 	blasX[3]= s;
 
 	///////////////////  algebra formulation of the SOCP ///////////////////
 	/* c */
-// Eigen::MatrixXd c=Eigen::MatrixXd::Zero(varNo,1);
+// MatrixXr c=MatrixXr::Zero(varNo,1);
 // c[3] = 1.0;
 
 	Real blasA1[(3+planeNoA)*varNo];
 	Real blasA2[(3+planeNoB)*varNo];
 	/* Second order cone constraints */
 	/* A1 */
-	//Eigen::MatrixXd A1(3+planeNoA,varNo);
+	//MatrixXr A1(3+planeNoA,varNo);
 	//Matrix3r QAs=kAs*QA; //cwise()
 	Real blasQAs[9];
 	int noElements = 9;
@@ -782,8 +782,8 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 	dcopy_(&noElements, &blasQA[0], &incx, &blasQAs[0], &incx);
 	dscal_(&noElements, &scaleFactor, &blasQAs[0], &incx);
 
-	// A1 << QAs,Eigen::MatrixXd::Zero(3,1+planeNoAB),
-	// Eigen::MatrixXd::Zero(planeNoA,4),kAp*Eigen::MatrixXd::Identity(planeNoA, planeNoA),Eigen::MatrixXd::Zero(planeNoA,planeNoB);
+	// A1 << QAs,MatrixXr::Zero(3,1+planeNoAB),
+	// MatrixXr::Zero(planeNoA,4),kAp*MatrixXr::Identity(planeNoA, planeNoA),MatrixXr::Zero(planeNoA,planeNoB);
 	memset(blasA1,0.0,sizeof(blasA1));
 	for (int i=0; i<3; i++) {
 		blasA1[i] = blasQAs[i];
@@ -796,7 +796,7 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
 
 	/* A2 */
-	//Eigen::MatrixXd A2(3+planeNoB,varNo);
+	//MatrixXr A2(3+planeNoB,varNo);
 	//Matrix3r QBs=kBs*QB; //cwise();
 	Real blasQBs[9];
 	noElements=9;
@@ -804,8 +804,8 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 	dcopy_(&noElements, &blasQB[0], &incx, &blasQBs[0], &incx);
 	dscal_(&noElements, &scaleFactor, &blasQBs[0], &incx);
 
-	// A2 << QBs,Eigen::MatrixXd::Zero(3,1+planeNoAB),
-	// Eigen::MatrixXd::Zero(planeNoB,4),Eigen::MatrixXd::Zero(planeNoB,planeNoA),kBp*Eigen::MatrixXd::Identity(planeNoB, planeNoB);
+	// A2 << QBs,MatrixXr::Zero(3,1+planeNoAB),
+	// MatrixXr::Zero(planeNoB,4),MatrixXr::Zero(planeNoB,planeNoA),kBp*MatrixXr::Identity(planeNoB, planeNoB);
 	memset(blasA2,0.0,sizeof(blasA2));
 	for (int i=0; i<3; i++) {
 		blasA2[i] = blasQBs[i];
@@ -821,8 +821,8 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
 	/*b1*/
 #if 0
-	Eigen::MatrixXd b1=Eigen::MatrixXd::Zero(3+planeNoA,1);
-	Eigen::Vector3d b1temp = QAs*posA;
+	MatrixXr b1=MatrixXr::Zero(3+planeNoA,1);
+	Vector3r b1temp = QAs*posA;
 	b1[0] = -b1temp[0];
 	b1[1]= -b1temp[1];
 	b1[2] = -b1temp[2];
@@ -841,8 +841,8 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
 	/*b2*/
 #if 0
-	Eigen::MatrixXd b2=Eigen::MatrixXd::Zero(3+planeNoB,1);
-	Eigen::Vector3d b2temp = QBs*posB;
+	MatrixXr b2=MatrixXr::Zero(3+planeNoB,1);
+	Vector3r b2temp = QBs*posB;
 	b2[0] = -b2temp[0];
 	b2[1]= -b2temp[1];
 	b2[2] = -b2temp[2];
@@ -859,9 +859,9 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 	blasB2[2]=blasB2temp[2];
 
 	/*AL*/
-// Eigen::MatrixXd AL(planeNoAB,varNo);
-// AL<<P1Q, Eigen::MatrixXd::Zero(planeNoA,1), -1.0*Eigen::MatrixXd::Identity(planeNoA,planeNoA), Eigen::MatrixXd::Zero(planeNoA,planeNoB), //cwise()
-//	      P2Q, Eigen::MatrixXd::Zero(planeNoB,1), Eigen::MatrixXd::Zero(planeNoB,planeNoA), -1.0*Eigen::MatrixXd::Identity(planeNoB,planeNoB);
+// MatrixXr AL(planeNoAB,varNo);
+// AL<<P1Q, MatrixXr::Zero(planeNoA,1), -1.0*MatrixXr::Identity(planeNoA,planeNoA), MatrixXr::Zero(planeNoA,planeNoB), //cwise()
+//	      P2Q, MatrixXr::Zero(planeNoB,1), MatrixXr::Zero(planeNoB,planeNoA), -1.0*MatrixXr::Identity(planeNoB,planeNoB);
 
 	Real blasAL[planeNoAB*varNo];
 	memset(blasAL,0.0,sizeof(blasAL));
@@ -882,17 +882,17 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
 	/*bL*/
 #if 0
-	Eigen::MatrixXd bL(planeNoAB,1);
-	Eigen::MatrixXd pos1(3,1);
+	MatrixXr bL(planeNoAB,1);
+	MatrixXr pos1(3,1);
 	pos1(0,0) = posA[0];
 	pos1(1,0) = posA[1];
 	pos1(2,0)=posA[2];
-	Eigen::MatrixXd pos2(3,1);
+	MatrixXr pos2(3,1);
 	pos2(0,0) = posB[0];
 	pos2(1,0) = posB[1];
 	pos2(2,0)=posB[2];
-	Eigen::MatrixXd btempU = P1Q*pos1 + d1;
-	Eigen::MatrixXd btempL = P2Q*pos2 + d2;
+	MatrixXr btempU = P1Q*pos1 + d1;
+	MatrixXr btempL = P2Q*pos2 + d2;
 	bL<<btempU,btempL;
 #endif
 
@@ -927,8 +927,8 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 	Real blasCa1[varNo2];
 //#if 0
 #if 0
-	Eigen::MatrixXd ca1Transpose = ccTranspose - A1.transpose()*A1;
-	Eigen::MatrixXd ca2Transpose = ccTranspose - A2.transpose()*A2;
+	MatrixXr ca1Transpose = ccTranspose - A1.transpose()*A1;
+	MatrixXr ca2Transpose = ccTranspose - A2.transpose()*A2;
 #endif
 	/* ca1Transpose */
 	noElements = varNo2;
@@ -1112,7 +1112,7 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 		}
 
 		/* Hessian */
-		/* HA */ //Eigen::MatrixXd HA =  (-2.0/u1)*(ca1Transpose)+ gA*gA.transpose();
+		/* HA */ //MatrixXr HA =  (-2.0/u1)*(ca1Transpose)+ gA*gA.transpose();
 		//noElements = varNo2;
 		dcopy_(&varNo2, &blasCa1[0], &incx, &blasHA[0], &incy);
 		//transA = 'N';   transB = 'T';   blasM = varNo;   blasN = varNo;   blasK = 1;blasLDA = blasM;   blasLDB = blasN;     blasAlpha = 1.0;  blasLDC = blasM;

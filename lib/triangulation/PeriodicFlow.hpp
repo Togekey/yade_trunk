@@ -50,7 +50,7 @@ namespace CGT{
 // 		Eigen::SparseMatrix<double> FIntegral;
 // 		Eigen::SparseMatrix<double> PshiftsInts;
 // 		Eigen::SparseMatrix<double> FRHS;
-// 		Eigen::VectorXd forces;
+// 		VectorXr forces;
 		#endif
 	};
 	

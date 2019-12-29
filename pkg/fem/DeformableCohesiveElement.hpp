@@ -59,8 +59,8 @@ class DeformableCohesiveElement: public DeformableElement {
 		typedef std::map<nodepair,Se3r> NodePairsMap;//Initial node differences
 		typedef std::map<Vector3r,Se3r> localTriad;//Updated on every step
 		unsigned int max_pair;
-		Matrix calculateStiffness(Real, Real ,Vector3r,Vector3r,Vector3r,Vector3r);
-		Matrix calculateMassMatrix(Real, Real);
+		MatrixXr calculateStiffness(Real, Real ,Vector3r,Vector3r,Vector3r,Vector3r);
+		MatrixXr calculateMassMatrix(Real, Real);
 		virtual ~DeformableCohesiveElement();
 		void initialize(void){max_pair=3;}
 

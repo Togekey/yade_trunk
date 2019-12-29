@@ -49,9 +49,9 @@ void If2_Lin4NodeTetra_LinIsoRayleighDampElast::go(const shared_ptr<Shape>& elem
 		   Vector3r node2relpos=i2->second.position-i0->second.position;
 		   Vector3r node3relpos=i3->second.position-i0->second.position;
 		   // I dont know wheter this is optimum or not
-		   tetel->massMatrixInvProductstiffnessMatrix=shared_ptr<Matrix>
+		   tetel->massMatrixInvProductstiffnessMatrix=shared_ptr<MatrixXr>
 		   (
-				   new Matrix(
+				   new MatrixXr(
 				   tetel->calculateMassMatrix(mat->density,mat->poissonratio).inverse()*
 				   tetel->calculateStiffness(mat->youngmodulus,mat->poissonratio,node0relpos,node1relpos,node2relpos,node3relpos)
 				   )
@@ -76,7 +76,7 @@ void If2_Lin4NodeTetra_LinIsoRayleighDampElast::go(const shared_ptr<Shape>& elem
 
 
 	//Now calculate the forces
-	Vector12r forces=-(*tetel->massMatrixInvProductstiffnessMatrix)*displacements-(mat->alpha*Matrix::Identity(12,12)+(*tetel->massMatrixInvProductstiffnessMatrix)*(mat->beta))*displacementvelocity;
+	Vector12r forces=-(*tetel->massMatrixInvProductstiffnessMatrix)*displacements-(mat->alpha*MatrixXr::Identity(12,12)+(*tetel->massMatrixInvProductstiffnessMatrix)*(mat->beta))*displacementvelocity;
 
 	scene->forces.addForce(i0->first->getId(),forces.segment(0,3));
 	scene->forces.addForce(i1->first->getId(),forces.segment(3,3));

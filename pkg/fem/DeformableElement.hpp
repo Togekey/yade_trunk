@@ -29,7 +29,6 @@ namespace yade { // Cannot have #include directive inside.
 
 class NewtonIntegrator;
 class InternalForceFunctor;
-typedef Eigen::MatrixXd Matrix;
 
 class DeformableElement: public Shape {
 	public:

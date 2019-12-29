@@ -120,7 +120,7 @@ if (vertices.empty() and (not a.empty())) { // i.e. if the particle is not initi
 		Vector3r eigenVec2 (A[3],A[4],A[5]); eigenVec2.normalize();
 		Vector3r eigenVec3 (A[6],A[7],A[8]); eigenVec3.normalize();
 
-		Eigen::Matrix3d lapackEigenVec;
+		Matrix3r lapackEigenVec;
 		lapackEigenVec(0,0) = eigenVec1[0]; lapackEigenVec(0,1) = eigenVec2[0]; lapackEigenVec(0,2)=eigenVec3[0];
 		lapackEigenVec(1,0) = eigenVec1[1]; lapackEigenVec(1,1) = eigenVec2[1]; lapackEigenVec(1,2)=eigenVec3[1];
 		lapackEigenVec(2,0) = eigenVec1[2]; lapackEigenVec(2,1) = eigenVec2[2]; lapackEigenVec(2,2)=eigenVec3[2];
@@ -134,7 +134,7 @@ if (vertices.empty() and (not a.empty())) { // i.e. if the particle is not initi
 			}
 		}
 
-		Eigen::Matrix3d lapackEigenVal = Eigen::Matrix3d::Zero();
+		Matrix3r lapackEigenVal = Matrix3r::Zero();
 		lapackEigenVal(0,0) = eigenValues[0]; lapackEigenVal(1,1) = eigenValues[1]; lapackEigenVal(2,2) = eigenValues[2];
 
 		Quaternionr q (lapackEigenVec);
@@ -170,7 +170,7 @@ if (vertices.empty() and (not a.empty())) { // i.e. if the particle is not initi
 }
 
 
-Real PotentialBlock::getDet(const Eigen::MatrixXd A){
+Real PotentialBlock::getDet(const MatrixXr A){
 	/* if positive, counter clockwise, 2nd point makes a larger angle */
 	/* if negative, clockwise, 3rd point makes a larger angle */
 	int rowNo = A.rows();  Real firstTerm = 0.0; Real secondTerm = 0.0;
@@ -185,7 +185,7 @@ Real PotentialBlock::getDet(const Eigen::MatrixXd A){
 Real PotentialBlock::getSignedArea(const Vector3r pt1, const Vector3r pt2, const Vector3r pt3){
 	/* if positive, counter clockwise, 2nd point makes a larger angle */
 	/* if negative, clockwise, 3rd point makes a larger angle */
-	Eigen::MatrixXd triangle(4,2);
+	MatrixXr triangle(4,2);
 	triangle(0,0) = pt1.x();  triangle(0,1) = pt1.y(); // triangle(0,2) = pt1.z();
 	triangle(1,0) = pt2.x();  triangle(1,1) = pt2.y(); // triangle(1,2) = pt2.z();
 	triangle(2,0) = pt3.x();  triangle(2,1) = pt3.y(); // triangle(2,2) = pt3.z();
@@ -196,7 +196,7 @@ Real PotentialBlock::getSignedArea(const Vector3r pt1, const Vector3r pt2, const
 
 
 void PotentialBlock::calculateVertices() {
-	std::vector<Real> D (3); std::vector<Real> Ax (9); Eigen::Matrix3d Aplanes;
+	std::vector<Real> D (3); std::vector<Real> Ax (9); Matrix3r Aplanes;
 	Real Distance;
 	int vertCount=0; Real minDistance;
 	int planeNo = a.size();
@@ -373,7 +373,7 @@ void PotentialBlock::calculateInertia(Vector3r& centroid, Real& Ixx, Real& Iyy, 
 	Quaternionr Qp;
 	unsigned int h, kk, m, counter;
 	int lastEntry;
-	Eigen::MatrixXd B(4,2), vertexOnPlane;
+	MatrixXr B(4,2), vertexOnPlane;
 	std::vector<Vector3r> verticesOnPlane, oriVerticesOnPlane, orderedVerticesOnPlane, oriOrderedVerticesOnPlane; //vector<int> oriOrderedVerticesOnplaneID;
 
 	centroid = Vector3r::Zero();
@@ -449,7 +449,7 @@ void PotentialBlock::calculateInertia(Vector3r& centroid, Real& Ixx, Real& Iyy, 
 			}
 		}
 
-		vertexOnPlane = Eigen::MatrixXd(orderedVerticesOnPlane.size()+1,2);
+		vertexOnPlane = MatrixXr(orderedVerticesOnPlane.size()+1,2);
 		baseOnPolygon = Vector3r(0,0,0); oriBaseOnPolygon = Vector3r(0,0,0);
 
 		for(unsigned int i=0; i< orderedVerticesOnPlane.size(); i++){
@@ -514,7 +514,7 @@ void PotentialBlock::calculateInertia(Vector3r& centroid, Real& Ixx, Real& Iyy, 
 
 			detJ=(x2-x1)*(y3-y1)*(z4-z1)+(x3-x1)*(y4-y1)*(z2-z1)+(x4-x1)*(y2-y1)*(z3-z1)
 				-(x2-x1)*(y4-y1)*(z3-z1)-(x3-x1)*(y2-y1)*(z4-z1)-(x4-x1)*(y3-y1)*(z2-z1);
-			detJ=std::abs(detJ);
+			detJ=math::abs(detJ);
 
 			Ixx += detJ*(y1*y1+y1*y2+y2*y2+y1*y3+y2*y3+
 				y3*y3+y1*y4+y2*y4+y3*y4+y4*y4+z1*z1+z1*z2+

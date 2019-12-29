@@ -26,9 +26,9 @@ Lin4NodeTetra::~Lin4NodeTetra(){
 void Lin4NodeTetra::initialize(void){
 	maxNodeCount=4;
 }
-Matrix Lin4NodeTetra::calculateMassMatrix(Real density,Real v)
+MatrixXr Lin4NodeTetra::calculateMassMatrix(Real density,Real v)
 {
-	   Matrix mass(12,12);
+	   MatrixXr mass(12,12);
 
 	   mass<<2,0,0,1,0,0,1,0,0,1,0,0,
 			 0,2,0,0,1,0,0,1,0,0,1,0,
@@ -48,7 +48,7 @@ Matrix Lin4NodeTetra::calculateMassMatrix(Real density,Real v)
 }
 
 
-Matrix Lin4NodeTetra::calculateStiffness(Real E, Real v,Vector3r pos0,Vector3r pos1,Vector3r pos2,Vector3r pos3)
+MatrixXr Lin4NodeTetra::calculateStiffness(Real E, Real v,Vector3r pos0,Vector3r pos1,Vector3r pos2,Vector3r pos3)
 {
 		/*
 		 * The calculation is relative, therefore, we do not need position of the first node.
@@ -64,7 +64,7 @@ Matrix Lin4NodeTetra::calculateStiffness(Real E, Real v,Vector3r pos0,Vector3r p
 	   Vector3r pos13= pos1-pos3;
 	   Vector3r pos23= pos2-pos3;
 
-	   Matrix J(4,4);
+	   MatrixXr J(4,4);
 	
 	  
 
@@ -97,7 +97,7 @@ Matrix Lin4NodeTetra::calculateStiffness(Real E, Real v,Vector3r pos0,Vector3r p
 
 	  //std::cout<<"Volume of the element is "<<V<<"\n";
  
-	   Matrix B(6,12);
+	   MatrixXr B(6,12);
 	   //Construction of B matrix
 	   B<<a1,0,0,a2,0,0,a3,0,0,a4,0,0,
 	      0,b1,0,0,b2,0,0,b3,0,0,b4,0,
@@ -110,7 +110,7 @@ Matrix Lin4NodeTetra::calculateStiffness(Real E, Real v,Vector3r pos0,Vector3r p
 	   B=(1/(6*V))*B;
 
 	   //Construction of Elasticity matrix
-	   Matrix Emtr(6,6);
+	   MatrixXr Emtr(6,6);
 
 	   Emtr<<1-v,v,v,0,0,0,
 			v,1-v,v,0,0,0,
@@ -120,7 +120,7 @@ Matrix Lin4NodeTetra::calculateStiffness(Real E, Real v,Vector3r pos0,Vector3r p
 			0,0,0,0,0,0.5-v;
 
 	   Emtr=E/((1+v)*(1-v))*Emtr;
-	   Matrix stiffness=V*B.transpose()*Emtr*B;
+	   MatrixXr stiffness=V*B.transpose()*Emtr*B;
 
 	   return stiffness;
 

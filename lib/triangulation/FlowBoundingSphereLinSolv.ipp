@@ -627,7 +627,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::eigenSolve(Real dt)
 	if (!isLinearSystemSet || (isLinearSystemSet && reApplyBoundaryConditions()) || !updatedRHS) ncols = setLinearSystem(dt);
 	copyCellsToLin(dt);
 	//FIXME: we introduce new Eigen vectors, then we have to copy from/to c-arrays, can be optimized later
-	Eigen::VectorXd eb(ncols); Eigen::VectorXd ex(ncols);
+	VectorXr eb(ncols); VectorXr ex(ncols);
 	for (int k=0; k<ncols; k++) eb[k]=T_bv[k];
 	if (!factorizedEigenSolver) {
 		eSolver.setMode(Eigen::CholmodSupernodalLLt);
