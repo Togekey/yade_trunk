@@ -1411,14 +1411,14 @@ public:
 		TRACE;
 		gilLock lock;
 		LOG_TRACE("GIL State: " << PyGILState_Check());
-		return get_override("contactForce")(u, a);
+		return static_cast<Real>(get_override("contactForce")(u, a));
 	}
 
 	virtual Real potentialForce(Real const& u, Real const& a) const
 	{
 		TRACE;
 		gilLock lock;
-		return get_override("potentialForce")(u, a);
+		return static_cast<Real>(get_override("potentialForce")(u, a));
 	}
 
 	virtual bool hasContact(Real const& u, Real const& a) const
