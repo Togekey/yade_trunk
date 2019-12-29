@@ -52,7 +52,7 @@ void PrintPolyhedraActualPos(const shared_ptr<Shape>& cm1, const State& state1)
 	        rot_mat(2, 1),
 	        rot_mat(2, 2),
 	        trans_vec[2],
-	        1.);
+	        1);
 	Polyhedron PA = A->GetPolyhedron();
 	std::transform(PA.points_begin(), PA.points_end(), PA.points_begin(), t_rot_trans);
 
@@ -85,7 +85,7 @@ bool do_Polyhedras_Intersect(const shared_ptr<Shape>& cm1, const shared_ptr<Shap
 	        rot_mat(2, 1),
 	        rot_mat(2, 2),
 	        trans_vec[2],
-	        1.);
+	        1);
 	Polyhedron PA = A->GetPolyhedron();
 	std::transform(PA.points_begin(), PA.points_end(), PA.points_begin(), t_rot_trans);
 
@@ -105,7 +105,7 @@ bool do_Polyhedras_Intersect(const shared_ptr<Shape>& cm1, const shared_ptr<Shap
 	        rot_mat(2, 1),
 	        rot_mat(2, 2),
 	        trans_vec[2],
-	        1.);
+	        1);
 	Polyhedron PB = B->GetPolyhedron();
 	std::transform(PB.points_begin(), PB.points_end(), PB.points_begin(), t_rot_trans);
 
@@ -163,9 +163,9 @@ Real SieveSize(const shared_ptr<Shape>& cm1)
 {
 	Polyhedra* A = static_cast<Polyhedra*>(cm1.get());
 
-	double phi = M_PI / 4.;
-	double x, y;
-	double minx = 0, maxx = 0, miny = 0, maxy = 0;
+	Real phi = M_PI / 4.;
+	Real x, y;
+	Real minx = 0, maxx = 0, miny = 0, maxy = 0;
 
 	for (vector<Vector3r>::iterator i = A->v.begin(); i != A->v.end(); ++i) {
 		x    = cos(phi) * (*i)[1] + sin(phi) * (*i)[2];
@@ -206,24 +206,24 @@ void SieveCurve()
 {
 	const shared_ptr<Scene>                _rb = shared_ptr<Scene>();
 	shared_ptr<Scene>                      rb  = (_rb ? _rb : Omega::instance().getScene());
-	std::vector<std::pair<double, double>> sieve_volume;
-	double                                 total_volume = 0;
+	std::vector<std::pair<Real, Real>> sieve_volume;
+	Real                                   total_volume = 0;
 	for (const auto& b : *rb->bodies) {
 		if (!b || !b->shape)
 			continue;
 		shared_ptr<Polyhedra> p = YADE_PTR_DYN_CAST<Polyhedra>(b->shape);
 		if (p) {
-			sieve_volume.push_back(std::pair<double, double>(SieveSize(p), p->GetVolume()));
+			sieve_volume.push_back(std::pair<Real, Real>(SieveSize(p), p->GetVolume()));
 			total_volume += p->GetVolume();
 		}
 	}
 
 	std::sort(sieve_volume.begin(), sieve_volume.end());
-	double cumul_vol = 0;
+	Real cumul_vol = 0;
 
 	ofstream myfile;
 	myfile.open("sieve_curve.dat");
-	for (std::vector<std::pair<double, double>>::iterator i = sieve_volume.begin(); i != sieve_volume.end(); ++i) {
+	for (std::vector<std::pair<Real, Real>>::iterator i = sieve_volume.begin(); i != sieve_volume.end(); ++i) {
 		cumul_vol += i->second / total_volume;
 		myfile << i->first << "\t" << cumul_vol << endl;
 	}
@@ -272,7 +272,7 @@ Vector3r MaxCoord(const shared_ptr<Shape>& cm1, const State& state1)
 	        rot_mat(2, 1),
 	        rot_mat(2, 2),
 	        trans_vec[2],
-	        1.);
+	        1);
 	Polyhedron PA = A->GetPolyhedron();
 	std::transform(PA.points_begin(), PA.points_end(), PA.points_begin(), t_rot_trans);
 
@@ -312,7 +312,7 @@ Vector3r MinCoord(const shared_ptr<Shape>& cm1, const State& state1)
 	        rot_mat(2, 1),
 	        rot_mat(2, 2),
 	        trans_vec[2],
-	        1.);
+	        1);
 	Polyhedron PA = A->GetPolyhedron();
 	std::transform(PA.points_begin(), PA.points_end(), PA.points_begin(), t_rot_trans);
 
@@ -379,7 +379,7 @@ vector<Vector3r> fillBox_cpp(Vector3r minCoord, Vector3r maxCoord, Vector3r size
 			        rot_mat(2, 0),
 			        rot_mat(2, 1),
 			        rot_mat(2, 2),
-			        1.);
+			        1);
 			std::transform(trial.points_begin(), trial.points_end(), trial.points_begin(), t_rot);
 		}
 		position = Vector3r(rand() * (maxCoord[0] - minCoord[0]), rand() * (maxCoord[1] - minCoord[1]), rand() * (maxCoord[2] - minCoord[2])) / RAND_MAX
@@ -433,7 +433,7 @@ vector<Vector3r> TruncIcosaHedPoints(Vector3r radii)
 {
 	vector<Vector3r> v;
 
-	double   p = (1. + sqrt(5.)) / 2.;
+	Real   p = (1. + sqrt(5.)) / 2.;
 	Vector3r f, c, b;
 	f = radii / sqrt(9. * p + 1.);
 	vector<Vector3r> A, B;
@@ -509,13 +509,13 @@ vector<Vector3r> BallPoints(Vector3r radii, int NumFacets, int seed)
 	if (NumFacets == 24)
 		v = SnubCubePoints(radii);
 	else {
-		double inc = Mathr::PI * (3. - pow(5., 0.5));
-		double off = 2. / double(NumFacets);
-		double y, r, phi;
+		Real   inc = Mathr::PI * (3. - pow(5., 0.5));
+		Real off = 2. / double(NumFacets);
+		Real y, r, phi;
 		for (int k = 0; k < NumFacets; k++) {
-			y   = double(k) * off - 1. + (off / 2.);
+			y   = Real(k) * off - 1. + (off / 2.);
 			r   = pow(1. - y * y, 0.5);
-			phi = double(k) * inc;
+			phi = Real(k) * inc;
 			v.push_back(Vector3r(cos(phi) * r * radii[0], y * radii[1], sin(phi) * r * radii[2]));
 		}
 	}
@@ -563,7 +563,7 @@ fillBoxByBalls_cpp(Vector3r minCoord, Vector3r maxCoord, Vector3r sizemin, Vecto
 		it = it + 1;
 		if (it == 1) {
 			if (fixed_ratio) {
-				double rrr = (rand() * (sizemax[0] - sizemin[0]) / RAND_MAX + sizemin[0]) / 2.;
+				Real rrr = (rand() * (sizemax[0] - sizemin[0]) / RAND_MAX + sizemin[0]) / 2.;
 				radii      = Vector3r(rrr, rrr, rrr);
 			} else {
 				radii = Vector3r(
@@ -587,7 +587,7 @@ fillBoxByBalls_cpp(Vector3r minCoord, Vector3r maxCoord, Vector3r sizemin, Vecto
 			        rot_mat(2, 0),
 			        rot_mat(2, 1),
 			        rot_mat(2, 2),
-			        1.);
+			        1);
 			std::transform(trial.points_begin(), trial.points_end(), trial.points_begin(), t_rot);
 		}
 		position = Vector3r(rand() * (maxCoord[0] - minCoord[0]), rand() * (maxCoord[1] - minCoord[1]), rand() * (maxCoord[2] - minCoord[2])) / RAND_MAX
