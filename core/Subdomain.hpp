@@ -52,10 +52,10 @@ class Subdomain: public Shape {
 	PyObject* getMyComm() {	return PyMPIComm_New(*myComm_p);}
 	
 	// returns pos,vel,angVel,ori of bodies interacting with a given otherDomain
-	std::vector<double> getStateValuesFromIds(const vector<Body::id_t>& search) { 
+	std::vector<Real> getStateValuesFromIds(const vector<Body::id_t>& search) { 
 		const shared_ptr<Scene>& scene= Omega::instance().getScene();
 		unsigned int N= search.size();
-		std::vector<double> res; res.reserve(N*13);
+		std::vector<Real> res; res.reserve(N*13);
 		for (unsigned k=0; k<N; k++) {
 			const shared_ptr<State>& s = (*(scene->bodies))[search[k]]->state;
 			for (unsigned i=0; i<3; i++) res.push_back(s->pos[i]);
@@ -67,10 +67,10 @@ class Subdomain: public Shape {
 	
 	
 	// returns pos,vel,angVel,ori,bounds of bodies interacting with a given otherDomain
-	std::vector<double> getStateBoundsValuesFromIds(const vector<Body::id_t>& search) { 
+	std::vector<Real> getStateBoundsValuesFromIds(const vector<Body::id_t>& search) { 
 		const shared_ptr<Scene>& scene= Omega::instance().getScene();
 		unsigned int N= search.size();
-		std::vector<double> res; res.reserve(N*19);
+		std::vector<Real> res; res.reserve(N*19);
 		for (unsigned k=0; k<N; k++) {
 			const shared_ptr<Body>& b = (*(scene->bodies))[search[k]];
 			const shared_ptr<State>& s = b->state;
@@ -91,10 +91,10 @@ class Subdomain: public Shape {
 		return res;
 	}
 	
-	std::vector<double> getStateValues(unsigned otherSubdomain) { 
+	std::vector<Real> getStateValues(unsigned otherSubdomain) { 
 		const shared_ptr<Scene>& scene= Omega::instance().getScene();
-		if (scene->subdomain==int(otherSubdomain)) {LOG_ERROR("subdomain cannot interact with itself"); return std::vector<double>();}
-		if (otherSubdomain >= intersections.size()) {LOG_ERROR("otherSubdomain exceeds no. of subdomains ("<<otherSubdomain<<" vs. "<<intersections.size()); return std::vector<double>();}
+		if (scene->subdomain==int(otherSubdomain)) {LOG_ERROR("subdomain cannot interact with itself"); return std::vector<Real>();}
+		if (otherSubdomain >= intersections.size()) {LOG_ERROR("otherSubdomain exceeds no. of subdomains ("<<otherSubdomain<<" vs. "<<intersections.size()); return std::vector<Real>();}
 		const vector<Body::id_t>& search = intersections[otherSubdomain];
 		return getStateValuesFromIds(search);
 	}
@@ -148,7 +148,7 @@ class Subdomain: public Shape {
 	}
 	
 	void mpiSendStates(/*vector<double> message,*/ unsigned otherSubdomain){
-		std::vector<double> vals = getStateValues(otherSubdomain);
+		std::vector<Real> vals = getStateValues(otherSubdomain);
 		MPI_Send(&vals.front(), vals.size(), MPI_DOUBLE, otherSubdomain, 177, selfComm());
 	}
 	
