@@ -469,9 +469,9 @@ public:
 	bool ptCheck(const Vector3r& pt) const
 	{
 		GtsPoint gp;
-		gp.x = pt[0];
-		gp.y = pt[1];
-		gp.z = pt[2];
+		gp.x = static_cast<gdouble>(pt[0]);
+		gp.y = static_cast<gdouble>(pt[1]);
+		gp.z = static_cast<gdouble>(pt[2]);
 		return (bool)gts_point_is_inside_surface(&gp, tree, is_open);
 	}
 	bool operator()(const Vector3r& pt, Real pad = 0.) const
