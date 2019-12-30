@@ -129,6 +129,16 @@ struct NT_converter<::yade::Real, boost::multiprecision::mpq_rational>
 
 } // namespace CGAL
 
+namespace std {
+// file /usr/include/CGAL/PCA_util_Eigen.h is calling std::sqrt ! They should call functions without qualification to let ADL take care of that, like boost does this:
+//  → https://www.boost.org/doc/libs/1_72_0/libs/math/doc/html/math_toolkit/float128_hints.html
+//  → https://www.boost.org/doc/libs/1_60_0/libs/multiprecision/doc/html/boost_multiprecision/tut/floats/fp_eg/jel.html
+//  → https://www.boost.org/doc/libs/1_72_0/libs/math/doc/html/math_toolkit/real_concepts.html
+// search for string 'unqualified'. Perhaps we file a bugreport to CGAL.
+using ::yade::math::pow;
+using ::yade::math::sqrt;
+}
+
 #endif
 
 
