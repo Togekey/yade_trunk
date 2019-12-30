@@ -301,20 +301,6 @@ namespace math {
 	static inline Real unitRandom() { return random01(); }
 	static inline Real random() { return random01() * 2 - 1; }
 
-
-	/********************************************************************************************/
-	/**********************                      CGAL                      **********************/
-	/********************************************************************************************/
-
-#if (YADE_REAL_BIT > 64)
-	template <typename A> std::pair<A, A> to_interval_target(const ::yade::math::Real& a)
-	{
-		// TODO: use frexp, ldexp, scalbn to properly calculate the lower and upper bounds in double
-		//       that's for CGAL inexact predicates.
-		return ::std::make_pair(A(a - ::std::numeric_limits<::yade::math::Real>::epsilon()), A(a + std::numeric_limits<::yade::math::Real>::epsilon()));
-	}
-#endif
-
 }
 // do we want such alias?
 //namespace m = ::yade::math;
