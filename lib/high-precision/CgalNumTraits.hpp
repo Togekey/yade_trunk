@@ -13,6 +13,7 @@
 
 #include <lib/high-precision/Real.hpp>
 #include <CGAL/Interval_nt.h>
+#include <CGAL/NT_converter.h>
 #include <CGAL/number_type_basic.h>
 
 // The traits are those listed in documentation:
@@ -91,6 +92,18 @@ public:
 		}
 	};
 };
+
+// When faster CGAL computations are needed, we might want to use and specialize converter for /usr/include/CGAL/Lazy_exact_nt.h
+template <typename GMP1, typename GMP2>
+struct NT_converter<::yade::Real, __gmp_expr<GMP1, GMP2>>
+        : public CGAL::cpp98::unary_function<::yade::Real, NT_converter<::yade::Real, __gmp_expr<GMP1, GMP2>>> {
+	__gmp_expr<GMP1, GMP2> operator()(const ::yade::Real& a) const
+	{
+		std::string s = std::to_string(a);
+		return __gmp_expr<GMP1, GMP2>(s, 10);
+	}
+};
+
 
 } // namespace CGAL
 
