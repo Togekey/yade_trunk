@@ -91,6 +91,10 @@ bool test_CGAL_Is_valid(const Real& x) {
 	return CGAL::Is_valid<Real>()(x);
 }
 
+Real test_CGAL_Square(const Real& x) {
+	return CGAL::Algebraic_structure_traits<Real>::Square()(x);
+}
+
 Real test_CGAL_Sqrt(const Real& x) {
 	return CGAL::Algebraic_structure_traits<Real>::Sqrt()(x);
 }
@@ -101,6 +105,10 @@ Real test_CGAL_Kth_root(int k, const Real& x) {
 
 std::pair<double, double> test_CGAL_To_interval(const Real& x) {
 	return CGAL::Real_embeddable_traits<Real>::To_interval()(x);
+}
+
+int test_CGAL_Sgn(const Real& x) {
+	return int(CGAL::Real_embeddable_traits<Real>::Sgn()(x));
 }
 
 bool test_CGAL_Is_finite(const Real& x) {
@@ -417,10 +425,15 @@ try {
 
 #ifdef YADE_CGAL
 	py::scope().attr("testCgalNumTraits") = true;
+	// https://doc.cgal.org/latest/Algebraic_foundations/group__PkgAlgebraicFoundationsRef.html
 	py::def("CGAL_Is_valid", test_CGAL_Is_valid, (py::arg("x")));
+	// AlgebraicStructureTraits
+	py::def("CGAL_Square", test_CGAL_Square, (py::arg("x")));
 	py::def("CGAL_Sqrt", test_CGAL_Sqrt, (py::arg("x")));
 	py::def("CGAL_Kth_root", test_CGAL_Kth_root, (py::arg("x")));
+	// RealEmbeddableTraits
 	py::def("CGAL_To_interval", test_CGAL_To_interval, (py::arg("x")));
+	py::def("CGAL_Sgn", test_CGAL_Sgn, (py::arg("x")));
 	py::def("CGAL_Is_finite", test_CGAL_Is_finite, (py::arg("x")));
 #else
 	py::scope().attr("testCgalNumTraits") = false;
