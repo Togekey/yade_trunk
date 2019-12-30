@@ -15,6 +15,8 @@
 #include <CGAL/Interval_nt.h>
 #include <CGAL/NT_converter.h>
 #include <CGAL/number_type_basic.h>
+// cmake already checks for GMP presence when checking for CGAL
+#include <CGAL/gmpxx.h>
 
 // The traits are those listed in documentation:
 //    https://doc.cgal.org/latest/Algebraic_foundations/index.html
