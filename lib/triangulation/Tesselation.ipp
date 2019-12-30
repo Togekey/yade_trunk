@@ -17,7 +17,8 @@ namespace CGT {
 using std::cerr;
 using std::cout;
 using std::endl;
-using std::max;
+using ::yade::math::max;
+using ::yade::math::min;
 using std::vector;
 using std::ifstream;
 
