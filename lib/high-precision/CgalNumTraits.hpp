@@ -17,6 +17,8 @@
 #include <CGAL/number_type_basic.h>
 // cmake already checks for GMP presence when checking for CGAL
 #include <CGAL/gmpxx.h>
+// newer CGAL uses boost multiprecision
+#include <boost/multiprecision/gmp.hpp>
 
 // The traits are those listed in documentation:
 //    https://doc.cgal.org/latest/Algebraic_foundations/index.html
@@ -101,11 +103,20 @@ struct NT_converter<::yade::Real, __gmp_expr<GMP1, GMP2>>
         : public CGAL::cpp98::unary_function<::yade::Real, NT_converter<::yade::Real, __gmp_expr<GMP1, GMP2>>> {
 	__gmp_expr<GMP1, GMP2> operator()(const ::yade::Real& a) const
 	{
+		// this is really slow, but fortunately newer CGAL uses boos::multiprecision, below.
 		std::string s = std::to_string(a);
 		return __gmp_expr<GMP1, GMP2>(s, 10);
 	}
 };
 
+template <>
+struct NT_converter<::yade::Real, boost::multiprecision::mpq_rational>
+        : public CGAL::cpp98::unary_function<::yade::Real, NT_converter<::yade::Real, boost::multiprecision::mpq_rational>> {
+	boost::multiprecision::mpq_rational operator()(const ::yade::Real& a) const
+	{
+		return boost::multiprecision::mpq_rational(static_cast<::yade::math::UnderlyingReal>(a));
+	}
+};
 
 } // namespace CGAL
 
