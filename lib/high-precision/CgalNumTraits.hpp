@@ -53,6 +53,23 @@ public:
 	typedef Tag_false Is_exact;
 	typedef Tag_true  Is_numerical_sensitive;
 
+/* if they become necessary add tests in py/tests/testMath.py, py/high-precision/_math.cpp
+	class IsZero : public CGAL::cpp98::unary_function<Type, bool> {
+	public:
+		bool operator()(const Type& x) const { return x == 0; }
+	};
+
+	class IsOne : public CGAL::cpp98::unary_function<Type, bool> {
+	public:
+		bool operator()(const Type& x) const { return x == 1; }
+	};
+*/
+
+	class Square : public CGAL::cpp98::unary_function<Type, Type> {
+	public:
+		Type operator()(const Type& x) const { return ::yade::math::pow(x, 2); }
+	};
+
 	class Sqrt : public CGAL::cpp98::unary_function<Type, Type> {
 	public:
 		Type operator()(const Type& x) const
@@ -81,6 +98,22 @@ public:
 	class To_interval : public CGAL::cpp98::unary_function<Type, std::pair<double, double>> {
 	public:
 		std::pair<double, double> operator()(const Type& x) const { return (Interval_nt<>(static_cast<double>(x)) + Interval_nt<>::smallest()).pair(); }
+	};
+
+/* if they become necessary add tests in py/tests/testMath.py, py/high-precision/_math.cpp
+	class Abs : public CGAL::cpp98::unary_function<Type, Type> {
+	public:
+		Type operator()(const Type& x) const { return ::yade::math::abs(x); }
+	};
+*/
+
+	class Sgn : public CGAL::cpp98::unary_function<Type, CGAL::Sign> {
+	public:
+		CGAL::Sign operator()(const Type& x) const
+		{
+			// see /usr/include/CGAL/enum.h
+			return CGAL::Sign(::yade::math::sign(x));
+		}
 	};
 
 	class Is_finite : public CGAL::cpp98::unary_function<Type, bool> {

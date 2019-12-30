@@ -198,6 +198,7 @@ class SimpleTests(unittest.TestCase):
 			print("Skipping test of CgalNumTraits")
 			return
 		self.assertEqual(mne.CGAL_Is_valid(r),True)
+		self.checkRelativeError(mne.CGAL_Square(r),mpmath.power(r,2),functionName="pow")
 		self.checkRelativeError(mne.CGAL_Sqrt(abs(r)),mpmath.sqrt(abs(r)),functionName="sqrt")
 		for kk in range(5):
 			k=kk+1
@@ -207,6 +208,12 @@ class SimpleTests(unittest.TestCase):
 		self.checkRelativeError(r,interval[0],1e-14)
 		self.checkRelativeError(r,interval[1],1e-14)
 		self.assertEqual(mne.CGAL_Is_finite(r),True)
+		if(r==0): self.assertEqual(mne.CGAL_Sgn(r),0)
+		if(r> 0): self.assertEqual(mne.CGAL_Sgn(r),1)
+		if(r< 0): self.assertEqual(mne.CGAL_Sgn(r),-1)
+		self.assertEqual(mne.CGAL_Sgn(0),0)
+		self.assertEqual(mne.CGAL_Sgn(2.5),1)
+		self.assertEqual(mne.CGAL_Sgn(-2.3),-1)
 
 	def twoArgMathCheck(self,r1,r2):
 		self.checkRelativeComplexError(mne.sin (mpmath.mpc(r1,r2)),mpmath.sin (mpmath.mpc(r1,r2)),functionName="csin")
