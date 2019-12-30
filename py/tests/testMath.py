@@ -86,6 +86,7 @@ class SimpleTests(unittest.TestCase):
 			 , "log2"      : {"6":1000, "15":1000, "18":100  , "33":100    , "100":100   , "100nb":100   , "150" :100   , "150nb" :100    , "100_b" :100     , "150_b" :100    }
 
 			 , "pow"       : {"6":5   , "15":10  , "18":50   , "33":50     , "100":50    , "100nb":50    , "150" :50    , "150nb" :50     , "100_b" :50      , "150_b" :50     }
+			 , "sqrt"      : {"6":5   , "15":10  , "18":50   , "33":50     , "100":50    , "100nb":50    , "150" :50    , "150nb" :50     , "100_b" :50      , "150_b" :50     }
 
 			 , "lgamma"    : {"6":100 , "15":100 , "18":1000 , "33":10000  , "100":100000, "100nb":100000, "150" :100000, "150nb" :100000 , "100_b" :1000000 , "150_b" :1000000}
 			 , "tgamma"    : {"6":100 , "15":100 , "18":1000 , "33":10000  , "100":100000, "100nb":100000, "150" :100000, "150nb" :100000 , "100_b" :1000000 , "150_b" :1000000}
@@ -152,6 +153,7 @@ class SimpleTests(unittest.TestCase):
 		self.checkRelativeError(mne.erf(r),mpmath.erf(r),functionName="erf")
 		self.checkRelativeError(mne.erfc(r),mpmath.erfc(r),functionName="erfc")
 		self.checkRelativeError(mne.exp(r),mpmath.exp(r),functionName="exp")
+		self.checkRelativeError(mne.sqrt(abs(r)),mpmath.sqrt(abs(r)),functionName="sqrt")
 		self.checkRelativeError(mne.exp2(r),mpmath.power(2,r),functionName="exp2")
 		self.checkRelativeError(mne.expm1(r),mpmath.expm1(r),functionName="expm1")
 		self.assertEqual(mne.floor(r),mpmath.floor(r))
@@ -188,6 +190,23 @@ class SimpleTests(unittest.TestCase):
 		if(r<0):
 			self.assertEqual(mne.sgn(r),-1)
 			self.assertEqual(mne.sign(r),-1)
+
+		self.checkCgalNumTraits(r)
+
+	def checkCgalNumTraits(self,r):
+		if(mne.testCgalNumTraits==False):
+			print("Skipping test of CgalNumTraits")
+			return
+		self.assertEqual(mne.CGAL_Is_valid(r),True)
+		self.checkRelativeError(mne.CGAL_Sqrt(abs(r)),mpmath.sqrt(abs(r)),functionName="sqrt")
+		for kk in range(5):
+			k=kk+1
+			self.checkRelativeError(mne.CGAL_Kth_root(k,abs(r)),mpmath.power(abs(r),1/mpmath.mpf(k)),functionName="pow")
+		# CGAL uses double for intervals
+		interval = mne.CGAL_To_interval(r)
+		self.checkRelativeError(r,interval[0],1e-14)
+		self.checkRelativeError(r,interval[1],1e-14)
+		self.assertEqual(mne.CGAL_Is_finite(r),True)
 
 	def twoArgMathCheck(self,r1,r2):
 		self.checkRelativeComplexError(mne.sin (mpmath.mpc(r1,r2)),mpmath.sin (mpmath.mpc(r1,r2)),functionName="csin")
