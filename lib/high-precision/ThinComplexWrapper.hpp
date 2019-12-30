@@ -206,14 +206,5 @@ public:
 } // namespace math
 } // namespace yade
 
-namespace std {
-inline std::string to_string(const ::yade::math::ThinComplexWrapper<std::complex<::yade::math::UnderlyingReal>>& val)
-{
-	std::ostringstream s;
-	s << val;
-	return s.str();
-};
-}
-
 #endif
 

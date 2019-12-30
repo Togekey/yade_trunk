@@ -324,5 +324,24 @@ using ::std::min;
 #undef YADE_WRAP_FUNC_1_COMPLEX_TO_REAL
 #undef YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD
 
+#include <string>
+#include <sstream>
+
+namespace std {
+inline std::string to_string(const ::yade::math::Real& val)
+{
+	std::ostringstream s;
+	s << val;
+	return s.str();
+};
+
+inline std::string to_string(const ::yade::math::Complex& val)
+{
+	std::ostringstream s;
+	s << val;
+	return s.str();
+};
+}
+
 #endif
 
