@@ -324,6 +324,8 @@ using ::std::min;
 #undef YADE_WRAP_FUNC_1_COMPLEX_TO_REAL
 #undef YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD
 
+#if (YADE_REAL_BIT > 64)
+
 #include <string>
 #include <sstream>
 
@@ -342,6 +344,8 @@ inline std::string to_string(const ::yade::math::Complex& val)
 	return s.str();
 };
 }
+
+#endif
 
 #endif
 
