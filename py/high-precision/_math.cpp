@@ -16,7 +16,9 @@
 // TODO: add docstrings to all these math functions.
 
 #include <lib/high-precision/Real.hpp>
+#ifdef YADE_CGAL
 #include <lib/base/AliasCGAL.hpp>
+#endif
 
 #include <Eigen/Core>
 #include <Eigen/src/Core/MathFunctions.h>
@@ -53,14 +55,14 @@ template <typename T1, typename T2> struct std_pair_to_python_converter {
 	}
 };
 
-std::pair<Real, int> frexp_c_test(const Real& x)
+std::pair<Real, int> test_frexp(const Real& x)
 {
 	int  i   = 0;
 	Real ret = ::yade::math::frexp(x, &i);
 	return std::pair<Real, int> { ret, i };
 }
 
-std::pair<Real, Real> modf_c_test(const Real& x)
+std::pair<Real, Real> test_modf(const Real& x)
 {
 	Real r = 0;
 #if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
@@ -71,7 +73,7 @@ std::pair<Real, Real> modf_c_test(const Real& x)
 	return std::pair<Real, Real> { ret, r };
 }
 
-std::pair<Real, long> remquo_c_test(const Real& x, const Real& y)
+std::pair<Real, long> test_remquo(const Real& x, const Real& y)
 {
 #if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
 	long i = 0;
@@ -81,6 +83,33 @@ std::pair<Real, long> remquo_c_test(const Real& x, const Real& y)
 	Real ret = ::yade::math::remquo(x, y, &i);
 	return std::pair<Real, long> { ret, i };
 }
+
+
+#ifdef YADE_CGAL
+
+bool test_CGAL_Is_valid(const Real& x) {
+	return CGAL::Is_valid<Real>()(x);
+}
+
+Real test_CGAL_Sqrt(const Real& x) {
+	return CGAL::Algebraic_structure_traits<Real>::Sqrt()(x);
+}
+
+Real test_CGAL_Kth_root(int k, const Real& x) {
+	return CGAL::Algebraic_structure_traits<Real>::Kth_root()(k,x);
+}
+
+std::pair<double, double> test_CGAL_To_interval(const Real& x) {
+	return CGAL::Real_embeddable_traits<Real>::To_interval()(x);
+}
+
+bool test_CGAL_Is_finite(const Real& x) {
+	return CGAL::Real_embeddable_traits<Real>::Is_finite()(x);
+}
+
+#endif
+
+
 
 struct Var {
 	Real    value { -71.23 };
@@ -373,17 +402,29 @@ try {
 #undef YADE_PYEXPORT_MATH_2_TYPE2
 
 	std_pair_to_python_converter<Real, Real>();
+	std_pair_to_python_converter<double, double>();
 	std_pair_to_python_converter<Real, long>();
 	std_pair_to_python_converter<Real, int>();
-	py::def("frexp", frexp_c_test, (py::arg("x")));
-	py::def("modf", modf_c_test, (py::arg("x")));
+	py::def("frexp", test_frexp, (py::arg("x")));
+	py::def("modf", test_modf, (py::arg("x")));
 
 #define YADE_PYEXPORT_MATH_3(func) py::def(#func, static_cast<Real (*)(const Real&, const Real&, const Real&)>(&::yade::math::func), (py::arg("x"), "y", "z"));
 	YADE_PYEXPORT_MATH_3(fma)
 #undef YADE_PYEXPORT_MATH_3
 
-	py::def("remquo", remquo_c_test, (py::arg("x"), "y"));
+	py::def("remquo", test_remquo, (py::arg("x"), "y"));
 	py::def("testArray", ::yade::testArray);
+
+#ifdef YADE_CGAL
+	py::scope().attr("testCgalNumTraits") = true;
+	py::def("CGAL_Is_valid", test_CGAL_Is_valid, (py::arg("x")));
+	py::def("CGAL_Sqrt", test_CGAL_Sqrt, (py::arg("x")));
+	py::def("CGAL_Kth_root", test_CGAL_Kth_root, (py::arg("x")));
+	py::def("CGAL_To_interval", test_CGAL_To_interval, (py::arg("x")));
+	py::def("CGAL_Is_finite", test_CGAL_Is_finite, (py::arg("x")));
+#else
+	py::scope().attr("testCgalNumTraits") = false;
+#endif
 
 } catch (...) {
 	std::cerr << ("Importing this module caused an unrecognized exception caught on C++ side and this module is in an inconsistent state now.\n\n");
