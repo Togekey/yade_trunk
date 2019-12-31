@@ -163,14 +163,20 @@ class PhaseCluster : public Serializable
 		vector<Interface> interfaces;
 // 		TwoPhaseFlowEngineT::RTriangulation* tri;
 		#ifdef LINSOLV
+		#if (not defined(NO_CHOLMOD))
 		cholmod_common comC;
 		cholmod_factor* LC;
 		cholmod_dense* ex;//the pressure field
 		cholmod_common* pComC;
+		#endif
 // 		cholmod_dense** pEx = &ex;
 // 		cholmod_l_start(&comC);
 		void solvePressure();
-		void resetSolver() {if (LC) cholmod_l_free_factor(&LC, &comC); if (ex) cholmod_l_free_dense(&ex, &comC); factorized=false;}
+		void resetSolver() {
+			#if (not defined(NO_CHOLMOD))
+			if (LC) cholmod_l_free_factor(&LC, &comC); if (ex) cholmod_l_free_dense(&ex, &comC); factorized=false;
+			#endif
+		}
 		#endif
 		
 		void reset() {label=entryPore=-1;volume=entryRadius=interfacialArea=0; pores.clear(); interfaces.clear(); resetSolver();}
@@ -225,7 +231,7 @@ class PhaseCluster : public Serializable
 		((int,entryPore,-1,,"the pore of the cluster incident to the throat with smallest entry Pc."))
 		((Real,interfacialArea,0,,"interfacial area of the cluster"))
 		,((LC,NULL))((ex,NULL))((pComC,&comC)),
-		#ifdef LINSOLV
+		#if defined(LINSOLV) and (not defined(NO_CHOLMOD))
 		cholmod_l_start(pComC);//initialize cholmod solver
 		factorized=false;
 		#endif

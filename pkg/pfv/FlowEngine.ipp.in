@@ -325,6 +325,9 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 	}
 	#else
 		metisForced=false;
+	if(force) {
+		std::cerr << "cannot setForceMetis, because cholmod is not allowed.\n";
+	}
 	#endif
 }
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
