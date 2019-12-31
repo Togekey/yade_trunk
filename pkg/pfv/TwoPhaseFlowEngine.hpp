@@ -156,7 +156,13 @@ class PhaseCluster : public Serializable
 			Interface (Interface_t i) : Interface_t(i),outerIndex(100),volume(0),capillaryP(0),conductivity(0)  {};
 		};
 		virtual ~PhaseCluster();
-		PhaseCluster (Tesselation& t) : PhaseCluster() {tes=&t; LC=NULL; ex=NULL; if (not tes) LOG_WARN("invalid initialization");}
+		PhaseCluster (Tesselation& t) : PhaseCluster() {
+			tes=&t;
+			#if (not defined(NO_CHOLMOD))
+			LC=NULL; ex=NULL;
+			#endif
+			if (not tes) LOG_WARN("invalid initialization");
+		}
 // 		PhaseCluster () {tes=NULL; LOG_WARN("avoid default constructor, 'tes' not initialized");}
 		Tesselation* tes;//point back to the full data structure
 		vector<CellHandle> pores;
@@ -230,7 +236,11 @@ class PhaseCluster : public Serializable
 		((Real,entryRadius,0,,"smallest entry capillary pressure."))
 		((int,entryPore,-1,,"the pore of the cluster incident to the throat with smallest entry Pc."))
 		((Real,interfacialArea,0,,"interfacial area of the cluster"))
-		,((LC,NULL))((ex,NULL))((pComC,&comC)),
+		,
+		#if (not defined(NO_CHOLMOD))
+		((LC,NULL))((ex,NULL))((pComC,&comC))
+		#endif
+		,
 		#if defined(LINSOLV) and (not defined(NO_CHOLMOD))
 		cholmod_l_start(pComC);//initialize cholmod solver
 		factorized=false;
