@@ -8,7 +8,17 @@
 #ifdef FLOW_ENGINE
 #pragma once
 
-#define NO_CHOLMOD
+//#define NO_CHOLMOD
+// cholmod requires Real==double. So it cannot work with arbitrary precision types.
+// I tried following solvers in its place:
+//    Eigen::BiCGSTAB<Eigen::SparseMatrix<Real>, Eigen::IncompleteLUT<Real> > eSolver;
+//    Eigen::CholmodDecomposition<Eigen::SparseMatrix<double>, Eigen::Lower > eSolver;
+//    Eigen::BiCGSTAB<Eigen::SparseMatrix<Real>, Eigen::IdentityPreconditioner > eSolver;
+//    Eigen::DGMRES<Eigen::SparseMatrix<double>, Eigen::IdentityPreconditioner> eSolver;
+//    Eigen::SparseLU<Eigen::SparseMatrix<Real> > eSolver;
+// They weren't satisfactory. But it is very close to have all of yade to support Real type. Only the solver needs to be raplaced.
+// Eigen also can use parallelized solvers. Since long time we had EIGEN_DONT_PARALLELIZE defined. Maybe it's time to undefine it? https://gitlab.com/libeigen/eigen/merge_requests/36^M
+// 
 
 //#define LINSOLV // should be defined at cmake step
 // #define TAUCS_LIB //comment this if TAUCS lib is not available, it will disable PARDISO lib as well
