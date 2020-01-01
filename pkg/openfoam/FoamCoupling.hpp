@@ -42,6 +42,8 @@ class FoamCoupling : public GlobalEngine {
 		const int TAG_SZ_BUFF = 1003; 
 		const int TAG_FLUID_DT = 1050;  
 		const int TAG_YADE_DT = 1060; 
+		const int TAG_SHARED_ID = 1080; 
+		bool serialYade=false; 
 
 	public: 
     
@@ -52,27 +54,20 @@ class FoamCoupling : public GlobalEngine {
 		void setIdList(const std::vector<int>& );  
 		void killMPI(); 
 		void updateProcList();
-		void castParticle();
-		void castNumParticle(int); 
 		void resetProcList(); 
-		void recvHydroForce(); 
-		void setHydroForce();
-		void sumHydroForce(); 
 		void exchangeDeltaT();  
-		void runCoupling(); 
 		bool exchangeData();
                 void castTerminate(); 
 		Real getViscousTimeScale();  // not fully implemented, piece of code left in foam.
 		void getParticleForce();
-		virtual void verifyParticleDetection(); 
-		virtual void buildSharedIds(); 
+		void verifyParticleDetection(); 
 		bool ifFluidDomain(const Body::id_t& );
 		int ifSharedId(const Body::id_t& ); 
 		bool checkSharedDomains(const int& ); 
 		int stride;  
 		void resetFluidDomains(); 
-		void runCouplingParallel(); 
-		void setHydroForceParallel(); 
+		void runCoupling(); 
+		void setHydroForce(); 
 		void buildLocalIds(); 
 		void exchangeDeltaTParallel(); 
 		void insertBodyId(int); 
@@ -126,8 +121,6 @@ class FoamCoupling : public GlobalEngine {
 		int ifSharedIdMap(const Body::id_t& ); 
 		bool commSizeSet=false;
 		//bool couplingModeParallel = false; 
-		bool getCouplingMode(){return couplingModeParallel; }
-		void setCouplingMode(bool val){couplingModeParallel = val; } 
 		bool initDone; 
       
 
@@ -140,7 +133,7 @@ class FoamCoupling : public GlobalEngine {
     ((int,numParticles,1, , "number of particles in coupling."))
     ((double,particleDensity,1, , "particle Density")) //not needed  as this is set in foam  
     ((double,fluidDensity,1, ,"fluidDensity")) //not needed  as this is set in foam  
-    ((bool,couplingModeParallel,false, ,"set true if Yade-MPI is being used. ")) 
+//    ((bool,couplingModeParallel,false, ,"set true if Yade-MPI is being used. ")) 
     ((std::vector<Body::id_t>,fluidDomains, std::vector<Body::id_t>(),,"list of fluid domain bounding fictitious fluid bodies that has the fluid mesh bounds")) 
     ,
     ,
