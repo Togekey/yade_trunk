@@ -168,7 +168,7 @@ public:
 	// The workaround is to convert double arguments to Real. Precision is lost along the way.
 	double FunctionValue(double x[3])
 	{
-		Real r[3] = { x[0], x[1], x[2] };
+		Real r[3] = { static_cast<Real>(x[0]), static_cast<Real>(x[1]), static_cast<Real>(x[2]) };
 		return static_cast<double>(FunctionValue(r));
 	}
 #endif
