@@ -678,7 +678,7 @@ Yade additionally defines a class named :yref:`Se3r`, which contains spatial pos
 
 Eigen provides full rich linear algebra functionality. Some code firther uses the [cgal]_ library for computational geometry.
 
-In Python, basic numeric types are wrapped and imported from the ``minieigen`` module; the types drop the ``r`` type qualifier at the end, the syntax is otherwise similar. ``Se3r`` is not wrapped at all, only converted automatically, rarely as it is needed, from/to a ``(Vector3,Quaternion)`` tuple/list.
+In Python, basic numeric types are wrapped and imported from the ``yade.minieigenHP`` module; the types drop the ``r`` type qualifier at the end, the syntax is otherwise similar. ``Se3r`` is not wrapped at all, only converted automatically, rarely as it is needed, from/to a ``(Vector3,Quaternion)`` tuple/list. See :ref:`high precision section <high-precision>` for more details.
 
 .. ipython::
 	:okexcept:
@@ -2026,8 +2026,10 @@ When an object is crossing c++/python boundary, boost::python's global "converte
 
 .. [#wrap]
 	Wrapped classes are automatically registered when the class wrapper is created. If wrapped class derives from another wrapped class (and if this dependency is declared with the ``boost::python::bases`` template, which Yade's classes do automatically), parent class must be registered before derived class, however. (This is handled via loop in ``Omega::buildDynlibDatabase``, which reiterates over classes, skipping failures, until they all successfully register)
-	Math classes (Vector3, Matrix3, Quaternion) are wrapped in minieigen, which is available as a separate package. Use your package manager to install it.
+	Math classes (Vector3, Matrix3, Quaternion) are wrapped in minieigenHP. If yade is compiled with ``Real`` type being ``double`` type then it redirects to minieigen, which is available as a separate package. Use your package manager to install it. See :ref:`high precision section <high-precision>` for more details.
 
+
+.. comment: FIXME - write    .. _high-precision:   section.
 
 Adding a new python/C++ module
 ============================
