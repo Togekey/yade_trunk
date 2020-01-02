@@ -185,11 +185,13 @@ namespace math {
 	using ::std::fabs;
 	using ::std::max;
 	using ::std::min;
-#if (YADE_REAL_BIT > 64)
+#if (YADE_REAL_BIT != 64)
 	YADE_WRAP_FUNC_2_TYPE2_STD_CAST(min, const double&)
 	YADE_WRAP_FUNC_2_TYPE2_STD_CAST(max, const double&)
 	YADE_WRAP_FUNC_2_TYPE2_STD_CAST(min, const Real&)
 	YADE_WRAP_FUNC_2_TYPE2_STD_CAST(max, const Real&)
+#endif
+#if (YADE_REAL_BIT > 64)
 	YADE_WRAP_FUNC_1(abs)
 	YADE_WRAP_FUNC_1_RENAME(fabs, abs)
 #endif
