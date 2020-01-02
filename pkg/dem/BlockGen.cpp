@@ -640,7 +640,7 @@ bool BlockGen::generate(string& /*message*/)
 				/* Fast contact detection */
 				Vector3r vertexFrJoint(0,0,0);
 				if(joint[j].throughGoing == false){
-					Real twoRadiiDist = 1.2*(presentBlock.R+ std::max(fabs(joint[j].persistence_d[0]), fabs(joint[j].persistence_d[2])));
+					Real twoRadiiDist = 1.2*(presentBlock.R+ math::max(fabs(joint[j].persistence_d[0]), fabs(joint[j].persistence_d[2])));
 					Real centroidDist = (joint[j].centre-presentBlock.tempCentre).norm();
 					if(centroidDist > twoRadiiDist ){subMemberIter++; continue;}
 					/* std::cout<<"centroidDist: "<<centroidDist<<", twoRadiiDist: "<<twoRadiiDist<<", presentBlock.R: "<<presentBlock.R<<", presentBlock.tempCentre: "<<presentBlock.tempCentre<<", joint.centre: "<<joint[j].centre<<endl; */
@@ -1517,7 +1517,7 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 	pBlock->id = number;
 
 	if (color[0]==-1 or color[1]==-1 or color[2]==-1) {
-		pBlock->color = Vector3r(Mathr::UnitRandom(),Mathr::UnitRandom(),Mathr::UnitRandom()); //std::max(std::max(maxXoverall, maxYoverall),maxZoverall) ; //
+		pBlock->color = Vector3r(Mathr::UnitRandom(),Mathr::UnitRandom(),Mathr::UnitRandom()); //math::max(math::max(maxXoverall, maxYoverall),maxZoverall) ; //
 	} else {
 		pBlock->color = color;
 	}
@@ -1554,7 +1554,7 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 	if(exactRotation == true){
 		body->state->inertia = pBlock->inertia * density * inertiaFactor;
 	}else{
-		Real maxInertia = std::max(std::max(std::max(pBlock->inertia[0],pBlock->inertia[1]),pBlock->inertia[2]), 2.0/5.0*body->state->mass/density*minSize*minSize);
+		Real maxInertia = math::max(math::max(math::max(pBlock->inertia[0],pBlock->inertia[1]),pBlock->inertia[2]), 2.0/5.0*body->state->mass/density*minSize*minSize);
 		body->state->inertia = Vector3r(maxInertia, maxInertia, maxInertia) * density * inertiaFactor;
 	}
 	body->state->pos = block.centre+pBlock->position;
