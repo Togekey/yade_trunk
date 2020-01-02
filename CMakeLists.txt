@@ -533,7 +533,10 @@ IF(ENABLE_TWOPHASEFLOW AND (NOT (${REAL_PRECISION_BITS} EQUAL 64)))
    MESSAGE(STATUS "TWOPHASEFLOW was disabled automatically because it uses double-only external library: cholesky. It can be replaced with native Eigen solvers, then it will work.")
    SET(ENABLE_TWOPHASEFLOW OFF)
 ENDIF()
-
+# This is for testing compilation with Real as float. Only useful to have wider testing coverage, not for real world use.
+IF(${REAL_PRECISION_BITS} EQUAL 32)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=float-conversion -Wno-error=narrowing")
+ENDIF()
 
 #===========================================================
 FIND_PACKAGE(Loki REQUIRED)
