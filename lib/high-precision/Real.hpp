@@ -65,6 +65,10 @@ using float_fast80_t = long double;
 #include <complex>
 #include <limits>
 
+#define EIGEN_DONT_PARALLELIZE
+
+#include <Eigen/Core>
+
 /*************************************************************************/
 /*************************    float 32 bits     **************************/
 /*************************************************************************/
@@ -208,8 +212,6 @@ static_assert(sizeof(Complex) == sizeof(std::complex<math::UnderlyingReal>), "Th
 /*************************************************************************/
 /*************************   Eigen  NumTraits   **************************/
 /*************************************************************************/
-#define EIGEN_DONT_PARALLELIZE
-#include <Eigen/Core>
 #if (YADE_REAL_BIT > 64) and (not defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this))
 #include "EigenNumTraits.hpp"
 #endif
