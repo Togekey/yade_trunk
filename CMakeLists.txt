@@ -528,6 +528,12 @@ MESSAGE(STATUS "Will use ${Esc}[93m${REAL_PREC_NAME}${Esc}[0m as Real type with 
 #======================================
 #====== ** END Real precision ** ======
 #======================================
+# non-double Real precision does not work with extarnal library cholmod. One check is here. Another around line 746:  IF(CHOLMOD_FOUND  ………
+IF(ENABLE_TWOPHASEFLOW AND (NOT (${REAL_PRECISION_BITS} EQUAL 64)))
+   MESSAGE(STATUS "TWOPHASEFLOW was disabled automatically because it uses double-only external library: cholesky. It can be replaced with native Eigen solvers, then it will work.")
+   SET(ENABLE_TWOPHASEFLOW OFF)
+ENDIF()
+
 
 #===========================================================
 FIND_PACKAGE(Loki REQUIRED)
