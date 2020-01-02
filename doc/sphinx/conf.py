@@ -96,6 +96,7 @@ moduleMap={
 	  'yade._libVersions'       :'yade.libVersions'
 	, 'yade._log'               :'yade.log'
 	, 'yade._math'              :'yade.math'
+	, 'yade._minieigenHP'       :'yade.minieigenHP'
 	, 'yade._packPredicates'    :'yade.pack'
 	, 'yade._packSpheres'       :'yade.pack'
 	, 'yade._packObb'           :'yade.pack'

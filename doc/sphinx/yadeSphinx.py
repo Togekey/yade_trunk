@@ -53,6 +53,7 @@ mods={
           'libVersions'     : ['_libVersions']
         , 'log'             : ['_log']
         , 'math'            : ['_math']
+        , 'minieigenHP'     : ['_minieigenHP']
         , 'export'          : []
         , 'post2d'          : []
         , 'pack'            : ['_packSpheres','_packPredicates','_packObb']

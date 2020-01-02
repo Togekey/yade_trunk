@@ -45,6 +45,11 @@ SET_TARGET_PROPERTIES(_math PROPERTIES PREFIX "")
 TARGET_LINK_LIBRARIES(_math yade)
 INSTALL(TARGETS _math DESTINATION "${YADE_PY_PATH}/yade/")
 
+ADD_LIBRARY(_minieigenHP SHARED "${CMAKE_CURRENT_SOURCE_DIR}/high-precision/_minieigenHP.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/high-precision/_ExposeBoxes.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/high-precision/_ExposeComplex.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/high-precision/_ExposeConverters.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/high-precision/_ExposeMatrices.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/high-precision/_ExposeQuaternion.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/high-precision/_ExposeStorageOrdering.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/high-precision/_ExposeVectors.cpp")
+SET_TARGET_PROPERTIES(_minieigenHP PROPERTIES PREFIX "")
+TARGET_LINK_LIBRARIES(_minieigenHP yade)
+INSTALL(TARGETS _minieigenHP DESTINATION "${YADE_PY_PATH}/yade/")
+
 ADD_LIBRARY(WeightedAverage2d SHARED "${CMAKE_CURRENT_SOURCE_DIR}/WeightedAverage2d.cpp")
 SET_TARGET_PROPERTIES(WeightedAverage2d PROPERTIES PREFIX "")
 INSTALL(TARGETS WeightedAverage2d DESTINATION "${YADE_PY_PATH}/yade/")
