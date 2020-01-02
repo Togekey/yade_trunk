@@ -79,6 +79,10 @@ template <> inline void glMultMatrix<yade::Real>(const yade::Real* m)
 }
 
 template <> inline void glRotate<yade::Real>(yade::Real angle, yade::Real x, yade::Real y, yade::Real z) { glRotated(FOUR_DOUBLES(angle, x, y, z)); }
+template <typename Type1, typename Type2, typename Type3, typename Type4> inline void glRotate(Type1 angle, Type2 x, Type3 y, Type4 z)
+{
+	glRotated(FOUR_DOUBLES(angle, x, y, z));
+}
 template <> inline void glScale<yade::Real>(yade::Real x, yade::Real y, yade::Real z) { glScaled(THREE_DOUBLES(x, y, z)); }
 template <> inline void glTranslate<yade::Real>(yade::Real x, yade::Real y, yade::Real z) { glTranslated(THREE_DOUBLES(x, y, z)); }
 template <typename Type1, typename Type2, typename Type3> inline void glTranslate(Type1 x, Type2 y, Type3 z) { glTranslated(THREE_DOUBLES(x, y, z)); }
@@ -187,6 +191,12 @@ template <typename Type1, typename Type2, typename Type3, typename Type4> inline
 	glClearColor(GLclampf(static_cast<double>(a)), GLclampf(static_cast<double>(b)), GLclampf(static_cast<double>(c)), GLclampf(static_cast<double>(d)));
 }
 inline void glLineWidth(yade::Real a) { glLineWidth(GLfloat(static_cast<double>(a))); }
+
+#if (YADE_REAL_BIT == 32)
+// this is only testing compilation with Real as float. To avoid ambiguous function calls int↔float, int↔double. Such low precision Real is not useful at all. Except for testing builds ;)
+inline void glutSolidCube(int a) { glutSolidCube(static_cast<double>(a)); }
+inline void glutWireCube(int a) { glutWireCube(static_cast<double>(a)); }
+#endif
 
 #else
 
