@@ -29,7 +29,7 @@ using namespace ::yade::MathEigenTypes;
 #include <minieigen/visitors.hpp>
 #include <minieigen/expose.hpp>
 
-BOOST_PYTHON_MODULE(THE_CPP_NAME)
+BOOST_PYTHON_MODULE(_minieigenHP)
 try {
 	// arbitrary Real specific stuff: start
 	ArbitraryComplex_from_python<Complex>();
