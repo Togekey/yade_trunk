@@ -96,6 +96,14 @@ namespace detail {
 
   template<>
   const int numpy_type_map<boost::uint64_t>::typenum = NPY_UINT64;
+
+#if (YADE_REAL_BIT > 64)
+  template<>
+  const int numpy_type_map<::yade::Real>::typenum = NPY_OBJECT;
+
+  template<>
+  const int numpy_type_map<::yade::Complex>::typenum = NPY_OBJECT;
+#endif
 }
 
 class python_exception : public std::exception {
