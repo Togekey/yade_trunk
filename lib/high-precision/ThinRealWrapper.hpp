@@ -100,6 +100,7 @@ public:
 	// conversion operator to other types
 	template <typename OtherType, typename = EnableIfConvertible<OtherType>> explicit operator OtherType() const { return static_cast<OtherType>(val); }
 	explicit                                                                          operator const WrappedReal&() const { return val; }
+	explicit                                                                          operator       WrappedReal&()       { return val; }
 
 	// https://en.cppreference.com/w/cpp/language/cast_operator
 	explicit operator WrappedReal*() { return &val; };
