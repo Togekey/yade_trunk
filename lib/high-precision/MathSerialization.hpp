@@ -14,8 +14,18 @@
 #ifndef ALL_MATH_TYPES_SERIALIZATION_HPP
 #define ALL_MATH_TYPES_SERIALIZATION_HPP
 
+#if (YADE_REAL_BIT > 80)
+#include <boost/serialization/split_free.hpp>
+BOOST_SERIALIZATION_SPLIT_FREE(::yade::math::Real);
+BOOST_IS_BITWISE_SERIALIZABLE(::yade::math::Real);
+#endif
+#if (YADE_REAL_BIT == 80)
+BOOST_IS_BITWISE_SERIALIZABLE(::yade::math::Real);
+#endif
+
 // fast serialization (no version info and no tracking) for basic math types
 // http://www.boost.org/doc/libs/1_42_0/libs/serialization/doc/traits.html#bitwise
+
 BOOST_IS_BITWISE_SERIALIZABLE(yade::Vector2r);
 BOOST_IS_BITWISE_SERIALIZABLE(yade::Vector2i);
 BOOST_IS_BITWISE_SERIALIZABLE(yade::Vector3r);
@@ -30,6 +40,33 @@ BOOST_IS_BITWISE_SERIALIZABLE(yade::Matrix6r);
 
 namespace boost {
 namespace serialization {
+
+#if (YADE_REAL_BIT > 80)
+	template <class Archive> void save(Archive& ar, const ::yade::math::Real& a, unsigned int)
+	{
+		// FIXME: similar code is in ToFromPythonConverter.hpp, MathSerialization.hpp, MathFunctions.hpp, extract it to single place.
+		// TODO: maybe we can find a faster method for float128
+                static constexpr auto digs1 = std::numeric_limits<::yade::math::Real>::digits10 + 1;
+		std::ostringstream ss;
+		ss << std::setprecision(digs1) << a;
+		std::string v = ss.str();
+		ar & BOOST_SERIALIZATION_NVP(v);
+	}
+	template <class Archive> void load(Archive& ar, ::yade::math::Real& a, unsigned int)
+	{
+		std::string v{};
+		ar & BOOST_SERIALIZATION_NVP(v);
+		std::stringstream ss{v};
+		ss >> a;
+	}
+#endif
+#if (YADE_REAL_BIT == 80)
+	template <class Archive> void serialize(Archive& ar, ::yade::math::Real& a, unsigned int)
+	{
+		::yade::math::UnderlyingReal& v = a.operator ::yade::math::UnderlyingReal&();
+		ar & BOOST_SERIALIZATION_NVP(v);
+	}
+#endif
 
 template<class Archive>
 void serialize(Archive & ar, yade::Vector2r & g, const unsigned int /*version*/){
