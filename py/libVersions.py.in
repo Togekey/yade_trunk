@@ -256,7 +256,8 @@ def printAllVersions(rstFormat=False):
 		confD = "~/"+os.path.relpath(yade.config.confDir,os.environ['HOME'])
 	except Exception as e:
 		pass
-	print("Yade config dir:",confD)
+	print("Yade config dir: ",confD)
+	print("Yade precision :  "+str(yade.config.highPrecisionBits)+" bits, "+str(yade.config.highPrecisionDecimalPlaces)+" decimal places, with"+("" if yade.config.highPrecisionMpmath else "out")+" mpmath")
 	if(rstFormat==False): print("```")
 	print("\nLibraries used :\n")
 	print(lines)
