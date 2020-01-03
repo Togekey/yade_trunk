@@ -385,109 +385,109 @@ void FoamCoupling::verifyParticleDetection() {
 	} 
 	
 	//check if the 'sharedIds' has been located in any of the fluid procs.  (REWRITE FROM HERE)
-	if (unFoundSharedIds.size() > 0) {
-		for (const auto& idPair : sharedIdsMapIndx){
-			const auto& bodyId = idPair.first; 
-			//const int mpSz = idPair.second.size(); 
-			bool found = false; 
-			for (const auto& fdIndx : idPair.second){
-				const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fdIndx.first]->shape); 
-				for (const auto& vt : verifyTracking){
-					if (vt.first == flbox->domainRank){
-						if (vt.second[fdIndx.second] > 0) found = true; 
-					}
-				}
-			}
-			if (! found) {
+// 	if (unFoundSharedIds.size() > 0) {
+// 		for (const auto& idPair : sharedIdsMapIndx){
+// 			const auto& bodyId = idPair.first; 
+// 			//const int mpSz = idPair.second.size(); 
+// 			bool found = false; 
+// 			for (const auto& fdIndx : idPair.second){
+// 				const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fdIndx.first]->shape); 
+// 				for (const auto& vt : verifyTracking){
+// 					if (vt.first == flbox->domainRank){
+// 						if (vt.second[fdIndx.second] > 0) found = true; 
+// 					}
+// 				}
+// 			}
+// 			if (! found) {
+// 
+// 				const Vector3r& pos = (*scene->bodies)[bodyId]->state->pos; 
+// 				LOG_ERROR("Particle ID (SHARED ID )  = " << bodyId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain" << " lost particle in proc " << localRank);
+// 			}
+// 		}
+// 	}
 
-				const Vector3r& pos = (*scene->bodies)[bodyId]->state->pos; 
-				LOG_ERROR("Particle ID (SHARED ID )  = " << bodyId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain" << " lost particle in proc " << localRank);
+	for (auto& idPair : sharedIdsMapIndx){
+		for (auto iter = idPair.second.cbegin(); iter != idPair.second.cend();){
+			auto fdIndx = *iter; 
+			const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fdIndx.first]->shape); 
+			for (const auto& vt : verifyTracking){
+				if (vt.first == flbox->domainRank){
+					if (vt.second[fdIndx.second] > 0) {
+					  ; ++iter;}
+				} else {
+					idPair.second.erase(iter++); // remove proc and indx from sharedIdsMap 
+				}
 			}
 		}
 	}
+	
+	for (const auto& idPair : sharedIdsMapIndx){
+		if (!idPair.second.size()) { 
+			const auto& bodyId = idPair.first; 
+			const Vector3r& pos = (*scene->bodies)[bodyId]->state->pos; 
+			LOG_ERROR("Particle ID (SHARED ID )  = " << bodyId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain" << " lost particle in proc " << localRank);
+		}
+	}
 
-// 	for (auto& idPair : sharedIdsMapIndx){
-// 		for (auto iter = idPair.second.cbegin(); iter != idPair.second.cend();){
-// 			auto fdIndx = *iter; 
-// 			const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fdIndx.first]->shape); 
-// 			for (const auto& vt : verifyTracking){
-// 				if (vt.first == flbox->domainRank){
-// 					if (vt.second[fdIndx.second] > 0) {
-// 					  ; ++iter;}
-// 				} else {
-// 					idPair.second.erase(iter++); // remove proc and indx from sharedIdsMap 
-// 				}
-// 			}
-// 		}
-// 	}
-// 	
-// 	for (const auto& idPair : sharedIdsMapIndx){
-// 		if (!idPair.second.size()) { 
-// 			const auto& bodyId = idPair.first; 
-// 			const Vector3r& pos = (*scene->bodies)[bodyId]->state->pos; 
-// 			LOG_ERROR("Particle ID (SHARED ID )  = " << bodyId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain" << " lost particle in proc " << localRank);
-// 		}
-// 	}
-// 	
-// 	//std::vector<std::pair<int, std::vector<int> >> sharedIdsBuff; sharedIdsBuff.resize(inCommunicationProc.size());
-// 	std::vector<int> sharedIdsCount(inCommunicationProc.size(), 0); std::vector<std::vector<std::vector<int>> >  sharedBuff; 
-// 	sharedBuff.resize(inCommunicationProc.size()); 
-// 	
-// 	
+	std::vector<int> sharedIdsCount(inCommunicationProc.size(), 0); std::vector<std::vector<std::vector<int>> >  sharedBuff; 
+	sharedBuff.resize(inCommunicationProc.size()); 
+	
 // 	//prepare to send shared ids 
-// 	for (int ii = 0; ii != (int) inCommunicationProc.size(); ++ii){
-// 		for (const auto& idPair : sharedIdsMapIndx) {
-// 			const auto& indxMap = idPair.second; 
-// 			const auto& iter = indxMap.find(inCommunicationProc[ii].first);
-// 			if (iter != indxMap.end()){
-// 				std::vector<int> buff; buff.push_back(iter->second); // index of the id in the fluid proc's lst of particles 
-// 				for (const auto&  val : indxMap){
-// 					if ( ii == val.first) continue; 
-// 					buff.push_back(val.first); 
-// 				}
-// 				sharedBuff[ii].push_back(buff); 
-// 			}
-// 			
-// 		}
-// 		
-// 	}
-// 	
+	for (int ii = 0; ii != (int) inCommunicationProc.size(); ++ii){
+		for (const auto& idPair : sharedIdsMapIndx) {
+			const auto& indxMap = idPair.second; 
+			const auto& iter = indxMap.find(inCommunicationProc[ii].first);
+			if (iter != indxMap.end()){
+				std::vector<int> buff; buff.push_back(iter->second); // index of the id in the fluid proc's lst of particles 
+				for (const auto&  val : indxMap){
+					if ( ii == val.first) continue; 
+					buff.push_back(val.first); 
+				}
+				sharedBuff[ii].push_back(buff); 
+			}
+			
+		}
+		
+	}
 // 	// send info on number of 'shared' ids 
-// 	int ii  = 0; std::vector<MPI_Request> mpiReqs; std::vector<int> rnks; 
-// 	
-// 	for (unsigned i =0; i != sharedBuff.size(); ++i) {
-// 		int buffSz = (int)  sharedBuff[i].size(); 
-// 		MPI_Request req; 
-// 		MPI_Send(&buffSz, 1, MPI_INT, inCommunicationProc[i].first, TAG_SHARED_ID, MPI_COMM_WORLD); 
-// 		mpiReqs.push_back(req); 
-// 	}
-// 		
-// 	
-// 	for (auto& req : mpiReqs) {
-// 		MPI_Status status; 
-// 		MPI_Wait(&req, &status);
-// 		
-// 	}
-// 	
-// 	mpiReqs.clear(); 
-// 	
-// 	for (unsigned i =0 ; i != sharedBuff.size(); ++i) {
-// 		if (!sharedBuff[ii].size()) continue; 
-// 		for (unsigned j =0; j != sharedBuff[ii].size(); ++j) {
-// 			MPI_Request req; 
-// 			std::vector<int>& buff = sharedBuff[ii][j]; 
-// 			int sz = (int) buff.size(); 
-// 			MPI_Send(&buff.front(), sz, MPI_INT, inCommunicationProc[i].first, TAG_SHARED_ID, MPI_COMM_WORLD);
-// 			mpiReqs.push_back(req); 
-// 		}
-// 	} 
-// 	 
-// 	for (auto& rq : mpiReqs) {
-// 		MPI_Status status; 
-// 		MPI_Wait( &rq, &status); 
-// 	}
-// 	
-
+	std::vector<MPI_Request> mpiReqs; 
+	
+	for (unsigned i =0; i != sharedBuff.size(); ++i) {
+		int buffSz = (int) sharedBuff[i].size(); 
+		MPI_Request req; 
+		MPI_Isend(&buffSz, 1, MPI_INT, inCommunicationProc[i].first, TAG_SHARED_ID, MPI_COMM_WORLD,&req); 
+		mpiReqs.push_back(req); 
+	}
+		
+	
+	for (auto& req : mpiReqs) {
+		MPI_Status status; 
+		MPI_Wait(&req, &status);
+		
+	}
+	
+	mpiReqs.clear(); 
+	
+	for (unsigned i =0 ; i != sharedBuff.size(); ++i) {
+		if (!sharedBuff[i].size()) continue; 
+		for (unsigned j =0; j != sharedBuff[i].size(); ++j) {
+			MPI_Request req; 
+			std::vector<int>& buff = sharedBuff[i][j]; 
+			int sz = (int) buff.size(); 
+			MPI_Isend(&buff.front(), sz, MPI_INT, inCommunicationProc[i].first, TAG_SHARED_ID, MPI_COMM_WORLD, &req);
+			mpiReqs.push_back(req); 
+		}
+	} 
+	if (mpiReqs.size()) {
+		for (auto& rq : mpiReqs) {
+			MPI_Status status; 
+			MPI_Wait( &rq, &status); 
+		}
+		mpiReqs.clear(); 
+	}
+	
+	
+	
 }
 
 void FoamCoupling::getParticleForce(){
@@ -522,7 +522,6 @@ void FoamCoupling::resetFluidDomains(){
 	}
 	sharedIdsMapIndx.clear();
 	localIds.clear(); 
-	//inCommunicationProc.clear(); 
 }
 
 
