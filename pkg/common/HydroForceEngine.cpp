@@ -292,9 +292,16 @@ void HydroForceEngine::turbulentFluctuation(){
 		vFluctZ.resize(size);
 	}
 	/* reset stored values to zero */
+#if (YADE_REAL_BIT <= 64)
 	memset(& vFluctX[0],0,size);
 	memset(& vFluctY[0],0,size);
 	memset(& vFluctZ[0],0,size);
+#else
+	// the standard way, perfectly optimized by compiler.
+	std::fill(vFluctX.begin(), vFluctX.end(), 0);
+	std::fill(vFluctY.begin(), vFluctY.end(), 0);
+	std::fill(vFluctZ.begin(), vFluctZ.end(), 0);
+#endif
 
 	/* Create a random number generator rnd() with a gaussian distribution of mean 0 and stdev 1.0 */
 	/* see http://www.boost.org/doc/libs/1_55_0/doc/html/boost_random/reference.html and the chapter 7 of Numerical Recipes in C, second edition (1992) for more details */
@@ -407,9 +414,16 @@ void HydroForceEngine::turbulentFluctuationFluidizedBed(){
 		vFluctZ.resize(size);
 	}
 	/* reset stored values to zero */
+#if (YADE_REAL_BIT <= 64)
 	memset(& vFluctX[0],0,size);
 	memset(& vFluctY[0],0,size);
 	memset(& vFluctZ[0],0,size);
+#else
+	// the standard way, perfectly optimized by compiler.
+	std::fill(vFluctX.begin(), vFluctX.end(), 0);
+	std::fill(vFluctY.begin(), vFluctY.end(), 0);
+	std::fill(vFluctZ.begin(), vFluctZ.end(), 0);
+#endif
 
 	/* Create a random number generator rnd() with a gaussian distribution of mean 0 and stdev 1.0 */
 	/* see http://www.boost.org/doc/libs/1_55_0/doc/html/boost_random/reference.html and the chapter 7 of Numerical Recipes in C, second edition (1992) for more details */
@@ -507,7 +521,13 @@ void HydroForceEngine::fluidResolution(Real tfin,Real dt)
 	// Compute the fluid-particle momentum transfer associated to drag force, taufsi = phi/Vp*<fd>/rhof/(uf - up), not changing during the fluid resolution
 
 	//Initialization
-	taufsi.resize(nCell);  memset(& taufsi[0],0,nCell);  //Resize and initialize taufsi
+	taufsi.resize(nCell);
+#if (YADE_REAL_BIT <= 64)
+	memset(& taufsi[0],0,nCell);  //Resize and initialize taufsi
+#else
+	// the standard way, perfectly optimized by compiler.
+	std::fill(taufsi.begin(), taufsi.end(), 0);
+#endif
 	Real lim = 1e-5, dragTerm=0., partVolume=1., partVolume1=1., partVolume2=1.;
 	// Evaluate particles volume
 	if (twoSize==true){
@@ -687,7 +707,17 @@ void HydroForceEngine::fluidResolution(Real tfin,Real dt)
 
 	//Update Fluid velocity, turbulent viscosity and Reynolds stresses
 	ReynoldStresses.resize(nCell);  turbulentViscosity.resize(nCell);  vxFluid.resize(nCell+1);
-	memset(& ReynoldStresses[0],0,nCell);  memset(& turbulentViscosity[0],0,nCell);  memset(& vxFluid[0],0,nCell+1);
+#if (YADE_REAL_BIT <= 64)
+	memset(& ReynoldStresses   [0],0,nCell);
+	memset(& turbulentViscosity[0],0,nCell);
+	memset(& vxFluid           [0],0,nCell+1);
+#else
+	// the standard way, perfectly optimized by compiler.
+	std::fill(ReynoldStresses   .begin(), ReynoldStresses   .end(), 0);
+	std::fill(turbulentViscosity.begin(), turbulentViscosity.end(), 0);
+	std::fill(vxFluid           .begin(), vxFluid           .end(), 0);
+#endif
+
 	for (j=0;j<nCell;j++){
 		vxFluid[j] = ufn[j];  // Update fluid velocity
 		turbulentViscosity[j] = viscoft[j];
