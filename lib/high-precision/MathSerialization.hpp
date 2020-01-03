@@ -16,6 +16,11 @@
 
 // fast serialization (no version info and no tracking) for basic math types
 // http://www.boost.org/doc/libs/1_42_0/libs/serialization/doc/traits.html#bitwise
+#if (YADE_REAL_BIT > 64)
+//#include <boost/serialization/split_free.hpp>
+//BOOST_SERIALIZATION_SPLIT_FREE(::yade::math::Real);
+BOOST_IS_BITWISE_SERIALIZABLE(::yade::math::Real);
+#endif
 BOOST_IS_BITWISE_SERIALIZABLE(yade::Vector2r);
 BOOST_IS_BITWISE_SERIALIZABLE(yade::Vector2i);
 BOOST_IS_BITWISE_SERIALIZABLE(yade::Vector3r);
@@ -30,6 +35,26 @@ BOOST_IS_BITWISE_SERIALIZABLE(yade::Matrix6r);
 
 namespace boost {
 namespace serialization {
+
+#if (YADE_REAL_BIT > 64)
+	template <class Archive> void serialize(Archive& ar, ::yade::math::Real& a, unsigned int)
+	{
+		::yade::math::UnderlyingReal& value = a.operator ::yade::math::UnderlyingReal&();
+		ar & BOOST_SERIALIZATION_NVP(value);
+	}
+/*
+	template <class Archive> void save(Archive& ar, const ::yade::math::Real& a, unsigned int)
+	{
+		const ::yade::math::UnderlyingReal& value = a.operator ::yade::math::UnderlyingReal&();
+		ar & BOOST_SERIALIZATION_NVP(value);
+	}
+	template <class Archive> void load(Archive& ar, ::yade::math::Real& a, unsigned int)
+	{
+		::yade::math::UnderlyingReal& value = a.operator ::yade::math::UnderlyingReal&();
+		ar & BOOST_SERIALIZATION_NVP(value);
+	}
+*/
+#endif
 
 template<class Archive>
 void serialize(Archive & ar, yade::Vector2r & g, const unsigned int /*version*/){
