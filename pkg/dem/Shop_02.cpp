@@ -359,7 +359,11 @@ Matrix3r Shop::getStress(Real volume){
 	Real volumeNonPeri = 0;
 	if ( volume==0 && !scene->isPeriodic ) {
 	  py::tuple extrema = Shop::aabbExtrema();
+#if (YADE_REAL_BIT <= 80)
 	  volumeNonPeri = py::extract<Real>( (extrema[1][0] - extrema[0][0])*(extrema[1][1] - extrema[0][1])*(extrema[1][2] - extrema[0][2]) );
+#else
+	  volumeNonPeri = static_cast<Real>(py::extract<Real>( (extrema[1][0] - extrema[0][0])*(extrema[1][1] - extrema[0][1])*(extrema[1][2] - extrema[0][2]) ));
+#endif
 	}
 	if (volume==0) volume = scene->isPeriodic?scene->cell->hSize.determinant():volumeNonPeri;
 	Matrix3r stressTensor = Matrix3r::Zero();

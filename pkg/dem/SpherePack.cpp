@@ -25,7 +25,11 @@ void SpherePack::fromList(const py::list& l)
 		const py::tuple&      t = py::extract<py::tuple>(l[i]);
 		py::extract<Vector3r> vec(t[0]);
 		if (vec.check()) {
+#if (YADE_REAL_BIT <= 80)
 			pack.push_back(Sph(vec(), py::extract<double>(t[1]), (py::len(t) > 2 ? py::extract<int>(t[2]) : -1)));
+#else
+			pack.push_back(Sph(vec(), static_cast<Real>(py::extract<Real>(t[1])), (py::len(t) > 2 ? py::extract<int>(t[2]) : -1)));
+#endif
 			continue;
 		}
 		PyErr_SetString(PyExc_TypeError, "List elements must be (Vector3, float) or (Vector3, float, int)!");
