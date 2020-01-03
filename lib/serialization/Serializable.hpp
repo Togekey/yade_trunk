@@ -123,12 +123,21 @@ if(!(_ATTR_FLG(attr) & yade::Attr::hidden)){\
 }
 
 
+#if (YADE_REAL_BIT <= 80)
 #define _PYSET_ATTR_DEPREC(x,thisClass,z) \
 if(key==BOOST_PP_STRINGIZE(_DEPREC_OLDNAME(z))){ \
 	_DEPREC_WARN(thisClass,z); \
 	_DEPREC_NEWNAME(z)=::boost::python::extract<decltype(_DEPREC_NEWNAME(z))>(value); \
 	return; \
 }
+#else
+#define _PYSET_ATTR_DEPREC(x,thisClass,z) \
+if(key==BOOST_PP_STRINGIZE(_DEPREC_OLDNAME(z))){ \
+	_DEPREC_WARN(thisClass,z); \
+	_DEPREC_NEWNAME(z)=static_cast<decltype(_DEPREC_NEWNAME(z))>(::boost::python::extract<decltype(_DEPREC_NEWNAME(z))>(value)); \
+	return; \
+}
+#endif
 
 #define _PYATTR_DEPREC_DEF(x,thisClass,z) \
 	.add_property(BOOST_PP_STRINGIZE(_DEPREC_OLDNAME(z)),\
@@ -145,7 +154,11 @@ if(key==BOOST_PP_STRINGIZE(_DEPREC_OLDNAME(z))){ \
 
 // loop bodies for attribute access
 #define _PYGET_ATTR(x,y,z) if(key==_ATTR_NAM_STR(z)) return ::boost::python::object(_ATTR_NAM(z));
+#if (YADE_REAL_BIT <= 80)
 #define _PYSET_ATTR(x,y,z) if(key==_ATTR_NAM_STR(z)) { _ATTR_NAM(z)=::boost::python::extract<decltype(_ATTR_NAM(z))>(value); return; }
+#else
+#define _PYSET_ATTR(x,y,z) if(key==_ATTR_NAM_STR(z)) { _ATTR_NAM(z)=static_cast<decltype(_ATTR_NAM(z))>(::boost::python::extract<decltype(_ATTR_NAM(z))>(value)); return; }
+#endif
 #define _PYKEYS_ATTR(x,y,z) ret.append(_ATTR_NAM_STR(z));
 #define _PYHASKEY_ATTR(x,y,z) if(key==_ATTR_NAM_STR(z)) return true;
 #define _PYDICT_ATTR(x,y,z) if(!(_ATTR_FLG(z) & yade::Attr::hidden)) ret[_ATTR_NAM_STR(z)]=::boost::python::object(_ATTR_NAM(z));
