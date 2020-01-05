@@ -1,4 +1,5 @@
 #include "PDFEngine.hpp"
+#include <type_traits>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -58,6 +59,7 @@ void PDFEngine::getSpectrums(vector<PDFEngine::PDF> & pdfs)
 
 void PDFEngine::writeToFile(vector<PDFEngine::PDF> const& pdfs)
 {
+	if(std::is_same< double , Real >::value) {
 	FILE* fid = fopen(filename.c_str(), (firstRun) ? "w" : "a");
 	
 	if(fid) {
@@ -75,16 +77,16 @@ void PDFEngine::writeToFile(vector<PDFEngine::PDF> const& pdfs)
 					
 					if(ss.size() > 1)
 						for(uint j(0);j<ss.size();j++)
-							fprintf(fid, "%s_%s(%f,%f)\t",pdfs[i][t][p]->name.c_str(),  ss[j].c_str(), ((double)t + 0.5)*dTheta, ((double)p + 0.5)*dPhi);
+							fprintf(fid, "%s_%s(%f,%f)\t",pdfs[i][t][p]->name.c_str(),  ss[j].c_str(), double(((double)t + 0.5)*dTheta), double(((double)p + 0.5)*dPhi));
 					else
-						fprintf(fid, "%s(%f,%f)\t", pdfs[i][t][p]->name.c_str(), ((double)t+0.5)*dTheta, ((double)p+0.5)*dPhi);
+						fprintf(fid, "%s(%f,%f)\t", pdfs[i][t][p]->name.c_str(), double(((double)t+0.5)*dTheta), double(((double)p+0.5)*dPhi));
 				}
 			}
 			firstRun = false;
 			fprintf(fid, "\n");
 		}
 		
-		fprintf(fid, "%f\t",scene->time);
+		fprintf(fid, "%f\t",double(scene->time));
 		
 		for(uint i(0);i<pdfs.size();i++) for(uint t(0);t<pdfs[i].shape()[0];t++) for(uint p(0);p<pdfs[i].shape()[1];p++)
 			if(pdfs[i][t][p]) {
@@ -99,6 +101,10 @@ void PDFEngine::writeToFile(vector<PDFEngine::PDF> const& pdfs)
 	else {
 		if(!warnedOnce) LOG_ERROR("Unable to open " << filename << " for PDF writing");
 		warnedOnce = true;
+	}
+	} else {
+		// writing does not work with non-double Real, fprintf has to be replaced with operator <<
+		LOG_ERROR("writeToFile not implemented for non-double Real type.");
 	}
 }
 

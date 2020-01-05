@@ -186,7 +186,7 @@ Vector3r SizeOfPolyhedra(const shared_ptr<Shape>& cm1)
 {
 	Polyhedra* A = static_cast<Polyhedra*>(cm1.get());
 
-	double minx = 0, maxx = 0, miny = 0, maxy = 0, minz = 0, maxz = 0;
+	Real minx = 0, maxx = 0, miny = 0, maxy = 0, minz = 0, maxz = 0;
 
 	for (vector<Vector3r>::iterator i = A->v.begin(); i != A->v.end(); ++i) {
 		minx = min(minx, (*i)[0]);
