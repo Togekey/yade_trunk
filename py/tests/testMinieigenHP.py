@@ -8,6 +8,7 @@ import minieigen as mne
 import yade
 
 import testMathHelper as mpmath
+from   testMathHelper import mpc
 
 class ExtendedMinieigenTests(unittest.TestCase):
 	def setUp(self):
