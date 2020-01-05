@@ -305,8 +305,16 @@ namespace math {
 // do we want such alias?
 //namespace m = ::yade::math;
 //namespace mth = ::yade::math;
-using ::std::max;
-using ::std::min;
+
+// Use those which argument dependent lookup (ADL) can't find, because sometimes they are used with non-Real type, like int or float.
+// This saves writing `math::` before the calls. If they were used only with `Real` arguments (like all other mathematic functions) the ADL would find them.
+// Also, the ADL does not work properly for g++ ver. older than 6 in case when Real is a fundamental type (e.g. `double`) inside `math::`
+//    #if (__GNUC__ <= 6) …… #endif
+using math::max;
+using math::min;
+using math::abs;
+using math::fabs;
+
 }
 
 #undef YADE_WRAP_FUNC_1
@@ -324,27 +332,65 @@ using ::std::min;
 #undef YADE_WRAP_FUNC_1_COMPLEX_TO_REAL
 #undef YADE_WRAP_FUNC_1_COMPLEX_TO_REAL_STD
 
-#if (YADE_REAL_BIT > 64)
+// Maybe this needs a separate header for all IO operations. Or move it to MathSerialization, since IO is just about serialization.
 
-#include <string>
 #include <sstream>
+#include <string>
 
-namespace std {
-inline std::string to_string(const ::yade::math::Real& val)
-{
-	std::ostringstream s;
-	s << val;
-	return s.str();
-};
+// Unfortunately std::to_string cannot be relied upon. See documentation: https://en.cppreference.com/w/cpp/string/basic_string/to_string
+// because of this, and following the boost multiprecision documentation to use stringstream we will have this general conversion method:
+//   → https://www.boost.org/doc/libs/1_72_0/doc/html/boost_lexical_cast.html
+//  "For more involved conversions, such as where precision or formatting need tighter control than is offered by the default behavior
+//  of lexical_cast, the conventional std::stringstream approach is recommended. Where the conversions are numeric to numeric,
+//  boost::numeric_cast may offer more reasonable behavior than lexical_cast."
+//
+namespace yade {
+namespace math {
+	inline std::string toString(const ::yade::math::Real& val)
+	{
+		// FIXME: similar code is in ToFromPythonConverter.hpp, extract it to single place.
+#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
+		const auto digs1 = std::numeric_limits<Real>::digits10 + 1;
+#else
+                static constexpr auto digs1 = std::numeric_limits<Real>::digits10 + 1;
+#endif
+		std::ostringstream ss;
+		ss << std::setprecision(digs1) << val;
+		return ss.str();
+	};
 
-inline std::string to_string(const ::yade::math::Complex& val)
-{
-	std::ostringstream s;
-	s << val;
-	return s.str();
-};
+	inline std::string toString(const ::yade::math::Complex& val)
+	{
+		std::ostringstream ss;
+#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
+		const auto digs1 = std::numeric_limits<Real>::digits10 + 1;
+#else
+                static constexpr auto digs1 = std::numeric_limits<Real>::digits10 + 1;
+#endif
+		ss << std::setprecision(digs1) << val;
+		return ss.str();
+	};
+}
+using yade::math::toString;
 }
 
+#if (YADE_REAL_BIT > 64)
+
+namespace std {
+inline std::string to_string(const ::yade::math::Real& val) { return ::yade::toString(val); };
+inline std::string to_string(const ::yade::math::Complex& val) { return ::yade::toString(val); };
+}
+/*
+namespace std {
+// file /usr/include/CGAL/PCA_util_Eigen.h is calling std::sqrt ! They should call functions without qualification to let ADL take care of that, like boost does this:
+//  → https://www.boost.org/doc/libs/1_72_0/libs/math/doc/html/math_toolkit/float128_hints.html
+//  → https://www.boost.org/doc/libs/1_60_0/libs/multiprecision/doc/html/boost_multiprecision/tut/floats/fp_eg/jel.html
+//  → https://www.boost.org/doc/libs/1_72_0/libs/math/doc/html/math_toolkit/real_concepts.html
+// search for string 'unqualified'. Perhaps we file a bugreport to CGAL.
+using ::yade::math::pow;
+using ::yade::math::sqrt;
+}
+*/
 #endif
 
 #endif

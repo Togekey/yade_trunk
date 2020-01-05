@@ -5,6 +5,10 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
+#ifndef YADE_REAL_MATH_NAMESPACE
+#error "This file cannot be included alone, include Real.hpp instead"
+#endif
+
 #ifndef YADE_EIGEN_NUM_TRAITS_HPP
 #define YADE_EIGEN_NUM_TRAITS_HPP
 
