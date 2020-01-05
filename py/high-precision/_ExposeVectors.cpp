@@ -16,6 +16,7 @@ using namespace ::yade::MathEigenTypes;
 
 #ifdef UNDEF_EIGEN_DONT_ALIGN
 #undef EIGEN_DONT_ALIGN
+#undef UNDEF_EIGEN_DONT_ALIGN
 #endif
 
 #endif

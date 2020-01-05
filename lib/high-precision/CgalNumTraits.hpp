@@ -5,13 +5,13 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
+#ifndef YADE_REAL_MATH_NAMESPACE
+#error "This file cannot be included alone, include Real.hpp instead"
+#endif
+
 #if defined(YADE_CGAL) and (not defined(CGAL_NUM_TRAITS_HPP))
 #define CGAL_NUM_TRAITS_HPP
 
-#if (YADE_REAL_BIT > 64)
-// when `Real` is not plain old `double` we need to define CGAL NumTraits just like it was the case for EigenNumTraits
-
-#include <lib/high-precision/Real.hpp>
 #include <CGAL/Interval_nt.h>
 #include <CGAL/NT_converter.h>
 #include <CGAL/number_type_basic.h>
@@ -148,7 +148,8 @@ struct NT_converter<::yade::Real, boost::multiprecision::mpq_rational>
 	boost::multiprecision::mpq_rational operator()(const ::yade::Real& a) const
 	{
 #ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-		// The non-boost MPFR cannot support fast conversion.
+		// The non-boost MPFR cannot support fast conversion. It doesn't matter. This won't be ever used in production. It is only for wider testing coverage.
+		// FIXME: see FIXME in ::yade::math::toString
 		std::stringstream ss;
 		ss << a;
 		boost::multiprecision::mpq_rational ret {};
@@ -171,33 +172,6 @@ namespace std {
 using ::yade::math::pow;
 using ::yade::math::sqrt;
 }
-
-#endif
-
-
-#include <CGAL/Filtered_kernel.h>
-#include <CGAL/Simple_cartesian.h>
-#include <CGAL/Triangulation_structural_filtering_traits.h>
-
-namespace CGAL {
-// The Exact_predicates_inexact_constructions_kernel used `double`. Make corresponding typedef for Real type.
-class EReal : public Filtered_kernel_adaptor<
-                      Type_equality_wrapper<Simple_cartesian<::yade::Real>::Base<EReal>::Type, EReal>,
-#ifdef CGAL_NO_STATIC_FILTERS
-                      false>
-#else
-                      true>
-#endif
-{
-};
-
-typedef EReal Exact_Real_predicates_inexact_constructions_kernel;
-
-template <> struct Triangulation_structural_filtering_traits<EReal> {
-	typedef Tag_true Use_structural_filtering_tag;
-};
-
-} // namespace CGAL
 
 #endif
 
