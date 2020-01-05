@@ -161,13 +161,6 @@ public:
 #ifdef YADE_IGNORE_IEEE_INFINITY_NAN
 	bool operator==(const ThinComplexWrapper& rhs) const { return val == rhs.val; }
 #else
-	void check(const ThinComplexWrapper& rhs) const
-	{
-		if (std::isnan(rhs.val.real()) or std::isnan(val.real()) or std::isinf(rhs.val.real()) or std::isinf(val.real()) or std::isnan(rhs.val.imag())
-		    or std::isnan(val.imag()) or std::isinf(rhs.val.imag()) or std::isinf(val.imag())) {
-			throw std::runtime_error("cannot compare NaN, Inf numbers.");
-		}
-	}
 	bool operator==(const ThinComplexWrapper& rhs) const
 	{
 		check(rhs);
@@ -189,6 +182,19 @@ public:
 		th.check(rhs);
 		return th.val != rhs;
 	}
+#ifdef YADE_WRAPPER_THROW_ON_NAN_INF_COMPLEX
+	// this can be useful sometimes for debugging when calculations go all wrong.
+	void check(const ThinComplexWrapper& rhs) const
+	{
+		if (std::isnan(rhs.val.real()) or std::isnan(val.real()) or std::isinf(rhs.val.real()) or std::isinf(val.real()) or std::isnan(rhs.val.imag())
+		    or std::isnan(val.imag()) or std::isinf(rhs.val.imag()) or std::isinf(val.imag())) {
+			throw std::runtime_error("cannot compare NaN, Inf numbers.");
+		}
+	}
+#else
+	// this one is optimized away
+	void check(const ThinComplexWrapper&) const {};
+#endif
 #endif
 
 	// Output/ Input

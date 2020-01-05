@@ -135,13 +135,6 @@ public:
 #ifdef YADE_IGNORE_IEEE_INFINITY_NAN
 	bool operator==(const ThinRealWrapper& rhs) const { return val == rhs.val; }
 #else
-	void check(const ThinRealWrapper& rhs) const
-	{
-		// boost::partially_ordered takes into account that some numbers cannot be compared with each other
-		if (std::isnan(rhs.val) or std::isnan(val) or std::isinf(rhs.val) or std::isinf(val)) {
-			throw std::runtime_error("cannot compare NaN, Inf numbers.");
-		}
-	}
 	bool operator==(const ThinRealWrapper& rhs) const
 	{
 		check(rhs);
@@ -163,6 +156,19 @@ public:
 		th.check(rhs);
 		return th.val != rhs;
 	}
+#ifdef YADE_WRAPPER_THROW_ON_NAN_INF_REAL
+	// this can be useful sometimes for debugging when calculations go all wrong.
+	void check(const ThinRealWrapper& rhs) const
+	{
+		// boost::partially_ordered takes into account that some numbers cannot be compared with each other
+		if (std::isnan(rhs.val) or std::isnan(val) or std::isinf(rhs.val) or std::isinf(val)) {
+			throw std::runtime_error("cannot compare NaN, Inf numbers.");
+		}
+	}
+#else
+	// this one is optimized away
+	void check(const ThinRealWrapper&) const {};
+#endif
 #endif
 
 	// Output/ Input
