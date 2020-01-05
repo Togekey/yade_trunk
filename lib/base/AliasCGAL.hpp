@@ -11,19 +11,42 @@
 
 #ifdef YADE_CGAL
 
-#include <lib/high-precision/CgalNumTraits.hpp>
+#include <lib/high-precision/Real.hpp>
 #include <CGAL/AABB_traits.h>
 #include <CGAL/AABB_tree.h>
 #include <CGAL/AABB_triangle_primitive.h>
 #include <CGAL/Delaunay_triangulation_3.h>
+#include <CGAL/Filtered_kernel.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_items_with_id_3.h>
+#include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/Tetrahedron_3.h>
 #include <CGAL/Triangulation_data_structure_3.h>
+#include <CGAL/Triangulation_structural_filtering_traits.h>
 #include <CGAL/convex_hull_3.h>
 #include <CGAL/linear_least_squares_fitting_3.h>
 #include <CGAL/squared_distance_3.h>
+
+namespace CGAL {
+// The Exact_predicates_inexact_constructions_kernel used `double`. Make corresponding typedef for Real type.
+class EReal : public Filtered_kernel_adaptor<
+                      Type_equality_wrapper<Simple_cartesian<::yade::Real>::Base<EReal>::Type, EReal>,
+#ifdef CGAL_NO_STATIC_FILTERS
+                      false>
+#else
+                      true>
+#endif
+{
+};
+
+using Exact_Real_predicates_inexact_constructions_kernel = EReal;
+
+template <> struct Triangulation_structural_filtering_traits<EReal> {
+	typedef Tag_true Use_structural_filtering_tag;
+};
+
+} // namespace CGAL
 
 namespace yade {
 
