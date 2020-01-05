@@ -105,7 +105,7 @@ class SimpleTests(unittest.TestCase):
 			#print("a= ",a," b= ",b," smallest=",mne.smallest_positive(), " maxval=",self.maxval)
 			self.printCount+=1
 			if(functionName and (self.printCount % self.everyNth == 0)):
-				print(functionName.ljust(15)+" : "+str(a))
+				print(functionName.ljust(15)+" : "+a.__repr__())
 			if(mpmath.isnan(a)):
 				print("\033[93m Warning: \033[0m got NaN, cannot verify if: ",a," == " ,b, " that was for function: \033[93m ",functionName, " \033[0m")
 			else:
@@ -326,7 +326,8 @@ class SimpleTests(unittest.TestCase):
 		self.checkRelativeError(a.val,10)
 		self.checkRelativeComplexError(a.cpl,-71.23+33.23j,0.01)
 		a.cpl=mpmath.mpc("1","-1")
-		self.checkRelativeComplexError(a.cpl,1-1j)
+		self.checkRelativeComplexError(a.cpl,1-1j,1e-15)
+		self.checkRelativeComplexError(a.cpl,mpmath.mpc("1","-1"))
 
 	def thisTestsExceptionReal(self):
 		a=mne.Var()
