@@ -11,6 +11,12 @@
 #define TWO_DOUBLES(val1, val2) (static_cast<double>(val1)), (static_cast<double>(val2))
 #define THREE_DOUBLES(val1, val2, val3) (static_cast<double>(val1)), (static_cast<double>(val2)), (static_cast<double>(val3))
 #define FOUR_DOUBLES(val1, val2, val3, val4) (static_cast<double>(val1)), (static_cast<double>(val2)), (static_cast<double>(val3)), (static_cast<double>(val4))
+#define SIX_DOUBLES(val1, val2, val3, val4, val5, val6)                                                                                                        \
+	(static_cast<double>(val1)), (static_cast<double>(val2)), (static_cast<double>(val3)), (static_cast<double>(val4)), (static_cast<double>(val5)),       \
+	        (static_cast<double>(val6))
+#define NINE_DOUBLES(val1, val2, val3, val4, val5, val6, val7, val8, val9)                                                                                     \
+	(static_cast<double>(val1)), (static_cast<double>(val2)), (static_cast<double>(val3)), (static_cast<double>(val4)), (static_cast<double>(val5)),       \
+	        (static_cast<double>(val6)), (static_cast<double>(val7)), (static_cast<double>(val8)), (static_cast<double>(val9))
 
 // These macros create on ald C-array of doubles.
 #define ARRAY_2_DOUBLE(val1, val2)                                                                                                                             \
@@ -30,9 +36,7 @@
 
 #define ARRAY_9_DOUBLE(val1, val2, val3, val4, val5, val6, val7, val8, val9)                                                                                   \
 	{                                                                                                                                                      \
-		(static_cast<double>(val1)), (static_cast<double>(val2)), (static_cast<double>(val3)), (static_cast<double>(val4)),                            \
-		        (static_cast<double>(val5)), (static_cast<double>(val6)), (static_cast<double>(val7)), (static_cast<double>(val8)),                    \
-		        (static_cast<double>(val9)),                                                                                                           \
+		NINE_DOUBLES(val1, val2, val3, val4, val5, val6, val7, val8, val9)                                                                             \
 	}
 
 #define VEC3_TO_ARRAY_DOUBLE(VectorName, ArrayName)                                                                                                            \
