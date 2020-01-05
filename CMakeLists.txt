@@ -300,7 +300,7 @@ if(ENABLE_USEFUL_ERRORS)
 
   IF((${EIGEN3_MAJOR_VERSION} LESS 2) OR (${EIGEN3_MAJOR_VERSION} EQUAL 2))
     # eigen <= 3.2, ubuntu 16.04 xenial
-    SET(WORKAROUND_LIBRARY_WARNINGS "${WORKAROUND_LIBRARY_WARNINGS} -Wno-float-conversion")
+    SET(WORKAROUND_LIBRARY_WARNINGS "${WORKAROUND_LIBRARY_WARNINGS} -Wno-error=float-conversion")
   ENDIF()
   IF((${NUMPY_VERSION_MAJOR} EQUAL 1) AND (${NUMPY_VERSION_MINOR} LESS 13))
     # numpy 1.11.0 has unused-function, 1.13 does not. So we have to print warning only when it appears.
