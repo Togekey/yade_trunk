@@ -76,6 +76,7 @@ class FoamCoupling : public GlobalEngine {
 		std::vector<int> getIdList(); 
 		MPI_Comm *myComm_p; 
 		bool bodyListModified; 
+		int findRankSharedIndxMap(const std::map<int, int>& , const int& ); 
     
 		MPI_Comm selfComm() {if (myComm_p) return *myComm_p; else return MPI_COMM_WORLD;}
 	

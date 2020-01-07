@@ -385,49 +385,57 @@ void FoamCoupling::verifyParticleDetection() {
 	} 
 	
 	//check if the 'sharedIds' has been located in any of the fluid procs.  (REWRITE FROM HERE)
-// 	if (unFoundSharedIds.size() > 0) {
-// 		for (const auto& idPair : sharedIdsMapIndx){
-// 			const auto& bodyId = idPair.first; 
-// 			//const int mpSz = idPair.second.size(); 
-// 			bool found = false; 
-// 			for (const auto& fdIndx : idPair.second){
-// 				const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fdIndx.first]->shape); 
-// 				for (const auto& vt : verifyTracking){
-// 					if (vt.first == flbox->domainRank){
-// 						if (vt.second[fdIndx.second] > 0) found = true; 
-// 					}
-// 				}
-// 			}
-// 			if (! found) {
-// 
-// 				const Vector3r& pos = (*scene->bodies)[bodyId]->state->pos; 
-// 				LOG_ERROR("Particle ID (SHARED ID )  = " << bodyId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain" << " lost particle in proc " << localRank);
-// 			}
-// 		}
-// 	}
-
-	for (auto& idPair : sharedIdsMapIndx){
-		for (auto iter = idPair.second.cbegin(); iter != idPair.second.cend();){
-			auto fdIndx = *iter; 
-			const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fdIndx.first]->shape); 
-			for (const auto& vt : verifyTracking){
-				if (vt.first == flbox->domainRank){
-					if (vt.second[fdIndx.second] > 0) {
-					  ; ++iter;}
-				} else {
-					idPair.second.erase(iter++); // remove proc and indx from sharedIdsMap 
+	if (unFoundSharedIds.size() > 0) {
+		for (const auto& idPair : sharedIdsMapIndx){
+			const auto& bodyId = idPair.first; 
+			int foundCount  = 0; 
+			//const int mpSz = idPair.second.size(); 
+			bool found = false; 
+			for (const auto& fdIndx : idPair.second){
+				const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fdIndx.first]->shape); 
+				for (const auto& vt : verifyTracking){
+					if (vt.first == flbox->domainRank){
+						if (vt.second[fdIndx.second] > 0) {
+						  found = true; 
+						  ++foundCount; 
+						  std::cout << "foundcount for bId = " <<  idPair.first <<  "  " << foundCount << std::endl; 
+						  std::cout << "totsize for bId = " <<  idPair.first <<  "  " << idPair.second.size() << std::endl; 
+						}
+						  
+					}
 				}
+			}
+			if (! found) {
+
+				const Vector3r& pos = (*scene->bodies)[bodyId]->state->pos; 
+				LOG_ERROR("Particle ID (SHARED ID )  = " << bodyId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain" << " lost particle in proc " << localRank);
 			}
 		}
 	}
+
+// 	for (auto& idPair : sharedIdsMapIndx){
+// 		for (auto iter = idPair.second.cbegin(); iter != idPair.second.cend();){
+// 			auto fdIndx = *iter; 
+// 			const shared_ptr<FluidDomainBbox>& flbox = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[fdIndx.first]->shape); 
+// 			for (const auto& vt : verifyTracking){
+// 				if (vt.first == flbox->domainRank){
+// 					if (vt.second[fdIndx.second] > 0) {
+// 					  ; ++iter;}
+// 				} else {
+// 					idPair.second.erase(iter++); // remove proc and indx from sharedIdsMap 
+// 				}
+// 			}
+// 		}
+// 	}
+		
 	
-	for (const auto& idPair : sharedIdsMapIndx){
-		if (!idPair.second.size()) { 
-			const auto& bodyId = idPair.first; 
-			const Vector3r& pos = (*scene->bodies)[bodyId]->state->pos; 
-			LOG_ERROR("Particle ID (SHARED ID )  = " << bodyId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain" << " lost particle in proc " << localRank);
-		}
-	}
+// 	for (const auto& idPair : sharedIdsMapIndx){
+// 		if (!idPair.second.size()) { 
+// 			const auto& bodyId = idPair.first; 
+// 			const Vector3r& pos = (*scene->bodies)[bodyId]->state->pos; 
+// 			LOG_ERROR("Particle ID (SHARED ID )  = " << bodyId << " pos = " << pos[0] << " " << pos[1] << " " << pos[2] <<  " was not found in fluid domain" << " lost particle in proc " << localRank);
+// 		}
+// 	}
 
 	std::vector<int> sharedIdsCount(inCommunicationProc.size(), 0); std::vector<std::vector<std::vector<int>> >  sharedBuff; 
 	sharedBuff.resize(inCommunicationProc.size()); 
@@ -436,22 +444,24 @@ void FoamCoupling::verifyParticleDetection() {
 	for (int ii = 0; ii != (int) inCommunicationProc.size(); ++ii){
 		for (const auto& idPair : sharedIdsMapIndx) {
 			const auto& indxMap = idPair.second; 
-			const auto& iter = indxMap.find(inCommunicationProc[ii].first);
-			if (iter != indxMap.end()){
-				std::vector<int> buff; buff.push_back(iter->second); // index of the id in the fluid proc's lst of particles 
-				for (const auto&  val : indxMap){
-					if ( ii == val.first) continue; 
-					buff.push_back(val.first); 
+			// if and only if the size of the map is > 1, the particle has been found in more than one foam procs. 
+			if (indxMap.size() > 1) { 
+				const auto& indx = findRankSharedIndxMap(indxMap, inCommunicationProc[ii].first); 
+				if (indx >= 0 ){
+					std::vector<int> buff; buff.push_back(indx); // index of the id in the fluid proc's lst of particles 
+					for (const auto&  val : indxMap){
+						const auto& flbx = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[val.first]->shape); 
+						if (inCommunicationProc[ii].first == flbx->domainRank) continue; 
+						buff.push_back(val.first); 
+					}
+					sharedBuff[ii].push_back(buff); 
 				}
-				sharedBuff[ii].push_back(buff); 
 			}
-			
 		}
 		
 	}
-// 	// send info on number of 'shared' ids 
+	// send info on number of 'shared' ids 
 	std::vector<MPI_Request> mpiReqs; 
-	
 	for (unsigned i =0; i != sharedBuff.size(); ++i) {
 		int buffSz = (int) sharedBuff[i].size(); 
 		MPI_Request req; 
@@ -467,6 +477,7 @@ void FoamCoupling::verifyParticleDetection() {
 	}
 	
 	mpiReqs.clear(); 
+	
 	
 	for (unsigned i =0 ; i != sharedBuff.size(); ++i) {
 		if (!sharedBuff[i].size()) continue; 
@@ -489,6 +500,17 @@ void FoamCoupling::verifyParticleDetection() {
 	
 	
 }
+
+
+int FoamCoupling::findRankSharedIndxMap(const std::map<int, int>& tMap, const int& rnk) {
+	// if found, return the index of the particle 
+	for (const auto& prcIndx : tMap) {
+		const auto& flbx  = YADE_PTR_CAST<FluidDomainBbox>((*scene->bodies)[prcIndx.first]->shape); 
+		if (rnk == flbx->domainRank) return prcIndx.second;  // return the particle index
+	}
+	return -1; 
+}
+
 
 void FoamCoupling::getParticleForce(){
 	
@@ -527,7 +549,7 @@ void FoamCoupling::resetFluidDomains(){
 
 
 void FoamCoupling::setHydroForce(){
- 	// add the force  
+	// add the force  
 	if (localRank == yadeMaster and not serialYade) {return; } 
 	for (const auto& rf : hForce){
 		int indx = abs(rf.first-localCommSize); 
@@ -578,7 +600,7 @@ void FoamCoupling::exchangeDeltaTParallel() {
 }
 
 void FoamCoupling::runCoupling(){
-	if (localRank > yadeMaster or serialYade) { // master proc does not take part in the coupling except for timestep exchange and  receiving the grid minmax
+	if (localRank > yadeMaster or serialYade) { 
 		buildLocalIds();
 		buildSharedIdsMap(); 
 		sendIntersectionToFluidProcs(); 
