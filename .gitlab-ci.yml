@@ -234,7 +234,7 @@ make_clang:
     - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 $EXTRA_CMAKE_ARGS"
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye
 
-make_long_double:
+makeHP_long_double:
   <<: *make_definition
   <<: *artifacts_definition
   before_script:
@@ -245,7 +245,7 @@ make_long_double:
     - echo $EXTRA_CMAKE_ARGS
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
 
-make_float128:
+makeHP_float128:
   <<: *make_definition
   <<: *artifacts_definition
   before_script:
@@ -256,7 +256,7 @@ make_float128:
     - echo $EXTRA_CMAKE_ARGS
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
 
-make_mpfr100:
+makeHP_mpfr100:
   <<: *make_definition
   <<: *artifacts_definition
   before_script:
@@ -267,7 +267,7 @@ make_mpfr100:
     - echo $EXTRA_CMAKE_ARGS
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
 
-make_float_boost100:
+makeHP_boost100:
   <<: *make_definition
   <<: *artifacts_definition
   before_script:
@@ -410,37 +410,37 @@ test_clang:
     - make_clang
   needs: ["make_clang"]
 
-test_long_double:
+testHP_long_double:
   <<: *test_definition
 ##<<: *skip_wip_test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
   dependencies:
-    - make_long_double
-  needs: ["make_long_double"]
+    - makeHP_long_double
+  needs: ["makeHP_long_double"]
 
-test_float128:
+testHP_float128:
   <<: *test_definition
 ##<<: *skip_wip_test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
   dependencies:
-    - make_float128
-  needs: ["make_float128"]
+    - makeHP_float128
+  needs: ["makeHP_float128"]
 
-test_mpfr100:
+testHP_mpfr100:
   <<: *test_definition
 ##<<: *skip_wip_test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
   dependencies:
-    - make_mpfr100
-  needs: ["make_mpfr100"]
+    - makeHP_mpfr100
+  needs: ["makeHP_mpfr100"]
 
-test_float_boost100:
+testHP_boost100:
   <<: *test_definition
 ##<<: *skip_wip_test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
   dependencies:
-    - make_float_boost100
-  needs: ["make_float_boost100"]
+    - makeHP_boost100
+  needs: ["makeHP_boost100"]
 
 
 # 3.2. check stage
@@ -542,37 +542,37 @@ check_clang:
     - make_clang
   needs: ["make_clang"]
 
-check_long_double:
+checkHP_long_double:
   <<: *check_definition
 ##<<: *skip_wip_test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
   dependencies:
-    - make_long_double
-  needs: ["make_long_double"]
+    - makeHP_long_double
+  needs: ["makeHP_long_double"]
 
-check_float128:
+checkHP_float128:
   <<: *check_definition
 ##<<: *skip_wip_test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
   dependencies:
-    - make_float128
-  needs: ["make_float128"]
+    - makeHP_float128
+  needs: ["makeHP_float128"]
 
-check_mpfr100:
+checkHP_mpfr100:
   <<: *check_definition
 ##<<: *skip_wip_test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
   dependencies:
-    - make_mpfr100
-  needs: ["make_mpfr100"]
+    - makeHP_mpfr100
+  needs: ["makeHP_mpfr100"]
 
-check_float_boost100:
+checkHP_boost100:
   <<: *check_definition
 ##<<: *skip_wip_test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
   dependencies:
-    - make_float_boost100
-  needs: ["make_float_boost100"]
+    - makeHP_boost100
+  needs: ["makeHP_boost100"]
 
 
 .doc_template: &doc_definition
