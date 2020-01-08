@@ -350,7 +350,7 @@ namespace yade {
 namespace math {
 	inline std::string toString(const ::yade::math::Real& val)
 	{
-		// FIXME: similar code is in ToFromPythonConverter.hpp, extract it to single place.
+		// FIXME: similar code is in ToFromPythonConverter.hpp, MathSerialization.hpp, MathFunctions.hpp, extract it to single place.
 #ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
 		const auto digs1 = std::numeric_limits<Real>::digits10 + 1;
 #else
