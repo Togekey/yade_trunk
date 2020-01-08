@@ -46,7 +46,7 @@ namespace serialization {
 	{
 		// FIXME: similar code is in ToFromPythonConverter.hpp, MathSerialization.hpp, MathFunctions.hpp, extract it to single place.
 		// TODO: maybe we can find a faster method for float128
-                static constexpr auto digs1 = std::numeric_limits<Real>::digits10 + 1;
+                static constexpr auto digs1 = std::numeric_limits<::yade::math::Real>::digits10 + 1;
 		std::ostringstream ss;
 		ss << std::setprecision(digs1) << a;
 		std::string v = ss.str();
