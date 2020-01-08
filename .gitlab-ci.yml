@@ -234,6 +234,50 @@ make_clang:
     - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 $EXTRA_CMAKE_ARGS"
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye
 
+make_long_double:
+  <<: *make_definition
+  <<: *artifacts_definition
+  before_script:
+## Comment this for now, because that is the main reason for this branch.
+##  # there can be only one before_script:, so the line below cannot be in a separate template
+##  - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
+    - export EXTRA_CMAKE_ARGS="-DREAL_DECIMAL_PLACES=18 $EXTRA_CMAKE_ARGS"
+    - echo $EXTRA_CMAKE_ARGS
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+
+make_float128:
+  <<: *make_definition
+  <<: *artifacts_definition
+  before_script:
+## Comment this for now, because that is the main reason for this branch.
+##  # there can be only one before_script:, so the line below cannot be in a separate template
+##  - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
+    - export EXTRA_CMAKE_ARGS="-DREAL_DECIMAL_PLACES=33 $EXTRA_CMAKE_ARGS"
+    - echo $EXTRA_CMAKE_ARGS
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+
+make_mpfr100:
+  <<: *make_definition
+  <<: *artifacts_definition
+  before_script:
+## Comment this for now, because that is the main reason for this branch.
+##  # there can be only one before_script:, so the line below cannot be in a separate template
+##  - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
+    - export EXTRA_CMAKE_ARGS="-DREAL_DECIMAL_PLACES=100 -DENABLE_MPFR=ON $EXTRA_CMAKE_ARGS"
+    - echo $EXTRA_CMAKE_ARGS
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+
+make_float_boost100:
+  <<: *make_definition
+  <<: *artifacts_definition
+  before_script:
+## Comment this for now, because that is the main reason for this branch.
+##  # there can be only one before_script:, so the line below cannot be in a separate template
+##  - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
+    - export EXTRA_CMAKE_ARGS="-DREAL_DECIMAL_PLACES=100 -DENABLE_MPFR=OFF $EXTRA_CMAKE_ARGS"
+    - echo $EXTRA_CMAKE_ARGS
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+
 # 3.1. test stage
 .test_template: &test_definition
   <<: *platforms_definition
@@ -366,6 +410,38 @@ test_clang:
     - make_clang
   needs: ["make_clang"]
 
+test_long_double:
+  <<: *test_definition
+##<<: *skip_wip_test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  dependencies:
+    - make_long_double
+  needs: ["make_long_double"]
+
+test_float128:
+  <<: *test_definition
+##<<: *skip_wip_test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  dependencies:
+    - make_float128
+  needs: ["make_float128"]
+
+test_mpfr100:
+  <<: *test_definition
+##<<: *skip_wip_test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  dependencies:
+    - make_mpfr100
+  needs: ["make_mpfr100"]
+
+test_float_boost100:
+  <<: *test_definition
+##<<: *skip_wip_test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  dependencies:
+    - make_float_boost100
+  needs: ["make_float_boost100"]
+
 
 # 3.2. check stage
 .check_template: &check_definition
@@ -465,6 +541,38 @@ check_clang:
   dependencies:
     - make_clang
   needs: ["make_clang"]
+
+check_long_double:
+  <<: *check_definition
+##<<: *skip_wip_test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  dependencies:
+    - make_long_double
+  needs: ["make_long_double"]
+
+check_float128:
+  <<: *check_definition
+##<<: *skip_wip_test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  dependencies:
+    - make_float128
+  needs: ["make_float128"]
+
+check_mpfr100:
+  <<: *check_definition
+##<<: *skip_wip_test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  dependencies:
+    - make_mpfr100
+  needs: ["make_mpfr100"]
+
+check_float_boost100:
+  <<: *check_definition
+##<<: *skip_wip_test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  dependencies:
+    - make_float_boost100
+  needs: ["make_float_boost100"]
 
 
 .doc_template: &doc_definition
