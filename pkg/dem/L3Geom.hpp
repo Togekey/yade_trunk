@@ -34,8 +34,6 @@ Note that:
 #define L3GEOM_SPHERESLIKE
 
 struct L3Geom: public GenericSpheresContact{
-	const Real& uN;
-	const Vector2r uT; 
 	virtual ~L3Geom();
 
 	// utility function
@@ -60,7 +58,6 @@ struct L3Geom: public GenericSpheresContact{
 		((Vector3r,F,Vector3r::Zero(),,"Applied force in local coordinates [debugging only, will be removed]"))
 		,
 		/*init*/
-		((uN,u[0])) ((uT,Vector2r::Map(&u[1])))
 		,
 		/*ctor*/ createIndex();
 		, /*py*/
