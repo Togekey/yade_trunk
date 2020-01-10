@@ -173,8 +173,9 @@ void RockLiningGlobal::action()
 	//std::cout<<"complete installation"<<endl;
 
 	if (installed == true && blockIDs.size() >= 2) {
-		Real displacementMatrix[totalNodes * 3];
-		memset(displacementMatrix, 0.0, sizeof(displacementMatrix));
+		//std::vector<Real> displacementMatrix(totalNodes * 3);
+		/////memset(displacementMatrix, 0.0, sizeof(displacementMatrix));
+		//std::fill(displacementMatrix.begin(), displacementMatrix.end(), 0);
 		//averageForce = 0.0; maxForce = 0.0;
 		int blockNo = blockIDs.size();
 
