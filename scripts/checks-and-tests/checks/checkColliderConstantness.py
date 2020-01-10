@@ -7,7 +7,7 @@ print('checkColliderConstantness for InsertionSortCollider')
 
 #### This is useful for printing the linenumber in the script
 # import inspect
-# print inspect.currentframe().f_lineno
+# print(inspect.currentframe().f_lineno)
 
 if((opts.threads != None and opts.threads != 1) or (opts.cores != None and opts.cores != '1')):
 	raise YadeCheckError("This test will only work on single core, because it must be fully reproducible, but -j "+str(opts.threads)+" or --cores "+str(opts.cores)+" is used.")
