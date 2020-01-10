@@ -29,7 +29,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.assertEqual(2    ,float(mpmath.mpf(2)))
 		self.assertEqual(2    ,float(mpmath.mpf("2")))
 		self.assertEqual(2**3 ,mpmath.mpf("2")**3)
-		self.assertEqual(2/3  ,mpmath.mpf("2")/3)
+		self.assertEqual(2/4  ,mpmath.mpf("2")/4)
 		self.assertEqual(3/2,3/mpmath.mpf("2"))
 		self.assertEqual(3*2,3*mpmath.mpf("2"))
 		self.assertEqual(2-3  ,mpmath.mpf("2")-3)
@@ -39,7 +39,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.assertEqual(2    ,complex(mpmath.mpc("2")))
 		self.assertEqual(2+5j ,complex(mpmath.mpc("2","5")))
 		self.assertEqual(2-3  ,mpmath.mpc("2")-3)
-		self.assertEqual(2/3  ,mpmath.mpc("2")/3)
+		self.assertEqual(2/4  ,mpmath.mpc("2")/4)
 		self.assertEqual(3/2,3/mpmath.mpc("2"))
 		self.assertEqual(5,abs(mpmath.mpc("-3","-4")))
 
