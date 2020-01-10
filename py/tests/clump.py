@@ -35,7 +35,11 @@ class TestSimpleClump(unittest.TestCase):
 		"Clump: mass, centroid, intertia"
 		b1,b2,bC=[O.bodies[id] for id in (self.id1,self.id2,self.idC)]
 		# mass
-		self.assertEqual(bC.state.mass,b1.state.mass+b2.state.mass)
+		if(yade.config.highPrecisionMpmath):
+			# looks like with high precision there are some dangling bits at the end
+			self.assertAlmostEqual(bC.state.mass,b1.state.mass+b2.state.mass)
+		else:
+			self.assertEqual(bC.state.mass,b1.state.mass+b2.state.mass)
 		# centroid
 		S=b1.state.mass*b1.state.pos+b2.state.mass*b2.state.pos
 		c=S/bC.state.mass
