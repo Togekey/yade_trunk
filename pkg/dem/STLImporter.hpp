@@ -50,7 +50,11 @@ class STLReader {
       Vrtx(float x, float y, float z) {pos[0]=x; pos[1]=y; pos[2]=z;}
       bool operator< (const Vrtx& v) const
       {
+#if (YADE_REAL_BIT <= 64)
     return memcmp(pos, v.pos,3*sizeof(float)) < 0;
+#else
+	      return std::tie(pos[0], pos[1], pos[2]) < std::tie(v.pos[0], v.pos[1], v.pos[2]);
+#endif
       }
       float operator[](int id) const { return pos[id]; }
       float& operator[](int id) { return pos[id]; }

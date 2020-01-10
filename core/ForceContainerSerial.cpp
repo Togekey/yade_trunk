@@ -97,6 +97,7 @@ void ForceContainer::sync() {
   return;
 }
 
+#if (YADE_REAL_BIT <= 64)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpragmas"
 // this is to remove warning about manipulating raw memory
@@ -112,6 +113,20 @@ void ForceContainer::reset(long iter, bool resetAll) {
   lastReset=iter;
 }
 #pragma GCC diagnostic pop
+#else
+void ForceContainer::reset(long iter, bool resetAll)
+{
+	// the standard way, perfectly optimized by compiler.
+	std::fill(_force .begin() , _force .end() , Vector3r::Zero() );
+	std::fill(_torque.begin() , _torque.end() , Vector3r::Zero() );
+	if (resetAll) {
+		std::fill(_permForce .begin() , _permForce .end() , Vector3r::Zero() );
+		std::fill(_permTorque.begin() , _permTorque.end() , Vector3r::Zero() );
+		permForceUsed = false;
+	}
+	lastReset = iter;
+}
+#endif
 
 void ForceContainer::resize(size_t newSize) {
   _force.resize(newSize,Vector3r::Zero());

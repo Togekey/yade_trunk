@@ -439,6 +439,7 @@ void InsertionSortCollider::action()
 					BBji.coord = cellWrap(BBji.coord, 0, BBj.cellDim, BBji.period);
 				// for each body, copy its minima and maxima, for quick checks of overlaps later
 				//bounds have been all updated when j==0, we can safely copy them here when j==1
+#if (YADE_REAL_BIT <= 64)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpragmas"
 // this is to remove warning about manipulating raw memory
@@ -452,6 +453,25 @@ void InsertionSortCollider::action()
 					memcpy(&maxima[3 * id], &maxVect, 3 * sizeof(Real));
 				}
 #pragma GCC diagnostic pop
+#else
+				if (bv) {
+					if (BBji.flags.isMin && j == 1) {
+						minima[3 * id]     = bv->min[0];
+						minima[3 * id + 1] = bv->min[1];
+						minima[3 * id + 2] = bv->min[2];
+					}
+					maxima[3 * id]     = bv->max[0];
+					maxima[3 * id + 1] = bv->max[1];
+					maxima[3 * id + 2] = bv->max[2];
+				} else if (keepListsShort) {
+					minima[3 * id]     = maxVect[0];
+					minima[3 * id + 1] = maxVect[1];
+					minima[3 * id + 2] = maxVect[2];
+					maxima[3 * id]     = maxVect[0];
+					maxima[3 * id + 1] = maxVect[1];
+					maxima[3 * id + 2] = maxVect[2];
+				}
+#endif
 			} else {
 				BBj[i].flags.hasBB = false; /* for vanished body, keep the coordinate as-is, to minimize inversions. */
 #ifdef YADE_MPI

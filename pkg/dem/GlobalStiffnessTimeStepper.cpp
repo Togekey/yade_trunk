@@ -170,6 +170,7 @@ void GlobalStiffnessTimeStepper::computeStiffnesses(Scene* rb){
 			viscosities.resize(size); Rviscosities.resize(size);
 			}
 	}
+#if (YADE_REAL_BIT <= 64)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpragmas"
 // this is to remove warning about manipulating raw memory
@@ -182,6 +183,15 @@ void GlobalStiffnessTimeStepper::computeStiffnesses(Scene* rb){
 		memset(&Rviscosities[0],0,sizeof(Vector3r)*size);
 	}
 #pragma GCC diagnostic pop
+#else
+	// the standard way, perfectly optimized by compiler.
+	std::fill(stiffnesses.begin(), stiffnesses.end(), Vector3r::Zero());
+	std::fill(Rstiffnesses.begin(), Rstiffnesses.end(), Vector3r::Zero());
+	if (viscEl == true) {
+		std::fill(viscosities.begin(), viscosities.end(), Vector3r::Zero());
+		std::fill(Rviscosities.begin(), Rviscosities.end(), Vector3r::Zero());
+	}
+#endif
 
 	FOREACH(const shared_ptr<Interaction>& contact, *rb->interactions){
 		if(!contact->isReal()) continue;

@@ -150,6 +150,7 @@ void GeneralIntegratorInsertionSortCollider::action(){
 		}
 	// for each body, copy its minima and maxima, for quick checks of overlaps later
 	BOOST_STATIC_ASSERT(sizeof(Vector3r)==3*sizeof(Real));
+#if (YADE_REAL_BIT <= 64)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpragmas"
 // this is to remove warning about manipulating raw memory
@@ -163,6 +164,33 @@ void GeneralIntegratorInsertionSortCollider::action(){
 		} else { memset(&minima[3*id],0,3*sizeof(Real)); memset(&maxima[3*id],0,3*sizeof(Real)); }
 	}
 #pragma GCC diagnostic pop
+#else
+	for (size_t id = 0; id < nBodies; id++) {
+		const shared_ptr<Body>& b = Body::byId(id, scene);
+		if (b) {
+			const shared_ptr<Bound>& bv = b->bound;
+			if (bv) {
+				minima[3 * id]     = bv->min[0];
+				minima[3 * id + 1] = bv->min[1];
+				minima[3 * id + 2] = bv->min[2];
+				maxima[3 * id]     = bv->max[0];
+				maxima[3 * id + 1] = bv->max[1];
+				maxima[3 * id + 2] = bv->max[2];
+			} else {
+				const Vector3r& pos = b->state->pos;
+				minima[3 * id]      = pos[0];
+				minima[3 * id + 1]  = pos[1];
+				minima[3 * id + 2]  = pos[2];
+				maxima[3 * id]      = pos[0];
+				maxima[3 * id + 1]  = pos[1];
+				maxima[3 * id + 2]  = pos[2];
+			}
+		} else {
+			std::fill(minima.begin() + 3 * id, minima.begin() + 3 * id + 3, 0);
+			std::fill(maxima.begin() + 3 * id, maxima.begin() + 3 * id + 3, 0);
+		}
+	}
+#endif
 
 	ISC_CHECKPOINT("copy");
 
