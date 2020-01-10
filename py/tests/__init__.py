@@ -14,8 +14,8 @@ allTests=[
 	, 'engines'
 	, 'utilsModule'
 	, 'libVersions'
-        , 'testMinieigenHP'
-        , 'testMath'
+	, 'testMinieigenHP'
+	, 'testMath'
 	#, 'testColliderByGiulia' # to investigate later maybe, my impression is that due to issue #7 the results are randomly different in that ill-posed periodic problem
 ]
 
@@ -50,7 +50,11 @@ def testAll():
 	TestResult object for further examination."""
 	suite=unittest.defaultTestLoader.loadTestsFromNames(allTestsFQ)
 	import doctest
-	for mod in allModules:
-		suite.addTest(doctest.DocTestSuite(mod))
+	if(yade.config.highPrecisionMpmath == False):
+		# docstest checks the printed output. So high precision output causes failures such as:   Expected: 2000.0    Got: mpf('2000.0')
+		for mod in allModules:
+			suite.addTest(doctest.DocTestSuite(mod))
+	else:
+		print("Note: docstest are skipped because it checks the printed output, instead of comparing numbers. High precision output causes failures such as: Expected: 2000.0 Got: mpf('2000.0')")
 	return unittest.TextTestRunner(stream=sys.stdout,verbosity=2).run(suite)
 
