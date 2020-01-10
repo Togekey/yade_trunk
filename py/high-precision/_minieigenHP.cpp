@@ -14,6 +14,7 @@
 
 #ifdef MINIEIGEN_OVERRIDE
 
+#include <lib/base/Logging.hpp>
 #include <lib/high-precision/Real.hpp>
 //#define ARBITRARY_REAL_DEBUG
 #include <py/high-precision/_ExposeStorageOrdering.hpp>
@@ -29,6 +30,8 @@ using namespace ::yade::MathEigenTypes;
 #include <minieigen/visitors.hpp>
 #include <minieigen/expose.hpp>
 
+CREATE_CPP_LOCAL_LOGGER("_minieigenHP.cpp")
+ 
 BOOST_PYTHON_MODULE(_minieigenHP)
 try {
 	// arbitrary Real specific stuff: start
@@ -73,7 +76,7 @@ try {
 	py::scope().attr("vectorize") = true;
 #endif
 } catch (...) {
-	std::cerr << "Importing this module caused an exception and this module is in an inconsistent state now.\n\n";
+	LOG_FATAL("Importing this module caused an exception and this module is in an inconsistent state now.");
 	PyErr_Print();
 	PyErr_SetString(PyExc_SystemError, __FILE__);
 	boost::python::handle_exception();
