@@ -15,7 +15,7 @@ namespace yade { // Cannot have #include directive inside.
 py::tuple negPosExtremeIds(int axis, Real distFactor)
 {
 	py::tuple extrema  = Shop::aabbExtrema();
-	Real      minCoord = py::extract<double>(extrema[0][axis])(), maxCoord = py::extract<double>(extrema[1][axis])();
+	Real      minCoord = py::extract<Real>(extrema[0][axis])(), maxCoord = py::extract<Real>(extrema[1][axis])();
 	py::list  minIds, maxIds;
 	for (const auto& b : *Omega::instance().getScene()->bodies) {
 		shared_ptr<Sphere> s = YADE_PTR_DYN_CAST<Sphere>(b->shape);
@@ -305,7 +305,7 @@ void wireNoSpheres() { wireSome("noSpheres"); }
  */
 bool pointInsidePolygon(py::tuple xy, py::object vertices)
 {
-	Real           testx = py::extract<double>(xy[0])(), testy = py::extract<double>(xy[1])();
+	Real           testx = py::extract<Real>(xy[0])(), testy = py::extract<Real>(xy[1])();
 	char**         vertData;
 	int            rows, cols;
 	PyArrayObject* vert   = (PyArrayObject*)vertices.ptr();
