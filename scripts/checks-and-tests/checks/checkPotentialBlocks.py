@@ -77,7 +77,7 @@ if ('PotentialBlocks' in features):
 				b.shape.vertices.count( Vector3( dim,-dim, dim) ) 
 		)
 		if vertices_sum!=len(b.shape.vertices) or vertices_sum!=8:
-			errMsg+=str( "Wrong vertices for body: "+ str(b.shape.id) +"\n" )
+			errMsg+=str( "Wrong vertices for body id="+ str(b.shape.id) + ", vertices_sum="+str(vertices_sum)+" len(b.shape.vertices)="+str(len(b.shape.vertices))+"\n" )
 			errors += 1
 
 	# ----------------------------------------------------------------------------------------------------------------------------------------------- #
