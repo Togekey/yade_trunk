@@ -50,11 +50,14 @@ using MatrixXi = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>;
 /*************************        Real          **************************/
 /*************************************************************************/
 
-// The Vector3r will become AlignedVector3 once we will start using SSE vectorization.
 #ifdef EIGEN_DONT_ALIGN
 using Vector3r = Vector3<Real>;
 #else
-using Vector3r = Eigen::AlignedVector3<Real>;
+// For start let's try SSE vectorization without AlignedVector3.
+// Later we can improve performance by using AlignedVector3 instead of Vector3r.
+// AlignedVector3 will need a few tweaks to make it right.
+// using Vector3r = Eigen::AlignedVector3<Real>;
+using Vector3r = Vector3<Real>;
 #endif
 
 using Vector2r  = Vector2<Real>;
