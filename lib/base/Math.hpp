@@ -179,7 +179,10 @@ Vector6<Scalar> tensor_toVoigt(const Matrix3<Scalar>& m, bool strain=false){
 	Vector6<Scalar> ret; ret<<m(0,0),m(1,1),m(2,2),k*.5*(m(1,2)+m(2,1)),k*.5*(m(2,0)+m(0,2)),k*.5*(m(0,1)+m(1,0)); return ret;
 }
 
-const Real NaN(std::numeric_limits<Real>::signaling_NaN());
+const Real
+        NaN(std::numeric_limits<Real>::has_signaling_NaN
+                    ? std::numeric_limits<Real>::signaling_NaN()
+                    : (std::numeric_limits<Real>::has_quiet_NaN ? std::numeric_limits<Real>::quiet_NaN() : abs(Real(0) / Real(0))));
 
 // void quaternionToEulerAngles (const Quaternionr& q, Vector3r& eulerAngles,Real threshold=1e-6f);
 template<typename Scalar> void quaterniontoGLMatrix(const Eigen::Quaternion<Scalar>& q, Scalar m[16]){
