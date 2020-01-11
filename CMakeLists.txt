@@ -530,17 +530,39 @@ ENDIF()
 
 MESSAGE(STATUS "Will use ${Esc}[93m${REAL_PREC_NAME}${Esc}[0m as Real type with ${Esc}[36m${REAL_DECIMAL_PLACES}${Esc}[0m decimal places precision and use ${Esc}[36m${REAL_PRECISION_BITS}${Esc}[0m bits of storage.")
 #======================================
-#====== ** END Real precision ** ======
+#====== * Unsupported features * ======
 #======================================
-# non-double Real precision does not work with extarnal library cholmod. One check is here. Another around line 746:  IF(CHOLMOD_FOUND  ………
-IF(ENABLE_TWOPHASEFLOW AND (NOT (${REAL_PRECISION_BITS} EQUAL 64)))
-   MESSAGE(STATUS "TWOPHASEFLOW was disabled automatically because it uses double-only external library: cholesky. It can be replaced with native Eigen solvers, then it will work.")
-   SET(ENABLE_TWOPHASEFLOW OFF)
-ENDIF()
+# non-double Real precision does not work with extarnal library cholmod.
+IF(NOT (${REAL_PRECISION_BITS} EQUAL 64))
+  IF(ENABLE_TWOPHASEFLOW OR ENABLE_LINSOLV OR ENABLE_PFVFLOW)
+     MESSAGE(STATUS "ENABLE_TWOPHASEFLOW OR ENABLE_LINSOLV OR ENABLE_PFVFLOW were disabled automatically because they use double precision external library: cholesky linear solver. It can be replaced with native Eigen solvers, then it will work.")
+     SET(ENABLE_TWOPHASEFLOW OFF)
+     SET(ENABLE_LINSOLV OFF)
+     SET(ENABLE_PFVFLOW OFF)
+  ENDIF(ENABLE_TWOPHASEFLOW)
+  IF(ENABLE_TWOPHASEFLOW OR ENABLE_LINSOLV OR ENABLE_PFVFLOW)
+    MESSAGE(FATAL_ERROR "Cannot (yet) use ENABLE_TWOPHASEFLOW OR ENABLE_LINSOLV OR ENABLE_PFVFLOW with high precision.")
+  ENDIF(ENABLE_TWOPHASEFLOW OR ENABLE_LINSOLV OR ENABLE_PFVFLOW)
+ENDIF(NOT (${REAL_PRECISION_BITS} EQUAL 64))
+
+IF(${REAL_PRECISION_BITS} GREATER 128)
+  IF(ENABLE_OPENMP)
+     MESSAGE(STATUS "OpenMP was disabled automatically because memcpy(…) in OpenMPAccumulator does not work correctly with precision different than 'double', 'long double' or 'float128'.")
+     SET(ENABLE_OPENMP OFF)
+  ENDIF(ENABLE_OPENMP)
+  IF(ENABLE_OPENMP)
+    MESSAGE(FATAL_ERROR "Cannot (yet) use ENABLE_OPENMP with precision higher than 128 bits")
+  ENDIF(ENABLE_OPENMP)
+ENDIF(${REAL_PRECISION_BITS} GREATER 128)
+
 # This is for testing compilation with Real as float. Only useful to have wider testing coverage, not for real world use.
 IF(${REAL_PRECISION_BITS} EQUAL 32)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=float-conversion -Wno-error=narrowing")
 ENDIF()
+
+#======================================
+#====== ** END Real precision ** ======
+#======================================
 
 #===========================================================
 
@@ -601,18 +623,15 @@ ENDIF(ENABLE_VTK)
 #===========================================================
 IF(ENABLE_OPENMP)
   FIND_PACKAGE(OpenMP)
-  IF(OPENMP_FOUND AND ((${REAL_PRECISION_BITS} EQUAL 64)))
+  IF(OPENMP_FOUND)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DYADE_OPENMP ${OpenMP_CXX_FLAGS}")
     MESSAGE(STATUS "Found OpenMP")
     SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} OpenMP")
-  ELSE(OPENMP_FOUND AND ((${REAL_PRECISION_BITS} EQUAL 64)))
-    IF(NOT ((${REAL_PRECISION_BITS} EQUAL 64)))
-      MESSAGE(STATUS "OpenMPAccumulator is does not work correctly with precision different than 'double'. Revert this commit when this is fixed.")
-    ENDIF()
+  ELSE(OPENMP_FOUND)
     MESSAGE(STATUS "OpenMP NOT found")
     SET(ENABLE_OPENMP OFF)
     SET(DISABLED_FEATS "${DISABLED_FEATS} OPENMP")
-  ENDIF(OPENMP_FOUND AND ((${REAL_PRECISION_BITS} EQUAL 64)))
+  ENDIF(OPENMP_FOUND)
 ELSE(ENABLE_OPENMP)
   SET(DISABLED_FEATS "${DISABLED_FEATS} OPENMP")
 ENDIF(ENABLE_OPENMP)
@@ -756,7 +775,7 @@ IF(ENABLE_PFVFLOW AND ENABLE_LINSOLV)
   FIND_PACKAGE(OpenBlas)
   FIND_PACKAGE(Metis)
 
-  IF(CHOLMOD_FOUND AND OPENBLAS_FOUND AND METIS_FOUND AND CGAL_FOUND AND (${REAL_PRECISION_BITS} EQUAL 64))
+  IF(CHOLMOD_FOUND AND OPENBLAS_FOUND AND METIS_FOUND AND CGAL_FOUND)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CGAL_DEFINITIONS} -DLINSOLV")
 
     SET(LINKLIBS  "${LINKLIBS};${CHOLMOD_LIBRARIES};${AMD_LIBRARY};${CAMD_LIBRARY};${COLAMD_LIBRARY};${CCOLAMD_LIBRARY};${OPENBLAS_LIBRARY};${METIS_LIBRARY};${SUITESPARSE_LIBRARY};${SUITESPARSECONFIG_LIBRARY}")
@@ -786,12 +805,9 @@ IF(ENABLE_PFVFLOW AND ENABLE_LINSOLV)
 
   ELSE(CHOLMOD_FOUND AND OPENBLAS_FOUND AND METIS_FOUND AND CGAL_FOUND)
     MESSAGE(STATUS "Missing dependency for LINSOLV, disabled")
-    IF(NOT ((${REAL_PRECISION_BITS} EQUAL 64)))
-      MESSAGE(STATUS "A linear solver that would work with non-double precision type is necessary. Cholmod uses double only. See more details in lib/triangulation/FlowBoundingSphereLinSolv.hpp")
-    ENDIF()
     SET(DISABLED_FEATS "${DISABLED_FEATS} LINSOLV")
     SET(ENABLE_LINSOLV OFF)
-  ENDIF(CHOLMOD_FOUND AND OPENBLAS_FOUND AND METIS_FOUND AND CGAL_FOUND AND (${REAL_PRECISION_BITS} EQUAL 64))
+  ENDIF(CHOLMOD_FOUND AND OPENBLAS_FOUND AND METIS_FOUND AND CGAL_FOUND)
 ELSE(ENABLE_PFVFLOW AND ENABLE_LINSOLV)
   SET(DISABLED_FEATS "${DISABLED_FEATS} LINSOLV")
       IF(ENABLE_TWOPHASEFLOW)
