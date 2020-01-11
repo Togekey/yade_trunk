@@ -417,6 +417,7 @@ testHP_long_double:
   dependencies:
     - makeHP_long_double
   needs: ["makeHP_long_double"]
+  timeout: 4 hours
 
 testHP_float128:
   <<: *test_definition
@@ -425,6 +426,7 @@ testHP_float128:
   dependencies:
     - makeHP_float128
   needs: ["makeHP_float128"]
+  timeout: 4 hours
 
 testHP_mpfr100:
   <<: *test_definition
@@ -433,6 +435,7 @@ testHP_mpfr100:
   dependencies:
     - makeHP_mpfr100
   needs: ["makeHP_mpfr100"]
+  timeout: 4 hours
 
 testHP_boost100:
   <<: *test_definition
@@ -441,6 +444,7 @@ testHP_boost100:
   dependencies:
     - makeHP_boost100
   needs: ["makeHP_boost100"]
+  timeout: 4 hours
 
 
 # 3.2. check stage
@@ -549,6 +553,7 @@ checkHP_long_double:
   dependencies:
     - makeHP_long_double
   needs: ["makeHP_long_double"]
+  timeout: 4 hours
 
 checkHP_float128:
   <<: *check_definition
@@ -557,6 +562,7 @@ checkHP_float128:
   dependencies:
     - makeHP_float128
   needs: ["makeHP_float128"]
+  timeout: 4 hours
 
 checkHP_mpfr100:
   <<: *check_definition
@@ -565,6 +571,7 @@ checkHP_mpfr100:
   dependencies:
     - makeHP_mpfr100
   needs: ["makeHP_mpfr100"]
+  timeout: 4 hours
 
 checkHP_boost100:
   <<: *check_definition
@@ -573,6 +580,7 @@ checkHP_boost100:
   dependencies:
     - makeHP_boost100
   needs: ["makeHP_boost100"]
+  timeout: 4 hours
 
 
 .doc_template: &doc_definition
