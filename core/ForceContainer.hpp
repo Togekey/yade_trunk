@@ -19,7 +19,10 @@ namespace yade { // Cannot have #include directive inside.
 #ifdef EIGEN_DONT_ALIGN
 BOOST_STATIC_ASSERT(sizeof(Vector3r)==3*sizeof(Real));
 #else
-BOOST_STATIC_ASSERT(sizeof(Vector3r)==4*sizeof(Real));
+// For start let's try SSE vectorization without AlignedVector3.
+// Later we will use this line, where AlignedVector3 has size of four (last one unused, but still SEE potentially could give three-times speedup).
+//BOOST_STATIC_ASSERT(sizeof(Vector3r)==4*sizeof(Real));
+BOOST_STATIC_ASSERT(sizeof(Vector3r)==3*sizeof(Real));
 #endif
 
 /*! Container for Body External Variables (forces), typically forces and torques from interactions.
