@@ -136,9 +136,10 @@ struct NT_converter<::yade::Real, __gmp_expr<GMP1, GMP2>>
         : public CGAL::cpp98::unary_function<::yade::Real, NT_converter<::yade::Real, __gmp_expr<GMP1, GMP2>>> {
 	__gmp_expr<GMP1, GMP2> operator()(const ::yade::Real& a) const
 	{
-		// this is really slow, but fortunately newer CGAL uses boos::multiprecision, below.
-		std::string s = std::to_string(a);
-		return __gmp_expr<GMP1, GMP2>(s, 10);
+		mpq_t ret;
+		mpq_init(ret);
+		mpq_set(ret, boost::multiprecision::mpq_rational(static_cast<::yade::math::UnderlyingReal>(a)).backend().data());
+		return __gmp_expr<GMP1, GMP2>(ret);
 	}
 };
 
