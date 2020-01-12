@@ -15,7 +15,9 @@
 
 // TODO: add docstrings to all these math functions.
 
+#include <lib/base/Logging.hpp>
 #include <lib/high-precision/Real.hpp>
+#include <lib/pyutil/doc_opts.hpp>
 #ifdef YADE_CGAL
 #include <lib/base/AliasCGAL.hpp>
 #endif
@@ -32,6 +34,8 @@
 // testing Real type
 #include <boost/concept/assert.hpp>
 #include <boost/math/concepts/real_type_concept.hpp>
+
+CREATE_CPP_LOCAL_LOGGER("_math.cpp")
 
 namespace py = ::boost::python;
 using ::yade::Complex;
@@ -64,14 +68,14 @@ std::pair<Real, int> test_frexp(const Real& x)
 
 std::pair<Real, Real> test_modf(const Real& x)
 {
-	Real r = 0;
-	Real ret      = ::yade::math::modf(x, &r);
+	Real r   = 0;
+	Real ret = ::yade::math::modf(x, &r);
 	return std::pair<Real, Real> { ret, r };
 }
 
 std::pair<Real, long> test_remquo(const Real& x, const Real& y)
 {
-	int  i        = 0;
+	int  i   = 0;
 	Real ret = ::yade::math::remquo(x, y, &i);
 	return std::pair<Real, long> { ret, i };
 }
@@ -79,37 +83,15 @@ std::pair<Real, long> test_remquo(const Real& x, const Real& y)
 
 #ifdef YADE_CGAL
 
-bool test_CGAL_Is_valid(const Real& x) {
-	return CGAL::Is_valid<Real>()(x);
-}
-
-Real test_CGAL_Square(const Real& x) {
-	return CGAL::Algebraic_structure_traits<Real>::Square()(x);
-}
-
-Real test_CGAL_Sqrt(const Real& x) {
-	return CGAL::Algebraic_structure_traits<Real>::Sqrt()(x);
-}
-
-Real test_CGAL_Kth_root(int k, const Real& x) {
-	return CGAL::Algebraic_structure_traits<Real>::Kth_root()(k,x);
-}
-
-std::pair<double, double> test_CGAL_To_interval(const Real& x) {
-	return CGAL::Real_embeddable_traits<Real>::To_interval()(x);
-}
-
-int test_CGAL_Sgn(const Real& x) {
-	return int(CGAL::Real_embeddable_traits<Real>::Sgn()(x));
-}
-
-bool test_CGAL_Is_finite(const Real& x) {
-	return CGAL::Real_embeddable_traits<Real>::Is_finite()(x);
-}
+bool test_CGAL_Is_valid(const Real& x) { return CGAL::Is_valid<Real>()(x); }
+Real test_CGAL_Square(const Real& x) { return CGAL::Algebraic_structure_traits<Real>::Square()(x); }
+Real test_CGAL_Sqrt(const Real& x) { return CGAL::Algebraic_structure_traits<Real>::Sqrt()(x); }
+Real test_CGAL_Kth_root(int k, const Real& x) { return CGAL::Algebraic_structure_traits<Real>::Kth_root()(k, x); }
+std::pair<double, double> test_CGAL_To_interval(const Real& x) { return CGAL::Real_embeddable_traits<Real>::To_interval()(x); }
+int test_CGAL_Sgn(const Real& x) { return int(CGAL::Real_embeddable_traits<Real>::Sgn()(x)); }
+bool test_CGAL_Is_finite(const Real& x) { return CGAL::Real_embeddable_traits<Real>::Is_finite()(x); }
 
 #endif
-
-
 
 struct Var {
 	Real    value { -71.23 };
@@ -197,6 +179,8 @@ inline bool        isEqualFuzzy(const Real& a, const Real& b, const Real& eps)
 
 BOOST_PYTHON_MODULE(_math)
 try {
+	YADE_SET_DOCSTRING_OPTS;
+
 	long defprec  = std::numeric_limits<Real>::digits;
 	long max_exp2 = std::numeric_limits<Real>::max_exponent;
 	// This is registered in py/high-precision/_minieigenHP.cpp
@@ -416,7 +400,7 @@ try {
 #endif
 
 } catch (...) {
-	std::cerr << ("Importing this module caused an unrecognized exception caught on C++ side and this module is in an inconsistent state now.\n\n");
+	LOG_FATAL("Importing this module caused an exception and this module is in an inconsistent state now.");
 	PyErr_Print();
 	PyErr_SetString(PyExc_SystemError, __FILE__); // raising anything other than SystemError is not possible
 	boost::python::handle_exception();
