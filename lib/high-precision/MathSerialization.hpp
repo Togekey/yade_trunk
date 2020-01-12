@@ -14,6 +14,8 @@
 #ifndef ALL_MATH_TYPES_SERIALIZATION_HPP
 #define ALL_MATH_TYPES_SERIALIZATION_HPP
 
+#include <lib/high-precision/RealIO.hpp>
+
 #if (YADE_REAL_BIT > 80)
 #include <boost/serialization/split_free.hpp>
 BOOST_SERIALIZATION_SPLIT_FREE(::yade::math::Real);
@@ -44,20 +46,15 @@ namespace serialization {
 #if (YADE_REAL_BIT > 80)
 	template <class Archive> void save(Archive& ar, const ::yade::math::Real& a, unsigned int)
 	{
-		// FIXME: similar code is in ToFromPythonConverter.hpp, MathSerialization.hpp, MathFunctions.hpp, extract it to single place.
 		// TODO: maybe we can find a faster method for float128
-                static constexpr auto digs1 = std::numeric_limits<::yade::math::Real>::digits10 + 1;
-		std::ostringstream ss;
-		ss << std::setprecision(digs1) << a;
-		std::string v = ss.str();
+		std::string v = ::yade::toString(a);
 		ar & BOOST_SERIALIZATION_NVP(v);
 	}
 	template <class Archive> void load(Archive& ar, ::yade::math::Real& a, unsigned int)
 	{
 		std::string v{};
 		ar & BOOST_SERIALIZATION_NVP(v);
-		std::stringstream ss{v};
-		ss >> a;
+		a = ::yade::fromStringReal(v);
 	}
 #endif
 #if (YADE_REAL_BIT == 80)
