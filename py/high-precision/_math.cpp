@@ -65,21 +65,13 @@ std::pair<Real, int> test_frexp(const Real& x)
 std::pair<Real, Real> test_modf(const Real& x)
 {
 	Real r = 0;
-#if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
-	Real ret = ::yade::math::modf(x, r);
-#else
 	Real ret      = ::yade::math::modf(x, &r);
-#endif
 	return std::pair<Real, Real> { ret, r };
 }
 
 std::pair<Real, long> test_remquo(const Real& x, const Real& y)
 {
-#if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
-	long i = 0;
-#else
 	int  i        = 0;
-#endif
 	Real ret = ::yade::math::remquo(x, y, &i);
 	return std::pair<Real, long> { ret, i };
 }
@@ -172,7 +164,7 @@ namespace {
 static inline Real smallest_positive() { return std::numeric_limits<Real>::min(); }
 }
 
-#if not(defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H) or defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this))
+#if not(defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H))
 namespace boost {
 namespace multiprecision {
 }
@@ -205,14 +197,8 @@ inline bool        isEqualFuzzy(const Real& a, const Real& b, const Real& eps)
 
 BOOST_PYTHON_MODULE(_math)
 try {
-#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-	mpfr::mpreal::set_default_prec(YADE_REAL_BIT + 1);
-	long defprec  = mpfr::mpreal::get_default_prec();
-	long max_exp2 = mpfr::mpreal::get_emax();
-#else
 	long defprec  = std::numeric_limits<Real>::digits;
 	long max_exp2 = std::numeric_limits<Real>::max_exponent;
-#endif
 	// This is registered in py/high-precision/_minieigenHP.cpp
 	//ArbitraryComplex_from_python<Complex>();
 	//py::to_python_converter<Complex, ArbitraryComplex_to_python<Complex>>();
@@ -236,7 +222,7 @@ try {
 	py::scope().attr("AddCost")               = int(Eigen::NumTraits<Real>::AddCost);
 	py::scope().attr("MulCost")               = int(Eigen::NumTraits<Real>::MulCost);
 
-#if defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H) or defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
+#if defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H)
 	py::def("highest", Eigen::NumTraits<Real>::highest, (py::arg("Precision") = defprec));
 	py::def("lowest", Eigen::NumTraits<Real>::lowest, (py::arg("Precision") = defprec));
 
@@ -247,13 +233,8 @@ try {
 
 	py::def("epsilon", static_cast<Real (*)(long)>(&Eigen::NumTraits<Real>::epsilon), (py::arg("Precision") = defprec));
 	py::def("epsilon", static_cast<Real (*)(const Real&)>(&Eigen::NumTraits<Real>::epsilon), (py::arg("x")));
-#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-	py::def("isEqualFuzzy", static_cast<bool (*)(const Real&, const Real&, const Real&)>(&mpfr::isEqualFuzzy));
-	py::def("smallest_positive", static_cast<Real (*)()>(&smallest_positive));
-#else
 	py::def("isEqualFuzzy", Eigen::internal::isEqualFuzzy);
 	py::def("smallest_positive", static_cast<Real (*)()>(&Eigen::NumTraits<Real>::smallest_positive));
-#endif
 #else
 	py::def("highest", Substitute::highest, (py::arg("Precision") = defprec));
 	py::def("lowest", Substitute::lowest, (py::arg("Precision") = defprec));
@@ -274,8 +255,7 @@ try {
 	py::def("random", static_cast<Real (*)()>(&Eigen::internal::random<Real>));
 	py::def("random", static_cast<Real (*)(const Real&, const Real&)>(&Eigen::internal::random<Real>), (py::arg("a"), "b"));
 
-#if ((EIGEN_MAJOR_VERSION > 2) and (EIGEN_WORLD_VERSION >= 3)) or defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H)                  \
-        or defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
+#if ((EIGEN_MAJOR_VERSION > 2) and (EIGEN_WORLD_VERSION >= 3)) or defined(YADE_EIGEN_NUM_TRAITS_HPP) or defined(EIGEN_MPREALSUPPORT_MODULE_H)
 	py::def("isMuchSmallerThan",
 	        static_cast<bool (*)(const Real&, const Real&, const Real&)>(&Eigen::internal::isMuchSmallerThan),
 	        (py::arg("a"), "b", "eps"));
@@ -301,11 +281,7 @@ try {
 
 	expose_storage_ordering();
 
-#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-#warning "::mpfr::mpreal (non-boost implementation) is not passing Boost RealTypeConcept test"
-#else
 	BOOST_CONCEPT_ASSERT((boost::math::concepts::RealTypeConcept<Real>));
-#endif
 
 	// check overload (and namespace) resolution for all math functions. As a side effect they are exported to python, and can be unit-tested.
 #define YADE_PYEXPORT_MATH_1(func) py::def(#func, static_cast<Real (*)(const Real&)>(&::yade::math::func), (py::arg("x")));
