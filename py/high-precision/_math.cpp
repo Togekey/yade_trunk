@@ -83,13 +83,13 @@ std::pair<Real, long> test_remquo(const Real& x, const Real& y)
 
 #ifdef YADE_CGAL
 
-bool test_CGAL_Is_valid(const Real& x) { return CGAL::Is_valid<Real>()(x); }
-Real test_CGAL_Square(const Real& x) { return CGAL::Algebraic_structure_traits<Real>::Square()(x); }
-Real test_CGAL_Sqrt(const Real& x) { return CGAL::Algebraic_structure_traits<Real>::Sqrt()(x); }
-Real test_CGAL_Kth_root(int k, const Real& x) { return CGAL::Algebraic_structure_traits<Real>::Kth_root()(k, x); }
+bool                      test_CGAL_Is_valid(const Real& x) { return CGAL::Is_valid<Real>()(x); }
+Real                      test_CGAL_Square(const Real& x) { return CGAL::Algebraic_structure_traits<Real>::Square()(x); }
+Real                      test_CGAL_Sqrt(const Real& x) { return CGAL::Algebraic_structure_traits<Real>::Sqrt()(x); }
+Real                      test_CGAL_Kth_root(int k, const Real& x) { return CGAL::Algebraic_structure_traits<Real>::Kth_root()(k, x); }
 std::pair<double, double> test_CGAL_To_interval(const Real& x) { return CGAL::Real_embeddable_traits<Real>::To_interval()(x); }
-int test_CGAL_Sgn(const Real& x) { return int(CGAL::Real_embeddable_traits<Real>::Sgn()(x)); }
-bool test_CGAL_Is_finite(const Real& x) { return CGAL::Real_embeddable_traits<Real>::Is_finite()(x); }
+int                       test_CGAL_Sgn(const Real& x) { return int(CGAL::Real_embeddable_traits<Real>::Sgn()(x)); }
+bool                      test_CGAL_Is_finite(const Real& x) { return CGAL::Real_embeddable_traits<Real>::Is_finite()(x); }
 
 #endif
 
@@ -190,7 +190,9 @@ try {
 	//ArbitraryReal_from_python<Real>();
 	//py::to_python_converter<Real, ArbitraryReal_to_python<Real>>();
 
-	py::class_<Var>("Var").add_property("val", &Var::get, &Var::set).add_property("cpl", &Var::getComplex, &Var::setComplex, "The ``Var`` class is used to test to/from python converters for arbitrary precision ``Real``. It has one ``Real`` (``val``) and one ``Complex`` (``cpl``) variable to test reading from and writing to.");
+	py::class_<Var>("Var", "The ``Var`` class is used to test to/from python converters for arbitrary precision ``Real``")
+	        .add_property("val", &Var::get, &Var::set, "one ``Real`` variable for testing.")
+	        .add_property("cpl", &Var::getComplex, &Var::setComplex, "one ``Complex`` variable to test reading from and writing to it.");
 
 	py::scope().attr("defprec")  = defprec;
 	py::scope().attr("max_exp2") = max_exp2;
@@ -210,10 +212,22 @@ try {
 	py::def("highest", Eigen::NumTraits<Real>::highest, (py::arg("Precision") = defprec));
 	py::def("lowest", Eigen::NumTraits<Real>::lowest, (py::arg("Precision") = defprec));
 
-	py::def("Pi", Eigen::NumTraits<Real>::Pi, (py::arg("Precision") = defprec));
-	py::def("Euler", Eigen::NumTraits<Real>::Euler, (py::arg("Precision") = defprec));
-	py::def("Log2", Eigen::NumTraits<Real>::Log2, (py::arg("Precision") = defprec));
-	py::def("Catalan", Eigen::NumTraits<Real>::Catalan, (py::arg("Precision") = defprec));
+	py::def("Pi",
+	        Eigen::NumTraits<Real>::Pi,
+	        (py::arg("Precision") = defprec),
+	        R"""(:return: ``Real`` The `π constant <https://en.wikipedia.org/wiki/Pi>`__, exposed to python for :ysrc:`testing <py/tests/testMath.py>` of :ysrc:`eigen numerical traits<lib/high-precision/EigenNumTraits.hpp>`.)""");
+	py::def("Euler",
+	        Eigen::NumTraits<Real>::Euler,
+	        (py::arg("Precision") = defprec),
+	        R"""(:return: ``Real`` The `Euler–Mascheroni constant <https://en.wikipedia.org/wiki/Euler%E2%80%93Mascheroni_constant>`__, exposed to python for :ysrc:`testing <py/tests/testMath.py>` of :ysrc:`eigen numerical traits<lib/high-precision/EigenNumTraits.hpp>`.)""");
+	py::def("Log2",
+	        Eigen::NumTraits<Real>::Log2,
+	        (py::arg("Precision") = defprec),
+	        R"""(:return: ``Real`` natural logarithm of 2, exposed to python for :ysrc:`testing <py/tests/testMath.py>` of :ysrc:`eigen numerical traits<lib/high-precision/EigenNumTraits.hpp>`.)""");
+	py::def("Catalan",
+	        Eigen::NumTraits<Real>::Catalan,
+	        (py::arg("Precision") = defprec),
+	        R"""(:return: ``Real`` The `catalan constant <https://en.wikipedia.org/wiki/Catalan%27s_constant>`__, exposed to python for :ysrc:`testing <py/tests/testMath.py>` of :ysrc:`eigen numerical traits<lib/high-precision/EigenNumTraits.hpp>`.)""");
 
 	py::def("epsilon", static_cast<Real (*)(long)>(&Eigen::NumTraits<Real>::epsilon), (py::arg("Precision") = defprec));
 	py::def("epsilon", static_cast<Real (*)(const Real&)>(&Eigen::NumTraits<Real>::epsilon), (py::arg("x")));
@@ -386,15 +400,78 @@ try {
 #ifdef YADE_CGAL
 	py::scope().attr("testCgalNumTraits") = true;
 	// https://doc.cgal.org/latest/Algebraic_foundations/group__PkgAlgebraicFoundationsRef.html
-	py::def("CGAL_Is_valid", test_CGAL_Is_valid, (py::arg("x")));
+	py::def("CGAL_Is_valid",
+	        test_CGAL_Is_valid,
+	        (py::arg("x")),
+	        R"""(
+CGAL's function ``Is_valid``, as described in `CGAL algebraic <https://doc.cgal.org/latest/Algebraic_foundations/index.html>`__
+`foundations <https://doc.cgal.org/latest/Algebraic_foundations/group__PkgAlgebraicFoundationsRef.html>`__ :ysrc:`exposed<lib/high-precision/CgalNumTraits.hpp>`
+to python for :ysrccommit:`testing<ff600a80018d21c03626c720cda08967b043c1c8/py/tests/testMath.py#L207>` of CGAL numerical traits.
+
+:return: ``bool`` indicating if the ``Real`` argument is valid. Checks are performed against NaN and Inf.
+)""");
 	// AlgebraicStructureTraits
-	py::def("CGAL_Square", test_CGAL_Square, (py::arg("x")));
-	py::def("CGAL_Sqrt", test_CGAL_Sqrt, (py::arg("x")));
-	py::def("CGAL_Kth_root", test_CGAL_Kth_root, (py::arg("x")));
+	py::def("CGAL_Square",
+	        test_CGAL_Square,
+	        (py::arg("x")),
+	        R"""(
+CGAL's function ``Square``, as described in `CGAL algebraic <https://doc.cgal.org/latest/Algebraic_foundations/index.html>`__
+`foundations <https://doc.cgal.org/latest/Algebraic_foundations/group__PkgAlgebraicFoundationsRef.html>`__ :ysrc:`exposed<lib/high-precision/CgalNumTraits.hpp>`
+to python for :ysrccommit:`testing<ff600a80018d21c03626c720cda08967b043c1c8/py/tests/testMath.py#L207>` of CGAL numerical traits.
+
+:return: ``Real`` the argument squared.
+)""");
+	py::def("CGAL_Sqrt",
+	        test_CGAL_Sqrt,
+	        (py::arg("x")),
+	        R"""(
+CGAL's function ``Sqrt``, as described in `CGAL algebraic <https://doc.cgal.org/latest/Algebraic_foundations/index.html>`__
+`foundations <https://doc.cgal.org/latest/Algebraic_foundations/group__PkgAlgebraicFoundationsRef.html>`__ :ysrc:`exposed<lib/high-precision/CgalNumTraits.hpp>`
+to python for :ysrccommit:`testing<ff600a80018d21c03626c720cda08967b043c1c8/py/tests/testMath.py#L207>` of CGAL numerical traits.
+
+:return: ``Real`` the square root of argument.
+)""");
+	py::def("CGAL_Kth_root",
+	        test_CGAL_Kth_root,
+	        (py::arg("x")),
+	        R"""(
+CGAL's function ``Kth_root``, as described in `CGAL algebraic <https://doc.cgal.org/latest/Algebraic_foundations/index.html>`__
+`foundations <https://doc.cgal.org/latest/Algebraic_foundations/group__PkgAlgebraicFoundationsRef.html>`__ :ysrc:`exposed<lib/high-precision/CgalNumTraits.hpp>`
+to python for :ysrccommit:`testing<ff600a80018d21c03626c720cda08967b043c1c8/py/tests/testMath.py#L207>` of CGAL numerical traits.
+
+:return: ``Real`` the k-th root of argument.
+)""");
 	// RealEmbeddableTraits
-	py::def("CGAL_To_interval", test_CGAL_To_interval, (py::arg("x")));
-	py::def("CGAL_Sgn", test_CGAL_Sgn, (py::arg("x")));
-	py::def("CGAL_Is_finite", test_CGAL_Is_finite, (py::arg("x")));
+	py::def("CGAL_To_interval",
+	        test_CGAL_To_interval,
+	        (py::arg("x")),
+	        R"""(
+CGAL's function ``To_interval``, as described in `CGAL algebraic <https://doc.cgal.org/latest/Algebraic_foundations/index.html>`__
+`foundations <https://doc.cgal.org/latest/Algebraic_foundations/group__PkgAlgebraicFoundationsRef.html>`__ :ysrc:`exposed<lib/high-precision/CgalNumTraits.hpp>`
+to python for :ysrccommit:`testing<ff600a80018d21c03626c720cda08967b043c1c8/py/tests/testMath.py#L207>` of CGAL numerical traits.
+
+:return: ``(double,double)`` tuple inside which the high-precision ``Real`` argument resides.
+)""");
+	py::def("CGAL_Sgn",
+	        test_CGAL_Sgn,
+	        (py::arg("x")),
+	        R"""(
+CGAL's function ``Sgn``, as described in `CGAL algebraic <https://doc.cgal.org/latest/Algebraic_foundations/index.html>`__
+`foundations <https://doc.cgal.org/latest/Algebraic_foundations/group__PkgAlgebraicFoundationsRef.html>`__ :ysrc:`exposed<lib/high-precision/CgalNumTraits.hpp>`
+to python for :ysrccommit:`testing<ff600a80018d21c03626c720cda08967b043c1c8/py/tests/testMath.py#L207>` of CGAL numerical traits.
+
+:return: sign of the argument, can be ``-1``, ``0`` or ``1``. Not very useful in python. In C++ it is useful to obtain a sign of an expression with exact accuracy, CGAL starts using MPFR internally for this when the approximate interval contains zero inside it.
+)""");
+	py::def("CGAL_Is_finite",
+	        test_CGAL_Is_finite,
+	        (py::arg("x")),
+	        R"""(
+CGAL's function ``Is_finite``, as described in `CGAL algebraic <https://doc.cgal.org/latest/Algebraic_foundations/index.html>`__
+`foundations <https://doc.cgal.org/latest/Algebraic_foundations/group__PkgAlgebraicFoundationsRef.html>`__ :ysrc:`exposed<lib/high-precision/CgalNumTraits.hpp>`
+to python for :ysrccommit:`testing<ff600a80018d21c03626c720cda08967b043c1c8/py/tests/testMath.py#L207>` of CGAL numerical traits.
+
+:return: ``bool`` indicating if the ``Real`` argument is finite.
+)""");
 #else
 	py::scope().attr("testCgalNumTraits") = false;
 #endif
