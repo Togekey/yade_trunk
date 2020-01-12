@@ -53,9 +53,6 @@
 		return YADE_REAL_MATH_NAMESPACE::func(static_cast<const UnderlyingReal&>(a), static_cast<const UnderlyingReal&>(b));                           \
 	}
 
-#define YADE_WRAP_FUNC_2_TYPE1(func, FirstType)                                                                                                                \
-	inline Real func(FirstType a, const Real& b) { return YADE_REAL_MATH_NAMESPACE::func(a, static_cast<const UnderlyingReal&>(b)); }
-
 #define YADE_WRAP_FUNC_2_TYPE2(func, SecondType)                                                                                                               \
 	inline Real func(const Real& a, SecondType b) { return YADE_REAL_MATH_NAMESPACE::func(static_cast<const UnderlyingReal&>(a), b); }
 
@@ -75,12 +72,6 @@
 	{                                                                                                                                                      \
 		return YADE_REAL_MATH_NAMESPACE::func(                                                                                                         \
 		        static_cast<const UnderlyingReal&>(a), static_cast<const UnderlyingReal&>(b), static_cast<const UnderlyingReal&>(c));                  \
-	}
-
-#define YADE_WRAP_FUNC_3_TYPE31(func, ThirdToFirstType)                                                                                                        \
-	inline Real func(const Real& a, const Real& b, ThirdToFirstType c)                                                                                     \
-	{                                                                                                                                                      \
-		return YADE_REAL_MATH_NAMESPACE::func(c, static_cast<const UnderlyingReal&>(a), static_cast<const UnderlyingReal&>(b));                        \
 	}
 
 #define YADE_WRAP_FUNC_3_TYPE3(func, ThirdType)                                                                                                                \
@@ -235,6 +226,16 @@ namespace math {
 	YADE_WRAP_FUNC_1(erf)
 	YADE_WRAP_FUNC_1(erfc)
 	YADE_WRAP_FUNC_1(lgamma)
+
+// These will be available in C++17, we could use the ones from boost, if they become necessary.
+//YADE_WRAP_FUNC_1(riemann_zeta)
+//YADE_WRAP_FUNC_2(beta)
+//YADE_WRAP_FUNC_2(cyl_bessel_i)
+//YADE_WRAP_FUNC_2(cyl_bessel_j)
+//YADE_WRAP_FUNC_2(cyl_bessel_k)
+//YADE_WRAP_FUNC_2_TYPE1(sph_bessel, unsigned)
+
+
 // workaround broken tgamma for boost::float128
 #if (YADE_REAL_BIT <= 128) and (YADE_REAL_BIT > 80)
 	static_assert(std::is_same<UnderlyingReal, boost::multiprecision::float128>::value, "Incorrect type, please file a bug report.");
@@ -251,18 +252,9 @@ namespace math {
 	YADE_WRAP_FUNC_1(tgamma)
 #endif
 
-// These will be available in C++17, we could use the ones from boost, if they become necessary.
-//YADE_WRAP_FUNC_1(riemann_zeta)
-//YADE_WRAP_FUNC_2(beta)
-//YADE_WRAP_FUNC_2(cyl_bessel_i)
-//YADE_WRAP_FUNC_2(cyl_bessel_j)
-//YADE_WRAP_FUNC_2(cyl_bessel_k)
-//YADE_WRAP_FUNC_2_TYPE1(sph_bessel, unsigned)
-
-
-/********************************************************************************************/
-/**********************        extract C-array from std::vector        **********************/
-/********************************************************************************************/
+	/********************************************************************************************/
+	/**********************        extract C-array from std::vector        **********************/
+	/********************************************************************************************/
 
 // Some old C library functions need pointer to C-array, this is for compatibility between ThinRealWrapper and UnderlyingReal
 #ifdef YADE_THIN_REAL_WRAPPER_HPP
@@ -284,8 +276,8 @@ namespace math {
 	// generate random number [0,1)
 	static inline Real random01()
 	{
-                static ::boost::random::mt19937 gen;
-                return ::boost::random::generate_canonical<::yade::math::Real, std::numeric_limits<::yade::math::Real>::digits>(gen);
+		static ::boost::random::mt19937 gen;
+		return ::boost::random::generate_canonical<::yade::math::Real, std::numeric_limits<::yade::math::Real>::digits>(gen);
 	}
 
 	static inline Real unitRandom() { return random01(); }
@@ -300,10 +292,10 @@ namespace math {
 // This saves writing `math::` before the calls. If they were used only with `Real` arguments (like all other mathematic functions) the ADL would find them.
 // Also, the ADL does not work properly for g++ ver. older than 6 in case when Real is a fundamental type (e.g. `double`) inside `math::`
 //    #if (__GNUC__ <= 6) …… #endif
-using math::max;
-using math::min;
 using math::abs;
 using math::fabs;
+using math::max;
+using math::min;
 
 }
 
@@ -313,10 +305,8 @@ using math::fabs;
 #undef YADE_WRAP_FUNC_2_TYPE2
 #undef YADE_WRAP_FUNC_2_TYPE2_CAST
 #undef YADE_WRAP_FUNC_2_TYPE2_STD_CAST
-#undef YADE_WRAP_FUNC_2_TYPE1
 #undef YADE_WRAP_FUNC_3
 #undef YADE_WRAP_FUNC_3_TYPE3
-#undef YADE_WRAP_FUNC_3_TYPE31
 #undef YADE_WRAP_FUNC_1_COMPLEX
 #undef YADE_WRAP_FUNC_1_COMPLEX_STD
 #undef YADE_WRAP_FUNC_1_COMPLEX_TO_REAL
