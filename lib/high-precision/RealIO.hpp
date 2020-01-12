@@ -43,17 +43,18 @@ namespace math {
 	};
 
 	// These are just an inline convenience functions. They are the same as using std::stringstream.
-	// Here stringstream is constructed directly by calling the function with a `const std::string&` argument.
-	inline Real fromStringReal(std::stringstream s)
+	inline Real fromStringReal(const std::string& st)
 	{
 		Real ret;
+		std::stringstream s{st};
 		s >> ret;
 		return ret;
 	};
 
-	inline Complex fromStringComplex(std::stringstream s)
+	inline Complex fromStringComplex(const std::string& st)
 	{
 		Complex ret;
+		std::stringstream s{st};
 		s >> ret;
 		return ret;
 	};
