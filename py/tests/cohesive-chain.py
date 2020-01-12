@@ -12,7 +12,7 @@ from yade.wrapper import *
 from yade._customConverters import *
 from yade.gridpfacet import *
 from math import *
-from minieigen import *
+from yade.minieigenHP import *
 
 class TestCohesiveChain(unittest.TestCase):
 	# prefix test names with PBC:

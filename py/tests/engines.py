@@ -8,7 +8,7 @@ from yade._customConverters import *
 from yade import utils
 from yade import *
 from math import *
-from minieigen import *
+from yade.minieigenHP import *
 
 class TestKinematicEngines(unittest.TestCase):
 	def testKinematicEngines(self):

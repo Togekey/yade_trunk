@@ -4,7 +4,7 @@
 # (C) 2019 Janek Kozicki
 
 import unittest, math, sys
-import minieigen as mne
+import yade.minieigenHP as mne
 import yade
 
 import testMathHelper as mpmath
@@ -61,7 +61,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeError( c2i[0] , mpmath.mpf("10") )
 		self.checkRelativeError( c2i[1] , mpmath.mpf("12") )
 
-		from minieigen import Vector2i
+		from yade.minieigenHP import Vector2i
 		self.assertEqual( c2i , eval(c2i.__str__()) )
 
 	def testVector2(self):
@@ -81,7 +81,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeError( c2[0] , mpmath.mpf("10") )
 		self.checkRelativeError( c2[1] , mpmath.mpf("12") )
 
-		from minieigen import Vector2
+		from yade.minieigenHP import Vector2
 		self.assertEqual( c2 , eval(c2.__str__()) )
 
 	def testVector2c(self):
@@ -101,7 +101,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeComplexError( c2c[0] , mpmath.mpc("10","-20") )
 		self.checkRelativeComplexError( c2c[1] , mpmath.mpf("12") )
 
-		from minieigen import Vector2c
+		from yade.minieigenHP import Vector2c
 		self.assertEqual( c2c , eval(c2c.__str__()) )
 
 	def testVector3i(self):
@@ -123,7 +123,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeError( c3i[1] , mpmath.mpf("18") )
 		self.checkRelativeError( c3i[2] , mpmath.mpf("27") )
 
-		from minieigen import Vector3i
+		from yade.minieigenHP import Vector3i
 		self.assertEqual( c3i , eval(c3i.__str__()) )
 
 	def testVector3(self):
@@ -145,7 +145,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeError( c3r[1] , mpmath.mpf("18.6") )
 		self.checkRelativeError( c3r[2] , mpmath.mpf("28.5") )
 
-		from minieigen import Vector3
+		from yade.minieigenHP import Vector3
 		self.checkRelativeError( c3r[0] , eval(c3r.__str__())[0] )
 		self.checkRelativeError( c3r[1] , eval(c3r.__str__())[1] )
 		self.checkRelativeError( c3r[2] , eval(c3r.__str__())[2] )
@@ -169,7 +169,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeComplexError( c3c[1] , mpmath.mpc("18.6","7.5") )
 		self.checkRelativeComplexError( c3c[2] , mpmath.mpc("28.5","-3") )
 
-		from minieigen import Vector3c
+		from yade.minieigenHP import Vector3c
 		self.checkRelativeComplexError( c3c[0] , eval(c3c.__str__())[0] )
 		self.checkRelativeComplexError( c3c[1] , eval(c3c.__str__())[1] )
 		self.checkRelativeComplexError( c3c[2] , eval(c3c.__str__())[2] )
@@ -194,7 +194,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeError( c3a[1] , mpmath.mpf("18.6") )
 		self.checkRelativeError( c3a[2] , mpmath.mpf("28.5") )
 
-		from minieigen import Vector3na
+		from yade.minieigenHP import Vector3na
 		self.checkRelativeError( c3a[0] , eval(c3a.__str__())[0] )
 		self.checkRelativeError( c3a[1] , eval(c3a.__str__())[1] )
 		self.checkRelativeError( c3a[2] , eval(c3a.__str__())[2] )
@@ -222,7 +222,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeError( c4r[2] , mpmath.mpf("28.5") )
 		self.checkRelativeError( c4r[3] , mpmath.mpf("1.5") )
 
-		from minieigen import Vector4
+		from yade.minieigenHP import Vector4
 		self.checkRelativeError( c4r[0] , eval(c4r.__str__())[0] )
 		self.checkRelativeError( c4r[1] , eval(c4r.__str__())[1] )
 		self.checkRelativeError( c4r[2] , eval(c4r.__str__())[2] )
@@ -254,7 +254,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 
 		self.checkRelativeError( a3m.maxAbsCoeff() , mpmath.mpf("9") )
 
-		from minieigen import Matrix3
+		from yade.minieigenHP import Matrix3
 		for i in range(3):
 			for j in range(3):
 				self.checkRelativeError( b3m[i][j] , eval(b3m.__str__())[i][j] )
@@ -286,7 +286,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 
 		self.checkRelativeComplexError( a3m.maxAbsCoeff() , abs(mpmath.mpc("9","-9")) )
 
-		from minieigen import Matrix3c
+		from yade.minieigenHP import Matrix3c
 		for i in range(3):
 			for j in range(3):
 				self.checkRelativeComplexError( b3m[i][j] , eval(b3m.__str__())[i][j] )
@@ -319,7 +319,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.assertEqual(mpmath.mp.dps , self.digs1 )
 		self.checkRelativeError( q4.norm() , mpmath.mpf("1") )
 
-		from minieigen import Quaternion
+		from yade.minieigenHP import Quaternion
 		self.checkRelativeError( q3[0] , eval(q3.__str__())[0] )
 		self.checkRelativeError( q3[1] , eval(q3.__str__())[1] )
 		self.checkRelativeError( q3[2] , eval(q3.__str__())[2] )

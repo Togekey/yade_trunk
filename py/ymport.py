@@ -7,7 +7,7 @@ from builtins import object
 from yade.wrapper import *
 from yade import utils
 
-from minieigen import *
+from yade.minieigenHP import *
 
 
 def textExt(fileName,format='x_y_z_r',shift=Vector3.Zero,scale=1.0,attrs=[],**kw):

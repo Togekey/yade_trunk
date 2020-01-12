@@ -44,7 +44,7 @@ import matplotlib,os,time,math,itertools
 import yade.runtime
 if not yade.runtime.hasDisplay: matplotlib.use('Agg')
 
-from minieigen import *
+from yade.minieigenHP import *
 
 #matplotlib.use('TkAgg')
 #matplotlib.use('GTKAgg')

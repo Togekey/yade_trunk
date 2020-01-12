@@ -20,7 +20,7 @@ if yade.config.highPrecisionMpmath:
 	import mpmath
 	mpmath.mp.dps=(int(yade.config.highPrecisionDecimalPlaces)+1)
 
-from minieigen import *
+from yade.minieigenHP import *
 
 seqSerializableShowType=True # show type headings in serializable sequences (takes vertical space, but makes the type hyperlinked)
 

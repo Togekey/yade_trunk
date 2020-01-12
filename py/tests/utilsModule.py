@@ -10,7 +10,7 @@ from yade.wrapper import *
 from yade._customConverters import *
 from yade import utils
 from yade import *
-from minieigen import *
+from yade.minieigenHP import *
 
 
 class TestUtils(unittest.TestCase):
