@@ -24,7 +24,7 @@ try: # use psyco if available
 except ImportError: pass
 
 
-from minieigen import *
+from yade.minieigenHP import *
 
 # c++ implementations for performance reasons
 from yade._utils import *

@@ -11,7 +11,7 @@ The maximum depth/number of levels is defined as log2(N_{w}), where N_{w} is the
 
 from math import ceil, log10, log
 from yade.wrapper import * 
-from minieigen import Vector3
+from yade.minieigenHP import Vector3
 from mpi4py import MPI 
 import sys
 

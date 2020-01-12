@@ -62,7 +62,7 @@ from builtins import zip
 from builtins import range
 from builtins import object
 from yade.wrapper import *
-from minieigen import *
+from yade.minieigenHP import *
 
 class Flatten(object):
 	"""Abstract class for converting 3d point into 2d. Used by post2d.data2d."""
@@ -181,7 +181,7 @@ def data(extractor,flattener,intr=False,onlyDynamic=True,stDev=None,relThreshold
 	"""
 	
 
-	from minieigen import Vector3
+	from yade.minieigenHP import Vector3
 		
 	xx,yy,dd1,dd2,rr=[],[],[],[],[]
 	nDim=0

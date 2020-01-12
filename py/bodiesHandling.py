@@ -7,7 +7,7 @@ from builtins import range
 from yade.wrapper import *
 import utils,math,numpy
 
-from minieigen import *
+from yade.minieigenHP import *
 
 #spheresPackDimensions==================================================
 def spheresPackDimensions(idSpheres=[],mask=-1):

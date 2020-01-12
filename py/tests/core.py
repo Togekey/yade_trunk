@@ -12,7 +12,7 @@ from yade._customConverters import *
 from yade import utils
 from yade import *
 from math import *
-from minieigen import *
+from yade.minieigenHP import *
 
 ## TODO tests
 class TestForce(unittest.TestCase): pass

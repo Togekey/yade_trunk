@@ -35,7 +35,7 @@ except ImportError: pass
 from yade import utils
 from yade._utils import createInteraction
 
-from minieigen import *
+from yade.minieigenHP import *
 
 
 def chainedCylinder(begin=Vector3(0,0,0),end=Vector3(1.,0.,0.),radius=0.2,dynamic=None,fixed=False,wire=False,color=None,highlight=False,material=-1,mask=1):

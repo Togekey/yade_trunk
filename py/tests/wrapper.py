@@ -14,7 +14,7 @@ from yade._customConverters import *
 from math import *
 from yade import system
 from yade import *
-from minieigen import *
+from yade.minieigenHP import *
 
 allClasses=system.childClasses('Serializable')
 
