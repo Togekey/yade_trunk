@@ -223,18 +223,10 @@ namespace math {
 	YADE_WRAP_FUNC_2(fmod)
 	YADE_WRAP_FUNC_2(remainder)
 
-#if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
-	YADE_WRAP_FUNC_2_TYPE2_CAST(modf, Real&, NotUsed)
-#else
 	YADE_WRAP_FUNC_2_TYPE2_CAST(modf, Real*, UnderlyingReal*)
-#endif
 
 	YADE_WRAP_FUNC_3(fma)
-#if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
-	YADE_WRAP_FUNC_3_TYPE31(remquo, long*)
-#else
 	YADE_WRAP_FUNC_3_TYPE3(remquo, int*)
-#endif
 
 	/********************************************************************************************/
 	/**********************         special mathematical functions         **********************/
@@ -292,12 +284,8 @@ namespace math {
 	// generate random number [0,1)
 	static inline Real random01()
 	{
-#if defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
-		return ::mpfr::random();
-#else
                 static ::boost::random::mt19937 gen;
                 return ::boost::random::generate_canonical<::yade::math::Real, std::numeric_limits<::yade::math::Real>::digits>(gen);
-#endif
 	}
 
 	static inline Real unitRandom() { return random01(); }
