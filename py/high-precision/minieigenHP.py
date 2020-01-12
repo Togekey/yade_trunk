@@ -14,5 +14,10 @@ Though it could be precompiled for some special types such as ``boost::multiprec
 """
 
 # all C++ functions are accessible now:
-from yade._minieigenHP import *
+import yade
+
+if(yade.config.highPrecisionBits != 64):
+	from yade._minieigenHP import *
+else:
+	from minieigen import *
 
