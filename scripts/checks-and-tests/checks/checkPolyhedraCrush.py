@@ -74,7 +74,12 @@ if ( 'CGAL' in features ):
 
     if(cgalVer > (4,9,0)):
         print("CGAL version is ",cgalVer,". Will test for cgal version > 4.9")
-        O.run(166, True); checkForcesBodies(-21.7037, 7)
+        O.run(166, True);
+        # number of bodies depends on precision used.
+        if(yade.config.highPrecisionDecimalPlaces < 18 or yade.config.highPrecisionDecimalPlaces > 33):
+            checkForcesBodies(-21.7037, 7)
+        else:
+            checkForcesBodies(-21.7037, 10)
     else:
         print("CGAL version is ",cgalVer,". Will test for cgal version <= 4.9")
         O.run(250, True); checkForcesBodies(25.44893, 4)
