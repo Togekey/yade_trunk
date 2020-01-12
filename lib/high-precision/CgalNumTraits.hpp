@@ -148,17 +148,7 @@ struct NT_converter<::yade::Real, boost::multiprecision::mpq_rational>
         : public CGAL::cpp98::unary_function<::yade::Real, NT_converter<::yade::Real, boost::multiprecision::mpq_rational>> {
 	boost::multiprecision::mpq_rational operator()(const ::yade::Real& a) const
 	{
-#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-		// The non-boost MPFR cannot support fast conversion. It doesn't matter. This won't be ever used in production. It is only for wider testing coverage.
-		// FIXME: see FIXME in ::yade::math::toString
-		std::stringstream ss;
-		ss << a;
-		boost::multiprecision::mpq_rational ret {};
-		ss >> ret;
-		return ret;
-#else
 		return boost::multiprecision::mpq_rational(static_cast<::yade::math::UnderlyingReal>(a));
-#endif
 	}
 };
 

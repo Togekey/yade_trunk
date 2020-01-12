@@ -156,14 +156,6 @@ enum { ReadCost = Eigen::HugeCost, AddCost = Eigen::HugeCost, MulCost = Eigen::H
 }
 
 /*************************************************************************/
-#elif defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this)
-#include <unsupported/Eigen/MPRealSupport>
-namespace yade {
-namespace math {
-	using UnderlyingReal = ::mpfr::mpreal;
-}
-}
-#define YADE_REAL_MATH_NAMESPACE ::mpfr
 #else
 #error "Real precision is unspecified, there must be a mistake in CMakeLists.txt, the requested #defines should have been provided."
 #endif
@@ -212,7 +204,7 @@ static_assert(sizeof(Complex) == sizeof(std::complex<math::UnderlyingReal>), "Th
 /*************************************************************************/
 /*************************   Eigen  NumTraits   **************************/
 /*************************************************************************/
-#if (YADE_REAL_BIT > 64) and (not defined(YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this))
+#if (YADE_REAL_BIT > 64)
 #include "EigenNumTraits.hpp"
 #endif
 
