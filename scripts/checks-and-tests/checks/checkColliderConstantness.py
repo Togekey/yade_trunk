@@ -90,9 +90,14 @@ for per in sorted(results):
 						line = resultFile.readline()
 						tmp = float(line)
 						if(abs(tmp - number) > 1e-8):
-							raise YadeCheckError("InsertionSortCollider check failed in file scripts/checks-and-tests/checks/data/checkColider.txt line: %d"%lineCount)
+							if(yade.config.highPrecisionMpmath and (type(number) == int) and (abs(tmp - number)==100)):
+								# with high precision sometimes the periodic spheres are sorted a little differently:
+								# sphere id numbers -88 and -188 or -55 and -155 are swapped.
+								pass
+							else:
+								raise YadeCheckError("InsertionSortCollider check failed in file scripts/checks-and-tests/checks/data/checkColider.txt line: %d"%lineCount)
 					else:
-						if(type(number) is int):
+						if(type(number) == int):
 							resultFile.write(str(number)+'\n')
 						else:
 							resultFile.write("%.8f"%number+'\n')
