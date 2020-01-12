@@ -580,7 +580,7 @@ checkHP_bf40:
   dependencies:
     - makeHP_bf40
   needs: ["makeHP_bf40"]
-  timeout: 4 hours
+  timeout: 8 hours
 
 
 .doc_template: &doc_definition
