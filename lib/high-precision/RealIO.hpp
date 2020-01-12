@@ -1,5 +1,5 @@
 /*************************************************************************
-*  2019 Janek Kozicki                                                    *
+*  2020 Janek Kozicki                                                    *
 *                                                                        *
 *  This program is free software; it is licensed under the terms of the  *
 *  GNU General Public License v2 or later. See file LICENSE for details. *
@@ -28,31 +28,30 @@ namespace math {
 	// guaranteed maximum precision
 	inline std::string toString(const Real& val)
 	{
-		// FIXME: similar code is in ToFromPythonConverter.hpp, MathSerialization.hpp, MathFunctions.hpp, extract it to single place.
-		static constexpr auto digs1 = std::numeric_limits<Real>::digits10 + 1;
-		std::ostringstream ss;
+		constexpr const auto digs1 = std::numeric_limits<Real>::digits10 + 1;
+		std::ostringstream   ss;
 		ss << std::setprecision(digs1) << val;
 		return ss.str();
 	};
 
 	inline std::string toString(const Complex& val)
 	{
-		std::ostringstream ss;
-		static constexpr auto digs1 = std::numeric_limits<Real>::digits10 + 1;
+		std::ostringstream   ss;
+		constexpr const auto digs1 = std::numeric_limits<Real>::digits10 + 1;
 		ss << std::setprecision(digs1) << val;
 		return ss.str();
 	};
 
-	// This is just an inline convenience function. It is the same as using std::stringstream.
+	// These are just an inline convenience functions. They are the same as using std::stringstream.
 	// Here stringstream is constructed directly by calling the function with a `const std::string&` argument.
-	inline Real fromString(std::stringstream s)
+	inline Real fromStringReal(std::stringstream s)
 	{
 		Real ret;
 		s >> ret;
 		return ret;
 	};
 
-	inline Complex fromString(std::stringstream s)
+	inline Complex fromStringComplex(std::stringstream s)
 	{
 		Complex ret;
 		s >> ret;
@@ -60,7 +59,8 @@ namespace math {
 	};
 
 }
-using yade::math::fromString;
+using yade::math::fromStringComplex;
+using yade::math::fromStringReal;
 using yade::math::toString;
 }
 
