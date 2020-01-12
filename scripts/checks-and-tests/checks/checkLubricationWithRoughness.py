@@ -62,4 +62,5 @@ O.engines=[ForceResetter(),
 O.dt = 1.e-5;
 #plot.plots = {'t':('u','u_')};
 
-O.run(10000000, True);
+O.run(10000000 if (yade.config.highPrecisionDecimalPlaces < 30) else 200001, True);
+
