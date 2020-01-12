@@ -70,7 +70,7 @@ template <typename T> std::string num_to_string(const T& num, int = 0)
 	if (digs1 <= 16) {
 		ss << std::setprecision(digs1) << num;
 	} else {
-		// make sure it is copy-pasteable without loss of precision
+		// The only way to make sure that it is copy-pasteable without loss of precision is to put it inside "…"
 		ss << "\"" << std::setprecision(digs1) << num << "\"";
 	}
 	return ss.str();
