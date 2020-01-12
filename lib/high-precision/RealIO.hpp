@@ -29,11 +29,7 @@ namespace math {
 	inline std::string toString(const Real& val)
 	{
 		// FIXME: similar code is in ToFromPythonConverter.hpp, MathSerialization.hpp, MathFunctions.hpp, extract it to single place.
-#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-		const auto digs1 = std::numeric_limits<Real>::digits10 + 1;
-#else
-                static constexpr auto digs1 = std::numeric_limits<Real>::digits10 + 1;
-#endif
+		static constexpr auto digs1 = std::numeric_limits<Real>::digits10 + 1;
 		std::ostringstream ss;
 		ss << std::setprecision(digs1) << val;
 		return ss.str();
@@ -42,16 +38,12 @@ namespace math {
 	inline std::string toString(const Complex& val)
 	{
 		std::ostringstream ss;
-#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-		const auto digs1 = std::numeric_limits<Real>::digits10 + 1;
-#else
-                static constexpr auto digs1 = std::numeric_limits<Real>::digits10 + 1;
-#endif
+		static constexpr auto digs1 = std::numeric_limits<Real>::digits10 + 1;
 		ss << std::setprecision(digs1) << val;
 		return ss.str();
 	};
 
-	// this is just an inline convenience function. It is the same as using std::stringstream.
+	// This is just an inline convenience function. It is the same as using std::stringstream.
 	// Here stringstream is constructed directly by calling the function with a `const std::string&` argument.
 	inline Real fromString(std::stringstream s)
 	{

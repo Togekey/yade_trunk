@@ -10,10 +10,6 @@
 
 #include <boost/python.hpp>
 
-#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-#define digits10 digits10()
-#endif
-
 #ifdef ARBITRARY_REAL_DEBUG
 #include <boost/core/demangle.hpp>
 #include <iostream>
@@ -37,11 +33,7 @@ template <typename ArbitraryReal> struct ArbitraryReal_to_python {
 	{
 		std::stringstream ss {};
 		// the '+1' is to make sure that there are no conversion errors in the last bit.
-#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-		const auto digs1 = std::numeric_limits<ArbitraryReal>::digits10 + 1;
-#else
 		static constexpr auto digs1 = std::numeric_limits<ArbitraryReal>::digits10 + 1;
-#endif
 		ss << std::setprecision(digs1) << val;
 		::boost::python::object mpmath = ::boost::python::import("mpmath");
 #ifdef ARBITRARY_REAL_DEBUG
@@ -99,11 +91,7 @@ template <typename ArbitraryReal> struct ArbitraryReal_from_python {
 
 template <typename T> std::string num_to_string(const T& num, int = 0)
 {
-#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-	const auto digs1 = std::numeric_limits<T>::digits10 + 1;
-#else
 	static constexpr auto digs1 = std::numeric_limits<T>::digits10 + 1;
-#endif
 #ifdef ARBITRARY_REAL_DEBUG
 	std::cerr << "\e[91m num_to_string<" << boost::core::demangle(typeid(T).name()) << ">" << digs1 << " number: " << num << "\e[0m\n";
 #endif
@@ -128,11 +116,7 @@ template <typename ArbitraryComplex> struct ArbitraryComplex_to_python {
 		std::stringstream ss_real {};
 		std::stringstream ss_imag {};
 		// the '+1' is to make sure that there are no conversion errors in the last bit.
-#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-		const auto digs1 = std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1;
-#else
 		static constexpr auto digs1 = std::numeric_limits<typename ArbitraryComplex::value_type>::digits10 + 1;
-#endif
 		ss_real << std::setprecision(digs1) << val.real();
 		ss_imag << std::setprecision(digs1) << val.imag();
 		::boost::python::object mpmath = ::boost::python::import("mpmath");
@@ -191,11 +175,7 @@ template <typename ArbitraryComplex> struct ArbitraryComplex_from_python {
 
 template <typename T> inline std::string num_to_string(const std::complex<T>& num, int = 0)
 {
-#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-	const auto digs1 = std::numeric_limits<T>::digits10 + 1;
-#else
 	static constexpr auto digs1 = std::numeric_limits<T>::digits10 + 1;
-#endif
 #ifdef ARBITRARY_REAL_DEBUG
 	std::cerr << "\e[91m COMPLEX num_to_string<" << boost::core::demangle(typeid(T).name()) << ">" << digs1 << " number: " << num << "\e[0m\n";
 #endif
@@ -229,10 +209,6 @@ template <> inline std::string num_to_string<::yade::Complex>(const ::yade::Comp
 {
 	return num_to_string(static_cast<std::complex<::yade::math::UnderlyingReal>>(num));
 }
-#endif
-
-#ifdef YADE_REAL_MPFR_NO_BOOST_experiments_only_never_use_this
-#undef digits10
 #endif
 
 #endif
