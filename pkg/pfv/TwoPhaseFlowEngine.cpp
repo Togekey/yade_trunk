@@ -782,44 +782,44 @@ Real TwoPhaseFlowEngine::getConstantC3(CellHandle cell)
     if(cell->info().numberFacets == 20){c1 = 0.394;}
     
     
-    double c3 = c1 * std::pow(2.0 * surfaceTension,3) / cell->info().mergedVolume;
+    Real c3 = c1 * std::pow(2.0 * surfaceTension,3) / cell->info().mergedVolume;
     return c3; 
 }
 
-double TwoPhaseFlowEngine::getConstantC4(CellHandle cell)
+Real TwoPhaseFlowEngine::getConstantC4(CellHandle cell)
 {
-   double c2 = 4.85*std::pow(double(cell->info().numberFacets),-1.19);
+   Real c2 = 4.85*std::pow(Real(cell->info().numberFacets),-1.19);
     if(cell->info().numberFacets == 4){c2 = 1.409;}
     if(cell->info().numberFacets == 6){c2 = 0.353;}
     if(cell->info().numberFacets == 8){c2 = 0.644;}
     if(cell->info().numberFacets == 10){c2 = 0.462 ;}
     if(cell->info().numberFacets == 12){c2 = 0.0989;}
     if(cell->info().numberFacets == 20){c2 = 0.245;}
-   double c4 = c2 * std::pow(2.0 * surfaceTension,3) / std::pow( double (cell->info().mergedVolume),2./3.);
+   Real c4 = c2 * std::pow(2.0 * surfaceTension,3) / std::pow( Real (cell->info().mergedVolume),2./3.);
    return c4; 
 }
 
-double TwoPhaseFlowEngine::dsdp(CellHandle cell, double pw)
+Real TwoPhaseFlowEngine::dsdp(CellHandle cell, Real pw)
 {
   
     
       if(pw == 0){std::cout << endl << "Error! water pressure is zero, while computing capillary pressure ... cellId= "<< cell->info().id;}
-      double exp = std::exp(-1*getKappa(cell->info().numberFacets) * cell->info().saturation);
-      double dsdp2 = (1.0 / cell->info().thresholdPressure) * std::pow((1.0 - exp),2.0) / ( getKappa(cell->info().numberFacets) * exp);
+      Real exp = std::exp(-1*getKappa(cell->info().numberFacets) * cell->info().saturation);
+      Real dsdp2 = (1.0 / cell->info().thresholdPressure) * std::pow((1.0 - exp),2.0) / ( getKappa(cell->info().numberFacets) * exp);
 //       if(std::abs(dsdp2) > 1e10){ std::cerr << "Huge dsdp! : "<< dsdp2 << " " << exp << " "<< cell->info().thresholdPressure << " " << getKappa(cell->info().numberFacets);}
 
     
-//     double dsdp2 = (3.0 * getConstantC3(cell) - 2.0 * getConstantC4(cell) * pw) / std::pow(pw,4);
+//     Real dsdp2 = (3.0 * getConstantC3(cell) - 2.0 * getConstantC4(cell) * pw) / std::pow(pw,4);
     if(dsdp2 != dsdp2){std::cerr<<endl << "Error! sat in dsdp is nan: " << cell->info().saturation << " kappa:" <<getKappa(cell->info().numberFacets) << " exp: " << exp <<   " mergedVolume=" << cell->info().mergedVolume  << " pthreshold=" << cell->info().thresholdPressure;}
     if(dsdp2 < 0.0){std::cerr<<endl<< "Error! dsdp is negative!" << dsdp2; dsdp2 = 0.0;}
 //     if(dsdp2 >1e6){std::cerr<<endl<< "Error! dsdp is huge!" << dsdp2; dsdp2 = 1e6;}
     return dsdp2;
 }
 
-double TwoPhaseFlowEngine::poreSaturationFromPcS(CellHandle cell,double pw)
+Real TwoPhaseFlowEngine::poreSaturationFromPcS(CellHandle cell,Real pw)
 {
     //Using equation: Pc = 2*surfaceTension / (Chi * PoreBodyVolume^(1/3) * (1-exp(-kappa * S)))
-  double s = truncationPrecision;
+  Real s = truncationPrecision;
      if(-1*pw > cell->info().thresholdPressure){
        s = std::log(1.0 + cell->info().thresholdPressure / pw) / (-1.0 * getKappa(cell->info().numberFacets));
      }
@@ -837,10 +837,10 @@ double TwoPhaseFlowEngine::poreSaturationFromPcS(CellHandle cell,double pw)
 }
 
 
-double TwoPhaseFlowEngine::porePressureFromPcS(CellHandle cell,double /*saturation*/)
+Real TwoPhaseFlowEngine::porePressureFromPcS(CellHandle cell,Real /*saturation*/)
 {
    
-  double pw = -1.0 * cell->info().thresholdPressure / (1.0 - std::exp(-1*getKappa(cell->info().numberFacets) * cell->info().saturation));
+  Real pw = -1.0 * cell->info().thresholdPressure / (1.0 - std::exp(-1*getKappa(cell->info().numberFacets) * cell->info().saturation));
   if(std::exp(-1*getKappa(cell->info().numberFacets) * cell->info().saturation) == 1.0){std::cerr << endl << "Error! pw = -inf!"  << cell->info().saturation;}
   if(pw > 0){
     std::cout << "Pw is above 0! - error: "<< pw << " id=" << cell->info().poreId << " pthr=" << cell->info().thresholdPressure << " sat:" << cell->info().saturation << " kappa: " << getKappa(cell->info().numberFacets) << " " << (1.0 - std::exp(-1*getKappa(cell->info().numberFacets) * cell->info().saturation));
@@ -1302,7 +1302,7 @@ void TwoPhaseFlowEngine::readTriangulation()
     deltaVoidVolume[cell->info().id] = cell->info().dv();
     if(cell->info().isFictious){finishedUpdating[cell->info().id] = -1;}
     if(!cell->info().isFictious){
-	  std::pair<int, double> pairs[4];
+	  std::pair<int, Real> pairs[4];
 	  for (unsigned int i = 0;i<4;i++){
 	   pairs[i] = std::make_pair(cell->vertex(i)->info().id(),std::abs(solver->fractionalSolidArea(cell,i))); 
 	  }
@@ -2412,22 +2412,22 @@ void TwoPhaseFlowEngine::updatePoreUnitProperties()
 	    CVector y = CGAL::cross_product(x,z);
 	    y = y/std::sqrt(y.squared_length());
 
-	    double b1[2]; b1[0] = B*x; b1[1] = B*y;
-	    double c1[2]; c1[0] = C*x; c1[1] = C*y;
+	    Real b1[2]; b1[0] = B*x; b1[1] = B*y;
+	    Real c1[2]; c1[0] = C*x; c1[1] = C*y;
 
-	    double A = ((std::pow(rA,2))*(1-c1[0]/b1[0])+((std::pow(rB,2)*c1[0])/b1[0])-std::pow(rC,2)+pow(c1[0],2)+std::pow(c1[1],2)-((std::pow(b1[0],2)+std::pow(b1[1],2))*c1[0]/b1[0]))/(2*c1[1]-2*b1[1]*c1[0]/b1[0]);
-	    double BB = (rA-rC-((rA-rB)*c1[0]/b1[0]))/(c1[1]-b1[1]*c1[0]/b1[0]);
-	    double CC = (std::pow(rA,2)-std::pow(rB,2)+std::pow(b1[0],2)+std::pow(b1[1],2))/(2*b1[0]);
-	    double D = (rA-rB)/b1[0];
-	    double E = b1[1]/b1[0];
-	    double F = std::pow(CC,2)+std::pow(E,2)*std::pow(A,2)-2*CC*E*A;
+	    Real A = ((std::pow(rA,2))*(1-c1[0]/b1[0])+((std::pow(rB,2)*c1[0])/b1[0])-std::pow(rC,2)+pow(c1[0],2)+std::pow(c1[1],2)-((std::pow(b1[0],2)+std::pow(b1[1],2))*c1[0]/b1[0]))/(2*c1[1]-2*b1[1]*c1[0]/b1[0]);
+	    Real BB = (rA-rC-((rA-rB)*c1[0]/b1[0]))/(c1[1]-b1[1]*c1[0]/b1[0]);
+	    Real CC = (std::pow(rA,2)-std::pow(rB,2)+std::pow(b1[0],2)+std::pow(b1[1],2))/(2*b1[0]);
+	    Real D = (rA-rB)/b1[0];
+	    Real E = b1[1]/b1[0];
+	    Real F = std::pow(CC,2)+std::pow(E,2)*std::pow(A,2)-2*CC*E*A;
 
-	    double c = -F-std::pow(A,2)+pow(rA,2);
-	    double b = 2*rA-2*(D-BB*E)*(CC-E*A)-2*A*BB;
-	    double a = 1-std::pow((D-BB*E),2)-std::pow(BB,2);
+	    Real c = -F-std::pow(A,2)+pow(rA,2);
+	    Real b = 2*rA-2*(D-BB*E)*(CC-E*A)-2*A*BB;
+	    Real a = 1-std::pow((D-BB*E),2)-std::pow(BB,2);
 
 	    if ((std::pow(b,2)-4*a*c)<0){std::cout << "NEGATIVE DETERMINANT" << endl; }
-	    double reff = (-b+std::sqrt(pow(b,2)-4*a*c))/(2*a);
+	    Real reff = (-b+std::sqrt(pow(b,2)-4*a*c))/(2*a);
 
 
 
@@ -3194,8 +3194,8 @@ Real TwoPhaseFlowEngine::getMinDrainagePc()
                 if (nCell->info().Pcondition) continue;
 //                 if ( (nCell->info().isFictious) && (!isInvadeBoundary) ) continue;
                 if ( nCell->info().isWRes == true && cell->info().poreThroatRadius[facet]>0) {
-                    double nCellP = std::max( (surfaceTension/cell->info().poreThroatRadius[facet]),(surfaceTension/nCell->info().poreBodyRadius) );
-//                     double nCellP = surfaceTension/cell->info().poreThroatRadius[facet];
+                    Real nCellP = std::max( (surfaceTension/cell->info().poreThroatRadius[facet]),(surfaceTension/nCell->info().poreBodyRadius) );
+//                     Real nCellP = surfaceTension/cell->info().poreThroatRadius[facet];
                     nextEntry = std::min(nextEntry,nCellP);}}}}
                     
     if (nextEntry==1e50) {
@@ -3218,7 +3218,7 @@ Real TwoPhaseFlowEngine::getMaxImbibitionPc()
                 if (nCell->info().Pcondition) continue;
 //                 if ( (nCell->info().isFictious) && (!isInvadeBoundary) ) continue;
                 if ( nCell->info().isNWRes == true && cell->info().poreThroatRadius[facet]>0) {
-                    double nCellP = std::min( (surfaceTension/nCell->info().poreBodyRadius), (surfaceTension/cell->info().poreThroatRadius[facet]));
+                    Real nCellP = std::min( (surfaceTension/nCell->info().poreBodyRadius), (surfaceTension/cell->info().poreThroatRadius[facet]));
                     nextEntry = std::max(nextEntry,nCellP);}}}}
                     
     if (nextEntry==-1e50) {
