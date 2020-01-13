@@ -16,24 +16,25 @@
 
 #include <lib/base/Logging.hpp>
 #include <lib/high-precision/Real.hpp>
-//#define ARBITRARY_REAL_DEBUG
-#include <py/high-precision/_ExposeStorageOrdering.hpp>
 #include <lib/high-precision/ToFromPythonConverter.hpp>
-
+#include <lib/pyutil/doc_opts.hpp>
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <py/high-precision/_ExposeStorageOrdering.hpp>
 #include <sstream>
 
 using namespace ::yade::MathEigenTypes;
 #include <minieigen/converters.hpp>
-#include <minieigen/visitors.hpp>
 #include <minieigen/expose.hpp>
+#include <minieigen/visitors.hpp>
 
 CREATE_CPP_LOCAL_LOGGER("_minieigenHP.cpp")
- 
+
 BOOST_PYTHON_MODULE(_minieigenHP)
 try {
+	YADE_SET_DOCSTRING_OPTS;
+
 	// arbitrary Real specific stuff: start
 	ArbitraryComplex_from_python<Complex>();
 	py::to_python_converter<Complex, ArbitraryComplex_to_python<Complex>>();
@@ -56,9 +57,14 @@ try {
 #ifndef EIGEN_DONT_ALIGN
 	// when we use vectorization the Vector3r is AlignedVector3, so we need to register converter from plain old Vector3<Real> so that other functions can accept it as an argument
 	custom_VectorAnyAny_from_sequence<Eigen::Matrix<Real, 3, 1>>();
-	py::class_<Eigen::Matrix<Real, 3, 1>>("Vector3na","3-dimensional non-aligned float vector; same as :obj:`Vector3`, but with alignment (``Eigen::AlignedVector3``).\n\nSupported operations (``f`` if a float/int, ``v`` is a Vector3): ``-v``, ``v+v``, ``v+=v``, ``v-v``, ``v-=v``, ``v*f``, ``f*v``, ``v*=f``, ``v/f``, ``v/=f``, ``v==v``, ``v!=v``, plus operations with ``Matrix3`` and ``Quaternion``.\n\nImplicit conversion from sequence (list, tuple, ...) of 3 floats.\n\nStatic attributes: ``Zero``, ``Ones``, ``UnitX``, ``UnitY``, ``UnitZ``.",py::init<>())
-	.def(VectorVisitor<Eigen::Matrix<Real, 3, 1>>())
-	;
+	py::class_<Eigen::Matrix<Real, 3, 1>>(
+	        "Vector3na",
+	        "3-dimensional non-aligned float vector; same as :obj:`Vector3`, but with alignment (``Eigen::AlignedVector3``).\n\nSupported operations "
+	        "(``f`` if a float/int, ``v`` is a Vector3): ``-v``, ``v+v``, ``v+=v``, ``v-v``, ``v-=v``, ``v*f``, ``f*v``, ``v*=f``, ``v/f``, ``v/=f``, "
+	        "``v==v``, ``v!=v``, plus operations with ``Matrix3`` and ``Quaternion``.\n\nImplicit conversion from sequence (list, tuple, ...) of 3 "
+	        "floats.\n\nStatic attributes: ``Zero``, ``Ones``, ``UnitX``, ``UnitY``, ``UnitZ``.",
+	        py::init<>())
+	        .def(VectorVisitor<Eigen::Matrix<Real, 3, 1>>());
 #endif
 
 	expose_vectors();
