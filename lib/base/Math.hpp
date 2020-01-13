@@ -128,6 +128,9 @@ template<typename Scalar> using Matrix6 = Eigen::Matrix<Scalar,6,6>;
 using Matrix6i = Matrix6<int>;
 using Matrix6r = Matrix6<Real>;
 
+using VectorXr  = Eigen::Matrix<Real, Eigen::Dynamic, 1>; // It's only for this double → Real merge request to work. In !366 it is moved to lib/high-precision/MathEigenTypes.hpp
+using MatrixXr = Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>;
+
 using Quaternionr = Eigen::Quaternion<Real>;
 using AngleAxisr  = Eigen::AngleAxis<Real>;
 using AlignedBox2r = Eigen::AlignedBox<Real,2>;
