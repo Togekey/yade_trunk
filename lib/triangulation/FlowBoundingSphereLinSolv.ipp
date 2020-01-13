@@ -49,12 +49,12 @@ namespace CGT
 #endif
 /* PARDISO prototype. */
 extern  "C" int F77_FUNC(pardisoinit)
-    (void *, int *, int *, int *, double *, int *);
+    (void *, int *, int *, int *, Real *, int *);
 
 extern  "C" int F77_FUNC(pardiso)
     (void *, int *, int *, int *, int *, int *,
-     double *, int *, int *, int *, int *, int *,
-     int *, double *, double *, int *, double *);
+     Real *, int *, int *, int *, int *, int *,
+     int *, Real *, Real *, int *, Real *);
 #endif
 
 #ifdef XVIEW
@@ -563,8 +563,8 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::vectorizedGaussSeidel(Rea
 		#endif
 
 		for (int ii=1; ii<=ncols; ii++) {
-			double** Acols = &(fullAcolumns[ii][0]); double* Avals = &(fullAvalues[ii][0]);
-			double dp = (((gsB[ii]-gsdV[ii]+Avals[0]*(*Acols[0])
+			Real** Acols = &(fullAcolumns[ii][0]); Real* Avals = &(fullAvalues[ii][0]);
+			Real dp = (((gsB[ii]-gsdV[ii]+Avals[0]*(*Acols[0])
 			               +Avals[1]*(*Acols[1])
 			               +Avals[2]*(*Acols[2])
 			               +Avals[3]*(*Acols[3])) * Avals[4])
@@ -835,9 +835,9 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::taucsSolve(Real /*dt*/)
 	if (debugOut) cerr << "Updating dv's (Yade->LinSolver) : " <<  taucs_ctime()-t << endl; t = taucs_ctime();
 	//taucs_logfile("stdout");//! VERY USEFULL!!!!!!!!!!! (disable to exclude output time from taucs_ctime() measurments)
 
-	taucs_double* x = &T_x[0];// the unknown vector to solve Ax=b
-	taucs_double* bod = &bodv[0];
-	taucs_double* xod = &xodv[0];
+	taucs_Real* x = &T_x[0];// the unknown vector to solve Ax=b
+	taucs_Real* bod = &bodv[0];
+	taucs_Real* xod = &xodv[0];
 
 	if (Fccs==NULL) {
 		if (debugOut) cerr << "_entering taucs_" << endl;
@@ -1002,7 +1002,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolve(Real /*dt*/)
 		pTime2N++; pTime2+=(taucs_ctime()-iniT);
 	}
 	if (pTimeInt>99) {
-		cout <<"Pardiso.....  "<<pTime1/(double) pTime1N << " s/iter for "<<pTime1N<<"/"<<(pTime2N+pTime1N)<<" std iter., "<< pTime2/pTime2N <<" s/iter for "<<pTime2N<<"/"<<(pTime2N+pTime1N)<<" retriangulation iter."<<endl;
+		cout <<"Pardiso.....  "<<pTime1/(Real) pTime1N << " s/iter for "<<pTime1N<<"/"<<(pTime2N+pTime1N)<<" std iter., "<< pTime2/pTime2N <<" s/iter for "<<pTime2N<<"/"<<(pTime2N+pTime1N)<<" retriangulation iter."<<endl;
 		pTime1=0;pTime2=0;pTime1N=0;pTime2N=0;pTimeInt=0;}
 	pTimeInt++;
 	/* ..  Convert matrix back to 0-based C-notation.                       */
@@ -1032,7 +1032,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolveTest()
 	t=taucs_ctime();
 	int*    ia = T_A->colptr;
 	int*    ja = T_A->rowind;
-	double*  a = T_A->values.d;
+	Real*  a = T_A->values.d;
 
 	if (!wasLSystemSet) for (int k=0; k<n; k++) sortV(ia[k],ia[k+1]-1,ja,a);
 	cout<<taucs_ctime()-t<<"s for ordering CCS format"<<endl;
@@ -1042,9 +1042,9 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolveTest()
 //    int mtype = -2;        /* Real symmetric matrix */
 	int mtype = 2;        /* Real symmetric positive def. matrix */
 	/* RHS and solution vectors. */
-	double*   b = &T_b[0];
+	Real*   b = &T_b[0];
 	P_x.resize(n);
-	double* x = &P_x[0];// the unknown vector to solve Ax=b
+	Real* x = &P_x[0];// the unknown vector to solve Ax=b
 	int      nrhs = 1;          /* Number of right hand sides. */
 
 	/* Internal solver memory pointer pt,                  */
@@ -1053,7 +1053,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolveTest()
 	void    *pt[64];
 	/* Pardiso control parameters. */
 	int      iparm[64];
-	double   dparm[64];
+	Real   dparm[64];
 	int      maxfct, mnum, phase, error, msglvl, solver;
 	/* Number of processors. */
 	int      num_procs;
@@ -1061,7 +1061,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolveTest()
 	char    *var;
 	int      i;
 
-	double   ddum;              /* Double dummy */
+	Real   ddum;              /* Double dummy */
 	int      idum;              /* Integer dummy. */
 	/* ..  Setup Pardiso control parameters.                     */
 	error = 0;
@@ -1171,24 +1171,24 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::taucsSolveTest()
 #ifdef TAUCS_LIB
     cout <<endl<<"TAUCS solve test"<<endl;
 
-    double t = taucs_ctime();//timer
+    Real t = taucs_ctime();//timer
     ncols = setLinearSystem();
 
 //taucs_logfile("stdout");//! VERY USEFULL!!!!!!!!!!! (disable to exclude output time from taucs_ctime() measurments)
 
 // allocate TAUCS solution vector
     T_x.resize(ncols);
-    double* x = &*T_x.begin();// the unknown vector to solve Ax=b
+    Real* x = &*T_x.begin();// the unknown vector to solve Ax=b
     cout << "Assembling the matrix2 : " <<  taucs_ctime()-t << endl;
     t =taucs_ctime();
 // solve the linear system
     void* F = NULL;
 
 //Allocate reoredered x and b
-    vector <double> bodv(ncols);
-    taucs_double* bod = &*bodv.begin();
-    vector <double> xodv(ncols);
-    taucs_double* xod = &*xodv.begin();
+    vector <Real> bodv(ncols);
+    taucs_Real* bod = &*bodv.begin();
+    vector <Real> xodv(ncols);
+    taucs_Real* xod = &*xodv.begin();
 
 
     int*         perm;
@@ -1196,7 +1196,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::taucsSolveTest()
     taucs_ccs_matrix*  Aod;
 
     t = taucs_ctime();
-    double t2 = taucs_ctime();
+    Real t2 = taucs_ctime();
 // 1) Reordering
     taucs_ccs_order(T_A, &perm, &invperm, "metis");
     Aod = taucs_ccs_permute_symmetrically(T_A, perm, invperm);
@@ -1210,7 +1210,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::taucsSolveTest()
     cout << "Factoring : " <<  taucs_ctime()-t << endl;
     t = taucs_ctime();
 // 3) Back substitution and reodering the solution back
-double t4 = taucs_ctime();
+Real t4 = taucs_ctime();
 // for (int k=0;k<10;k++){
 
     taucs_supernodal_solve_llt(F, xod, bod);
@@ -1220,7 +1220,7 @@ double t4 = taucs_ctime();
 //     cout << "B4) Deordering : " <<  taucs_ctime()-t << endl;
     t = taucs_ctime();
 // }
-	double T4=taucs_ctime()-t4;
+	Real T4=taucs_ctime()-t4;
     cout <<  "Solving : " <<  T4 << endl;
     cout << "Low level reordered total time : " <<  taucs_ctime()-t2 << endl;
     t2 = taucs_ctime();

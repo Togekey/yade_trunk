@@ -38,12 +38,12 @@ namespace CGT
 #endif
 /* PARDISO prototype. */
 extern  "C" int F77_FUNC(pardisoinit)
-    (void *, int *, int *, int *, double *, int *);
+    (void *, int *, int *, int *, Real *, int *);
 
 extern  "C" int F77_FUNC(pardiso)
     (void *, int *, int *, int *, int *, int *,
-     double *, int *, int *, int *, int *, int *,
-     int *, double *, double *, int *, double *);
+     Real *, int *, int *, int *, int *, int *,
+     int *, Real *, Real *, int *, Real *);
 #endif
 template<class _Tesselation>
 PeriodicFlowLinSolv<_Tesselation>::~PeriodicFlowLinSolv()
