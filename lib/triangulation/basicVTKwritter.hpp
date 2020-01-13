@@ -10,7 +10,7 @@ enum DataType     {INT,FLOAT};
 // Really simplistic struct for vtk file creation
 struct basicVTKwritter
 {
-	typedef double WriteType; // maybe later turn this class into a template class
+	using WriteType = ::yade::Real; // maybe later turn this class into a template class
 
 	std::ofstream file;
 	unsigned int nbVertices, nbCells;
