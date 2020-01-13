@@ -60,7 +60,7 @@ class Network
 		bool currentTes;
 		Tesselation& tesselation() {return T[currentTes];};
 		
-		double xMin, xMax, yMin, yMax, zMin, zMax, Rmoy, sectionArea, Height, vTotal;
+		Real xMin, xMax, yMin, yMax, zMin, zMax, Rmoy, sectionArea, Height, vTotal;
 		bool debugOut;
 		int nOfSpheres;
 		int xMinId, xMaxId, yMinId, yMaxId, zMinId, zMaxId;
@@ -85,37 +85,37 @@ class Network
 
 		void addBoundingPlanes();
 		void addBoundingPlane (CVector Normal, int id_wall);
-		void addBoundingPlane (Real center[3], double thickness, CVector Normal, int id_wall );
-		void setAlphaBoundary(double alpha,bool fixed);
+		void addBoundingPlane (Real center[3], Real thickness, CVector Normal, int id_wall );
+		void setAlphaBoundary(Real alpha,bool fixed);
 
 		void defineFictiousCells();
 		int detectFacetFictiousVertices (CellHandle& cell, int& j);
-		double volumeSolidPore (const CellHandle& cell);
-		double volumeSingleFictiousPore(const VertexHandle& SV1, const VertexHandle& SV2, const VertexHandle& SV3, const Point& PV1,  const Point& PV2, CVector& facetSurface);
-		double volumeDoubleFictiousPore(const VertexHandle& SV1, const VertexHandle& SV2, const VertexHandle& SV3, const Point& PV1, const Point& PV2, CVector& facetSurface);
-		double sphericalTriangleVolume(const Sphere& ST1, const Point& PT1, const Point& PT2, const Point& PT3);
+		Real volumeSolidPore (const CellHandle& cell);
+		Real volumeSingleFictiousPore(const VertexHandle& SV1, const VertexHandle& SV2, const VertexHandle& SV3, const Point& PV1,  const Point& PV2, CVector& facetSurface);
+		Real volumeDoubleFictiousPore(const VertexHandle& SV1, const VertexHandle& SV2, const VertexHandle& SV3, const Point& PV1, const Point& PV2, CVector& facetSurface);
+		Real sphericalTriangleVolume(const Sphere& ST1, const Point& PT1, const Point& PT2, const Point& PT3);
 		
-		double fastSphericalTriangleArea(const Sphere& STA1, const Point& STA2, const Point& STA3, const Point& PTA1);
+		Real fastSphericalTriangleArea(const Sphere& STA1, const Point& STA2, const Point& STA3, const Point& PTA1);
 		Real fastSolidAngle(const Point& STA1, const Point& PTA1, const Point& PTA2, const Point& PTA3);
-		double volumeDoubleFictiousPore(VertexHandle SV1, VertexHandle SV2, VertexHandle SV3, Point PV1);
-		double volumeSingleFictiousPore(VertexHandle SV1, VertexHandle SV2, VertexHandle SV3, Point PV1);
-		double volumePoreVoronoiFraction ( CellHandle& cell, int& j, bool reuseFacetData=false);
-		double surfaceSolidThroat( CellHandle cell, int j, bool slipBoundary, bool reuseFacetData=false);
-		double surfaceSolidThroatInPore( CellHandle cell, int j, bool slipBoundary, bool reuseFacetData=false);// returns the solid area in the throat, keeping only that part of the throat in cell
-		double sphericalTriangleArea ( Sphere STA1, Sphere STA2, Sphere STA3, Point PTA1 );
+		Real volumeDoubleFictiousPore(VertexHandle SV1, VertexHandle SV2, VertexHandle SV3, Point PV1);
+		Real volumeSingleFictiousPore(VertexHandle SV1, VertexHandle SV2, VertexHandle SV3, Point PV1);
+		Real volumePoreVoronoiFraction ( CellHandle& cell, int& j, bool reuseFacetData=false);
+		Real surfaceSolidThroat( CellHandle cell, int j, bool slipBoundary, bool reuseFacetData=false);
+		Real surfaceSolidThroatInPore( CellHandle cell, int j, bool slipBoundary, bool reuseFacetData=false);// returns the solid area in the throat, keeping only that part of the throat in cell
+		Real sphericalTriangleArea ( Sphere STA1, Sphere STA2, Sphere STA3, Point PTA1 );
 		
 		CVector surfaceDoubleFictiousFacet(VertexHandle fSV1, VertexHandle fSV2, VertexHandle SV3);
 		CVector surfaceSingleFictiousFacet(VertexHandle fSV1, VertexHandle SV2, VertexHandle SV3);
-		double surfaceSolidDoubleFictiousFacet(VertexHandle SV1, VertexHandle SV2, VertexHandle SV3);
-		double surfaceSolidFacet(Sphere ST1, Sphere ST2, Sphere ST3);
+		Real surfaceSolidDoubleFictiousFacet(VertexHandle SV1, VertexHandle SV2, VertexHandle SV3);
+		Real surfaceSolidFacet(Sphere ST1, Sphere ST2, Sphere ST3);
 
 		void lineSolidPore(CellHandle cell, int j);
-		double lineSolidFacet(Sphere ST1, Sphere ST2, Sphere ST3);
+		Real lineSolidFacet(Sphere ST1, Sphere ST2, Sphere ST3);
 
 		int facetF1, facetF2, facetRe1, facetRe2, facetRe3;
 		int facetNFictious;
-		double FAR;
-		static const double ONE_THIRD;
+		Real FAR;
+		static const Real ONE_THIRD;
 		static const int facetVertices [4][3];
 		static const int permut3 [3][3];
 		static const int permut4 [4][4];
