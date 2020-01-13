@@ -47,9 +47,9 @@ namespace CGT{
 		void displayStatistics();
 		#ifdef EIGENSPARSE_LIB
 		//Eigen's sparse matrix for forces computation
-// 		Eigen::SparseMatrix<double> FIntegral;
-// 		Eigen::SparseMatrix<double> PshiftsInts;
-// 		Eigen::SparseMatrix<double> FRHS;
+// 		Eigen::SparseMatrix<Real> FIntegral;
+// 		Eigen::SparseMatrix<Real> PshiftsInts;
+// 		Eigen::SparseMatrix<Real> FRHS;
 // 		VectorXr forces;
 		#endif
 	};
@@ -177,11 +177,11 @@ void PeriodicFlow<_Tesselation>::computePermeability()
 	VSolidTot = 0, Vtotalissimo = 0, vPoral = 0, sSolidTot = 0, vTotalPorosity=0, vPoralPorosity=0;
 	CellHandle neighbourCell;
 
-	double k=0, distance = 0, radius = 0;
+	Real k=0, distance = 0, radius = 0;
 	int surfneg=0; int NEG=0, POS=0, pass=0;
 	Real meanK=0, STDEV=0, meanRadius=0, meanDistance=0;
 	Real infiniteK=1e3;
-	double volume_sub_pore = 0.f;
+	Real volume_sub_pore = 0.f;
 	VectorCell& cellHandles= T[currentTes].cellHandles;
 	for (VCellIterator cellIt=T[currentTes].cellHandles.begin(); cellIt!=T[currentTes].cellHandles.end(); cellIt++){
 			CellHandle& cell = *cellIt;
@@ -331,7 +331,7 @@ void PeriodicFlow<_Tesselation>::computePermeability()
 		STDEV = sqrt(STDEV/pass);
 		if (debugOut) cout << "PassSTDEV = " << pass << endl;
 		cout << "STATISTIC K" << endl;
-		double k_min = 0, k_max = meanK + KOptFactor*STDEV;
+		Real k_min = 0, k_max = meanK + KOptFactor*STDEV;
 		cout << "Kmoy = " << meanK << " Standard Deviation = " << STDEV << endl;
 		cout << "kmin = " << k_min << " kmax = " << k_max << endl;
 		pass=0;
@@ -378,8 +378,8 @@ void PeriodicFlow<_Tesselation>::gaussSeidel(Real dt)
 {
     RTriangulation& Tri = T[currentTes].Triangulation();
     int j = 0;
-    double m, n, dp_max, p_max, sum_p, dp, sum_dp;
-    double compFlowFactor=0;
+    Real m, n, dp_max, p_max, sum_p, dp, sum_dp;
+    Real compFlowFactor=0;
     vector<Real> previousP;
     previousP.resize(Tri.number_of_finite_cells());
     const int num_threads=1;
@@ -440,7 +440,7 @@ void PeriodicFlow<_Tesselation>::gaussSeidel(Real dt)
     } while ((dp_max/p_max) > tolerance && j<40000 /*&& ( dp_max > tolerance )*//* &&*/ /*( j<50 )*/);
 
     int cel=0;
-    double Pav=0;
+    Real Pav=0;
     for (FiniteCellsIterator cell = Tri.finite_cells_begin();
             cell != cellEnd;
             cell++) {

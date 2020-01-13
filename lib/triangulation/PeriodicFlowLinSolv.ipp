@@ -60,7 +60,7 @@ int PeriodicFlowLinSolv<_Tesselation>::setLinearSystem(Real dt)
 	vector<int> clen;
 	vector<int> is;
 	vector<int> js;
-	vector<double> vs;
+	vector<Real> vs;
 	if (!areCellsOrdered) {
 		T_nnz=0;
 		ncols=0;

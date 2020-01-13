@@ -135,7 +135,7 @@ Point _Tesselation<TT>::circumCenter (const Sphere& S0, const Sphere& S1, const 
 
 //construct the circumCenter of a facet vs. an external sphere of weight wExt (wExt=alpha, typically)
 template<class TT>
-Point _Tesselation<TT>::circumCenter (const CellHandle& cell, const short facet, const double wExt, bool& violate, Sphere& SAlpha, CVector& normal)
+Point _Tesselation<TT>::circumCenter (const CellHandle& cell, const short facet, const Real wExt, bool& violate, Sphere& SAlpha, CVector& normal)
 {
         const Sphere& S0 = cell->vertex ( facetVertices[facet][0] )->point();
         const Sphere& S1 = cell->vertex ( facetVertices[facet][1] )->point();
@@ -143,16 +143,16 @@ Point _Tesselation<TT>::circumCenter (const CellHandle& cell, const short facet,
         const Sphere& Sin = cell->vertex (facet)->point();
 	CVector surface = 0.5*cross_product ( S0.point()-S1.point(), S0.point()-S2.point() );
 	//check if the surface vector is inward or outward
-	double dotP = surface* ( S0.point()-Sin.point() );
+	Real dotP = surface* ( S0.point()-Sin.point() );
 	if ( dotP<0 ) surface=-surface;
-	double area = sqrt ( surface.squared_length() );
+	Real area = sqrt ( surface.squared_length() );
 	normal = surface/area; //unit normal
 // 	p1 = setCircumCenter(cell1);//starting point of the polygon
 	Point vv=setCircumCenter(cell);
-	double h1 = ( S0.point()-vv ) *normal; //orthogonal distance from Voronoi vertex to the plane in which the spheres lie, call the intersection V
+	Real h1 = ( S0.point()-vv ) *normal; //orthogonal distance from Voronoi vertex to the plane in which the spheres lie, call the intersection V
 	Point p2 = vv+ h1*normal;
-	double sqR = ( p2-S0.point() ).squared_length(); //squared distance between V and the center of sphere 0
-	double temp = wExt + S0.weight() -sqR;
+	Real sqR = ( p2-S0.point() ).squared_length(); //squared distance between V and the center of sphere 0
+	Real temp = wExt + S0.weight() -sqR;
 	Point OAlpha = p2+sqrt(temp)*normal;//center of the alpha sphere
 	SAlpha=Sphere(OAlpha,wExt);
 	p2=circumCenter(SAlpha,S0,S1,S2);
@@ -170,9 +170,9 @@ Point _Tesselation<TT>::circumCenter (const CellHandle& cell, const short facet,
         const Sphere& Sin = cell->vertex (facet)->point();
         CVector surface = 0.5*cross_product ( S0.point()-S1.point(), S0.point()-S2.point() );
         //check if the surface vector is inward or outward
-        double dotP = surface* ( S0.point()-Sin.point() );
+        Real dotP = surface* ( S0.point()-Sin.point() );
         if ( dotP<0 ) surface=-surface;
-//         double area = sqrt ( surface.squared_length() );
+//         Real area = sqrt ( surface.squared_length() );
 //         CVector normal = surface/area; //unit normal
 //      p1 = setCircumCenter(cell1);//starting point of the polygon
         Point vv=setCircumCenter(cell);
@@ -198,7 +198,7 @@ Point _Tesselation<TT>::setCircumCenter (const CellHandle& cell,bool force) {
 
 #ifdef ALPHASHAPE
 template<class TT>
-std::vector<int> _Tesselation<TT>::getAlphaVertices(double alpha)
+std::vector<int> _Tesselation<TT>::getAlphaVertices(Real alpha)
 {
 	cerr<<"Warning: this is extremely slow - only for experiments"<<endl;
 	RTriangulation temp(*Tri);
@@ -213,7 +213,7 @@ std::vector<int> _Tesselation<TT>::getAlphaVertices(double alpha)
 }
 
 template<class TT>
-void _Tesselation<TT>::testAlphaShape(double alpha)
+void _Tesselation<TT>::testAlphaShape(Real alpha)
 {
 // 	if (not computed) compute();
 
@@ -265,7 +265,7 @@ void _Tesselation<TT>::testAlphaShape(double alpha)
 		CVector surface = 0.5*cross_product(f->first->vertex(facetVertices[idx][0])->point().point()-f->first->vertex(facetVertices[idx][1])->point().point(),
 			f->first->vertex(facetVertices[idx][0])->point().point()-f->first->vertex(facetVertices[idx][2])->point().point());
 		//largest sphere
-		double maxWeight = std::max(f->first->vertex(facetVertices[idx][0])->point().weight(),max(f->first->vertex(facetVertices[idx][1])->point().weight(), f->first->vertex(facetVertices[idx][2])->point().weight()));
+		Real maxWeight = std::max(f->first->vertex(facetVertices[idx][0])->point().weight(),max(f->first->vertex(facetVertices[idx][1])->point().weight(), f->first->vertex(facetVertices[idx][2])->point().weight()));
 		Point pp;
 		Point vv;
  		if (as.classify(f->first)==AlphaShape::INTERIOR) {
@@ -289,27 +289,27 @@ void _Tesselation<TT>::testAlphaShape(double alpha)
 // 			std::cerr << "not an Alpha_shape_3::INTERIOR"<<std::endl;
 		}
 		//check if the surface vector is inward or outward
-		double dotP = surface*(f->first->vertex(facetVertices[f->second][0])->point().point()-pp);
+		Real dotP = surface*(f->first->vertex(facetVertices[f->second][0])->point().point()-pp);
 		if (dotP<0) surface=-surface;
-		double area = sqrt(surface.squared_length());
+		Real area = sqrt(surface.squared_length());
 		CVector normal = surface/area; //unit normal
 // 		std::cerr <<"dotP="<<dotP<<std::endl<<"surface: "<<surface<<std::endl;
 
-		double h1 = (f->first->vertex(facetVertices[idx][0])->point().point()-vv)*surface/area; //orthogonal distance from Voronoi vertex to the plane in which the spheres lie, call the intersection V
+		Real h1 = (f->first->vertex(facetVertices[idx][0])->point().point()-vv)*surface/area; //orthogonal distance from Voronoi vertex to the plane in which the spheres lie, call the intersection V
 		Point V = vv + h1*normal;
-		double distLiu = sqrt((V-Point(0,0,0)).squared_length());
-		double sqR = (V-f->first->vertex(facetVertices[idx][0])->point().point()).squared_length(); //squared distance between V and the center of sphere 0
-		double temp = alpha + f->first->vertex(facetVertices[idx][0])->point().weight() -sqR;
+		Real distLiu = sqrt((V-Point(0,0,0)).squared_length());
+		Real sqR = (V-f->first->vertex(facetVertices[idx][0])->point().point()).squared_length(); //squared distance between V and the center of sphere 0
+		Real temp = alpha + f->first->vertex(facetVertices[idx][0])->point().weight() -sqR;
 		if (temp<0) {temp=0; std::cerr<<"NEGATIVE TEMP!"<<std::endl;}
 		if (temp>maxWeight) temp=maxWeight; //if alpha vertex is too far, crop
-		double h2 = sqrt(temp);// this is now the distance from Voronoi vertex to "alpha" vertex (after cropping if needed)
+		Real h2 = sqrt(temp);// this is now the distance from Voronoi vertex to "alpha" vertex (after cropping if needed)
 		V = V+h2*normal;
 		std::cerr <<"dist alpha center:"<<sqrt((V-Point(0,0,0)).squared_length())<<"(vs. Liu:"<< distLiu << ")"<<std::endl;
 	}
 }
 
 template<class TT>
-void _Tesselation<TT>::setAlphaFaces(std::vector<AlphaFace>& faces, double alpha)
+void _Tesselation<TT>::setAlphaFaces(std::vector<AlphaFace>& faces, Real alpha)
 {
 	RTriangulation temp(*Tri);
 	AlphaShape as (temp);
@@ -331,7 +331,7 @@ void _Tesselation<TT>::setAlphaFaces(std::vector<AlphaFace>& faces, double alpha
  		if (as.classify(f->first)==AlphaShape::INTERIOR) pp= f->first->vertex(f->second)->point().point();
 		else pp= f->first->neighbor(f->second)->vertex(Tri->mirror_index(f->first,f->second))->point().point();
 		//check if the normal vector is inward or outward
-		double dotP = normal*(f->first->vertex(facetVertices[f->second][0])->point().point()-pp);
+		Real dotP = normal*(f->first->vertex(facetVertices[f->second][0])->point().point()-pp);
 		if (dotP<0) normal=-normal;
 		// set the face in the global list
 		for (int ii=0; ii<3;ii++) faces[k].ids[ii]= f->first->vertex(facetVertices[idx][ii])->info().id();
@@ -340,12 +340,12 @@ void _Tesselation<TT>::setAlphaFaces(std::vector<AlphaFace>& faces, double alpha
 }
 
 template<class TT>
-std::vector<Vector3r> _Tesselation<TT>::getExtendedAlphaGraph (double alpha, double shrinkedAlpha, bool fixedAlpha)
+std::vector<Vector3r> _Tesselation<TT>::getExtendedAlphaGraph (Real alpha, Real shrinkedAlpha, bool fixedAlpha)
 {
 	std::vector<Vector3r> vSegments;
 	RTriangulation temp ( *Tri );
 	AlphaShape as ( temp );
-	double minAlpha=as.find_alpha_solid();
+	Real minAlpha=as.find_alpha_solid();
 	if ( !alpha ) as.set_alpha ( minAlpha );
 	else {
 		as.set_alpha ( alpha );
@@ -367,8 +367,8 @@ std::vector<Vector3r> _Tesselation<TT>::getExtendedAlphaGraph (double alpha, dou
 
 	} else {//insert one sphere per exterior/infinite cell, the radius is derived from the alpha value of the corresponding cell or 4*alpha for infinite cells
 
-		double alphaRad=sqrt(alpha);
-		double deltaAlpha=alphaRad-sqrt(shrinkedAlpha);
+		Real alphaRad=sqrt(alpha);
+		Real deltaAlpha=alphaRad-sqrt(shrinkedAlpha);
 		std::list<Facet> facets;// the infinite ones
 		as.get_alpha_shape_facets(std::back_inserter(facets), AlphaShape::REGULAR);
 		for ( auto fp=facets.begin(); fp!=facets.end(); fp++ ) {
@@ -386,7 +386,7 @@ std::vector<Vector3r> _Tesselation<TT>::getExtendedAlphaGraph (double alpha, dou
 				if (!outerCell->info().isFictious) {
 					outerCell->info().isFictious=true;
 					Point p = setCircumCenter(outerCell);
-			double weight = (p-outerCell->vertex(0)->point().point()).squared_length() - outerCell->vertex(0)->point().weight();
+			Real weight = (p-outerCell->vertex(0)->point().point()).squared_length() - outerCell->vertex(0)->point().weight();
 			VertexHandle Vh = Tri->insert(Sphere(p, pow(sqrt(weight)-deltaAlpha,2) ));
 			if ( Vh!=NULL ) Vh->info().isFictious = true;
 			else cerr << " : __Vh==NULL__ :(" << endl;
@@ -411,7 +411,7 @@ std::vector<Vector3r> _Tesselation<TT>::getExtendedAlphaGraph (double alpha, dou
 
 
 template<class TT>
-void _Tesselation<TT>::setExtendedAlphaCaps ( std::vector<AlphaCap>& faces, double alpha, double shrinkedAlpha, bool fixedAlpha)
+void _Tesselation<TT>::setExtendedAlphaCaps ( std::vector<AlphaCap>& faces, Real alpha, Real shrinkedAlpha, bool fixedAlpha)
 {
 	std::vector<CVector> areas;
 	//initialize area vectors in a list accessed via ids (hence the size), later refactored into a shorter list in "faces"
@@ -419,7 +419,7 @@ void _Tesselation<TT>::setExtendedAlphaCaps ( std::vector<AlphaCap>& faces, doub
 
 	RTriangulation temp ( *Tri );
 	AlphaShape as ( temp );
-	double minAlpha=as.find_alpha_solid();
+	Real minAlpha=as.find_alpha_solid();
 	if ( !alpha ) as.set_alpha ( minAlpha );
 	else {
 		as.set_alpha ( alpha );
@@ -437,8 +437,8 @@ void _Tesselation<TT>::setExtendedAlphaCaps ( std::vector<AlphaCap>& faces, doub
 			if ( Vh!=NULL ) Vh->info().isFictious = true;
 			else cerr << " : __Vh==NULL__ :(" << endl;}
 	} else {//insert one sphere per exterior/infinite cell, the radius is derived from the alpha value of the corresponding cell or 4*alpha for infinite cells
-		double alphaRad=sqrt(alpha);
-		double deltaAlpha=alphaRad-sqrt(shrinkedAlpha);
+		Real alphaRad=sqrt(alpha);
+		Real deltaAlpha=alphaRad-sqrt(shrinkedAlpha);
 		for ( auto fp=facets.begin(); fp!=facets.end(); fp++ ) {
 			Facet f = *fp;
 			if (as.classify(f.first)!=AlphaShape::INTERIOR) f=as.mirror_facet(f);
@@ -452,7 +452,7 @@ void _Tesselation<TT>::setExtendedAlphaCaps ( std::vector<AlphaCap>& faces, doub
 			} else if (!outerCell->info().isFictious) {
 					outerCell->info().isFictious=true;
 					Point p = setCircumCenter(outerCell);
-					double weight = (p-outerCell->vertex(0)->point().point()).squared_length() - outerCell->vertex(0)->point().weight();
+					Real weight = (p-outerCell->vertex(0)->point().point()).squared_length() - outerCell->vertex(0)->point().weight();
 					VertexHandle Vh = Tri->insert(Sphere(p, pow(sqrt(weight)-deltaAlpha,2) ));
 					if ( Vh!=NULL ) Vh->info().isFictious = true;
 					else cerr << " : __Vh==NULL__ :(" << endl;
@@ -493,7 +493,7 @@ CVector _Tesselation<TT>::alphaVoronoiFaceArea (const Edge& ed_it, const AlphaSh
 {
 	//Overall, we calculate the area vector of the polygonal Voronoi face between two spheres, this is done by integrating x×dx
 
-        double alpha = as.get_alpha();
+        Real alpha = as.get_alpha();
 	CellCirculator cell0,cell1,cell2;
 	cell0 = as.incident_cells ( ed_it );
 	cell2 = cell0;
@@ -530,19 +530,19 @@ CVector _Tesselation<TT>::alphaVoronoiFaceArea (const Edge& ed_it, const AlphaSh
 			CVector surface = 0.5*cross_product(baseCell->vertex(facetVertices[idx][0])->point().point()-baseCell->vertex(facetVertices[idx][1])->point().point(),
 			baseCell->vertex(facetVertices[idx][0])->point().point()-baseCell->vertex(facetVertices[idx][2])->point().point());
 			//largest sphere
-			double maxWeight = std::max(baseCell->vertex(facetVertices[idx][0])->point().weight(),max(baseCell->vertex(facetVertices[idx][1])->point().weight(), baseCell->vertex(facetVertices[idx][2])->point().weight()));
+			Real maxWeight = std::max(baseCell->vertex(facetVertices[idx][0])->point().weight(),max(baseCell->vertex(facetVertices[idx][1])->point().weight(), baseCell->vertex(facetVertices[idx][2])->point().weight()));
 			//check if the surface vector is inward or outward
-			double dotP = surface*(baseCell->vertex(facetVertices[idx][0])->point().point()-baseCell->vertex(idx)->point().point());
+			Real dotP = surface*(baseCell->vertex(facetVertices[idx][0])->point().point()-baseCell->vertex(idx)->point().point());
 			if (dotP<0) surface=-surface;
-			double area = sqrt(surface.squared_length());
+			Real area = sqrt(surface.squared_length());
 			normal = surface/area; //unit normal
-			double h1 = (baseCell->vertex(facetVertices[idx][0])->point().point()-vv)*normal; //orthogonal distance from Voronoi vertex to the plane in which the spheres lie, call the intersection V
+			Real h1 = (baseCell->vertex(facetVertices[idx][0])->point().point()-vv)*normal; //orthogonal distance from Voronoi vertex to the plane in which the spheres lie, call the intersection V
 			p2 = vv + h1*normal;
-			double sqR = (p2-baseCell->vertex(facetVertices[idx][0])->point().point()).squared_length(); //squared distance between V and the center of sphere 0
-                        double temp = alpha + baseCell->vertex(facetVertices[idx][0])->point().weight() -sqR;
+			Real sqR = (p2-baseCell->vertex(facetVertices[idx][0])->point().point()).squared_length(); //squared distance between V and the center of sphere 0
+                        Real temp = alpha + baseCell->vertex(facetVertices[idx][0])->point().weight() -sqR;
                         if (temp<0) {temp=0; std::cerr<<"NEGATIVE TEMP!"<<std::endl;}
                         if (temp>maxWeight) temp=maxWeight; //if alpha vertex is too far, crop
-                        double h2 = sqrt(temp);// this is now the distance from Voronoi vertex to "alpha" vertex (after cropping if needed)
+                        Real h2 = sqrt(temp);// this is now the distance from Voronoi vertex to "alpha" vertex (after cropping if needed)
 		        p2 = p2+h2*normal;
 
 		        bool coplanar=false;
@@ -551,7 +551,7 @@ CVector _Tesselation<TT>::alphaVoronoiFaceArea (const Edge& ed_it, const AlphaSh
 			        //VERSION 1,intersection of orthogonal planes from two branches
 			        CVector tangent = cross_product(AB,p1-vv0);
 			        tangent = tangent/sqrt(tangent.squared_length());//this is orthogonal to the _previous_ branch segment of the polygonal contour
-			        double dotP2 = tangent*normal;
+			        Real dotP2 = tangent*normal;
 			        coplanar=(abs(dotP2)<1e-2);
 				CVector p1mp2=p1-p2;
 			        if (!coplanar) {
@@ -583,7 +583,7 @@ template<class TT>
 CVector _Tesselation<TT>::alphaVoronoiPartialCapArea ( const Edge& ed_it, const AlphaShape& as, std::vector<Vector3r>& vSegments )
 {
 	//Overall, a partial area vector based on only the outer part of a polygonal Voronoi face (see alphaVoronoiFaceArea), looping on REGULAR edges incident to a boundary sphere and using this function for each of them should give the contour integral of x×dx for the polygonal cap of the sphere.
-	double alpha = as.get_alpha();
+	Real alpha = as.get_alpha();
 	CellCirculator cell0,cell1,cell2,cell3;
 	cell0 = as.incident_cells ( ed_it );
 	cell1 = cell2 = cell0;
@@ -764,7 +764,7 @@ CVector _Tesselation<TT>::alphaVoronoiPartialCapArea ( const Edge& ed_it, const 
 //                              bool clockWise = ( tangent*p1mp2>0 );//not sure it works
                                 bool clockWise = ( cross_product(p1-vv0,p2-p1)*AB>0 );
                                 tangent = tangent/sqrt ( tangent.squared_length() ); //this is orthogonal to the _previous_ branch segment of the polygonal contour
-                                double dotP = tangent*normal1;
+                                Real dotP = tangent*normal1;
 
                                 branchArea = branchArea+cross_product ( p2-p1, p1-CGAL::ORIGIN );
 
@@ -779,10 +779,10 @@ CVector _Tesselation<TT>::alphaVoronoiPartialCapArea ( const Edge& ed_it, const 
 }
 
 template<class TT>
-CVector _Tesselation<TT>::alphaVoronoiPartialCapArea ( Facet facet, const AlphaShape& as, double shrinkedAlpha, std::vector<Vector3r>& vSegments )
+CVector _Tesselation<TT>::alphaVoronoiPartialCapArea ( Facet facet, const AlphaShape& as, Real shrinkedAlpha, std::vector<Vector3r>& vSegments )
 {
 	//Overall, a partial area vector based on only the outer part of a polygonal Voronoi face (see alphaVoronoiFaceArea), looping on REGULAR edges incident to a boundary sphere and using this function for each of them should give the contour integral of x×dx for the polygonal cap of the sphere.
-	double alpha = as.get_alpha();
+	Real alpha = as.get_alpha();
 	Facet adjactF [4];
 	bool violate [4];
 	Point circumC [4];
