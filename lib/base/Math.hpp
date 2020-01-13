@@ -109,6 +109,10 @@ template<typename Scalar> using Vector2 = Eigen::Matrix<Scalar,2,1>;
 using Vector2i = Vector2<int>;
 using Vector2r = Vector2<Real>;
 
+template <typename Scalar> using Vector4 = Eigen::Matrix<Scalar, 4, 1>;
+using Vector4r  = Vector4<Real>;
+using Vector4i = Vector4<int>;
+
 template<typename Scalar> using Vector3 = Eigen::Matrix<Scalar,3,1>;
 using Vector3i = Vector3<int>;
 using Vector3r = Vector3<Real>;
