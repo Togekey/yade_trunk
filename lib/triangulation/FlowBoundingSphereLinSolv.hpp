@@ -86,16 +86,16 @@ public:
 
 	#ifdef LINSOLV
 	//Eigen's sparse matrix and solver
-	Eigen::SparseMatrix<double> A;
-	//Eigen::SparseMatrix<std::complex<double>,RowMajor> Ga; for row major stuff?
-	typedef Eigen::Triplet<double> ETriplet;
+	Eigen::SparseMatrix<Real> A;
+	//Eigen::SparseMatrix<::yade::math::Complex,RowMajor> Ga; for row major stuff?
+	typedef Eigen::Triplet<Real> ETriplet;
 	std::vector<ETriplet> tripletList;//The list of non-zero components in Eigen sparse matrix
 	Eigen::CholmodDecomposition<Eigen::SparseMatrix<double>, Eigen::Lower > eSolver;
 	bool factorizedEigenSolver;
 	void exportMatrix(const char* filename) {ofstream f; f.open(filename); f<<A; f.close();};
 	void exportTriplets(const char* filename) {ofstream f; f.open(filename);
 		for (int k=0; k<A.outerSize(); ++k)
-		  	for (Eigen::SparseMatrix<double>::InnerIterator it(A,k); it; ++it) f<< it.row()<<" "<< it.col()<<" "<<it.value()<<endl; f.close();};
+		  	for (Eigen::SparseMatrix<Real>::InnerIterator it(A,k); it; ++it) f<< it.row()<<" "<< it.col()<<" "<<it.value()<<endl; f.close();};
 	//Multi-threading seems to work fine for Cholesky decomposition, but it fails for the solve phase in which -j1 is the fastest,
 	//here we specify both thread numbers independently
 	int numFactorizeThreads;
@@ -113,22 +113,22 @@ public:
 	bool factorExists;
 	#ifdef PFV_GPU
 		#define CHOLMOD(name) cholmod_l_ ## name
-		void add_T_entry(cholmod_triplet* T, long r, long c, double x)
+		void add_T_entry(cholmod_triplet* T, long r, long c, Real x)
 		{
 			size_t k = T->nnz;
 			((long*)T->i)[k] = r;
 			((long*)T->j)[k] = c;
-			((double*)T->x)[k] = x;
+			((Real*)T->x)[k] = x;
 			T->nnz++;
 		}
 	#else
 		#define CHOLMOD(name) cholmod_ ## name
-		void add_T_entry(cholmod_triplet* T, int r, int c, double x)
+		void add_T_entry(cholmod_triplet* T, int r, int c, Real x)
 		{
 			size_t k = T->nnz;
 			((int*)T->i)[k] = r;
 			((int*)T->j)[k] = c;
-			((double*)T->x)[k] = x;
+			((Real*)T->x)[k] = x;
 			T->nnz++;
 		}
 	#endif
@@ -147,22 +147,22 @@ public:
 	int ncols;
 	int T_size;
 
-	double pTime1, pTime2;
+	Real pTime1, pTime2;
 	int pTimeInt, pTime1N, pTime2N;
 
-	double ZERO;
-	vector<double> T_an;//(size*5);
+	Real ZERO;
+	vector<Real> T_an;//(size*5);
 	vector<int> T_jn;//(size+1);
 	vector<int> T_ia;//(size*5);
-	vector<double> T_f;//(size); // right-hand size vector object
+	vector<Real> T_f;//(size); // right-hand size vector object
 	vector<CellHandle> T_cells;//(size)
 	int T_index;
 
-	vector<double> T_b;
-	vector<double> T_bv;
-	vector <double> T_x, P_x;
-	vector <double> bodv;
-	vector <double> xodv;
+	vector<Real> T_b;
+	vector<Real> T_bv;
+	vector <Real> T_x, P_x;
+	vector <Real> bodv;
+	vector <Real> xodv;
 	int*         perm;
 	int*         invperm;
 	bool pardisoInitialized;
@@ -172,29 +172,29 @@ public:
 	//! Pardiso
 	int*    ia;
 	int*    ja;
-	double*  a;
+	Real*  a;
 	int nnz;
 	int mtype;        /* Real symmetric positive def. matrix */
-	double* b;
-	double* x;// the unknown vector to solve Ax=b
+	Real* b;
+	Real* x;// the unknown vector to solve Ax=b
 	int      nrhs;          /* Number of right hand sides. */
 	void *pt[64];
 	int      iparm[64];
-	double   dparm[64];
+	Real   dparm[64];
 	int      maxfct, mnum, phase, error, msglvl, solver;
 	int      num_procs;
 	char    *var;
 	int      i;
-	double   ddum;              /* Double dummy */
+	Real   ddum;              /* Double dummy */
 	int      idum;              /* Integer dummy. */
 	//! end pardiso
 
 	/// EXTERNAL_GS part
-	vector<vector<double> > fullAvalues;//contains Kij's and 1/(sum Kij) in 5th value (for use in GuaussSeidel)
-	vector<vector<double*> > fullAcolumns;//contains columns numbers
-	vector<double> gsP;//a vector of pressures
-	vector<double> gsdV;//a vector of dV
-	vector<double> gsB;//a vector of dV
+	vector<vector<Real> > fullAvalues;//contains Kij's and 1/(sum Kij) in 5th value (for use in GuaussSeidel)
+	vector<vector<Real*> > fullAcolumns;//contains columns numbers
+	vector<Real> gsP;//a vector of pressures
+	vector<Real> gsdV;//a vector of dV
+	vector<Real> gsB;//a vector of dV
 
 public:
 	virtual ~FlowBoundingSphereLinSolv();
@@ -220,9 +220,9 @@ public:
 
 	void copyLinToCells();
 	virtual void copyCellsToLin(Real dt);
-	void swapFwd (double* v, int i);
+	void swapFwd (Real* v, int i);
 	void swapFwd (int* v, int i);
-	void sortV(int k1, int k2, int* is, double* ds);
+	void sortV(int k1, int k2, int* is, Real* ds);
 
 	virtual void gaussSeidel (Real dt) {
 		switch (useSolver) {
