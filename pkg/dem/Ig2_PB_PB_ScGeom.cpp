@@ -1440,7 +1440,7 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
   }
   //MatrixXr P1Q = P1*QA;
   //transA = 'N'; transB = 'N'; blasM = planeNoA;  blasN = 3; blasK = 3;
- // blasLDA = math::max(1,blasM);  blasLDC = math::max(1,blasM); blasLDB = 3; blasAlpha=1.0; blasBeta = 0.0;
+ // blasLDA = std::max(1,blasM);  blasLDC = std::max(1,blasM); blasLDB = 3; blasAlpha=1.0; blasBeta = 0.0;
   //dgemm_(&transA, &transB, &blasM, &blasN, &blasK, &blasAlpha, &blasP1[0], &blasLDA, &blasQA[0], &blasLDB, &blasBeta, &blasP1Q[0], &blasLDC);
   dgemm_(&blasNT, &blasNT, &planeNoA, &blas3, &blas3, &blas1, &blasP1[0], &blas1planeNoA, &blasQA[0], &blasLDB, &blas0, &blasP1Q[0], &blas1planeNoA);
 
@@ -1477,14 +1477,14 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
   }
  //MatrixXr P2Q = P2*QB;
   //transA = 'N'; transB = 'N'; blasM = planeNoB;    blasN = 3; blasK = 3;
-  //blasLDA = math::max(1,blasM);   blasLDC = math::max(1,blasM); blasLDB = 3; blasAlpha=1.0; blasBeta = 0.0;
+  //blasLDA = std::max(1,blasM);   blasLDC = std::max(1,blasM); blasLDB = 3; blasAlpha=1.0; blasBeta = 0.0;
  // dgemm_(&transA, &transB, &blasM, &blasN, &blasK, &blasAlpha, &blasP2[0], &blasLDA, &blasQB[0], &blasLDB, &blasBeta, &blasP2Q[0], &blasLDC);
   dgemm_(&blasNT, &blasNT, &planeNoB, &blas3, &blas3, &blasAlpha, &blasP2[0], &blas1planeNoB, &blasQB[0], &blas3, &blasBeta, &blasP2Q[0], &blas1planeNoB);
   Real sphereB  = (pow(blasLocalP2[0],2) + pow(blasLocalP2[1],2) + pow(blasLocalP2[2],2))/pow(RB,2);
   Real sB = (1.0-kB)*(pertSumB2/pow(rB,2) - 1.0)+kB*(sphereB -1.0);
   //sPert = fabs(fA-fB);
 
-  s = math::max(sqrt(fabs(sA+1.0)), sqrt(fabs(sB+1.0))) + sPert;  //sqrt(fA+fB+2.0)+sPert; //sqrt(math::max(fabs(fA+1.0), fabs(fB+1.0))) + sPert; //
+  s = std::max(sqrt(fabs(sA+1.0)), sqrt(fabs(sB+1.0))) + sPert;  //sqrt(fA+fB+2.0)+sPert; //sqrt(std::max(fabs(fA+1.0), fabs(fB+1.0))) + sPert; //
   //x[3] = s;
   blasX[3]= s;
 

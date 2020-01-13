@@ -514,7 +514,7 @@ void PotentialBlock::calculateInertia(Vector3r& centroid, Real& Ixx, Real& Iyy, 
 
 			detJ=(x2-x1)*(y3-y1)*(z4-z1)+(x3-x1)*(y4-y1)*(z2-z1)+(x4-x1)*(y2-y1)*(z3-z1)
 				-(x2-x1)*(y4-y1)*(z3-z1)-(x3-x1)*(y2-y1)*(z4-z1)-(x4-x1)*(y3-y1)*(z2-z1);
-			detJ=math::abs(detJ);
+			detJ=std::abs(detJ);
 
 			Ixx += detJ*(y1*y1+y1*y2+y2*y2+y1*y3+y2*y3+
 				y3*y3+y1*y4+y2*y4+y3*y4+y4*y4+z1*z1+z1*z2+
