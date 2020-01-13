@@ -8,15 +8,24 @@
 #ifdef FLOW_ENGINE
 #pragma once
 
+#define NO_CHOLMOD
 
 //#define LINSOLV // should be defined at cmake step
 // #define TAUCS_LIB //comment this if TAUCS lib is not available, it will disable PARDISO lib as well
 
+// FIXME - use a templatized solver that can work with a non-double Real type, maybe this:
+//         https://eigen.tuxfamily.org/dox/group__SparseCholesky__Module.html
+//         according to documentation only this one uses `double`: https://eigen.tuxfamily.org/dox/classEigen_1_1CholmodDecomposition.html
+//         others seem to be general and templatized. So maybe they are faster? especially when compiling with -Ofast ?
 #ifdef LINSOLV
 	#include <Eigen/Sparse>
 	#include <Eigen/SparseCore>
+#ifdef NO_CHOLMOD
+	#include<Eigen/IterativeLinearSolvers>
+#else
 	#include <Eigen/CholmodSupport>
 	#include <cholmod.h>
+#endif
 #endif
 
 #ifdef TAUCS_LIB
@@ -105,7 +114,7 @@ public:
 	int numFactorizeThreads;
 	int numSolveThreads;
 	#endif
-	#ifdef SUITESPARSE_VERSION_4
+	#if defined(SUITESPARSE_VERSION_4) and (not defined(NO_CHOLMOD))
 	// cholmod direct solver (useSolver=4)
 
 	cholmod_triplet* cholT;

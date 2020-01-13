@@ -20,7 +20,7 @@
 #include "FlowEngine_TwoPhaseFlowEngineT.hpp"
 #include<Eigen/SparseLU>
 
-#ifdef LINSOLV
+#if defined(LINSOLV) and (not defined(NO_CHOLMOD))
       #include <cholmod.h>
 #endif
 

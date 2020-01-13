@@ -9,7 +9,7 @@
 
 #ifdef FLOW_ENGINE
 
-#ifdef LINSOLV
+#if defined(LINSOLV) and (not defined(NO_CHOLMOD))
 #include <cholmod.h>
 #endif
 //For pyRunString
@@ -137,7 +137,9 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 			}
 
 			backgroundSolver = shared_ptr<FlowSolver> (new FlowSolver);
+			#if (not defined(NO_CHOLMOD))
 			if (metisForced) {backgroundSolver->eSolver.cholmod().nmethods=1; backgroundSolver->eSolver.cholmod().method[0].ordering=CHOLMOD_METIS;}
+			#endif
 			backgroundSolver->imposedP = vector<pair<CGT::Point,Real> >(solver->imposedP);
 			backgroundSolver->imposedF = vector<pair<CGT::Point,Real> >(solver->imposedF);
 			backgroundSolver->imposedCavity = vector<CGT::Point>(solver->imposedCavity);
@@ -312,14 +314,27 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
 void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::setForceMetis ( bool force )
 {
+	#if (not defined(NO_CHOLMOD))
         if (force) {
 		metisForced=true;
 		solver->eSolver.cholmod().nmethods=1;
 		solver->eSolver.cholmod().method[0].ordering=CHOLMOD_METIS;
-	} else {cholmod_defaults(&(solver->eSolver.cholmod())); metisForced=false;}
+	} else {
+		cholmod_defaults(&(solver->eSolver.cholmod()));
+		metisForced=false;
+	}
+	#else
+		metisForced=false;
+	#endif
 }
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
-bool TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::getForceMetis () {return (solver->eSolver.cholmod().nmethods==1);}
+bool TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::getForceMetis () {
+	#if (not defined(NO_CHOLMOD))
+	return (solver->eSolver.cholmod().nmethods==1);
+	#else
+		throw std::runtime_error("cannot call getForceMetis() because cholmod is not allowed.");
+	#endif
+	}
 #endif
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
 void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::buildTriangulation ( Solver& flow )

@@ -81,8 +81,10 @@ void ThermalEngine::action()
 	if (!conduction)
 		thermoMech = false; //don't allow thermoMech if conduction is not activated
 	if (advection) {
+#ifdef LINSOLV
 		flow->solver->initializeInternalEnergy(); // internal energy of cells
 		flow->solver->augmentConductivityMatrix(scene->dt);
+#endif
 	}
 	if (debug)
 		cout << "advection done" << endl;
@@ -94,16 +96,20 @@ void ThermalEngine::action()
 	if (unboundCavityBodies)
 		unboundCavityParticles();
 	if (advection && fluidConduction) { // need to avoid duplicating energy, so reinitializing pore energy before conduction
+#ifdef LINSOLV
 		flow->solver->setNewCellTemps(false);
 		flow->solver->initializeInternalEnergy();
 		computeFluidFluidConduction();
+#endif
 	}
 	if (debug)
 		cout << "conduction done" << endl;
 	if (conduction && runConduction)
 		computeNewParticleTemperatures();
+#ifdef LINSOLV
 	if (advection)
 		flow->solver->setNewCellTemps(fluidConduction); // in case of fluid conduction, the delta temps are added to, not replaced
+#endif
 	if (debug)
 		cout << "temps set" << endl;
 	if (delT > 0 && runConduction)
@@ -608,8 +614,10 @@ CVector ThermalEngine::cellBarycenter(const CellHandle& cell)
 
 void ThermalEngine::computeNewPoreTemperatures()
 {
+#ifdef LINSOLV
 	bool addToDeltaTemp = false;
 	flow->solver->setNewCellTemps(addToDeltaTemp);
+#endif
 }
 
 void ThermalEngine::computeNewParticleTemperatures()

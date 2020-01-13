@@ -66,7 +66,7 @@ FlowBoundingSphereLinSolv<_Tesselation,FlowType>::~FlowBoundingSphereLinSolv()
 	#ifdef TAUCS_LIB
 	if (Fccs) taucs_ccs_free(Fccs);
 	#endif
-	#ifdef SUITESPARSE_VERSION_4
+	#if defined(SUITESPARSE_VERSION_4) and (not defined(NO_CHOLMOD))
 	if (useSolver == 4){
 		if (getCHOLMODPerfTimings) gettimeofday (&start, NULL);
 		CHOLMOD(free_sparse)(&Achol, &com);
@@ -100,7 +100,7 @@ FlowBoundingSphereLinSolv<_Tesselation,FlowType>::FlowBoundingSphereLinSolv(): F
 	numFactorizeThreads=1;
 	numSolveThreads=1;
 	#endif
-	#ifdef SUITESPARSE_VERSION_4
+	#if defined(SUITESPARSE_VERSION_4) and (not defined(NO_CHOLMOD))
 	CHOLMOD(start)(&com);
 	//CHOLMOD(wildcard)();
 	factorExists=false;
@@ -169,7 +169,7 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::resetLinearSystem() {
 template<class _Tesselation, class FlowType>
 int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setLinearSystem(Real dt)
 {
-	#ifdef SUITESPARSE_VERSION_4
+	#if defined(SUITESPARSE_VERSION_4) and (not defined(NO_CHOLMOD))
 	if (!multithread && factorExists && useSolver==4){
 		if (getCHOLMODPerfTimings) gettimeofday (&start, NULL);
 		CHOLMOD(free_sparse)(&Achol, &com);
@@ -339,7 +339,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setLinearSystem(Real dt)
 			A.data().squeeze();
 			A.setFromTriplets(tripletList.begin(), tripletList.end());
 		#endif
-		#ifdef SUITESPARSE_VERSION_4
+		#if defined(SUITESPARSE_VERSION_4) and (not defined(NO_CHOLMOD))
 		}else if (useSolver==4){
 			if (getCHOLMODPerfTimings) gettimeofday (&start, NULL);
 			cholmod_triplet* trip = CHOLMOD(allocate_triplet)(ncols,ncols, T_nnz, 1, CHOLMOD_REAL, &com);
@@ -630,15 +630,19 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::eigenSolve(Real dt)
 	VectorXr eb(ncols); VectorXr ex(ncols);
 	for (int k=0; k<ncols; k++) eb[k]=T_bv[k];
 	if (!factorizedEigenSolver) {
+		#if (not defined(NO_CHOLMOD))
 		eSolver.setMode(Eigen::CholmodSupernodalLLt);
+		#endif
 		openblas_set_num_threads(numFactorizeThreads);
 		eSolver.compute(A);
 		//Check result
+		#if (not defined(NO_CHOLMOD))
 		if (eSolver.cholmod().status>0) {
 			cerr << "something went wrong in Cholesky factorization, use LDLt as fallback this time" << eSolver.cholmod().status << endl;
 			eSolver.setMode(Eigen::CholmodLDLt);
 			eSolver.compute(A);
 		}
+		#endif
 		factorizedEigenSolver = true;
 	}
 	// backgroundAction only wants to factorize, no need to solve and copy to cells.
@@ -657,7 +661,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::eigenSolve(Real dt)
 template<class _Tesselation, class FlowType>
 int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::cholmodSolve(Real dt)
 {
-#ifdef SUITESPARSE_VERSION_4
+	#if defined(SUITESPARSE_VERSION_4) and (not defined(NO_CHOLMOD))
 	if (!isLinearSystemSet || (isLinearSystemSet && reApplyBoundaryConditions()) || !updatedRHS) ncols = setLinearSystem(dt);
 	copyCellsToLin(dt);
 	cholmod_dense* B = CHOLMOD(zeros)(ncols, 1, Achol->xtype, &com); //cholmod_l_zeros(ncols, 1, Achol->xtype, &com);
@@ -702,7 +706,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::cholmodSolve(Real dt)
 	}
 	CHOLMOD(free_dense)(&B, &com); //cholmod_l_free_dense(&B, &com);
 #else
-	cerr<<"Flow engine not compiled with CHOLMOD, nothing computed if useSolver=4"<<endl;
+	cerr<<"Flow engine not compiled with CHOLMOD, nothing computed if useSolver=4, dt="<<dt<<endl;
 #endif
 	return 0;
 }
