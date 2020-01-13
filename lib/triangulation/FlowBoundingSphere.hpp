@@ -17,7 +17,7 @@
 
 namespace yade { // Cannot have #include directive inside.
 
-typedef pair<pair<int,int>, vector<double> > Constriction;
+typedef pair<pair<int,int>, vector<Real> > Constriction;
 
 namespace CGT {
 
@@ -38,9 +38,9 @@ class FlowBoundingSphere : public Network<_Tesselation>
  		FlowBoundingSphere();
 
 		bool slipBoundary;
-		double tolerance;
-		double relax;
-		double ks; //Hydraulic Conductivity
+		Real tolerance;
+		Real relax;
+		Real ks; //Hydraulic Conductivity
 		bool clampKValues, meanKStat, distanceCorrection;
 		bool OUTPUT_BOUDARIES_RADII;
 		bool noCache;//flag for checking if cached values cell->unitForceVectors have been defined
@@ -53,15 +53,15 @@ class FlowBoundingSphere : public Network<_Tesselation>
 		bool controlCavityPressure;
 		bool controlCavityVolumeChange;
 		bool averageCavityPressure;
-		double cavityDV;
-		double alphaBound;
-		double alphaBoundValue;
+		Real cavityDV;
+		Real alphaBound;
+		Real alphaBoundValue;
 
 		bool thermalEngine;
-		double fluidRho;
-		double fluidCp;
+		Real fluidRho;
+		Real fluidCp;
 		bool sphericalVertexAreaCalculated = 0;
-		double thermalPorosity;
+		Real thermalPorosity;
 
 		//Handling imposed pressures/fluxes on elements in the form of {point,value} pairs, IPCells contains the cell handles corresponding to point
 		vector<pair<Point,Real> > imposedP;
@@ -77,10 +77,10 @@ class FlowBoundingSphere : public Network<_Tesselation>
 		void initNewTri () {noCache=true; /*isLinearSystemSet=false; areCellsOrdered=false;*/}//set flags after retriangulation
 		bool permeabilityMap;
 
-		bool computeAllCells;//exececute computeHydraulicRadius for all facets and all spheres (double cpu time but needed for now in order to define crossSections correctly)
-		double KOptFactor;
-		double minKdivKmean;
-		double maxKdivKmean;
+		bool computeAllCells;//exececute computeHydraulicRadius for all facets and all spheres (Real cpu time but needed for now in order to define crossSections correctly)
+		Real KOptFactor;
+		Real minKdivKmean;
+		Real maxKdivKmean;
 		int Iterations;
 
 		//Handling imposed temperatures on elements in the form of {point,value} pairs, ITCells contains the cell handles corresponding to point
@@ -120,26 +120,26 @@ class FlowBoundingSphere : public Network<_Tesselation>
 		virtual void resetLinearSystem();//reset both A and B in the linear system A*P=B, done typically after updating the mesh 
 		virtual void resetRHS() {};////reset only B in the linear system A*P=B, done typically after changing values of imposed pressures 
 
-		double kFactor; //permeability moltiplicator
-		double cavityFactor; // permeability factor for cavity cell neighbors
+		Real kFactor; //permeability moltiplicator
+		Real cavityFactor; // permeability factor for cavity cell neighbors
 		bool tempDependentViscosity; 
 		std::string key; //to give to consolidation files a name with iteration number
-// 		std::vector<double> pressures; //for automatic write maximum pressures during consolidation
+// 		std::vector<Real> pressures; //for automatic write maximum pressures during consolidation
 		bool tessBasedForce; //allow the force computation method to be chosen from FlowEngine
 		Real minPermLength; //min branch length for Poiseuille
 
-		double viscosity;
-		double fluidBulkModulus;
-		double equivalentCompressibility;
-		double netCavityFlux;
-		double phiZero;
-		double cavityFlux;
-		double cavityFluidDensity;
+		Real viscosity;
+		Real fluidBulkModulus;
+		Real equivalentCompressibility;
+		Real netCavityFlux;
+		Real phiZero;
+		Real cavityFlux;
+		Real cavityFluidDensity;
 		bool multithread;
 		
 		void displayStatistics();
-		void initializePressure ( double pZero );
-		void initializeTemperatures ( double tZero );
+		void initializePressure ( Real pZero );
+		void initializeTemperatures ( Real tZero );
 		bool reApplyBoundaryConditions ();
 		void computeFacetForcesWithCache(bool onlyCache=false);
 		void saveVtk (const char* folder, bool withBoundaries);
@@ -150,17 +150,17 @@ class FlowBoundingSphere : public Network<_Tesselation>
 		void dessineTriangulation ( Vue3D &Vue, RTriangulation &T );
 		void dessineShortTesselation ( Vue3D &Vue, Tesselation &Tes );
 #endif
-		double permeameter ( double PInf, double PSup, double Section, double DeltaY, const char *file );
-		double samplePermeability( double& xMin,double& xMax ,double& yMin,double& yMax,double& zMin,double& zMax);
-		double computeHydraulicRadius (CellHandle cell, int j );
+		Real permeameter ( Real PInf, Real PSup, Real Section, Real DeltaY, const char *file );
+		Real samplePermeability( Real& xMin,Real& xMax ,Real& yMin,Real& yMax,Real& zMin,Real& zMax);
+		Real computeHydraulicRadius (CellHandle cell, int j );
 		Real checkSphereFacetOverlap(const Sphere& v0, const Sphere& v1, const Sphere& v2);
 
-		double dotProduct ( CVector x, CVector y );
-		double computeEffectiveRadius(CellHandle cell, int j);
-		double computeEffectiveRadiusByPosRadius(const Point& posA, const double& rA, const Point& posB, const double& rB, const Point& posC, const double& rC);
-		double computeEquivalentRadius(CellHandle cell, int j);
+		Real dotProduct ( CVector x, CVector y );
+		Real computeEffectiveRadius(CellHandle cell, int j);
+		Real computeEffectiveRadiusByPosRadius(const Point& posA, const Real& rA, const Point& posB, const Real& rB, const Point& posC, const Real& rC);
+		Real computeEquivalentRadius(CellHandle cell, int j);
 		//return the list of constriction values
-		vector<double> getConstrictions();
+		vector<Real> getConstrictions();
 		vector<Constriction> getConstrictionsFull();
 		CVector cellBarycenter(CellHandle& cell);
 
@@ -178,7 +178,7 @@ class FlowBoundingSphere : public Network<_Tesselation>
 
 		RTriangulation& buildTriangulation ( Real x, Real y, Real z, Real radius, unsigned const id );
 
-		bool isInsideSphere ( double& x, double& y, double& z );
+		bool isInsideSphere ( Real& x, Real& y, Real& z );
 
 		void sliceField (const char *filename);
 		void comsolField();
@@ -186,27 +186,27 @@ class FlowBoundingSphere : public Network<_Tesselation>
 		void interpolate ( Tesselation& Tes, Tesselation& NewTes );
 		virtual void averageRelativeCellVelocity();
 		void averageFluidVelocity();
-		void applySinusoidalPressure(RTriangulation& Tri, double amplitude, double averagePressure, double loadIntervals);
+		void applySinusoidalPressure(RTriangulation& Tri, Real amplitude, Real averagePressure, Real loadIntervals);
 		void applyUserDefinedPressure(RTriangulation& Tri, vector<Real>& xpos, vector<Real>& pval);
-		bool isOnSolid  (double X, double Y, double Z);
-		double getPorePressure (double X, double Y, double Z);
-		double getPoreTemperature (double X, double Y, double Z);
-		void measurePressureProfile(double WallUpy, double WallDowny);
-		double averageSlicePressure(double Y);
-		double averagePressure();
-		int getCell (double X,double Y,double Z);
-		double boundaryFlux(unsigned int boundaryId);
-		double boundaryArea(unsigned int boundaryId);
-		std::vector<std::vector<double>> boundaryVel(unsigned int booundaryId);
+		bool isOnSolid  (Real X, Real Y, Real Z);
+		Real getPorePressure (Real X, Real Y, Real Z);
+		Real getPoreTemperature (Real X, Real Y, Real Z);
+		void measurePressureProfile(Real WallUpy, Real WallDowny);
+		Real averageSlicePressure(Real Y);
+		Real averagePressure();
+		int getCell (Real X,Real Y,Real Z);
+		Real boundaryFlux(unsigned int boundaryId);
+		Real boundaryArea(unsigned int boundaryId);
+		std::vector<std::vector<Real>> boundaryVel(unsigned int booundaryId);
 		void setBlocked(CellHandle& cell);
-		void adjustCavityPressure(double dt, int stepsSinceLastMesh, double pZero);
-		void adjustCavityVolumeChange(double dt, int stepsSinceLastMesh, double pZero);
-		void adjustCavityCompressibility(double pZero);
-		double getCavityFlux();
+		void adjustCavityPressure(Real dt, int stepsSinceLastMesh, Real pZero);
+		void adjustCavityVolumeChange(Real dt, int stepsSinceLastMesh, Real pZero);
+		void adjustCavityCompressibility(Real pZero);
+		Real getCavityFlux();
 		vector<Real> averageFluidVelocityOnSphere(unsigned int Id_sph);
 		//Solver?
 		int useSolver;//(0 : GaussSeidel, 1:CHOLMOD)
-		double fractionalSolidArea(CellHandle cell, int j);
+		Real fractionalSolidArea(CellHandle cell, int j);
 };
 
 } //namespace CGT
