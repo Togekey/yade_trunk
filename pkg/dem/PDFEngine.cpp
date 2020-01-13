@@ -59,7 +59,6 @@ void PDFEngine::getSpectrums(vector<PDFEngine::PDF> & pdfs)
 
 void PDFEngine::writeToFile(vector<PDFEngine::PDF> const& pdfs)
 {
-	if(std::is_same< double , Real >::value) {
 	FILE* fid = fopen(filename.c_str(), (firstRun) ? "w" : "a");
 	
 	if(fid) {
@@ -102,9 +101,9 @@ void PDFEngine::writeToFile(vector<PDFEngine::PDF> const& pdfs)
 		if(!warnedOnce) LOG_ERROR("Unable to open " << filename << " for PDF writing");
 		warnedOnce = true;
 	}
-	} else {
-		// writing does not work with non-double Real, fprintf has to be replaced with operator <<
-		LOG_ERROR("writeToFile not implemented for non-double Real type.");
+	if(not std::is_same< double , Real >::value) {
+		// fprintf has to be replaced with operator <<
+		LOG_WARN("writeToFile converted high precision Real to low precision 'double' type.");
 	}
 }
 
