@@ -48,11 +48,6 @@ try {
 	py::scope().attr("__doc__") = "miniEigen is wrapper for a small part of the `Eigen <http://eigen.tuxfamily.org>`_ library. Refer to its documentation "
 	                              "for details. All classes in this module support pickling.";
 
-	py::docstring_options docopt;
-	docopt.enable_all();
-	docopt.disable_cpp_signatures();
-
-
 	expose_converters(); // in expose-converters.cpp
 #ifndef EIGEN_DONT_ALIGN
 	// when we use vectorization the Vector3r is AlignedVector3, so we need to register converter from plain old Vector3<Real> so that other functions can accept it as an argument
