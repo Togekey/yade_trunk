@@ -548,11 +548,11 @@ void ThermalEngine::computeFluidFluidConduction()
 		else
 			fluidToSolidRatio = cell->info().facetFluidSurfacesRatio[facetPair.second];
 		//if (flow->thermalPorosity>0) fluidConductionAreaFactor=flow->thermalPorosity;
-		area = fluidConductionAreaFactor * std::sqrt(cell->info().facetSurfaces[facetPair.second].squared_length()) * fluidToSolidRatio;
+		area = fluidConductionAreaFactor * sqrt(cell->info().facetSurfaces[facetPair.second].squared_length()) * fluidToSolidRatio;
 		//area = sqrt(fluidSurfK.squared_length());
 		//poreVector = cell->info() - neighborCell->info();
 		poreVector = cellBarycenter(cell) - cellBarycenter(neighborCell); // voronoi was breaking for hexagonal packings
-		distance   = std::sqrt(poreVector.squared_length());
+		distance   = sqrt(poreVector.squared_length());
 		if (distance < minimumFluidCondDist)
 			distance = minimumFluidCondDist;
 		//cout << "conduction distance" << distance << endl;
