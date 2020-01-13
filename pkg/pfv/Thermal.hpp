@@ -66,9 +66,9 @@ class ThermalEngine : public PartialEngine
 		Real Pr;
 		Real Nu;
 		Real NutimesFluidK;
-		double cavitySolidVolumeChange;
-		double cavityVolume;
-		double cavityDtemp;
+		Real cavitySolidVolumeChange;
+		Real cavityVolume;
+		Real cavityDtemp;
 		
 		virtual ~ThermalEngine();
 		virtual void action();
@@ -86,11 +86,11 @@ class ThermalEngine : public PartialEngine
 		void computeFluidFluidConduction();
 		void updateForces();
 		void computeVertexSphericalArea();
-		void computeFlux(CellHandle& cell, const shared_ptr<Body>& b, const double surfaceArea);
+		void computeFlux(CellHandle& cell, const shared_ptr<Body>& b, const Real surfaceArea);
 		void computeSolidSolidFluxes();
         	void timeStepEstimate();
 		CVector cellBarycenter(const CellHandle& cell);
-        	void computeCellVolumeChangeFromDeltaTemp(CellHandle& cell,double cavDens);
+        	void computeCellVolumeChangeFromDeltaTemp(CellHandle& cell,Real cavDens);
 		void accountForCavitySolidVolumeChange();
 		void accountForCavityThermalVolumeChange();
 		void unboundCavityParticles();
@@ -110,8 +110,8 @@ class ThermalEngine : public PartialEngine
         	((bool,solidThermoMech,true,,"Activates thermoMech"))
 		((bool,ignoreFictiousConduction,false,,"Allows user to ignore conduction between fictious cells and particles. Mainly for debugging purposes."))
 		((vector<bool>, bndCondIsTemperature, vector<bool>(6,false),,"defines the type of boundary condition for each side. True if temperature is imposed, False for no heat-flux. Indices can be retrieved with :yref:`FlowEngine::xmin` and friends."))
-		((vector<double>, thermalBndCondValue, vector<double>(6,0),,"Imposed value of a boundary condition."))
-		((vector<double>, thermalBndFlux, vector<double>(6,0),,"Flux through thermal boundary."))
+		((vector<Real>, thermalBndCondValue, vector<Real>(6,0),,"Imposed value of a boundary condition."))
+		((vector<Real>, thermalBndFlux, vector<Real>(6,0),,"Flux through thermal boundary."))
 		((bool,boundarySet,false,,"set false to change boundary conditions"))
 		((bool,useKernMethod,false,,"flag to use Kern method for thermal conductivity area calc"))
 		((bool,useHertzMethod,false,,"flag to use hertzmethod for thermal conductivity area calc"))
@@ -129,12 +129,12 @@ class ThermalEngine : public PartialEngine
         	((Real
 ,fluidK,0.580,,"Thermal conductivity of the fluid."))
 		((Real,uniformReynolds,-1.,,"Control reynolds number in all cells (mostly debugging purposes). "))
-		((double,fluidBulkModulus,0,,"If > 0, thermalEngine uses this value instead of flow.fluidBulkModulus."))
+		((Real,fluidBulkModulus,0,,"If > 0, thermalEngine uses this value instead of flow.fluidBulkModulus."))
 		((Real, delT, 0,,"Allows user to apply a delT to solids and observe macro thermal expansion. Resets to 0 after one conduction step."))
-        	((double,tsSafetyFactor,0.8,,"Allow user to control the timstep estimate with a safety factor. Default 0.8. If <= 0, thermal timestep is equal to DEM"))
-        	((double,porosityFactor,0,,"If >0, factors the fluid thermal expansion. Useful for simulating low porosity matrices."))
+        	((Real,tsSafetyFactor,0.8,,"Allow user to control the timstep estimate with a safety factor. Default 0.8. If <= 0, thermal timestep is equal to DEM"))
+        	((Real,porosityFactor,0,,"If >0, factors the fluid thermal expansion. Useful for simulating low porosity matrices."))
         	((bool,tempDependentFluidBeta,false,,"If true, fluid volumetric thermal expansion is temperature dependent (linear model between 20-70 degC)"))
-        	((double,minimumFluidCondDist,0,,"Useful for maintaining stability despite poor external triangulations involving flat tetrahedrals. Consider setting to minimum particle diameter to keep scale."))
+        	((Real,minimumFluidCondDist,0,,"Useful for maintaining stability despite poor external triangulations involving flat tetrahedrals. Consider setting to minimum particle diameter to keep scale."))
 		,
 		/* extra initializers */
 		,

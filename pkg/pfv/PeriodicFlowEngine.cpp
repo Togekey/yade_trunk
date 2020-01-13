@@ -36,9 +36,9 @@ class PeriodicCellInfo : public FlowCellInfo_FlowEngine_PeriodicInfo
 		volumeSign=0;}
 	~PeriodicCellInfo (void) {}
 
-	inline double shiftedP (void) const {return isGhost? (*_pression)+pShift() :(*_pression) ;}
-	inline double pShift (void) const {return deltaP[0]*period[0] + deltaP[1]*period[1] +deltaP[2]*period[2];}
-// 	inline const double p (void) {return shiftedP();}
+	inline Real shiftedP (void) const {return isGhost? (*_pression)+pShift() :(*_pression) ;}
+	inline Real pShift (void) const {return deltaP[0]*period[0] + deltaP[1]*period[1] +deltaP[2]*period[2];}
+// 	inline const Real p (void) {return shiftedP();}
 	inline void setP (const Real& p) {pression=p;}
 	bool isReal (void) {return !(isFictious || isGhost);}
 };
@@ -409,7 +409,7 @@ void PeriodicFlowEngine::updateVolumes (FlowSolver& flow)
 {	//FIXME: replace by the non-periodic version
         if ( debug ) cout << "Updating volumes.............." << endl;
         Real invDeltaT = 1/scene->dt;
-        double newVol, dVol;
+        Real newVol, dVol;
         epsVolMax=0;
         Real totVol=0;
         Real totDVol=0;
@@ -465,7 +465,7 @@ void PeriodicFlowEngine::initializeVolumes (FlowSolver& flow)
         if ( debug ) cout << "Volumes initialised." << endl;
 }
 
-void PeriodicFlowEngine::buildTriangulation ( double pZero, FlowSolver& flow)
+void PeriodicFlowEngine::buildTriangulation ( Real pZero, FlowSolver& flow)
 {
         if (first) flow.currentTes=0;
         else {

@@ -128,7 +128,7 @@ void ThermalEngine::setReynoldsNumbers()
 	Tesselation& Tes  = flow->solver->T[flow->solver->currentTes];
 	const long   size = Tes.cellHandles.size();
 	if (uniformReynolds != -1) { // gain efficiency if we know the flow is creep (assigning uniform low reynolds to all cells)
-		double NussfluidK = (2. + 0.6 * pow(uniformReynolds, 0.5) * pow(Pr, 0.33333)) * fluidK;
+		Real NussfluidK = (2. + 0.6 * pow(uniformReynolds, 0.5) * pow(Pr, 0.33333)) * fluidK;
 #pragma omp parallel for
 		for (long i = 0; i < size; i++) {
 			CellHandle& cell           = Tes.cellHandles[i];
@@ -141,21 +141,21 @@ void ThermalEngine::setReynoldsNumbers()
 	// else get fluid velocity, compute reynolds, compute proper nusselt
 	flow->solver->averageRelativeCellVelocity();
 	//	#ifdef YADE_OPENMP
-	const double poro = Shop::getPorosityAlt();
+	const Real poro = Shop::getPorosityAlt();
 #pragma omp parallel for
 	for (long i = 0; i < size; i++) {
 		CellHandle& cell = Tes.cellHandles[i];
 		CVector     l;
-		double      charLength = 0.000001;
-		//double NutimesFluidK = 2*fluidK;
-		double Nusselt = 2.;
+		Real      charLength = 0.000001;
+		//Real NutimesFluidK = 2*fluidK;
+		Real Nusselt = 2.;
 		for (int j = 0; j < 4; j++) {
 			if (!cell->neighbor(j)->info().isFictious) {
 				l          = cell->info() - cell->neighbor(j)->info();
 				charLength = sqrt(l.squared_length());
 			}
 		}
-		const double avgCellFluidVel = sqrt(cell->info().averageVelocity().squared_length());
+		const Real avgCellFluidVel = sqrt(cell->info().averageVelocity().squared_length());
 		double       Reynolds        = flow->solver->fluidRho * avgCellFluidVel * charLength / flow->viscosity;
 		if (Reynolds < 0 || std::isnan(Reynolds)) {
 			cerr << "Reynolds is negative or nan" << endl;
@@ -223,7 +223,7 @@ void ThermalEngine::timeStepEstimate()
 		//	#pragma omp parallel for
 		for (long i = 0; i < sizeCells; i++) {
 			CellHandle& cell = Tes.cellHandles[i];
-			double      poreVolume;
+			Real      poreVolume;
 			if (cell->info().isCavity)
 				poreVolume = cell->info().volume();
 			else if (porosityFactor > 0)
@@ -333,7 +333,7 @@ void ThermalEngine::computeSolidFluidFluxes()
 			}
 			if (!first && thState->isCavity)
 				continue; // avoid heat transfer with placeholder cavity bodies
-			const double surfaceArea = cell->info().sphericalVertexSurface[v];
+			const Real surfaceArea = cell->info().sphericalVertexSurface[v];
 			computeFlux(cell, b, surfaceArea);
 		}
 	}
@@ -396,7 +396,7 @@ void ThermalEngine::computeVertexSphericalArea()
 }
 
 
-void ThermalEngine::computeFlux(CellHandle& cell, const shared_ptr<Body>& b, const double surfaceArea)
+void ThermalEngine::computeFlux(CellHandle& cell, const shared_ptr<Body>& b, const Real surfaceArea)
 {
 	const Sphere* sphere  = dynamic_cast<Sphere*>(b->shape.get());
 	auto*         thState = b->state.get();
@@ -432,7 +432,7 @@ void ThermalEngine::computeSolidSolidFluxes()
 			geom = YADE_CAST<ScGeom*>(I->geom.get());
 			if (!geom)
 				continue;
-			const double            pd  = geom->penetrationDepth;
+			const Real            pd  = geom->penetrationDepth;
 			const shared_ptr<Body>& b1_ = Body::byId(I->getId1(), scene);
 			const shared_ptr<Body>& b2_ = Body::byId(I->getId2(), scene);
 			if (b1_->shape->getClassIndex() != Sphere::getClassIndexStatic() || b2_->shape->getClassIndex() != Sphere::getClassIndexStatic() || !b1_
@@ -448,22 +448,22 @@ void ThermalEngine::computeSolidSolidFluxes()
 
 			FrictMat*    mat1 = dynamic_cast<FrictMat*>(b1_->material.get());
 			FrictMat*    mat2 = dynamic_cast<FrictMat*>(b2_->material.get());
-			const double k1   = thState1->k;
-			const double k2   = thState2->k;
-			const double r1   = sphere1->radius;
-			const double r2   = sphere2->radius;
-			const double T1   = thState1->temp;
-			const double T2   = thState2->temp;
-			const double d    = r1 + r2 - pd;
-			const double E1   = mat1->young;
-			const double E2   = mat1->young;
-			const double nu1  = mat1->poisson;
-			const double nu2  = mat2->poisson;
-			const double F    = phys->normalForce.squaredNorm();
+			const Real k1   = thState1->k;
+			const Real k2   = thState2->k;
+			const Real r1   = sphere1->radius;
+			const Real r2   = sphere2->radius;
+			const Real T1   = thState1->temp;
+			const Real T2   = thState2->temp;
+			const Real d    = r1 + r2 - pd;
+			const Real E1   = mat1->young;
+			const Real E2   = mat1->young;
+			const Real nu1  = mat1->poisson;
+			const Real nu2  = mat2->poisson;
+			const Real F    = phys->normalForce.squaredNorm();
 			if (d == 0)
 				continue;
-			double R = 0;
-			double r = 0;
+			Real R = 0;
+			Real r = 0;
 			// for equation:
 			if (r1 >= r2) {
 				R = r1;
@@ -473,36 +473,36 @@ void ThermalEngine::computeSolidSolidFluxes()
 				r = r1;
 			}
 			// The radius of the intersection found by: Kern, W. F. and Bland, J. R. Solid Mensuration with Proofs, 2nd ed. New York: Wiley, p. 97, 1948.	http://mathworld.wolfram.com/Sphere-SphereIntersection.html
-			//const double area = M_PI*pow(rc,2);
+			//const Real area = M_PI*pow(rc,2);
 
-			//const double dt = scene->dt;
-			//const double fluxij = 4.*rc*(T1-T2) / (1./k1 + 1./k2);
+			//const Real dt = scene->dt;
+			//const Real fluxij = 4.*rc*(T1-T2) / (1./k1 + 1./k2);
 
 			// compute the overlapping volume for thermodynamic considerations
-			//		const double capHeight1 = (r1-r2+d)*(r1+r2-d)/2*d;
-			//		const double capHeight2 = (r2-r1+d)*(r2+r1-d)/2*d;
+			//		const Real capHeight1 = (r1-r2+d)*(r1+r2-d)/2*d;
+			//		const Real capHeight2 = (r2-r1+d)*(r2+r1-d)/2*d;
 			//		thState1->capVol += (1./3.)*M_PI*pow(capHeight1,2)*(3.*r1-capHeight1);
 			//		thState2->capVol += (1./3.)*M_PI*pow(capHeight2,2)*(3.*r2-capHeight2);
 
 			// compute the thermal resistance of the pair and the associated flux
-			double thermalResist;
+			Real thermalResist;
 			if (useKernMethod) {
-				const double numerator = pow((-d + r - R) * (-d - r + R) * (-d + r + R) * (d + r + R), 0.5);
-				const double rc        = numerator / (2. * d);
+				const Real numerator = pow((-d + r - R) * (-d - r + R) * (-d + r + R) * (d + r + R), 0.5);
+				const Real rc        = numerator / (2. * d);
 				//thermalResist = 4.*rc / (1./k1 + 1./k2);
 				thermalResist = 2. * (k1 + k2) * rc * rc / (r1 + r2 - pd);
 			} //thermalResist = ((k1+k2)/2.)*area/(r1+r2-pd);}
 			else if (useHertzMethod) {
-				const double re    = 1. / r1 + 1. / r2;
-				const double Eavg  = (E1 + E2) / 2.;
-				const double Nuavg = (nu1 + nu2) / 2.;
-				const double Estar = Eavg / (1. - pow(Nuavg, 2));
-				const double a     = pow(3. * F * re / (4. * Estar), 1. / 3.);
+				const Real re    = 1. / r1 + 1. / r2;
+				const Real Eavg  = (E1 + E2) / 2.;
+				const Real Nuavg = (nu1 + nu2) / 2.;
+				const Real Estar = Eavg / (1. - pow(Nuavg, 2));
+				const Real a     = pow(3. * F * re / (4. * Estar), 1. / 3.);
 				thermalResist      = ((k1 + k2) / 2.) / (r1 + r2) * M_PI * pow(a, 2);
 			} else {
 				thermalResist = 2. * (k1 + k2) * r1 * r2 / (r1 + r2 - pd);
 			}
-			const double fluxij = thermalResist * (T1 - T2);
+			const Real fluxij = thermalResist * (T1 - T2);
 
 			//cout << "Flux b/w "<< b1_->id << " & "<< b2_->id << " fluxij " << fluxij << endl;
 			if (runConduction && tsSafetyFactor > 0) {
@@ -542,22 +542,22 @@ void ThermalEngine::computeFluidFluidConduction()
 		if (cell->info().isFictious || neighborCell->info().isFictious || cell->info().blocked || neighborCell->info().blocked)
 			continue;
 		delT = cell->info().temp() - neighborCell->info().temp();
-		double fluidToSolidRatio;
+		Real fluidToSolidRatio;
 		if (cell->info().isCavity && neighborCell->info().isCavity)
 			fluidToSolidRatio = 1.;
 		else
 			fluidToSolidRatio = cell->info().facetFluidSurfacesRatio[facetPair.second];
 		//if (flow->thermalPorosity>0) fluidConductionAreaFactor=flow->thermalPorosity;
-		area = fluidConductionAreaFactor * sqrt(cell->info().facetSurfaces[facetPair.second].squared_length()) * fluidToSolidRatio;
+		area = fluidConductionAreaFactor * std::sqrt(cell->info().facetSurfaces[facetPair.second].squared_length()) * fluidToSolidRatio;
 		//area = sqrt(fluidSurfK.squared_length());
 		//poreVector = cell->info() - neighborCell->info();
 		poreVector = cellBarycenter(cell) - cellBarycenter(neighborCell); // voronoi was breaking for hexagonal packings
-		distance   = sqrt(poreVector.squared_length());
+		distance   = std::sqrt(poreVector.squared_length());
 		if (distance < minimumFluidCondDist)
 			distance = minimumFluidCondDist;
 		//cout << "conduction distance" << distance << endl;
 		//if (distance < area) continue;  // hexagonal packings result in extremely small distances that blow up the simulation
-		const double thermalResist = fluidK * area / distance;
+		const Real thermalResist = fluidK * area / distance;
 		conductionEnergy           = thermalResist * delT * thermalDT;
 		if (std::isnan(conductionEnergy))
 			conductionEnergy = 0;
@@ -577,7 +577,7 @@ void ThermalEngine::computeFluidFluidConduction()
 	//		const CellHandle& neighborCell = f_it->first->neighbor(f_it->second);
 	//		if (cell->info().isFictious || neighborCell->info().isFictious || cell->info().blocked || neighborCell->info().blocked) continue;
 	//		delT = cell->info().temp() - neighborCell->info().temp();
-	//		double fluidToSolidRatio;
+	//		Real fluidToSolidRatio;
 	//		if (cell->info().isCavity && neighborCell->info().isCavity) fluidToSolidRatio = 1.;
 	//		else fluidToSolidRatio = cell->info().facetFluidSurfacesRatio[f_it->second];
 	//		area = fluidConductionAreaFactor * sqrt(cell->info().facetSurfaces[f_it->second].squared_length())*fluidToSolidRatio;
@@ -587,7 +587,7 @@ void ThermalEngine::computeFluidFluidConduction()
 	//		distance = sqrt(poreVector.squared_length());
 	//		//cout << "conduction distance" << distance << endl;
 	//		//if (distance < area) continue;  // hexagonal packings result in extremely small distances that blow up the simulation
-	//		const double thermalResist = fluidK*area/distance;
+	//		const Real thermalResist = fluidK*area/distance;
 	//		conductionEnergy = thermalResist * delT * thermalDT;
 	//		if (isnan(conductionEnergy)) conductionEnergy=0;
 	//		cell->info().stabilityCoefficient+=thermalResist;
@@ -626,7 +626,7 @@ void ThermalEngine::computeNewParticleTemperatures()
 			continue;
 		Sphere*      sphere  = dynamic_cast<Sphere*>(b->shape.get());
 		const Real   density = (particleDensity > 0 ? particleDensity : b->material->density);
-		const double volume  = 4. / 3. * M_PI * pow(sphere->radius, 3); // - thState->capVol;
+		const Real volume  = 4. / 3. * M_PI * pow(sphere->radius, 3); // - thState->capVol;
 		if (thState->Tcondition)
 			continue;
 		thState->oldTemp  = thState->temp;
@@ -665,7 +665,7 @@ void ThermalEngine::thermalExpansion()
 		cavityDtemp             = 0;
 		flow->solver->cavityDV  = 0; //setting cavity rate of volume change to 0 here, will be added to in adjustCavityVolumeChange
 		Tesselation& Tes        = flow->solver->T[flow->solver->currentTes];
-		double       cavDens    = flow->solver->cavityFluidDensity;
+		Real       cavDens    = flow->solver->cavityFluidDensity;
 		//	#ifdef YADE_OPENMP
 		const long sizeCells = Tes.cellHandles.size();
 #pragma omp parallel for
@@ -720,10 +720,10 @@ void ThermalEngine::computeCellVolumeChangeFromSolidVolumeChange(CellHandle& cel
 		auto*   thState = b->state.get();
 		if (!first && thState->isCavity)
 			continue; // don't consider fake cavity bodies
-		const double surfaceArea
+		const Real surfaceArea
 		        = cell->info().sphericalVertexSurface[v]; // from last fluid engine remesh. We could store this in cell->info() if it becomes a burden
 		const Real   rCubedDiff = pow(sphere->radius, 3) - pow(sphere->radius - thState->delRadius, 3);
-		const double areaTot    = 4. * M_PI * pow(sphere->radius, 2); // We could store this in cell->info() if it becomes a burden
+		const Real areaTot    = 4. * M_PI * pow(sphere->radius, 2); // We could store this in cell->info() if it becomes a burden
 		solidVolumeChange += surfaceArea / areaTot * rCubedDiff * M_PI * 4. / 3.;
 	}
 
@@ -750,22 +750,22 @@ void ThermalEngine::computeCellVolumeChangeFromSolidVolumeChange(CellHandle& cel
 //       			const shared_ptr<Body>& b =(*bodies)[id];
 //        		if (b->shape->getClassIndex()!=Sphere::getClassIndexStatic() || !b) continue;
 //        		Sphere* sphere = dynamic_cast<Sphere*>(b->shape.get());
-//			const double surfaceArea = cell->info().sphericalVertexSurface[v];
-//			const double areaTot = 4. * M_PI * pow(sphere->radius,2);
+//			const Real surfaceArea = cell->info().sphericalVertexSurface[v];
+//			const Real areaTot = 4. * M_PI * pow(sphere->radius,2);
 //			solidVolume += surfaceArea/areaTot * pow(sphere->radius,3) * M_PI * 4./3.;
 //		}
 //		cell->info().invVoidVolume() = abs(cell->info().volume()-solidVolume);
 //	}
 //}
 
-void ThermalEngine::computeCellVolumeChangeFromDeltaTemp(CellHandle& cell, double /*cavDens*/)
+void ThermalEngine::computeCellVolumeChangeFromDeltaTemp(CellHandle& cell, Real /*cavDens*/)
 {
-	double beta;
+	Real beta;
 	if (tempDependentFluidBeta)
 		beta = 7.5e-6 * cell->info().temp() + 5.7e-5; // linear model for thermal expansion
 	else
 		beta = fluidBeta;
-	double poreVolume;
+	Real poreVolume;
 	if (porosityFactor > 0)
 		poreVolume = cell->info().volume() * porosityFactor; // allows us to simulate low porosity matrices
 	else
@@ -843,7 +843,7 @@ void ThermalEngine::resetFlowBoundaryTemps()
 // //	#pragma omp parallel for num_threads(ompThreads>0 ? ompThreads : 1)
 //     for (long i=0; i<size; i++){
 // 		CellHandle& cell = Tes.cellHandles[i];
-//         double vSolid;
+//         Real vSolid;
 //         VertexHandle W[4];
 //         Body
 // 		for (int k=0;k<4;k++){
@@ -858,9 +858,9 @@ void ThermalEngine::resetFlowBoundaryTemps()
 //
 // }
 //
-// double ThermalEngine::sphericalTriangleVolume(const Sphere& ST1, const Point& PT1, const Point& PT2, const Point& PT3)
+// Real ThermalEngine::sphericalTriangleVolume(const Sphere& ST1, const Point& PT1, const Point& PT2, const Point& PT3)
 // {
-//         double rayon = sqrt(ST1.weight());
+//         Real rayon = math::sqrt(ST1.weight());
 //         if (rayon == 0.0) return 0.0;
 //         return ((ONE_THIRD * rayon) * (fastSphericalTriangleArea(ST1, PT1, PT2, PT3))) ;
 // }
@@ -869,7 +869,7 @@ void ThermalEngine::resetFlowBoundaryTemps()
 // {
 //         //! This function needs to be fast because it is used heavily. Avoid using vector operations which require constructing vectors (~50% of cpu time in the non-fast version), and compute angle using the 3x faster formula of Oosterom and StrackeeVan Oosterom, A; Strackee, J (1983). "The Solid Angle of a Plane Triangle". IEEE Trans. Biom. Eng. BME-30 (2): 125-126. (or check http://en.wikipedia.org/wiki/Solid_angle)
 //         using namespace CGAL;
-//         double M[3][3];
+//         Real M[3][3];
 //         M[0][0] = PTA1.x() - STA1.x();
 //         M[0][1] = PTA2.x() - STA1.x();
 //         M[0][2] = PTA3.x() - STA1.x();
@@ -880,23 +880,23 @@ void ThermalEngine::resetFlowBoundaryTemps()
 //         M[2][1] = PTA2.z() - STA1.z();
 //         M[2][2] = PTA3.z() - STA1.z();
 //
-//         double detM = M[0][0]* (M[1][1]*M[2][2]-M[2][1]*M[1][2]) +
+//         Real detM = M[0][0]* (M[1][1]*M[2][2]-M[2][1]*M[1][2]) +
 //                       M[1][0]* (M[2][1]*M[0][2]-M[0][1]*M[2][2]) +
 //                       M[2][0]* (M[0][1]*M[1][2]-M[1][1]*M[0][2]);
 //
-//         double pv12N2 = pow(M[0][0],2) +pow(M[1][0],2) +pow(M[2][0],2);
-//         double pv13N2 = pow(M[0][1],2) +pow(M[1][1],2) +pow(M[2][1],2);
-//         double pv14N2 = pow(M[0][2],2) +pow(M[1][2],2) +pow(M[2][2],2);
+//         Real pv12N2 = pow(M[0][0],2) +pow(M[1][0],2) +pow(M[2][0],2);
+//         Real pv13N2 = pow(M[0][1],2) +pow(M[1][1],2) +pow(M[2][1],2);
+//         Real pv14N2 = pow(M[0][2],2) +pow(M[1][2],2) +pow(M[2][2],2);
 //
-//         double pv12N = sqrt(pv12N2);
-//         double pv13N = sqrt(pv13N2);
-//         double pv14N = sqrt(pv14N2);
+//         Real pv12N = sqrt(pv12N2);
+//         Real pv13N = sqrt(pv13N2);
+//         Real pv14N = sqrt(pv14N2);
 //
-//         double cp12 = (M[0][0]*M[0][1]+M[1][0]*M[1][1]+M[2][0]*M[2][1]);
-//         double cp13 = (M[0][0]*M[0][2]+M[1][0]*M[1][2]+M[2][0]*M[2][2]);
-//         double cp23 = (M[0][1]*M[0][2]+M[1][1]*M[1][2]+M[2][1]*M[2][2]);
+//         Real cp12 = (M[0][0]*M[0][1]+M[1][0]*M[1][1]+M[2][0]*M[2][1]);
+//         Real cp13 = (M[0][0]*M[0][2]+M[1][0]*M[1][2]+M[2][0]*M[2][2]);
+//         Real cp23 = (M[0][1]*M[0][2]+M[1][1]*M[1][2]+M[2][1]*M[2][2]);
 //
-//         double ratio = detM/ (pv12N*pv13N*pv14N+cp12*pv14N+cp13*pv13N+cp23*pv12N);
+//         Real ratio = detM/ (pv12N*pv13N*pv14N+cp12*pv14N+cp13*pv13N+cp23*pv12N);
 //         return abs(2*atan(ratio));
 // }
 

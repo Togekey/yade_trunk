@@ -236,7 +236,7 @@ template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT 
 Real TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::getCellFlux ( unsigned int cond)
 {
 	if ( cond>=solver->imposedP.size() ) {LOG_ERROR ( "Getting flux with cond higher than imposedP size." ); return 0;}
-        double flux=0;
+        Real flux=0;
         typename Solver::CellHandle& cell= solver->IPCells[cond];
         for ( int ngb=0;ngb<4;ngb++ ) {
                 /*if (!cell->neighbor(ngb)->info().Pcondition)*/
@@ -249,7 +249,7 @@ template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT 
 Real TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::getCellFluxFromId ( unsigned long id)
 {
         if (id>=solver->T[solver->currentTes].cellHandles.size()) {LOG_ERROR("id out of range, max value is "<<solver->T[solver->currentTes].cellHandles.size()); return 0;}
-        double flux=0;
+        Real flux=0;
         typename Solver::CellHandle& cell= solver->T[solver->currentTes].cellHandles[id];
         for ( int ngb=0;ngb<4;ngb++ ) {
                 flux+= cell->info().kNorm() [ngb]* ( cell->info().p()-cell->neighbor ( ngb )->info().p() );
@@ -327,7 +327,7 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
         buildTriangulation ( 0.f,flow );
 }
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
-void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::buildTriangulation ( double pZero, Solver& flow )
+void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::buildTriangulation ( Real pZero, Solver& flow )
 {
  	if (first) flow.currentTes=0;
         else {  flow.currentTes=!flow.currentTes; if (debug) cout << "--------RETRIANGULATION-----------" << endl;}
@@ -480,7 +480,7 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
         //assign BCs types and values
         boundaryConditions ( flow );
 	if (thermalEngine) thermalBoundaryConditions ( flow );
-        double center[3];
+        Real center[3];
         for ( int i=0; i<6; i++ ) {
                 if ( *flow.boundsIds[i]<0 ) continue;
                 CGT::CVector Normal ( normal[i].x(), normal[i].y(), normal[i].z() );
@@ -563,7 +563,7 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
                 }
                 RTriangulation& Tri = solver->T[solver->currentTes].Triangulation();
                 CGT::Point pos_av_facet;
-                double volume_facet_translation = 0;
+                Real volume_facet_translation = 0;
                 CGT::CVector Vel_av ( Vel[0], Vel[1], Vel[2] );
                 for ( int i=0; i<4; i++ ) {
                         volume_facet_translation = 0;
@@ -594,7 +594,7 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 	#else
 	FOREACH(CellHandle& cell, flow.tesselation().cellHandles){
 	#endif
-		double newVol, dVol;
+		Real newVol, dVol;
                 switch ( cell->info().fictious() ) {
                 	case ( 3 ) : newVol = volumeCellTripleFictious ( cell ); break;
                		case ( 2 ) : newVol = volumeCellDoubleFictious ( cell ); break;

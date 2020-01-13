@@ -84,7 +84,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		Vector3r normal [6];
 		bool fluxChanged;  // flag that keeps multithreading working when a flux is imposed
 		bool metisForced;
-		double epsVolCumulative;
+		Real epsVolCumulative;
 		int ReTrg;
 		int ellapsedIter;
 		int permUpdateIters;
@@ -97,7 +97,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		#endif
 		void triangulate (Solver& flow);
 		void addBoundary (Solver& flow);
-		void buildTriangulation (double pZero, Solver& flow);
+		void buildTriangulation (Real pZero, Solver& flow);
 		void buildTriangulation (Solver& flow);
 		void updateVolumes (Solver& flow);
 		void applyForces (Solver& flow);
@@ -147,7 +147,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		Real getBoundaryVolume(unsigned int boundary, Real dt) {return -1.0*solver->boundaryFlux(boundary)*dt;}
 		Real getCellInVolumeFromId(unsigned long id, Real dt) {return -1.0*getCellFluxFromId(id)*dt;}
 		Real getBoundaryArea(unsigned int boundary) {return solver->boundaryArea(boundary);}
-		std::vector<std::vector<double>> getBoundaryVel(unsigned int boundary) {return solver->boundaryVel(boundary);}
+		std::vector<std::vector<Real>> getBoundaryVel(unsigned int boundary) {return solver->boundaryVel(boundary);}
 		Vector3r fluidForce(unsigned int idSph) {
 			const CGT::CVector& f=solver->T[solver->currentTes].vertex(idSph)->info().forces; return Vector3r(f[0],f[1],f[2]);}
 		Vector3r averageVelocity();
@@ -180,8 +180,8 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 			return (solver->surfaceDistance[interaction]);}
 		Real edgeSize() {
 			return (solver->edgeIds.size());}
-		double getEquivalentCompressibility() {return (solver->equivalentCompressibility);}
-		double getCavityDensity() {return (solver->cavityFluidDensity);}
+		Real getEquivalentCompressibility() {return (solver->equivalentCompressibility);}
+		Real getCavityDensity() {return (solver->cavityFluidDensity);}
 		void printVertices() {solver->printVertices();}
 		Real OSI() {
 			return (solver->onlySpheresInteractions.size());}
@@ -232,11 +232,11 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		vector<Real> avFlVelOnSph(unsigned int idSph) {return solver->averageFluidVelocityOnSphere(idSph);}
 
 // 		void setBoundaryVel(Vector3r vel) {topBoundaryVelocity=vel; updateTriangulation=true;}
-		void pressureProfile(double wallUpY, double wallDownY) {return solver->measurePressureProfile(wallUpY,wallDownY);}
-		double getPorePressure(Vector3r pos){return solver->getPorePressure(pos[0], pos[1], pos[2]);}
-		double getPoreTemperature(Vector3r pos){return solver->getPoreTemperature(pos[0], pos[1], pos[2]);}
-		int getCell(double posX, double posY, double posZ){return solver->getCell(posX, posY, posZ);}
-		double getCavityFlux(){return solver->getCavityFlux();}
+		void pressureProfile(Real wallUpY, Real wallDownY) {return solver->measurePressureProfile(wallUpY,wallDownY);}
+		Real getPorePressure(Vector3r pos){return solver->getPorePressure(pos[0], pos[1], pos[2]);}
+		Real getPoreTemperature(Vector3r pos){return solver->getPoreTemperature(pos[0], pos[1], pos[2]);}
+		int getCell(Real posX, Real posY, Real posZ){return solver->getCell(posX, posY, posZ);}
+		Real getCavityFlux(){return solver->getCavityFlux();}
 		unsigned int nCells(){return solver->T[solver->currentTes].cellHandles.size();}
 		CELL_VECTOR_GETTER(,cellCenter)
 		CELL_VECTOR_GETTER(.averageCellVelocity,cellVelocity)
@@ -277,8 +277,8 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		void setBoundaryNormal(int index, Vector3r v) {
 		  if (index<0 || index>5) LOG_ERROR("index out of range (0-5)"); normal[max(0,min(5,index))]=v;}
 
-		double averageSlicePressure(double posY){return solver->averageSlicePressure(posY);}
-		double averagePressure(){return solver->averagePressure();}
+		Real averageSlicePressure(Real posY){return solver->averageSlicePressure(posY);}
+		Real averagePressure(){return solver->averagePressure();}
 
 		void emulateAction(){
 			scene = Omega::instance().getScene().get();
@@ -315,40 +315,40 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		((int,idOffset,0,,"If the bounding walls of the fluid mesh are not walls of the scene (i.e. are not elements of O.bodies), the offset should be set equal to the size of O.bodies. If the bounding walls are bodies of the scene but are not numbered as 0-5 then offset should be the number of bodies comming before the walls. Set offset<0 to get it set equal to O.bodies.size(), it will also update :yref:`FlowEngine::wallIds`."))
 		((bool,convertClumps,true,,"If true the clumps will be temptatively converted into equivalent spheres in the triangulation, and clump members are skipped. Else clumps are ignored and spherical clump members are triangulated as independent bodies."))
 		((bool,doInterpolate,false,,"Force the interpolation of cell's info while remeshing. By default, interpolation would be done only for compressible fluids. It can be forced with this flag."))
-		((double, fluidBulkModulus, 0.,,"Bulk modulus of fluid (inverse of compressibility) K=-dP*V/dV [Pa]. Flow is compressible if fluidBulkModulus > 0, else incompressible."))
-		((double, fluidRho, 1000.,,"Density of fluid (for thermalEngine)."))
-		((double, fluidCp, 4181.3,,"Heat capacity of fluid (for thermalEngine)."))
+		((Real, fluidBulkModulus, 0.,,"Bulk modulus of fluid (inverse of compressibility) K=-dP*V/dV [Pa]. Flow is compressible if fluidBulkModulus > 0, else incompressible."))
+		((Real, fluidRho, 1000.,,"Density of fluid (for thermalEngine)."))
+		((Real, fluidCp, 4181.3,,"Heat capacity of fluid (for thermalEngine)."))
 		((Real, dt, 0,,"timestep [s]"))
 		((bool,permeabilityMap,false,,"Enable/disable stocking of average permeability scalar in cell infos."))
 		((bool, slipBoundary, true,, "Controls friction condition on lateral walls"))
 		((bool,waveAction, false,, "Allow sinusoidal pressure condition to simulate ocean waves"))
-		((double, sineMagnitude, 0,, "Pressure value (amplitude) when sinusoidal pressure is applied (p )"))
-		((double, sineAverage, 0,,"Pressure value (average) when sinusoidal pressure is applied"))
+		((Real, sineMagnitude, 0,, "Pressure value (amplitude) when sinusoidal pressure is applied (p )"))
+		((Real, sineAverage, 0,,"Pressure value (average) when sinusoidal pressure is applied"))
 		((bool, debug, false,,"Activate debug messages"))
-		((double, wallThickness,0,,"Walls thickness"))
-		((double,pZero,0,,"The value used for initializing pore pressure. It is useless for incompressible fluid, but important for compressible model."))
-		((double,tZero,0,,"The value used for initializing pore temperatures in thermalEngine."))
-		((double,tolerance,1e-06,,"Gauss-Seidel tolerance"))
-		((double,relax,1.9,,"Gauss-Seidel relaxation"))
+		((Real, wallThickness,0,,"Walls thickness"))
+		((Real,pZero,0,,"The value used for initializing pore pressure. It is useless for incompressible fluid, but important for compressible model."))
+		((Real,tZero,0,,"The value used for initializing pore temperatures in thermalEngine."))
+		((Real,tolerance,1e-06,,"Gauss-Seidel tolerance"))
+		((Real,relax,1.9,,"Gauss-Seidel relaxation"))
 		((bool, updateTriangulation, 0,,"If true the medium is retriangulated. Can be switched on to force retriangulation after some events (else it will be true periodicaly based on :yref:`FlowEngine::defTolerance` and :yref:`FlowEngine::meshUpdateInterval`. Of course, it costs CPU time. Note that the new triangulation will start to be effectively used only after one iteration (i.e. O.run(2) gives a result with the new one, O.run(1) does not)."))
 		((int,meshUpdateInterval,1000,,"Maximum number of timesteps between re-triangulation events (a negative value will never re-triangulate). See also :yref:`FlowEngine::defTolerance`."))
 		((int,breakControlledRemesh,0,,"If true, remesh will occur everytime a break occurs in JCFpmPhys. Designed to increase accuracy and efficiency in hydraulic fracture simulations."))
-		((double, epsVolMax, 0,(Attr::readonly),"Maximal absolute volumetric strain computed at each iteration. |yupdate|"))
-		((double, defTolerance,0.05,,"Cumulated deformation threshold for which retriangulation of pore space is performed. If negative, the triangulation update will occure with a fixed frequency on the basis of :yref:`FlowEngine::meshUpdateInterval`"))
-		((double, porosity, 0,(Attr::readonly),"Porosity computed at each retriangulation |yupdate|"))
+		((Real, epsVolMax, 0,(Attr::readonly),"Maximal absolute volumetric strain computed at each iteration. |yupdate|"))
+		((Real, defTolerance,0.05,,"Cumulated deformation threshold for which retriangulation of pore space is performed. If negative, the triangulation update will occure with a fixed frequency on the basis of :yref:`FlowEngine::meshUpdateInterval`"))
+		((Real, porosity, 0,(Attr::readonly),"Porosity computed at each retriangulation |yupdate|"))
 		((bool,meanKStat,false,,"report the local permeabilities' correction"))
 		((bool,clampKValues,true,,"If true, clamp local permeabilities in [minKdivKmean,maxKdivKmean]*globalK. This clamping can avoid singular values in the permeability matrix and may reduce numerical errors in the solve phase. It will also hide junk values if they exist, or bias all values in very heterogeneous problems. So, use this with care."))
 		((Real,minKdivKmean,0.0001,,"define the min K value (see :yref:`FlowEngine::clampKValues`)"))
 		((Real,maxKdivKmean,100,,"define the max K value (see :yref:`FlowEngine::clampKValues`)"))
-		((double,permeabilityFactor,1.0,,"Permability multiplier ($m$): $m=1$ (default) attempts to predicty the actual hydraulic conductivity using a Poiseuille equation; $m>0$ multiplies the default values by $m$; $m<0$ defines the conductivity independently of particle size and viscosity as if the material was a homogeneous continuum of conductivity $-m$"))
-		((double,cavityFactor,1.,,"Permeability/viscosity for cavity cell neighbors (arbitrarily high to model triangulated fluid filled cavity)."))
-		((double,volumeFactor,1.,,"Factor used for simulating low porosity (for thermal considerations only) in high porosity DEM packings."))
+		((Real,permeabilityFactor,1.0,,"Permability multiplier ($m$): $m=1$ (default) attempts to predicty the actual hydraulic conductivity using a Poiseuille equation; $m>0$ multiplies the default values by $m$; $m<0$ defines the conductivity independently of particle size and viscosity as if the material was a homogeneous continuum of conductivity $-m$"))
+		((Real,cavityFactor,1.,,"Permeability/viscosity for cavity cell neighbors (arbitrarily high to model triangulated fluid filled cavity)."))
+		((Real,volumeFactor,1.,,"Factor used for simulating low porosity (for thermal considerations only) in high porosity DEM packings."))
 		((Real,flatThreshold,-1,,"If >=0, pore volumes below flatThreshold value are blocked from flow calc. Useful for compressible flow involving odd triangulations with some very flat pores."))
-		((double,viscosity,1.0,,"viscosity of the fluid"))
+		((Real,viscosity,1.0,,"viscosity of the fluid"))
 		((bool,tempDependentViscosity,false,,"boolean to vary viscosity (ultimately cell permeability) with cell temperature. Linear model for viscosity b/w 20-70 degC. If true, kFactor must also be set negative, and becomes the darcy permeability."))
-		((double,desiredPorosity,0,,"Correct the cell volumes to reflect this desired porosity (not active by default (0))."))
+		((Real,desiredPorosity,0,,"Correct the cell volumes to reflect this desired porosity (not active by default (0))."))
 		((Real,volumeCorrection,1,,"Volume correction factor (not user controlled. auto computed if :yref:`FlowEngine::desiredPorosity` != 0)"))
-		((double,stiffness, 10000,,"equivalent contact stiffness used in the lubrication model"))
+		((Real,stiffness, 10000,,"equivalent contact stiffness used in the lubrication model"))
 		((int, useSolver, 3,, "Solver to use. 0:Gauss-Seidel, 3: Cholesky factorization (via Eigen3 interface), 4:multicore CPU or GPU accelerated CHOLMOD (without Eigen3), 1-2: undefined."))
 		((int, xmin,0,(Attr::readonly),"Index of the boundary $x_{min}$. This index is not equal the the id of the corresponding body in general, it may be used to access the corresponding attributes (e.g. flow.bndCondValue[flow.xmin], flow.wallId[flow.xmin],...)."))
 		((int, xmax,1,(Attr::readonly),"See :yref:`FlowEngine::xmin`."))
@@ -359,8 +359,8 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 
 		((vector<bool>, bndCondIsPressure, vector<bool>(6,false),,"defines the type of boundary condition for each side. True if pressure is imposed, False for no-flux. Indexes can be retrieved with :yref:`FlowEngine::xmin` and friends."))
 		((vector<bool>, bndCondIsTemperature, vector<bool>(6,false),,"defines the type of boundary condition for each side. True if temperature is imposed, False for no heat-flux. Indexes can be retrieved with :yref:`FlowEngine::xmin` and friends."))
-		((vector<double>, bndCondValue, vector<double>(6,0),,"Imposed value of a boundary condition. Only applies if the boundary condition is imposed pressure, else the imposed flux is always zero presently (may be generalized to non-zero imposed fluxes in the future)."))
-		((vector<double>, thermalBndCondValue, vector<double>(6,0),,"Imposed temperature value of a boundary condition."))
+		((vector<Real>, bndCondValue, vector<Real>(6,0),,"Imposed value of a boundary condition. Only applies if the boundary condition is imposed pressure, else the imposed flux is always zero presently (may be generalized to non-zero imposed fluxes in the future)."))
+		((vector<Real>, thermalBndCondValue, vector<Real>(6,0),,"Imposed temperature value of a boundary condition."))
 		((vector<Vector3r>, boundaryVelocity, vector<Vector3r>(6,Vector3r::Zero()),, "velocity on top boundary, only change it using :yref:`FlowEngine::setBoundaryVel`"))
 		((int, ignoredBody,-1,,"DEPRECATED, USE MASK - Id of a sphere to exclude from the triangulation.)"))
 		((int,mask,0,,"If mask defined, only bodies with corresponding groupMask will be affected by this engine. If 0, all bodies will be affected."))
@@ -370,7 +370,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		((bool, shearLubrication, false,,"compute shear lubrication force as developped by Brule (FIXME: ref.) "))
 		((bool, pumpTorque, false,,"Compute pump torque applied on particles "))
 		((bool, twistTorque, false,,"Compute twist torque applied on particles "))
-		((double, eps, 0.00001,,"roughness defined as a fraction of particles size, giving the minimum distance between particles in the lubrication model."))
+		((Real, eps, 0.00001,,"roughness defined as a fraction of particles size, giving the minimum distance between particles in the lubrication model."))
 		((bool, pressureForce, true,,"compute the pressure field and associated fluid forces. WARNING: turning off means fluid flow is not computed at all."))
 		((bool, normalLubrication, false,,"compute normal lubrication force as developped by Brule"))
 		((bool, viscousNormalBodyStress, false,,"compute normal viscous stress applied on each body"))
@@ -390,15 +390,15 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		((bool, iniVoidVolumes, false,,"activate the computation of the inverse of the initial void volumes in each cell when pore volumes are initialized."))
 		((bool, controlCavityPressure, false,,"use full cavity flux and fluidbulkmodulus to control cavity as dynamic pressure (dirichlet) boundary condition."))
 		((bool, controlCavityVolumeChange, false,,"cavity imposes a volume change on neighbor cells (shouldnt be used with controlCavityPressure)"))
-		((double, phiZero, 0,,"if >0, considers water aircontent impact on fluid compressibility."))
-		((double, cavityFlux, 0,,"For adding flux to pressuremanaged cavity model (:yref:`FlowEngine::controlCavityPressure`). Negavite influx, postive outflux."))
-		((double, cavityFluidDensity, 0,,">0 means cavity compressibility model considers density changes instead of volume changes."))
-		((double, thermalPorosity, 0,,">0 means the void volume space will be factored by thermalPorosity for pore internal energy considerations."))
+		((Real, phiZero, 0,,"if >0, considers water aircontent impact on fluid compressibility."))
+		((Real, cavityFlux, 0,,"For adding flux to pressuremanaged cavity model (:yref:`FlowEngine::controlCavityPressure`). Negavite influx, postive outflux."))
+		((Real, cavityFluidDensity, 0,,">0 means cavity compressibility model considers density changes instead of volume changes."))
+		((Real, thermalPorosity, 0,,">0 means the void volume space will be factored by thermalPorosity for pore internal energy considerations."))
 		((bool, averageCavityPressure, false,,"true means the pressure in the cavity will be averaged each iteration."))
-		((double, alphaBound,-1,,"if 0, use an alphaBoundary condition where CGAL finds minimum alpha necessary for a single solid object. Any positive value will be used for the alpha. All negative values deactivate the functionality."))
-		((double, alphaBoundValue, 0,,"value of alpha constant pressure condition"))
+		((Real, alphaBound,-1,,"if 0, use an alphaBoundary condition where CGAL finds minimum alpha necessary for a single solid object. Any positive value will be used for the alpha. All negative values deactivate the functionality."))
+		((Real, alphaBoundValue, 0,,"value of alpha constant pressure condition"))
 		((bool, fixedAlpha, false,,"If true, a constant-sized alpha vertex will be placed exactly above each facet. If false, logic is used to improve cell sizes in concave regions."))
-		((double, minimumPorosity, 0,,"value used to limit the allowable minimum porosity for pore volume calculations. Particularly useful if very small volumes are impacting stability"))
+		((Real, minimumPorosity, 0,,"value used to limit the allowable minimum porosity for pore volume calculations. Particularly useful if very small volumes are impacting stability"))
 		,
 		/*deprec*/
 		((meanK_opt,clampKValues,"the name changed"))
@@ -506,7 +506,7 @@ class FlowCellInfo_@TEMPLATE_FLOW_NAME@ : public CGT::SimpleCellInfo {
 	Real t;
 	int fict;
  	Real volumeVariation;
-	double pression;
+	Real pression;
 	 //average relative (fluid - facet translation) velocity defined for a single cell as 1/Volume * SUM_ON_FACETS(x_average_facet*average_facet_flow_rate)
 	CVector averageCellVelocity;
 	// Surface vectors of facets, pointing from outside toward inside the cell
@@ -518,19 +518,19 @@ class FlowCellInfo_@TEMPLATE_FLOW_NAME@ : public CGT::SimpleCellInfo {
 	// Store the area of triangle-sphere intersections for each facet (used in forces definition)
 	std::vector<CVector> facetSphereCrossSections;
 	std::vector<CVector> cellForce;
-	std::vector<double> rayHydr;
-	std::vector<double> modulePermeability;
-	std::vector<double> sphericalVertexSurface;
-	// Partial surfaces of spheres in the double-tetrahedron linking two voronoi centers. [i][j] is for sphere facet "i" and sphere facetVertices[i][j]. Last component for 1/sum_surfaces in the facet.doInterpolate
-	double solidSurfaces [4][4];
-	double temperature;
+	std::vector<Real> rayHydr;
+	std::vector<Real> modulePermeability;
+	std::vector<Real> sphericalVertexSurface;
+	// Partial surfaces of spheres in the Real-tetrahedron linking two voronoi centers. [i][j] is for sphere facet "i" and sphere facetVertices[i][j]. Last component for 1/sum_surfaces in the facet.doInterpolate
+	Real solidSurfaces [4][4];
+	Real temperature;
 	Real tempVariation;
-	double internalEnergy;
+	Real internalEnergy;
 	bool Tcondition;
 	bool isCavity;
-	double Reynolds;
-	double NutimesFluidK;
-	double stabilityCoefficient;
+	Real Reynolds;
+	Real NutimesFluidK;
+	Real stabilityCoefficient;
 
 
 	FlowCellInfo_@TEMPLATE_FLOW_NAME@ (void)
@@ -554,7 +554,7 @@ class FlowCellInfo_@TEMPLATE_FLOW_NAME@ : public CGT::SimpleCellInfo {
 		blocked=false;
 	}
 	bool isGhost;
-	double invSumK;
+	Real invSumK;
 	bool isvisited;
 
 	inline Real& volume (void) {return t;}
@@ -563,14 +563,14 @@ class FlowCellInfo_@TEMPLATE_FLOW_NAME@ : public CGT::SimpleCellInfo {
 	inline Real& dv (void) {return volumeVariation;}
 	inline Real& dtemp (void) {return tempVariation;}
 	inline int& fictious (void) {return fict;}
-	inline double& p (void) {return pression;}
-	inline double& temp (void) {return temperature;}
-	inline double shiftedP (void) const {return pression;} //For compatibility with the periodic case
-	inline const std::vector<double>& kNorm (void) const {return modulePermeability;}
-	inline std::vector<double>& kNorm (void) {return modulePermeability;}
+	inline Real& p (void) {return pression;}
+	inline Real& temp (void) {return temperature;}
+	inline Real shiftedP (void) const {return pression;} //For compatibility with the periodic case
+	inline const std::vector<Real>& kNorm (void) const {return modulePermeability;}
+	inline std::vector<Real>& kNorm (void) {return modulePermeability;}
 	inline std::vector< CVector >& facetSurf (void) {return facetSurfaces;}
 	inline std::vector<CVector>& force (void) {return cellForce;}
-	inline std::vector<double>& Rh (void) {return rayHydr;}
+	inline std::vector<Real>& Rh (void) {return rayHydr;}
 	inline CVector& averageVelocity (void) {return averageCellVelocity;}
 	//used for transfering values between two triangulations, overload with more variables in derived classes (see e.g. SoluteFlow)
 	inline void getInfo(const FlowCellInfo_@TEMPLATE_FLOW_NAME@& otherCellInfo) {p()=otherCellInfo.shiftedP();}
