@@ -90,7 +90,11 @@ public:
 	//Eigen::SparseMatrix<::yade::math::Complex,RowMajor> Ga; for row major stuff?
 	typedef Eigen::Triplet<Real> ETriplet;
 	std::vector<ETriplet> tripletList;//The list of non-zero components in Eigen sparse matrix
+#ifdef NO_CHOLMOD
+	Eigen::BiCGSTAB<Eigen::SparseMatrix<Real>, Eigen::IncompleteLUT<Real> > eSolver;
+#else
 	Eigen::CholmodDecomposition<Eigen::SparseMatrix<double>, Eigen::Lower > eSolver;
+#endif
 	bool factorizedEigenSolver;
 	void exportMatrix(const char* filename) {ofstream f; f.open(filename); f<<A; f.close();};
 	void exportTriplets(const char* filename) {ofstream f; f.open(filename);
