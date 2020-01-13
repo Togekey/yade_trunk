@@ -122,7 +122,7 @@ void FlowBoundingSphere<Tesselation>::averageRelativeCellVelocity()
 		if (cell->info().Pcondition) cell->info().averageVelocity() = cell->info().averageVelocity() - (totFlowRate)*((Point) cell->info()-CGAL::ORIGIN );
 		//now divide by volume
 		if (cell->info().volume()==0) cerr << "zero volume pore interrupting velocity calculation" << endl;
-		else cell->info().averageVelocity() = cell->info().averageVelocity() /std::abs(cell->info().volume());
+		else cell->info().averageVelocity() = cell->info().averageVelocity() /math::abs(cell->info().volume());
 	}
 }
 
@@ -167,8 +167,8 @@ void FlowBoundingSphere<Tesselation>::averageFluidVelocity()
 	{
 	  if (cell->info().fictious()==0){
 	    for (int i=0;i<4;i++){
-	      velocityVolumes[cell->vertex(i)->info().id()] =  velocityVolumes[cell->vertex(i)->info().id()] + cell->info().averageVelocity()*std::abs(cell->info().volume());
-	      volumes[cell->vertex(i)->info().id()] = volumes[cell->vertex(i)->info().id()] + std::abs(cell->info().volume());}
+	      velocityVolumes[cell->vertex(i)->info().id()] =  velocityVolumes[cell->vertex(i)->info().id()] + cell->info().averageVelocity()*math::abs(cell->info().volume());
+	      volumes[cell->vertex(i)->info().id()] = volumes[cell->vertex(i)->info().id()] + math::abs(cell->info().volume());}
 	  }}
 
 	std::ofstream fluid_vel ("Velocity", std::ios::out);
@@ -257,7 +257,7 @@ void FlowBoundingSphere<Tesselation>::measurePressureProfile(Real WallUpy, Real 
 	Real pressure = 0.f;
 	int cell=0;
 	for (int i=0; i<captures; i++){
-        for (Real Z=min(zMin,zMax); Z<=max(zMin,zMax); Z+=std::abs(Rz)) {
+        for (Real Z=min(zMin,zMax); Z<=max(zMin,zMax); Z+=math::abs(Rz)) {
 		permeameter = Tri.locate(CGT::Sphere(X, Y, Z));
 		pressure+=permeameter->info().p();
 		cell++;
@@ -293,8 +293,8 @@ Real FlowBoundingSphere<Tesselation>::averagePressure()
   for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != Tri.finite_cells_end(); cell++) {
 	P+=cell->info().p();
 	n++;
-	Ppond+=cell->info().p()*std::abs(cell->info().volume());
-	Vpond+=std::abs(cell->info().volume());}
+	Ppond+=cell->info().p()*math::abs(cell->info().volume());
+	Vpond+=math::abs(cell->info().volume());}
   P/=n;
   Ppond/=Vpond;
   return Ppond;
@@ -338,7 +338,7 @@ void FlowBoundingSphere<Tesselation>::computeFacetForcesWithCache(bool onlyCache
 					/// handle fictious vertex since we can get the projected surface easily here
 					if (cell->vertex(j)->info().isFictious) {
 						//projection of facet on the boundary
-						Real projSurf=std::abs(Surfk[boundary(cell->vertex(j)->info().id()).coordinate]);
+						Real projSurf=math::abs(Surfk[boundary(cell->vertex(j)->info().id()).coordinate]);
 						tempVect=-projSurf*boundary(cell->vertex(j)->info().id()).normal;
 						cell->vertex(j)->info().forces = cell->vertex(j)->info().forces+tempVect*cell->info().p();
 							//define the cached value for later use with cache*p
@@ -583,7 +583,7 @@ void FlowBoundingSphere<Tesselation>::computePermeability()
 					if (S0==0) S0=checkSphereFacetOverlap(v1,v2,v0);
 					if (S0==0) S0=checkSphereFacetOverlap(v2,v0,v1);
 					//take absolute value, since in rare cases the surface can be negative (overlaping spheres)
-					fluidArea=std::abs(area-crossSections[0]-crossSections[1]-crossSections[2]+S0);
+					fluidArea=math::abs(area-crossSections[0]-crossSections[1]-crossSections[2]+S0);
 					cell->info().facetFluidSurfacesRatio[j]=fluidArea/area;
 					// kFactor<0 means we replace Poiseuille by Darcy localy, yielding a particle size-independent bulk conductivity
 					if (kFactor>0) cell->info().kNorm()[j]= kFactor*(fluidArea * pow(radius,2)) / (8*viscosity*distance);
@@ -1030,7 +1030,7 @@ void FlowBoundingSphere<Tesselation>::gaussSeidel(Real dt)
 						} else {
 						/// INCOMPRESSIBLE
 							m += (cell->info().kNorm())[j2] * cell->neighbor(j2)->info().p();
-							if ( std::isinf(m) && j<10 ) cout << "(cell->info().kNorm())[j2] = " << (cell->info().kNorm())[j2] << " cell->neighbor(j2)->info().p() = " << cell->neighbor(j2)->info().p() << endl;
+							if ( math::isinf(m) && j<10 ) cout << "(cell->info().kNorm())[j2] = " << (cell->info().kNorm())[j2] << " cell->neighbor(j2)->info().p() = " << cell->neighbor(j2)->info().p() << endl;
 							if (j==0) n += (cell->info().kNorm())[j2];
 						}
 					}
@@ -1051,15 +1051,15 @@ void FlowBoundingSphere<Tesselation>::gaussSeidel(Real dt)
                                 dp -= cell->info().p();
                                 #ifdef GS_OPEN_MP
                                 const int tn=omp_get_thread_num();
-				t_sum_dp[tn] += std::abs(dp);
-				t_dp_max[tn]=max(t_dp_max[tn], std::abs(dp));
-				t_p_max[tn]= max(t_p_max[tn], std::abs(cell->info().p()));
-				t_sum_p[tn]+= std::abs(cell->info().p());
+				t_sum_dp[tn] += math::abs(dp);
+				t_dp_max[tn]=max(t_dp_max[tn], math::abs(dp));
+				t_p_max[tn]= max(t_p_max[tn], math::abs(cell->info().p()));
+				t_sum_p[tn]+= math::abs(cell->info().p());
 				#else
-                                dp_max = max(dp_max, std::abs(dp));
-                                p_max = max(p_max, std::abs(cell->info().p()));
-                                sum_p += std::abs(cell->info().p());
-                                sum_dp += std::abs(dp);
+                                dp_max = max(dp_max, math::abs(dp));
+                                p_max = max(p_max, math::abs(cell->info().p()));
+                                sum_p += math::abs(cell->info().p());
+                                sum_dp += math::abs(dp);
 				#endif
                         }
                 }
@@ -1370,7 +1370,7 @@ Real FlowBoundingSphere<Tesselation>::permeameter(Real PInf, Real PSup, Real Sec
         Real viscosity = viscosity;
         Real gravity = 1;
         Real Vdarcy = Q1/Section;
-	Real DeltaP = std::abs(PInf-PSup);
+	Real DeltaP = math::abs(PInf-PSup);
 	Real DeltaH = DeltaP/ (density*gravity);
 	Real k = viscosity*Vdarcy*DeltaY / DeltaP; /**m²**/
 	Real Ks = k*(density*gravity)/viscosity; /**m/s**/
@@ -1824,7 +1824,7 @@ Real FlowBoundingSphere<Tesselation>::samplePermeability(Real& xMin,Real& xMax ,
         boundary(yMaxId).flowCondition=0;
         boundary(yMinId).value=0;
         boundary(yMaxId).value=1;
-	Real pZero = std::abs((boundary(yMinId).value-boundary(yMaxId).value)/2);
+	Real pZero = math::abs((boundary(yMinId).value-boundary(yMaxId).value)/2);
 	initializePressure( pZero );
 	gaussSeidel();
 	const char *kk = "Permeability";

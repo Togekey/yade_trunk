@@ -412,7 +412,7 @@ void PeriodicFlow<_Tesselation>::gaussSeidel(Real dt)
 				if (j==0) n += compFlowFactor*(cell->info().kNorm())[j2];
 			} else {
 				m += (cell->info().kNorm())[j2]*cell->neighbor(j2)->info().shiftedP();
-				if ( std::isinf(m) && j<10 ) cout << "(cell->info().kNorm())[j2] = " << (cell->info().kNorm())[j2] << " cell->neighbor(j2)->info().shiftedP() = " << cell->neighbor(j2)->info().shiftedP() << endl;
+				if ( math::isinf(m) && j<10 ) cout << "(cell->info().kNorm())[j2] = " << (cell->info().kNorm())[j2] << " cell->neighbor(j2)->info().shiftedP() = " << cell->neighbor(j2)->info().shiftedP() << endl;
 				if (j==0) n += (cell->info().kNorm())[j2];
 			} 
 		  }
@@ -427,10 +427,10 @@ void PeriodicFlow<_Tesselation>::gaussSeidel(Real dt)
 			}
 		}
 		dp -= cell->info().p();
-		dp_max = max(dp_max, std::abs(dp));
-		p_max = max(p_max, std::abs(cell->info().shiftedP()));
+		dp_max = max(dp_max, math::abs(dp));
+		p_max = max(p_max, math::abs(cell->info().shiftedP()));
 		sum_p += cell->info().shiftedP();
-		sum_dp += std::abs(dp);
+		sum_dp += math::abs(dp);
             }
         }
         j++;

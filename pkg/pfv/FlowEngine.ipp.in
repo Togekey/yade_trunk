@@ -574,7 +574,7 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
                                 CGT::CVector branch = cell->vertex ( facetVertices[i][0] )->point() - cell->info();
                                 pos_av_facet = ( CGT::Point ) cell->info() + ( branch*Surfk ) *Surfk;
                                 volume_facet_translation += Vel_av*cell->info().facetSurfaces[i];
-                                cell->info().averageVelocity() = cell->info().averageVelocity() - volume_facet_translation/std::abs(cell->info().volume()) * ( pos_av_facet-CGAL::ORIGIN );
+                                cell->info().averageVelocity() = cell->info().averageVelocity() - volume_facet_translation/math::abs(cell->info().volume()) * ( pos_av_facet-CGAL::ORIGIN );
                         }
                 }
         }
@@ -647,7 +647,7 @@ Real TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 /*	Real retVol;*/
 /*	if (cell->info().isCavity) retVol = Volume; // don't factor volume if it is a cavity cell*/
 /*	else retVol = Volume*volumeCorrection;*/
-        return std::abs ( Volume );
+        return math::abs ( Volume );
 }
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
 template<class Cellhandle>
@@ -685,7 +685,7 @@ Real TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 /*	Real retVol;*/
 /*	if (cell->info().isCavity) retVol = (Vol1+Vol2); // don't factor volume if it is a cavity cell*/
 /*	else retVol = (Vol1+Vol2)*volumeCorrection;*/
-        return std::abs ( (Vol1+Vol2) );
+        return math::abs ( (Vol1+Vol2) );
 }
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
 template<class Cellhandle>
@@ -717,7 +717,7 @@ Real TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 /*	Real retVol;*/
 /*	if (cell->info().isCavity) retVol = Volume; // don't factor volume if it is a cavity cell*/
 /*	else retVol = Volume*volumeCorrection;*/
-        return std::abs ( Volume );
+        return math::abs ( Volume );
 }
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
 template<class Cellhandle>
@@ -795,7 +795,7 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 					bool v1fictious = Tes.vertex ( id1 )->info().isFictious;
 					int bnd = v1fictious? id1 : id2;
 					int coord = flow.boundary(bnd).coordinate;
-					O1O2 = v1fictious ? std::abs((sph2->state->pos + makeVector3r(Tes.vertex(id2)->info().ghostShift()))[coord] - flow.boundary(bnd).p[coord]) : std::abs((sph1->state->pos + makeVector3r(Tes.vertex(id1)->info().ghostShift()))[coord] - flow.boundary(bnd).p[coord]);
+					O1O2 = v1fictious ? math::abs((sph2->state->pos + makeVector3r(Tes.vertex(id2)->info().ghostShift()))[coord] - flow.boundary(bnd).p[coord]) : math::abs((sph1->state->pos + makeVector3r(Tes.vertex(id1)->info().ghostShift()))[coord] - flow.boundary(bnd).p[coord]);
 					if(v1fictious)
 						normal = makeVector3r(flow.boundary(id1).normal);
 					else
@@ -900,8 +900,8 @@ Vector3r TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselat
 //                 if ( !cell->info().isReal() ) continue;
                 if ( cell->info().isGhost ) continue;
                 for ( int i=0;i<3;i++ )
-                        meanVel[i]=meanVel[i]+ ( ( cell->info().averageVelocity() ) [i] * std::abs ( cell->info().volume() ) );
-                volume+=std::abs ( cell->info().volume() );
+                        meanVel[i]=meanVel[i]+ ( ( cell->info().averageVelocity() ) [i] * math::abs ( cell->info().volume() ) );
+                volume+=math::abs ( cell->info().volume() );
         }
         return ( meanVel/volume );
 }

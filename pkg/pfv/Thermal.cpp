@@ -152,12 +152,12 @@ void ThermalEngine::setReynoldsNumbers()
 		for (int j = 0; j < 4; j++) {
 			if (!cell->neighbor(j)->info().isFictious) {
 				l          = cell->info() - cell->neighbor(j)->info();
-				charLength = std::sqrt(l.squared_length());
+				charLength = math::sqrt(l.squared_length());
 			}
 		}
-		const Real avgCellFluidVel = std::sqrt(cell->info().averageVelocity().squared_length());
+		const Real avgCellFluidVel = math::sqrt(cell->info().averageVelocity().squared_length());
 		Real       Reynolds        = flow->solver->fluidRho * avgCellFluidVel * charLength / flow->viscosity;
-		if (Reynolds < 0 || std::isnan(Reynolds)) {
+		if (Reynolds < 0 || math::isnan(Reynolds)) {
 			cerr << "Reynolds is negative or nan" << endl;
 			Reynolds = 0;
 		}
@@ -548,24 +548,24 @@ void ThermalEngine::computeFluidFluidConduction()
 		else
 			fluidToSolidRatio = cell->info().facetFluidSurfacesRatio[facetPair.second];
 		//if (flow->thermalPorosity>0) fluidConductionAreaFactor=flow->thermalPorosity;
-		area = fluidConductionAreaFactor * std::sqrt(cell->info().facetSurfaces[facetPair.second].squared_length()) * fluidToSolidRatio;
-		//area = sqrt(fluidSurfK.squared_length());
+		area = fluidConductionAreaFactor * math::sqrt(cell->info().facetSurfaces[facetPair.second].squared_length()) * fluidToSolidRatio;
+		//area = math::sqrt(fluidSurfK.squared_length());
 		//poreVector = cell->info() - neighborCell->info();
 		poreVector = cellBarycenter(cell) - cellBarycenter(neighborCell); // voronoi was breaking for hexagonal packings
-		distance   = std::sqrt(poreVector.squared_length());
+		distance   = math::sqrt(poreVector.squared_length());
 		if (distance < minimumFluidCondDist)
 			distance = minimumFluidCondDist;
 		//cout << "conduction distance" << distance << endl;
 		//if (distance < area) continue;  // hexagonal packings result in extremely small distances that blow up the simulation
 		const Real thermalResist = fluidK * area / distance;
 		conductionEnergy           = thermalResist * delT * thermalDT;
-		if (std::isnan(conductionEnergy))
+		if (math::isnan(conductionEnergy))
 			conductionEnergy = 0;
 		cell->info().stabilityCoefficient += thermalResist;
 		//cout << "conduction distance" << distance << endl;
-		if (!cell->info().Tcondition && !std::isnan(conductionEnergy))
+		if (!cell->info().Tcondition && !math::isnan(conductionEnergy))
 			cell->info().internalEnergy -= conductionEnergy;
-		if (!neighborCell->info().Tcondition && !std::isnan(conductionEnergy))
+		if (!neighborCell->info().Tcondition && !math::isnan(conductionEnergy))
 			neighborCell->info().internalEnergy += conductionEnergy;
 		//cout << "added conduction energy"<< conductionEnergy << endl;
 	}
@@ -580,11 +580,11 @@ void ThermalEngine::computeFluidFluidConduction()
 	//		Real fluidToSolidRatio;
 	//		if (cell->info().isCavity && neighborCell->info().isCavity) fluidToSolidRatio = 1.;
 	//		else fluidToSolidRatio = cell->info().facetFluidSurfacesRatio[f_it->second];
-	//		area = fluidConductionAreaFactor * sqrt(cell->info().facetSurfaces[f_it->second].squared_length())*fluidToSolidRatio;
-	//		//area = sqrt(fluidSurfK.squared_length());
+	//		area = fluidConductionAreaFactor * math::sqrt(cell->info().facetSurfaces[f_it->second].squared_length())*fluidToSolidRatio;
+	//		//area = math::sqrt(fluidSurfK.squared_length());
 	//		//poreVector = cell->info() - neighborCell->info();
 	//		poreVector = cellBarycenter(cell) - cellBarycenter(neighborCell);  // voronoi was breaking for hexagonal packings
-	//		distance = sqrt(poreVector.squared_length());
+	//		distance = math::sqrt(poreVector.squared_length());
 	//		//cout << "conduction distance" << distance << endl;
 	//		//if (distance < area) continue;  // hexagonal packings result in extremely small distances that blow up the simulation
 	//		const Real thermalResist = fluidK*area/distance;
@@ -888,9 +888,9 @@ void ThermalEngine::resetFlowBoundaryTemps()
 //         Real pv13N2 = pow(M[0][1],2) +pow(M[1][1],2) +pow(M[2][1],2);
 //         Real pv14N2 = pow(M[0][2],2) +pow(M[1][2],2) +pow(M[2][2],2);
 //
-//         Real pv12N = sqrt(pv12N2);
-//         Real pv13N = sqrt(pv13N2);
-//         Real pv14N = sqrt(pv14N2);
+//         Real pv12N = math::sqrt(pv12N2);
+//         Real pv13N = math::sqrt(pv13N2);
+//         Real pv14N = math::sqrt(pv14N2);
 //
 //         Real cp12 = (M[0][0]*M[0][1]+M[1][0]*M[1][1]+M[2][0]*M[2][1]);
 //         Real cp13 = (M[0][0]*M[0][2]+M[1][0]*M[1][2]+M[2][0]*M[2][2]);

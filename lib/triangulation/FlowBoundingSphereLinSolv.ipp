@@ -574,15 +574,15 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::vectorizedGaussSeidel(Rea
 			if (j2==0) {
 #ifdef GS_OPEN_MP
 				const int tn=omp_get_thread_num();
-				t_sum_dp[tn] += std::abs(dp);
-				t_dp_max[tn]=max(t_dp_max[tn], std::abs(dp));
+				t_sum_dp[tn] += math::abs(dp);
+				t_dp_max[tn]=max(t_dp_max[tn], math::abs(dp));
 				t_p_max[tn]= max(t_p_max[tn], gsP[ii]);
-				t_sum_p[tn]+= std::abs(gsP[ii]);
+				t_sum_p[tn]+= math::abs(gsP[ii]);
 #else
-				dp_max = max(dp_max, std::abs(dp));
-				p_max = max(p_max, std::abs(gsP[ii]));
-				sum_p += std::abs(gsP[ii]);
-				sum_dp += std::abs(dp);
+				dp_max = max(dp_max, math::abs(dp));
+				p_max = max(p_max, math::abs(gsP[ii]));
+				sum_p += math::abs(gsP[ii]);
+				sum_dp += math::abs(dp);
 #endif
 			}
 		}
