@@ -187,6 +187,74 @@ make_asan:
     paths:
       - screenshots
 
+make_asan_long_double:
+  <<: *make_definition
+  before_script:
+#    # there can be only one before_script:, so the line below cannot be in a separate template
+#    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else export TESTS_AFTER_MAKE="TESTS_AFTER_MAKE"; fi
+    - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 -DENABLE_ASAN=1 -DREAL_DECIMAL_PLACES=18 $EXTRA_CMAKE_ARGS"
+    - echo $EXTRA_CMAKE_ARGS
+    - export ASAN_OPTIONS=detect_leaks=0:log_path=stdout:verify_asan_link_order=false
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  tags:
+    - debug
+  artifacts:
+    when: always
+    paths:
+      - screenshots
+  timeout: 6 hours
+
+make_asan_float128:
+  <<: *make_definition
+  before_script:
+#    # there can be only one before_script:, so the line below cannot be in a separate template
+#    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else export TESTS_AFTER_MAKE="TESTS_AFTER_MAKE"; fi
+    - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 -DENABLE_ASAN=1 -DREAL_DECIMAL_PLACES=33 $EXTRA_CMAKE_ARGS"
+    - echo $EXTRA_CMAKE_ARGS
+    - export ASAN_OPTIONS=detect_leaks=0:log_path=stdout:verify_asan_link_order=false
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  tags:
+    - debug
+  artifacts:
+    when: always
+    paths:
+      - screenshots
+  timeout: 6 hours
+
+make_asan_mpfr40:
+  <<: *make_definition
+  before_script:
+#    # there can be only one before_script:, so the line below cannot be in a separate template
+#    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else export TESTS_AFTER_MAKE="TESTS_AFTER_MAKE"; fi
+    - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 -DENABLE_ASAN=1 -DREAL_DECIMAL_PLACES=40 -DENABLE_MPFR=ON $EXTRA_CMAKE_ARGS"
+    - echo $EXTRA_CMAKE_ARGS
+    - export ASAN_OPTIONS=detect_leaks=0:log_path=stdout:verify_asan_link_order=false
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  tags:
+    - debug
+  artifacts:
+    when: always
+    paths:
+      - screenshots
+  timeout: 6 hours
+
+make_asan_bf40:
+  <<: *make_definition
+  before_script:
+#    # there can be only one before_script:, so the line below cannot be in a separate template
+#    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else export TESTS_AFTER_MAKE="TESTS_AFTER_MAKE"; fi
+    - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 -DENABLE_ASAN=1 -DREAL_DECIMAL_PLACES=40 -DENABLE_MPFR=OFF $EXTRA_CMAKE_ARGS"
+    - echo $EXTRA_CMAKE_ARGS
+    - export ASAN_OPTIONS=detect_leaks=0:log_path=stdout:verify_asan_link_order=false
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  tags:
+    - debug
+  artifacts:
+    when: always
+    paths:
+      - screenshots
+  timeout: 6 hours
+
 make_minimal:
   <<: *make_definition
   <<: *artifacts_definition
