@@ -8,6 +8,7 @@
 #endif
 
 #include "Polyhedra.hpp"
+#include <lib/compatibility/DoubleCompatibility.hpp>
 
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
@@ -308,18 +309,20 @@ void PrintPolyhedron2File(Polyhedron P,FILE* X){
 			++hfc0;
 			B = C;
 			C = FromCGALPoint(hfc0->next()->vertex()->point());
-			fprintf(X,"%e\t%e\t%e\t%e\t%e\t%e\t%e\t%e\t%e\n",A[0],A[1],A[2],B[0],B[1],B[2],C[0],C[1],C[2]);
+			fprintf(X,"%e\t%e\t%e\t%e\t%e\t%e\t%e\t%e\t%e\n",NINE_DOUBLES(A[0],A[1],A[2],B[0],B[1],B[2],C[0],C[1],C[2]));
 		}
 	}
 	fprintf(X,"*** edges ***\n");
  	for (Polyhedron::Edge_iterator hei = P.edges_begin(); hei!=P.edges_end(); ++hei){
 		fprintf(X,"%e\t%e\t%e\t%e\t%e\t%e\n",
+		SIX_DOUBLES(
 			hei->vertex()->point()[0],
 			hei->vertex()->point()[1],
 			hei->vertex()->point()[2],
 			hei->opposite()->vertex()->point()[0],
 			hei->opposite()->vertex()->point()[1],
-			hei->opposite()->vertex()->point()[2]);
+			hei->opposite()->vertex()->point()[2])
+		);
 	}
 }
 
