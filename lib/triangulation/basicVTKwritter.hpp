@@ -1,4 +1,5 @@
 #pragma once
+#include <lib/high-precision/Real.hpp>
 #include <fstream>
 #include <iostream>
 #include <boost/lexical_cast.hpp>
@@ -42,7 +43,7 @@ struct basicVTKwritter
 
 	private:
 		std::string conv(const WriteType& v) {
-			return boost::lexical_cast<std::string>(v);
+			return ::yade::toString(v);
 		}
 };
 
