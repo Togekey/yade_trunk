@@ -207,8 +207,8 @@ vector<Real> FlowBoundingSphere<Tesselation>::averageFluidVelocityOnSphere(unsig
 	  if (cell->info().fictious()==0){
 	    for (unsigned int i=0;i<4;i++){
 	      if (cell->vertex(i)->info().id()==Id_sph){
-		velocityVolumes = velocityVolumes + cell->info().averageVelocity()*math::abs(cell->info().volume());
-		volumes = volumes + math::abs(cell->info().volume());}}}}
+		velocityVolumes = velocityVolumes + cell->info().averageVelocity()*std::abs(cell->info().volume());
+		volumes = volumes + std::abs(cell->info().volume());}}}}
 
 	for (int i=0;i<3;i++) result[i] += velocityVolumes[i]/volumes;
 	return result;
@@ -1853,8 +1853,8 @@ void FlowBoundingSphere<Tesselation>::sliceField(const char *filename)
         Real Ry = (yMax-yMin) /intervals;
         Real Rz = (zMax-zMin) /intervals;
 	Real X=0.5;
-                for (Real Y=min(yMax,yMin); Y<=max(yMax,yMin); Y=Y+math::abs(Ry)) {
-                        for (Real Z=min(zMin,zMax); Z<=max(zMin,zMax); Z=Z+math::abs(Rz)) {
+                for (Real Y=min(yMax,yMin); Y<=max(yMax,yMin); Y=Y+std::abs(Ry)) {
+                        for (Real Z=min(zMin,zMax); Z<=max(zMin,zMax); Z=Z+std::abs(Rz)) {
 			  permeameter = Tri.locate(Point(X, Y, Z));
 			  consFile << permeameter->info().p() <<" ";
                         }
