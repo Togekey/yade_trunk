@@ -33,9 +33,9 @@ void PhaseCluster::solvePressure()
 		vector<int> is;
 		vector<int> js;
 		int ncols=0;//number of unknown
-		vector<double> vs;
-		vector<double> RHS;
-		vector<double> RHSvol;
+		vector<Real> vs;
+		vector<Real> RHS;
+		vector<Real> RHSvol;
 		
 		vector<CellHandle> pCells;//the pores in which pressure will be solved
 #ifdef LINSOLV
@@ -52,7 +52,7 @@ void PhaseCluster::solvePressure()
 		for (auto cellIt =  pCells.begin(); cellIt!=pCells.end(); cellIt++) 
 		{
 			CellHandle cell = *cellIt;
-			  double diag=0;
+			  Real diag=0;
 			  for (int j=0;j<4;j++) if ((not tes->Triangulation().is_infinite(cell->neighbor(j))) and  !cell->neighbor(j)->info().blocked) {
 			      diag+= (cell->info().kNorm())[j];
 			      if ((not cell->neighbor(j)->info().Pcondition) and not cell->neighbor(j)->info().isNWRes) {
@@ -96,7 +96,7 @@ void PhaseCluster::solvePressure()
 			for(unsigned k=0;k<T_nnz;k++) {
 				((long*) T->i)[k]=is[k];
 				((long*) T->j)[k]=js[k];
-				((double*) T->x)[k]=vs[k];
+				((Real*) T->x)[k]=vs[k];
 			}
 			T->nnz=T_nnz;
 			// convert triplet list into a cholmod sparse matrix, then factorize it
@@ -109,11 +109,11 @@ void PhaseCluster::solvePressure()
 			factorized = true;
 		}
 		cholmod_dense* B = cholmod_l_zeros(ncols, 1, LC->xtype, &(comC));
-		double* B_x =(double *) B->x;
+		Real* B_x =(Real *) B->x;
 		for (int k=0; k<ncols; k++) B_x[k]=RHS[k]+RHSvol[k];
 	
 		ex = cholmod_l_solve(CHOLMOD_A, LC, B, &(comC));
-		double* e_x =(double *) ex->x;
+		Real* e_x =(Real *) ex->x;
 		
 		for (auto cellIt =  pCells.begin(); cellIt!=pCells.end(); cellIt++) 
 		{
@@ -190,10 +190,10 @@ void TwoPhaseFlowEngine::computePoreBodyRadius()
   
     // This routine finds the radius of the inscribed sphere within each pore-body
     // Following Mackay et al., 1972. 
-      double d01 = 0.0, d02 = 0.0, d03 = 0.0, d12 = 0.0, d13 = 0.0, d23 = 0.0, Rin = 0.0, r0 = 0.0, r1 = 0.0, r2 =0.0, r3 = 0.0;
+      Real d01 = 0.0, d02 = 0.0, d03 = 0.0, d12 = 0.0, d13 = 0.0, d23 = 0.0, Rin = 0.0, r0 = 0.0, r1 = 0.0, r2 =0.0, r3 = 0.0;
       bool check = false;
       unsigned int i = 0;
-      double dR=0.0, tempR = 0.0;
+      Real dR=0.0, tempR = 0.0;
       bool initialSign = false; //False = negative, true is positive
       bool first = true;
       
@@ -306,23 +306,23 @@ void TwoPhaseFlowEngine::computePoreThroatRadiusMethod1()
                 cell->info().poreThroatRadius[j]=computeEffPoreThroatRadius(cell, j);
                 neighbourCell->info().poreThroatRadius[tri.mirror_index(cell, j)]= cell->info().poreThroatRadius[j];}}}
 }
-double TwoPhaseFlowEngine::computeEffPoreThroatRadius(CellHandle cell, int j)
+Real TwoPhaseFlowEngine::computeEffPoreThroatRadius(CellHandle cell, int j)
 {
-    double rInscribe = std::abs(solver->computeEffectiveRadius(cell, j));
+    Real rInscribe = std::abs(solver->computeEffectiveRadius(cell, j));
     CellHandle cellh = CellHandle(cell);
     int facetNFictious = solver->detectFacetFictiousVertices (cellh,j);
-    double r;
+    Real r;
     if(facetNFictious==0) {r=computeEffPoreThroatRadiusFine(cell,j);}
     else r=rInscribe;    
     return r;
 }
-double TwoPhaseFlowEngine::computeEffPoreThroatRadiusFine(CellHandle cell, int j)
+Real TwoPhaseFlowEngine::computeEffPoreThroatRadiusFine(CellHandle cell, int j)
 {
     RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
     if (tri.is_infinite(cell->neighbor(j))) return 0;
 
     Vector3r pos[3]; //solid pos
-    double r[3]; //solid radius
+    Real r[3]; //solid radius
     
     for (int i=0; i<3; i++) {
       pos[i] = makeVector3r(cell->vertex(facetVertices[j][i])->point().point());
@@ -330,10 +330,10 @@ double TwoPhaseFlowEngine::computeEffPoreThroatRadiusFine(CellHandle cell, int j
     }
     return computeMSPRcByPosRadius(pos[0],r[0],pos[1],r[1],pos[2],r[2]);
 }   
-double TwoPhaseFlowEngine::computeMSPRcByPosRadius(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC)
+Real TwoPhaseFlowEngine::computeMSPRcByPosRadius(const Vector3r& posA, const Real& rA, const Vector3r& posB, const Real& rB, const Vector3r& posC, const Real& rC)
 {
-    double e[3]; //edges of triangulation
-    double g[3]; //gap radius between solid
+    Real e[3]; //edges of triangulation
+    Real g[3]; //gap radius between solid
         
     e[0] = (posB-posC).norm();
     e[1] = (posC-posA).norm();
@@ -342,13 +342,13 @@ double TwoPhaseFlowEngine::computeMSPRcByPosRadius(const Vector3r& posA, const d
     g[1] = ((e[1]-rC-rA)>0) ? 0.5*(e[1]-rC-rA):0 ;
     g[2] = ((e[2]-rA-rB)>0) ? 0.5*(e[2]-rA-rB):0 ;
     
-    double rmin= (std::max(g[0],std::max(g[1],g[2]))==0) ? 1.0e-11:std::max(g[0],std::max(g[1],g[2])) ;
-    double rmax= computeEffRcByPosRadius(posA, rA, posB, rB, posC, rC);
+    Real rmin= (std::max(g[0],std::max(g[1],g[2]))==0) ? 1.0e-11:std::max(g[0],std::max(g[1],g[2])) ;
+    Real rmax= computeEffRcByPosRadius(posA, rA, posB, rB, posC, rC);
     if(rmin>rmax) { cerr<<"WARNING! rmin>rmax. rmin="<<rmin<<" ,rmax="<<rmax<<endl; }
     
-    double deltaForceRMin = computeDeltaForce(posA, rA, posB, rB, posC, rC, rmin);
-    double deltaForceRMax = computeDeltaForce(posA, rA, posB, rB, posC, rC, rmax);
-    double effPoreRadius;
+    Real deltaForceRMin = computeDeltaForce(posA, rA, posB, rB, posC, rC, rmin);
+    Real deltaForceRMax = computeDeltaForce(posA, rA, posB, rB, posC, rC, rmax);
+    Real effPoreRadius;
     
     if(deltaForceRMin>deltaForceRMax) { effPoreRadius=rmax; }
     else if(deltaForceRMax<0) { effPoreRadius=rmax; }
@@ -356,9 +356,9 @@ double TwoPhaseFlowEngine::computeMSPRcByPosRadius(const Vector3r& posA, const d
     else { effPoreRadius=bisection(posA, rA, posB, rB, posC, rC, rmin,rmax); }
     return effPoreRadius;
 }
-double TwoPhaseFlowEngine::bisection(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC, double a, double b)
+Real TwoPhaseFlowEngine::bisection(const Vector3r& posA, const Real& rA, const Vector3r& posB, const Real& rB, const Vector3r& posC, const Real& rC, Real a, Real b)
 {
-    double m = 0.5*(a+b);
+    Real m = 0.5*(a+b);
     if (std::abs(b-a)>computeEffRcByPosRadius(posA, rA, posB, rB, posC, rC)*1.0e-6) {
         if ( computeDeltaForce(posA, rA, posB, rB, posC, rC,m) * computeDeltaForce(posA, rA, posB, rB, posC, rC,a) < 0 ) {
             b = m; return bisection(posA, rA, posB, rB, posC, rC, a,b);}
@@ -366,11 +366,11 @@ double TwoPhaseFlowEngine::bisection(const Vector3r& posA, const double& rA, con
     }
     else {return m;}
 }
-double TwoPhaseFlowEngine::computeDeltaForce(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC, double r)
+Real TwoPhaseFlowEngine::computeDeltaForce(const Vector3r& posA, const Real& rA, const Vector3r& posB, const Real& rB, const Vector3r& posC, const Real& rC, Real r)
 {
-    double rRc[3]; //r[i] + r (r: capillary radius)
-    double e[3]; //edges of triangulation
-    double rad[4][3]; //angle in radian
+    Real rRc[3]; //r[i] + r (r: capillary radius)
+    Real e[3]; //edges of triangulation
+    Real rad[4][3]; //angle in radian
 
     rRc[0] = rA+r;
     rRc[1] = rB+r;
@@ -396,28 +396,28 @@ double TwoPhaseFlowEngine::computeDeltaForce(const Vector3r& posA, const double&
     rad[2][1]=computeTriRadian(rRc[0],rRc[1],e[2]);
     rad[2][2]=computeTriRadian(e[2],rRc[0],rRc[1]);
 
-    double lNW = (rad[0][0]+rad[1][1]+rad[2][2])*r;
-    double lNS = (rad[3][0]-rad[1][0]-rad[2][0])*rA + (rad[3][1]-rad[2][1]-rad[0][1])*rB + (rad[3][2]-rad[1][2]-rad[0][2])*rC ;
-    double lInterface=lNW+lNS;
+    Real lNW = (rad[0][0]+rad[1][1]+rad[2][2])*r;
+    Real lNS = (rad[3][0]-rad[1][0]-rad[2][0])*rA + (rad[3][1]-rad[2][1]-rad[0][1])*rB + (rad[3][2]-rad[1][2]-rad[0][2])*rC ;
+    Real lInterface=lNW+lNS;
 
-    double sW0=0.5*rRc[1]*rRc[2]*sin(rad[0][0])-0.5*rad[0][0]*pow(r,2)-0.5*rad[0][1]*pow(rB,2)-0.5*rad[0][2]*pow(rC,2) ;
-    double sW1=0.5*rRc[2]*rRc[0]*sin(rad[1][1])-0.5*rad[1][1]*pow(r,2)-0.5*rad[1][2]*pow(rC,2)-0.5*rad[1][0]*pow(rA,2) ;
-    double sW2=0.5*rRc[0]*rRc[1]*sin(rad[2][2])-0.5*rad[2][2]*pow(r,2)-0.5*rad[2][0]*pow(rA,2)-0.5*rad[2][1]*pow(rB,2) ;
-    double sW=sW0+sW1+sW2;
+    Real sW0=0.5*rRc[1]*rRc[2]*sin(rad[0][0])-0.5*rad[0][0]*pow(r,2)-0.5*rad[0][1]*pow(rB,2)-0.5*rad[0][2]*pow(rC,2) ;
+    Real sW1=0.5*rRc[2]*rRc[0]*sin(rad[1][1])-0.5*rad[1][1]*pow(r,2)-0.5*rad[1][2]*pow(rC,2)-0.5*rad[1][0]*pow(rA,2) ;
+    Real sW2=0.5*rRc[0]*rRc[1]*sin(rad[2][2])-0.5*rad[2][2]*pow(r,2)-0.5*rad[2][0]*pow(rA,2)-0.5*rad[2][1]*pow(rB,2) ;
+    Real sW=sW0+sW1+sW2;
 
     CVector facetSurface = 0.5*CGAL::cross_product(makeCgVect(posA-posC),makeCgVect(posB-posC));
-    double sVoid = sqrt(facetSurface.squared_length()) - (0.5*rad[3][0]*pow(rA,2) + 0.5*rad[3][1]*pow(rB,2) + 0.5*rad[3][2]*pow(rC,2));
-    double sInterface=sVoid-sW;
+    Real sVoid = sqrt(facetSurface.squared_length()) - (0.5*rad[3][0]*pow(rA,2) + 0.5*rad[3][1]*pow(rB,2) + 0.5*rad[3][2]*pow(rC,2));
+    Real sInterface=sVoid-sW;
 
-    double deltaF = lInterface - sInterface/r;//deltaF=surfaceTension*(perimeterPore - areaPore/rCap)
+    Real deltaF = lInterface - sInterface/r;//deltaF=surfaceTension*(perimeterPore - areaPore/rCap)
     return deltaF;
 }
 //calculate radian with law of cosines. (solve $\alpha$)
-double TwoPhaseFlowEngine::computeTriRadian(double a, double b, double c)
+Real TwoPhaseFlowEngine::computeTriRadian(Real a, Real b, Real c)
 {   
-  double cosAlpha = (pow(b,2) + pow(c,2) - pow(a,2))/(2*b*c);
+  Real cosAlpha = (pow(b,2) + pow(c,2) - pow(a,2))/(2*b*c);
   if (cosAlpha>1.0) {cosAlpha=1.0;} if (cosAlpha<-1.0) {cosAlpha=-1.0;}
-  double alpha = acos(cosAlpha);
+  Real alpha = acos(cosAlpha);
   return alpha;
 }
 
@@ -620,7 +620,7 @@ void TwoPhaseFlowEngine::savePoreNetwork(const char* folder)
       filePoreBodyRadius << cell->info().poreBodyRadius << '\n';
       filePoreBodyVolume << cell->info().poreBodyRadius << '\n';
       CVector center ( 0,0,0 );
-      double count = 0.0;
+      Real count = 0.0;
       for ( int k=0;k<4;k++ ){ 
 	  if(cell->vertex(k)->info().id() > 5){
 	    center= center + (cell->vertex(k)->point().point()-CGAL::ORIGIN);
@@ -687,11 +687,11 @@ void TwoPhaseFlowEngine::savePoreNetwork(const char* folder)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-double TwoPhaseFlowEngine::getKappa(int numberFacets)
+Real TwoPhaseFlowEngine::getKappa(int numberFacets)
 {
   if(numberFacets == 0){return 0; cout << endl << "Pore with zero throats? Check your data";}
   else{
-    double kappa = 0.0; 
+    Real kappa = 0.0; 
     	if(numberFacets == 4){kappa = 3.8716;}//Tetrahedra
 	else if(numberFacets == 6){kappa = 8.7067;}//Octahedra
 	else if(numberFacets == 8){kappa = 6.7419;}//Cube
@@ -703,12 +703,12 @@ double TwoPhaseFlowEngine::getKappa(int numberFacets)
   }
 }
 
-double TwoPhaseFlowEngine::getChi(int numberFacets)
+Real TwoPhaseFlowEngine::getChi(int numberFacets)
 {  
   
     if(numberFacets == 0){return 0; cout << endl << "Pore with zero throats? Check your data";}
     else{
-      double chi = 0.0;
+      Real chi = 0.0;
 	if(numberFacets == 4){chi = 0.416;}//Tetrahedra
 	else if(numberFacets == 6){chi = 0.525;}//Octahedra
 	else if(numberFacets == 8){chi = 0.500;}//Cube
@@ -721,12 +721,12 @@ double TwoPhaseFlowEngine::getChi(int numberFacets)
 }
 
 
-double TwoPhaseFlowEngine::getLambda(int numberFacets)
+Real TwoPhaseFlowEngine::getLambda(int numberFacets)
 { 
     
     if(numberFacets == 0){return 0; cout << endl << "Pore with zero throats? Check your data";}
     else{
-      double lambda = 0.0;
+      Real lambda = 0.0;
 	if(numberFacets == 4){lambda = 2.0396;}//Tetrahedra
 	else if(numberFacets == 6){lambda = 1.2849;}//Octahedra
 	else if(numberFacets == 8){lambda = 1;}//Cube
@@ -739,27 +739,27 @@ double TwoPhaseFlowEngine::getLambda(int numberFacets)
 
 }
 
-double TwoPhaseFlowEngine::getN(int numberFacets)
+Real TwoPhaseFlowEngine::getN(int numberFacets)
 {
       if(numberFacets == 0){return 0; cout << endl << "Pore with zero throats? Check your data";}
       else{
-      double n = 0.0;
+      Real n = 0.0;
 	if(numberFacets == 4){n = 6.0;}//Tetrahedra
 	else if(numberFacets == 6){n = 12.0;}//Octahedra
 	else if(numberFacets == 8){n = 8.0;}//Cube
 	else if(numberFacets == 10){n = 12.0; /*cout << endl << "number of edges requested for octa + hexahedron!";*/ }//Octahedron + hexahedron NOTE this should not be requested for calculations!
 	else if(numberFacets == 12){n = 30.0; } //Icosahedra
   	else if(numberFacets == 20){n = 30.0;} // Dodecahedron
-	else{ n = 1.63 * double(numberFacets);} //Other pore shapes
+	else{ n = 1.63 * Real(numberFacets);} //Other pore shapes
 	return n;
   }
 }
 
-double TwoPhaseFlowEngine::getDihedralAngle(int numberFacets)
+Real TwoPhaseFlowEngine::getDihedralAngle(int numberFacets)
 { //given in radians which is reported as tetha in manuscript Sweijen et al., 
     if(numberFacets == 0){return 0; cout << endl << "Pore with zero throats? Check your data";}
       else{
-      double DihedralAngle = 0.0;
+      Real DihedralAngle = 0.0;
 	if(numberFacets == 4){DihedralAngle = 1.0*std::atan(2.0*std::sqrt(2.0));}//Tetrahedra
 	else if(numberFacets == 6){DihedralAngle = 1.0*std::acos(-1.0 / 3.0);}//Octahedra
 	else if(numberFacets == 8){DihedralAngle = 0.5*3.1415926535;}//Cube
@@ -771,9 +771,9 @@ double TwoPhaseFlowEngine::getDihedralAngle(int numberFacets)
   }
 }
 
-double TwoPhaseFlowEngine::getConstantC3(CellHandle cell)
+Real TwoPhaseFlowEngine::getConstantC3(CellHandle cell)
 {
-    double c1 = 54.92*std::pow(double(cell->info().numberFacets),-1.14);
+    Real c1 = 54.92*std::pow(Real(cell->info().numberFacets),-1.14);
     if(cell->info().numberFacets == 4){c1 = 8.291;}
     if(cell->info().numberFacets == 6){c1 = 2.524;}
     if(cell->info().numberFacets == 8){c1 = 2.524;}
@@ -885,7 +885,7 @@ void TwoPhaseFlowEngine::mergeCells()
       //A limitation of max 20 merged tetrahedra is used to prevent huge pores. 
   
       int number = 1, ID = 0;
-      double  dC = 0.0, criterion = 200.0;
+      Real  dC = 0.0, criterion = 200.0;
       bool check = false;
       RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
       FiniteCellsIterator cellEnd = tri.finite_cells_end();
@@ -976,7 +976,7 @@ void TwoPhaseFlowEngine::computeMergedVolumes()
 {
     RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
     FiniteCellsIterator cellEnd = tri.finite_cells_end();
-    double volume = 0.0, summ = 0.0;
+    Real volume = 0.0, summ = 0.0;
     for (unsigned int mergeID = 1; mergeID < maxIDMergedCells; mergeID++){
 	volume = 0.0;
 	summ = 0.0;	  
@@ -1038,8 +1038,8 @@ void TwoPhaseFlowEngine::countFacets()
 void TwoPhaseFlowEngine::getMergedCellStats()
 {
   
-    std::array<double,26> countFacets = {0};
-    std::array<double,30> countMergedNR = {0};
+    std::array<Real,26> countFacets = {0};
+    std::array<Real,30> countMergedNR = {0};
     int count = 0, countTot = 0;
     RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
     FiniteCellsIterator cellEnd = tri.finite_cells_end();
@@ -1144,7 +1144,7 @@ void TwoPhaseFlowEngine::checkVolumeConservationAfterMergingAlgorithm()
     //Check volume of the merging of pores, especially required for truncated pore shapes.
     RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
     FiniteCellsIterator cellEnd = tri.finite_cells_end();
-    double volumeSingleCells = 0.0, volumeTotal = 0.0, volumeMergedCells = 0.0;
+    Real volumeSingleCells = 0.0, volumeTotal = 0.0, volumeMergedCells = 0.0;
     bool check = false;
     for (FiniteCellsIterator cell = tri.finite_cells_begin(); cell != cellEnd; cell++){
      if(cell->info().isFictious == 0){
@@ -1351,7 +1351,7 @@ void TwoPhaseFlowEngine::assignWaterVolumesTriangulation()
       }
       for(unsigned int i=0;i<index;i++){
 	if(finishedUpdating[i] == 0){
-	  double totalArea = solidFractionSpPerTet[i][0] + solidFractionSpPerTet[i][1] + solidFractionSpPerTet[i][2] + solidFractionSpPerTet[i][3];
+	  Real totalArea = solidFractionSpPerTet[i][0] + solidFractionSpPerTet[i][1] + solidFractionSpPerTet[i][2] + solidFractionSpPerTet[i][3];
 	  for(unsigned int j=0;j<4;j++){
 	    leftOverVolumePerSphere[tetrahedra[i][j]] += (solidFractionSpPerTet[i][j] / totalArea)*waterVolume[i];
 	    leftOverDVPerSphere[tetrahedra[i][j]] += (solidFractionSpPerTet[i][j] / totalArea)*deltaVoidVolume[i];
@@ -1361,7 +1361,7 @@ void TwoPhaseFlowEngine::assignWaterVolumesTriangulation()
 
       for (FiniteCellsIterator cell = tri.finite_cells_begin(); cell != cellEnd; cell++) {
 	if(cell->info().saturation == -1){
-	  double vol = 0.0, dv = 0.0;
+	  Real vol = 0.0, dv = 0.0;
 	   for(unsigned int j=0;j<4;j++){
 	     vol += leftOverVolumePerSphere[cell->vertex(j)->info().id()] * (std::abs(solver->fractionalSolidArea(cell,j)) / untreatedAreaPerSphere[cell->vertex(j)->info().id()]);
 	     dv += leftOverDVPerSphere[cell->vertex(j)->info().id()] * (std::abs(solver->fractionalSolidArea(cell,j)) / untreatedAreaPerSphere[cell->vertex(j)->info().id()]);
@@ -1377,7 +1377,7 @@ void TwoPhaseFlowEngine::assignWaterVolumesTriangulation()
 
 void TwoPhaseFlowEngine::equalizeSaturationOverMergedCells()
 {
-    double waterVolume = 0.0, volume = 0.0, leftOverVolume = 0.0, workVolume = 0.0;
+    Real waterVolume = 0.0, volume = 0.0, leftOverVolume = 0.0, workVolume = 0.0;
     RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
     FiniteCellsIterator cellEnd = tri.finite_cells_end();
     
@@ -1677,7 +1677,7 @@ void TwoPhaseFlowEngine::setBoundaryConditions()
 }
 void TwoPhaseFlowEngine::verifyCompatibilityBC()
 {
-    //This is merely a function to double check boundary conditions to avoid ill-posed B.C.
+    //This is merely a function to Real check boundary conditions to avoid ill-posed B.C.
     std::cerr << endl << "Boundary and initial conditions are set for: ";
 
     if(drainageFirst && primaryTPF){  
@@ -1832,7 +1832,7 @@ void TwoPhaseFlowEngine::setListOfPores()
  	  for(unsigned int j = 0; j < listOfPores[i]->info().poreNeighbors.size(); j++){ 
  	    if(listOfPores[listOfPores[i]->info().poreNeighbors[j]]->info().saturation < 1.0){
  	      if(-1.0*listOfPores[i]->info().p() > listOfPores[i]->info().listOfEntryPressure[j]){	      
- 		  double radiusCurvature = 0.0;
+ 		  Real radiusCurvature = 0.0;
  		  if(listOfPores[i]->info().saturation < 1.0 || listOfPores[listOfPores[i]->info().poreNeighbors[j]]->info().saturation == 1.0){
  		    radiusCurvature = 2.0 * surfaceTension / (-1.0 * listOfPores[i]->info().p());
  		  }
@@ -1843,15 +1843,15 @@ void TwoPhaseFlowEngine::setListOfPores()
  		    radiusCurvature = 4.0*surfaceTension / (-1.0 * (listOfPores[listOfPores[i]->info().poreNeighbors[j]]->info().p() + listOfPores[i]->info().p() ));
  		  }
  		 
- 		  double areaWater = listOfPores[i]->info().listOfThroatArea[j] - 3.1415926535 * radiusCurvature * radiusCurvature;
+ 		  Real areaWater = listOfPores[i]->info().listOfThroatArea[j] - 3.1415926535 * radiusCurvature * radiusCurvature;
  		  if(areaWater < 0.0){areaWater = listOfPores[i]->info().listOfThroatArea[j];}
  		 
- 		 double hydraulicRad = 4.0*surfaceTension / (-1.0 * (listOfPores[listOfPores[i]->info().poreNeighbors[j]]->info().p() + listOfPores[i]->info().p() ));
+ 		 Real hydraulicRad = 4.0*surfaceTension / (-1.0 * (listOfPores[listOfPores[i]->info().poreNeighbors[j]]->info().p() + listOfPores[i]->info().p() ));
  		 
  		 Point& p1 = listOfPores[i]->info();
  		 Point& p2 = listOfPores[listOfPores[i]->info().poreNeighbors[j]]->info();
  		 CVector l = p1 - p2;
- 		 double distance = sqrt(l.squared_length());
+ 		 Real distance = sqrt(l.squared_length());
   		 listOfPores[i]->info().listOfkNorm[j] = areaWater * hydraulicRad * hydraulicRad / (viscosity * distance);
 		 if(listOfPores[i]->info().listOfkNorm[j] < 1e-15){listOfPores[i]->info().listOfkNorm[j] = 1e-15;}
  		 if(listOfPores[i]->info().listOfkNorm[j] < 0.0 || listOfPores[i]->info().listOfkNorm[j] != listOfPores[i]->info().listOfkNorm[j]){std::cerr << " Error! " << listOfPores[i]->info().listOfkNorm[j];}
@@ -1895,7 +1895,7 @@ void TwoPhaseFlowEngine::solvePressure()
 {	
     RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
     FiniteCellsIterator cellEnd = tri.finite_cells_end();  
-    double oldDT = 0.0;
+    Real oldDT = 0.0;
     
     //Define matrix, triplet list, and linear solver
     tripletList.clear(); // tripletList.resize(T_nnz);
@@ -1924,8 +1924,8 @@ void TwoPhaseFlowEngine::solvePressure()
     for(unsigned int i = 0; i < numberOfPores; i++){
       
        //Get diagonal coeff
-       double dsdp2 = 0.0;
-       double coeffA = 0.0, coeffA2 = 0.0;
+       Real dsdp2 = 0.0;
+       Real coeffA = 0.0, coeffA2 = 0.0;
        if(hasInterfaceList[i] && !firstDynTPF){
 	    if(listOfPores[i]->info().p() == 0){
 	      std::cout << endl << "Error, pressure = 0 "<< listOfPores[i]->info().p() << listOfPores[i]->info().id;
@@ -1970,10 +1970,10 @@ void TwoPhaseFlowEngine::solvePressure()
 	pressuresList = eSolver.solve(residualsList);
 	
 	//Compute flux
-	double flux = 0.0;
-	double accumulativeDefFlux = 0.0;
-	double waterBefore = 0.0, waterAfter = 0.0;
-	double boundaryFlux = 0.0, lostVolume = 0.0;
+	Real flux = 0.0;
+	Real accumulativeDefFlux = 0.0;
+	Real waterBefore = 0.0, waterAfter = 0.0;
+	Real boundaryFlux = 0.0, lostVolume = 0.0;
 	oldDT = scene->dt;
 	
 	//check water balance
@@ -2000,8 +2000,8 @@ void TwoPhaseFlowEngine::solvePressure()
 	}
 
 	
-	double summFluxList = 0.0;
-	double summFluxUnsat = 0.0;
+	Real summFluxList = 0.0;
+	Real summFluxUnsat = 0.0;
 	for(unsigned int i = 0; i < numberOfPores; i++){
 	  if(hasInterfaceList[i]){summFluxUnsat += listOfFlux[i];}
 	  summFluxList += listOfFlux[i];
@@ -2010,7 +2010,7 @@ void TwoPhaseFlowEngine::solvePressure()
 	//update saturation
 	for(unsigned int i = 0; i < numberOfPores; i++){
 	  if(!deformation && hasInterfaceList[i] && listOfFlux[i] != 0.0 && !listOfPores[i]->info().isWResInternal){		
-       	      double ds = -1.0 * scene->dt * (listOfFlux[i]) / (listOfPores[i]->info().mergedVolume +  listOfPores[i]->info().accumulativeDV * scene->dt);
+       	      Real ds = -1.0 * scene->dt * (listOfFlux[i]) / (listOfPores[i]->info().mergedVolume +  listOfPores[i]->info().accumulativeDV * scene->dt);
 	      saturationList[i] = ds + (saturationList[i] * listOfPores[i]->info().mergedVolume / (listOfPores[i]->info().mergedVolume +  listOfPores[i]->info().accumulativeDV * scene->dt )); 
           }
  	    if(deformation && hasInterfaceList[i] && !listOfPores[i]->info().isWResInternal){
@@ -2035,7 +2035,7 @@ void TwoPhaseFlowEngine::solvePressure()
 // 	  stopSimulation = true;
  	}
 	// --------------------------------------find new dt -----------------------------------------------------
-	double dt = 0.0, finalDT = 1e6;
+	Real dt = 0.0, finalDT = 1e6;
 	int saveID = -1;
 	for(unsigned int i = 0; i < numberOfPores; i++){
 	  //Time step for deforming pore units
@@ -2201,7 +2201,7 @@ void TwoPhaseFlowEngine::solvePressure()
 
 void TwoPhaseFlowEngine::getQuantities()
 {
-  double waterVolume = 0.0, pressureWaterVolume = 0.0, waterVolume_NHJ = 0.0, pressureWaterVolume_NHJ = 0.0, waterVolumeP = 0.0, YDimension  = 0.0, simplePressureAverage = 0.0;
+  Real waterVolume = 0.0, pressureWaterVolume = 0.0, waterVolume_NHJ = 0.0, pressureWaterVolume_NHJ = 0.0, waterVolumeP = 0.0, YDimension  = 0.0, simplePressureAverage = 0.0;
   voidVolume = 0.0;
     for(unsigned int i = 0; i < numberOfPores; i++){
 	  voidVolume += listOfPores[i]->info().mergedVolume;
@@ -2246,7 +2246,7 @@ void TwoPhaseFlowEngine::getQuantities()
     
     
     if(!deformation){
-      double volumeWaterVBC = 0.0, volumeWaterPressureBC = 0.0, volumeWaterBC = 0.0, volumeWaterAirBC = 0.0, volumeWaterPressureAirBC = 0.0, volumeAirBC = 0.0, Ybottom = 0.0, Ytop = 0.0;
+      Real volumeWaterVBC = 0.0, volumeWaterPressureBC = 0.0, volumeWaterBC = 0.0, volumeWaterAirBC = 0.0, volumeWaterPressureAirBC = 0.0, volumeAirBC = 0.0, Ybottom = 0.0, Ytop = 0.0;
       for(unsigned int i = 0; i < numberOfPores; i++){
       if(listOfPores[i]->info().waterBC){
 	volumeWaterVBC += listOfPores[i]->info().saturation * listOfPores[i]->info().mergedVolume;
@@ -2261,13 +2261,13 @@ void TwoPhaseFlowEngine::getQuantities()
 	Ytop += solver->cellBarycenter(listOfPores[i])[1] * listOfPores[i]->info().mergedVolume;
       }
       }
-      double Stop = volumeWaterAirBC / volumeAirBC;  //air BC
-      double Sbottom = volumeWaterVBC / volumeWaterBC;//Water BC.
-      double Ptop = volumeWaterPressureAirBC / volumeWaterAirBC ;
-      double Pbottom = volumeWaterPressureBC /  volumeWaterVBC ;
-      double z = (((Ytop / volumeAirBC) - (Ybottom / volumeWaterBC)) / 2.0) + (Ybottom / volumeWaterBC);
-      double gradP =  -1.0 * (Stop - Sbottom) +  (Stop * Ptop - Sbottom * Pbottom);
-      double gradZ =  -1.0 * (YDimension / waterVolume)*(Stop - Sbottom) +  ((Stop * Ytop / volumeAirBC) - (Sbottom * Ybottom / volumeWaterBC));
+      Real Stop = volumeWaterAirBC / volumeAirBC;  //air BC
+      Real Sbottom = volumeWaterVBC / volumeWaterBC;//Water BC.
+      Real Ptop = volumeWaterPressureAirBC / volumeWaterAirBC ;
+      Real Pbottom = volumeWaterPressureBC /  volumeWaterVBC ;
+      Real z = (((Ytop / volumeAirBC) - (Ybottom / volumeWaterBC)) / 2.0) + (Ybottom / volumeWaterBC);
+      Real gradP =  -1.0 * (Stop - Sbottom) +  (Stop * Ptop - Sbottom * Pbottom);
+      Real gradZ =  -1.0 * (YDimension / waterVolume)*(Stop - Sbottom) +  ((Stop * Ytop / volumeAirBC) - (Sbottom * Ybottom / volumeWaterBC));
       centroidAverageWaterPressure = waterPressure + (1.0 / gradZ) *  (z - (YDimension / waterVolume)) * gradP;
     }
 }
@@ -2286,7 +2286,7 @@ void TwoPhaseFlowEngine::updateDeformationFluxTPF()
 {
   RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
   FiniteCellsIterator cellEnd = tri.finite_cells_end();  
-  double dv = 0.0, summ = 0.0, summBC = 0.0, summMC = 0.0, SolidVolume = 0.0, dvSwelling = 0.0;
+  Real dv = 0.0, summ = 0.0, summBC = 0.0, summMC = 0.0, SolidVolume = 0.0, dvSwelling = 0.0;
   
   if(!imposeDeformationFluxTPFSwitch){    
     setPositionsBuffer(true);
@@ -2294,12 +2294,12 @@ void TwoPhaseFlowEngine::updateDeformationFluxTPF()
     
     
     if(swelling){
-    double volume = 0.0, invTime = (1.0 / scene->dt);
+    Real volume = 0.0, invTime = (1.0 / scene->dt);
     if(scene->dt == 0.0){std::cerr<<" No dt found!";}
     for (FiniteCellsIterator cell = tri.finite_cells_begin(); cell != cellEnd; cell++){
       cell->info().dv() = 0.0;
 	if(!cell->info().isFictious){
-	  double solidVol = getSolidVolumeInCell(cell);
+	  Real solidVol = getSolidVolumeInCell(cell);
 	  if(solidVol < 0.0){std::cerr<<"Error! negative pore body volume! " << solidVol; solidVol = 0.0;}
 	  volume = cell->info().volume()*cell->info().volumeSign  - solidVol;
 	  if(volume < 0.0){
@@ -2338,7 +2338,7 @@ void TwoPhaseFlowEngine::updateDeformationFluxTPF()
     //Account for swelling of particles into a non-existing pore (i.e. boundary pores).
     for(unsigned int i = 0; i < numberOfPores; i++){
     if(listOfPores[i]->info().isNWRes){
-        double count = 0.0;
+        Real count = 0.0;
         for(unsigned int j = 0; j < listOfPores[i]->info().poreNeighbors.size(); j++){
             if(!listOfPores[listOfPores[i]->info().poreNeighbors[j]]->info().isNWRes){
                 count += 1.0;
@@ -2357,11 +2357,11 @@ void TwoPhaseFlowEngine::updateDeformationFluxTPF()
   }
 }
 
-double TwoPhaseFlowEngine::getSolidVolumeInCell(CellHandle cell)
+Real TwoPhaseFlowEngine::getSolidVolumeInCell(CellHandle cell)
 {
   //Dublicate function that depends on position buffer of particles
   //FIXME this function be replaced if function of void volume can be made dependent on updated location of particles
-  double Vsolid=0;
+  Real Vsolid=0;
   cell->info().apparentSolidVolume = 0.0;
   for (int i=0;i<4;i++) {
       const Vector3r& p0v = positionBufferCurrent[cell->vertex (solver->permut4[i][0])->info().id()].pos;
@@ -2372,9 +2372,9 @@ double TwoPhaseFlowEngine::getSolidVolumeInCell(CellHandle cell)
       Point p1(p1v[0],p1v[1],p1v[2]);
       Point p2(p2v[0],p2v[1],p2v[2]);
       Point p3(p3v[0],p3v[1],p3v[2]);
-      double rad = positionBufferCurrent[cell->vertex (solver->permut4[i][0])->info().id()].radius;
+      Real rad = positionBufferCurrent[cell->vertex (solver->permut4[i][0])->info().id()].radius;
 
-      double angle =  solver->fastSolidAngle(p0,p1,p2,p3);
+      Real angle =  solver->fastSolidAngle(p0,p1,p2,p3);
       cell->info().particleSurfaceArea[i] = rad*rad*angle;
       
       
@@ -2399,9 +2399,9 @@ void TwoPhaseFlowEngine::updatePoreUnitProperties()
       if(!cell->info().isFictious){
 	for(unsigned int j = 0; j<4; j++){
 	  if(cell->info().poreId != cell->neighbor(j)->info().poreId && cell->info().id > cell->neighbor(j)->info().id){
-	    double rA = positionBufferCurrent[cell->vertex(facetVertices[j][0])->info().id()].radius;
-	    double rB = positionBufferCurrent[cell->vertex(facetVertices[j][1])->info().id()].radius;
-	    double rC = positionBufferCurrent[cell->vertex(facetVertices[j][2])->info().id()].radius;
+	    Real rA = positionBufferCurrent[cell->vertex(facetVertices[j][0])->info().id()].radius;
+	    Real rB = positionBufferCurrent[cell->vertex(facetVertices[j][1])->info().id()].radius;
+	    Real rC = positionBufferCurrent[cell->vertex(facetVertices[j][2])->info().id()].radius;
 	    CVector posA(positionBufferCurrent[cell->vertex(facetVertices[j][0])->info().id()].pos[0],positionBufferCurrent[cell->vertex(facetVertices[j][0])->info().id()].pos[1],positionBufferCurrent[cell->vertex(facetVertices[j][0])->info().id()].pos[2] );
 	    CVector posB(positionBufferCurrent[cell->vertex(facetVertices[j][1])->info().id()].pos[0],positionBufferCurrent[cell->vertex(facetVertices[j][1])->info().id()].pos[1],positionBufferCurrent[cell->vertex(facetVertices[j][1])->info().id()].pos[2] );
 	    CVector posC(positionBufferCurrent[cell->vertex(facetVertices[j][2])->info().id()].pos[0],positionBufferCurrent[cell->vertex(facetVertices[j][2])->info().id()].pos[1],positionBufferCurrent[cell->vertex(facetVertices[j][2])->info().id()].pos[2] );
@@ -2457,10 +2457,10 @@ void TwoPhaseFlowEngine::makeListOfPoresInCells(bool fast)
       for (unsigned int j = 0 ; j < numberOfPores; j++){
 	  firstCheck = true;
 	  std::vector<int> poreNeighbors;
-	  std::vector<double> listOfkNorm;
-	  std::vector<double> listOfEntrySaturation;
-	  std::vector<double> listOfEntryPressure;
-  	  std::vector<double> listOfThroatArea;
+	  std::vector<Real> listOfkNorm;
+	  std::vector<Real> listOfEntrySaturation;
+	  std::vector<Real> listOfEntryPressure;
+  	  std::vector<Real> listOfThroatArea;
 	  for (FiniteCellsIterator cell = tri.finite_cells_begin(); cell != cellEnd; cell++){
 	    if(cell->info().poreId == (int) j){
 	      for(unsigned int ngb = 0; ngb <4 ; ngb++){
@@ -2476,7 +2476,7 @@ void TwoPhaseFlowEngine::makeListOfPoresInCells(bool fast)
 		    if(!fast){poreNeighbors.push_back(cell->neighbor(ngb)->info().poreId);}
 		    if(!fast){listOfkNorm.push_back(cell->info().kNorm()[ngb]);}
 		    listOfEntryPressure.push_back(entryMethodCorrection * surfaceTension / cell->info().poreThroatRadius[ngb]);
-                    double saturation = poreSaturationFromPcS(cell,-1.0 * cell->info().entryPressure[ngb]); 
+                    Real saturation = poreSaturationFromPcS(cell,-1.0 * cell->info().entryPressure[ngb]); 
                     listOfEntrySaturation.push_back(saturation);
                     if(saturation > 1.0 || saturation < 0.0 || saturation != saturation){
                      std::cerr<<endl<< "Time to update triangulation, entry saturation not correct: " << saturation;   
@@ -2630,8 +2630,8 @@ void TwoPhaseFlowEngine:: updateReservoirLabel()
 
 void TwoPhaseFlowEngine::clusterGetFacet(PhaseCluster* cluster, CellHandle cell, int facet) {
 	cell->info().hasInterface = true;
-	double interfArea = sqrt((cell->info().facetSurfaces[facet]*cell->info().facetFluidSurfacesRatio[facet]).squared_length());
-	cluster->interfaces.push_back(PhaseCluster::Interface(std::pair<std::pair<unsigned int,unsigned int>,double>(
+	Real interfArea = sqrt((cell->info().facetSurfaces[facet]*cell->info().facetFluidSurfacesRatio[facet]).squared_length());
+	cluster->interfaces.push_back(PhaseCluster::Interface(std::pair<std::pair<unsigned int,unsigned int>,Real>(
 		std::pair<unsigned int,unsigned int>(cell->info().id,cell->neighbor(facet)->info().id),interfArea)));
 	cluster->interfaces.back().outerIndex=facet;
 	cluster->interfaces.back().innerCell=cell;
@@ -2970,8 +2970,8 @@ void TwoPhaseFlowEngine::invasion()
 ///mode1 and mode2 can share the same invasionSingleCell(), invasionSingleCell() ONLY change neighbor pressure and neighbor saturation, independent of reservoirInfo.
 void TwoPhaseFlowEngine::invasionSingleCell(CellHandle cell)
 {
-    double localPressure=cell->info().p();
-    double localSaturation=cell->info().saturation;
+    Real localPressure=cell->info().p();
+    Real localSaturation=cell->info().saturation;
     if (useFastInvasion and cell->info().label>0) clusterInvadePoreFast(clusters[cell->info().label].get(),cell);
     for (int facet = 0; facet < 4; facet ++) {
         CellHandle nCell = cell->neighbor(facet);
@@ -2985,8 +2985,8 @@ void TwoPhaseFlowEngine::invasionSingleCell(CellHandle cell)
 	  if(solver->debugOut) {cerr<<"merge trapped phase"<<endl;}
 	  invasionSingleCell(nCell);} ///here we merge trapped phase back to reservoir 
 	else if ( (nCell->info().saturation>localSaturation) ) {
-	  double nPcThroat=surfaceTension/cell->info().poreThroatRadius[facet];
-	  double nPcBody=surfaceTension/nCell->info().poreBodyRadius;
+	  Real nPcThroat=surfaceTension/cell->info().poreThroatRadius[facet];
+	  Real nPcBody=surfaceTension/nCell->info().poreBodyRadius;
 	  if( (localPressure-nCell->info().p()>nPcThroat) && (localPressure-nCell->info().p()>nPcBody) ) {
 	    nCell->info().p() = localPressure;
 	    nCell->info().saturation=localSaturation;
@@ -3002,8 +3002,8 @@ void TwoPhaseFlowEngine::invasionSingleCell(CellHandle cell)
 // 	  else continue;
 	}
 	else if ( (nCell->info().saturation<localSaturation) ) {
-	  double nPcThroat=surfaceTension/cell->info().poreThroatRadius[facet];
-	  double nPcBody=surfaceTension/nCell->info().poreBodyRadius;
+	  Real nPcThroat=surfaceTension/cell->info().poreThroatRadius[facet];
+	  Real nPcBody=surfaceTension/nCell->info().poreBodyRadius;
 	  if( (nCell->info().p()-localPressure<nPcBody) && (nCell->info().p()-localPressure<nPcThroat) ) {
 	    nCell->info().p() = localPressure;
 	    nCell->info().saturation=localSaturation;
@@ -3068,7 +3068,7 @@ void TwoPhaseFlowEngine::invasion1()
 }
 
 ///search trapped W-phase or NW-phase, define trapCapP=Pn-Pw. assign isTrapW/isTrapNW info.
-void TwoPhaseFlowEngine::checkTrap(double pressure)
+void TwoPhaseFlowEngine::checkTrap(Real pressure)
 {
     RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
     FiniteCellsIterator cellEnd = tri.finite_cells_end();
@@ -3181,9 +3181,9 @@ void TwoPhaseFlowEngine::updateReservoirs2()
     }
 }
 
-double TwoPhaseFlowEngine::getMinDrainagePc()
+Real TwoPhaseFlowEngine::getMinDrainagePc()
 {
-    double nextEntry = 1e50;
+    Real nextEntry = 1e50;
     RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
     FiniteCellsIterator cellEnd = tri.finite_cells_end();
     for ( FiniteCellsIterator cell = tri.finite_cells_begin(); cell != cellEnd; cell++ ) {
@@ -3205,9 +3205,9 @@ double TwoPhaseFlowEngine::getMinDrainagePc()
     else return nextEntry;
 }
 
-double TwoPhaseFlowEngine::getMaxImbibitionPc()
+Real TwoPhaseFlowEngine::getMaxImbibitionPc()
 {
-    double nextEntry = -1e50;
+    Real nextEntry = -1e50;
     RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
     FiniteCellsIterator cellEnd = tri.finite_cells_end();
     for ( FiniteCellsIterator cell = tri.finite_cells_begin(); cell != cellEnd; cell++ ) {
@@ -3228,12 +3228,12 @@ double TwoPhaseFlowEngine::getMaxImbibitionPc()
     else return nextEntry;
 }
 
-double TwoPhaseFlowEngine::getSaturation(bool isSideBoundaryIncluded)
+Real TwoPhaseFlowEngine::getSaturation(bool isSideBoundaryIncluded)
 {
     if( (!isInvadeBoundary) && (isSideBoundaryIncluded)) cerr<<"In isInvadeBoundary=false drainage, isSideBoundaryIncluded can't set true."<<endl;
     RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
-    double poresVolume = 0.0; //total pores volume
-    double wVolume = 0.0; 	//NW-phase volume
+    Real poresVolume = 0.0; //total pores volume
+    Real wVolume = 0.0; 	//NW-phase volume
     FiniteCellsIterator cellEnd = tri.finite_cells_end();
 
     for ( FiniteCellsIterator cell = tri.finite_cells_begin(); cell != cellEnd; cell++ ) {
@@ -3364,7 +3364,7 @@ bool TwoPhaseFlowEngine::isCellNeighbor(unsigned int cell1, unsigned int cell2)
   return neighbor;
 }
 
-void TwoPhaseFlowEngine::setPoreThroatRadius(unsigned int cell1, unsigned int cell2, double radius)
+void TwoPhaseFlowEngine::setPoreThroatRadius(unsigned int cell1, unsigned int cell2, Real radius)
 {
     if (isCellNeighbor(cell1,cell2)==false) {
         cout<<"cell1 and cell2 are not neighbors."<<endl;}
@@ -3375,9 +3375,9 @@ void TwoPhaseFlowEngine::setPoreThroatRadius(unsigned int cell1, unsigned int ce
             if (solver->T[solver->currentTes].cellHandles[cell2]->neighbor(i)->info().id==cell1)
                 solver->T[solver->currentTes].cellHandles[cell2]->info().poreThroatRadius[i]=radius;}}
 }
-double TwoPhaseFlowEngine::getPoreThroatRadius(unsigned int cell1, unsigned int cell2)
+Real TwoPhaseFlowEngine::getPoreThroatRadius(unsigned int cell1, unsigned int cell2)
 {
-    double r =-1.;
+    Real r =-1.;
     if (isCellNeighbor(cell1,cell2)==false) {
         cerr<<"cell1 and cell2 are not neighbors."<<endl;}
     else {

@@ -34,49 +34,49 @@ class TwoPhaseCellInfo : public FlowCellInfo_TwoPhaseFlowEngineT
 	bool isNWRes;
 	bool isTrapW;
 	bool isTrapNW;
-	double saturation;//the saturation of single pore (will be used in quasi-static imbibition and dynamic flow)
-	double trapCapP;//for calculating the pressure of trapped pore, cell->info().p() = pressureNW- trapCapP. OR cell->info().p() = pressureW + trapCapP
+	Real saturation;//the saturation of single pore (will be used in quasi-static imbibition and dynamic flow)
+	Real trapCapP;//for calculating the pressure of trapped pore, cell->info().p() = pressureNW- trapCapP. OR cell->info().p() = pressureW + trapCapP
 	bool hasInterface; //Indicated whether a NW-W interface is present within the pore body
-	std::vector<double> poreThroatRadius;
-	double poreBodyRadius;
-	double poreBodyVolume;
-	double porosity;
+	std::vector<Real> poreThroatRadius;
+	Real poreBodyRadius;
+	Real poreBodyVolume;
+	Real porosity;
 	int windowsID;//a temp cell info for experiment comparison(used by chao)
-	double solidLine [4][4];//the length of intersecting line between sphere and facet. [i][j] is for facet "i" and sphere (facetVertices)"[i][j]". Last component [i][3] for 1/sumLines in the facet "i" (used by chao).
+	Real solidLine [4][4];//the length of intersecting line between sphere and facet. [i][j] is for facet "i" and sphere (facetVertices)"[i][j]". Last component [i][3] for 1/sumLines in the facet "i" (used by chao).
 	
 	//DynamicTwoPhaseFlow 
-	std::vector<double> entryPressure;
-	std::vector<double> entrySaturation;
+	std::vector<Real> entryPressure;
+	std::vector<Real> entrySaturation;
 	std::vector<int> poreNeighbors;
 	std::vector<int> poreIdConnectivity;
-	std::vector<double> listOfkNorm;
-	std::vector<double> listOfkNorm2;
-	std::vector<double> listOfEntrySaturation;
-	std::vector<double> listOfEntryPressure;
-	std::vector<double> kNorm2;
-	std::vector<double> listOfThroatArea;
-	std::vector<double> particleSurfaceArea;	//Surface area of four particles enclosing one grain-based tetrahedra
-	double accumulativeDVSwelling;
-	double saturation2;
+	std::vector<Real> listOfkNorm;
+	std::vector<Real> listOfkNorm2;
+	std::vector<Real> listOfEntrySaturation;
+	std::vector<Real> listOfEntryPressure;
+	std::vector<Real> kNorm2;
+	std::vector<Real> listOfThroatArea;
+	std::vector<Real> particleSurfaceArea;	//Surface area of four particles enclosing one grain-based tetrahedra
+	Real accumulativeDVSwelling;
+	Real saturation2;
 	int numberFacets;
 	int isFictiousId;
-	double mergedVolume;
+	Real mergedVolume;
 	int mergednr;
 	unsigned int mergedID;
-	double thresholdSaturation;
-	double flux;
-	double accumulativeDV; 	
-	double airWaterArea;
+	Real thresholdSaturation;
+	Real flux;
+	Real accumulativeDV; 	
+	Real airWaterArea;
 	bool isWResInternal;
-      	double conductivityWRes;
-	double minSaturation;
+      	Real conductivityWRes;
+	Real minSaturation;
 	int poreId;
 	bool airBC;
 	bool waterBC;
-	double thresholdPressure;
-	double apparentSolidVolume;
-	double dvSwelling;
-	double dvTPF;
+	Real thresholdPressure;
+	Real apparentSolidVolume;
+	Real dvSwelling;
+	Real dvTPF;
 	bool isNWResDef;
 	int invadedFrom;
 	int label;//for marking disconnected clusters. NW-res: 0; W-res: 1; W-clusters by 2,3,4...
@@ -139,14 +139,14 @@ REGISTER_SERIALIZABLE(TwoPhaseFlowEngineT);
 // A class to represent isolated single-phase cluster (main application in convective drying at the moment)
 class PhaseCluster : public Serializable
 {
-		double totalCellVolume;
+		Real totalCellVolume;
 		bool factorized;
 // 		CellHandle entryPoreHandle;
 
 	public :
 		typedef TwoPhaseFlowEngineT::CellHandle CellHandle;
 		typedef TwoPhaseFlowEngineT::Tesselation Tesselation;
-		typedef std::pair<std::pair<unsigned int,unsigned int>,double> Interface_t;
+		typedef std::pair<std::pair<unsigned int,unsigned int>,Real> Interface_t;
 		struct Interface : Interface_t {
 			unsigned outerIndex;// local index to outer cell from inner cell (from 0 to 3)
 			Real volume; // for tracking movements of the interface
@@ -220,10 +220,10 @@ class PhaseCluster : public Serializable
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(PhaseCluster,Serializable,"Preliminary.",
 		((int,label,-1,,"Unique label of this cluster, should be reflected in pores of this cluster."))
-		((double,volume,0,,"cumulated volume of all pores."))
-		((double,entryRadius,0,,"smallest entry capillary pressure."))
+		((Real,volume,0,,"cumulated volume of all pores."))
+		((Real,entryRadius,0,,"smallest entry capillary pressure."))
 		((int,entryPore,-1,,"the pore of the cluster incident to the throat with smallest entry Pc."))
-		((double,interfacialArea,0,,"interfacial area of the cluster"))
+		((Real,interfacialArea,0,,"interfacial area of the cluster"))
 		,((LC,NULL))((ex,NULL))((pComC,&comC)),
 		#ifdef LINSOLV
 		cholmod_l_start(pComC);//initialize cholmod solver
@@ -251,10 +251,10 @@ REGISTER_SERIALIZABLE(PhaseCluster);
 class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 {
 	public :
-	double airBoundaryPressure = 0.0;
+	Real airBoundaryPressure = 0.0;
 	std::vector<CellHandle> listOfPores;
 	bool imposeDeformationFluxTPFSwitch =false;
-	double totalCellVolume;
+	Real totalCellVolume;
 	vector<shared_ptr<PhaseCluster> > clusters; // the list of clusters
 
 	//We can overload every functions of the base engine to make it behave differently
@@ -270,13 +270,13 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	//compute entry pore throat radius (drainage)
 	void computePoreThroatRadiusMethod1();//MS-P method
 	void computePoreThroatRadiusTrickyMethod1();//set the radius of pore throat between side pores negative.
-	double computeEffPoreThroatRadius(CellHandle cell, int j);
-	double computeEffPoreThroatRadiusFine(CellHandle cell, int j);
-	double computeMSPRcByPosRadius(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC);
-	double computeTriRadian(double a, double b, double c);
-	double computeEffRcByPosRadius(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC){double reff=solver->computeEffectiveRadiusByPosRadius(makeCgPoint(posA),rA,makeCgPoint(posB),rB,makeCgPoint(posC),rC); return reff<0?1.0e-10:reff;};
-	double bisection(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC, double a, double b);
-	double computeDeltaForce(const Vector3r& posA, const double& rA, const Vector3r& posB, const double& rB, const Vector3r& posC, const double& rC, double r);
+	Real computeEffPoreThroatRadius(CellHandle cell, int j);
+	Real computeEffPoreThroatRadiusFine(CellHandle cell, int j);
+	Real computeMSPRcByPosRadius(const Vector3r& posA, const Real& rA, const Vector3r& posB, const Real& rB, const Vector3r& posC, const Real& rC);
+	Real computeTriRadian(Real a, Real b, Real c);
+	Real computeEffRcByPosRadius(const Vector3r& posA, const Real& rA, const Vector3r& posB, const Real& rB, const Vector3r& posC, const Real& rC){Real reff=solver->computeEffectiveRadiusByPosRadius(makeCgPoint(posA),rA,makeCgPoint(posB),rB,makeCgPoint(posC),rC); return reff<0?1.0e-10:reff;};
+	Real bisection(const Vector3r& posA, const Real& rA, const Vector3r& posB, const Real& rB, const Vector3r& posC, const Real& rC, Real a, Real b);
+	Real computeDeltaForce(const Vector3r& posA, const Real& rA, const Vector3r& posB, const Real& rB, const Vector3r& posC, const Real& rC, Real r);
 
 	void computePoreThroatRadiusMethod2();//radius of the inscribed circle
 	void computePoreThroatRadiusMethod3();//radius of area-equivalent circle
@@ -288,15 +288,15 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	void invasion();//functions can be shared by two modes
 	void invasionSingleCell(CellHandle cell);
 	void updatePressure();
-	double getMinDrainagePc();
-	double getMaxImbibitionPc();
-	double getSaturation(bool isSideBoundaryIncluded=false);
+	Real getMinDrainagePc();
+	Real getMaxImbibitionPc();
+	Real getSaturation(bool isSideBoundaryIncluded=false);
 
 	void invasion1();//with-trap
 	void updateReservoirs1();
 	void WResRecursion(CellHandle cell);
 	void NWResRecursion(CellHandle cell);
-	void checkTrap(double pressure);
+	void checkTrap(Real pressure);
 	void updateReservoirLabel();
 	void invasion2();//without-trap
 	void updateReservoirs2();
@@ -354,11 +354,11 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	bool detectBridge(RTriangulation::Finite_edges_iterator& edge);
 	
 	//Library TwoPhaseFlow
-	double getKappa(int numberFacets);
-	double getChi(int numberFacets);
- 	double getLambda(int numberFacets);
-	double getN(int numberFacets);
-	double getDihedralAngle(int numberFacets);
+	Real getKappa(int numberFacets);
+	Real getChi(int numberFacets);
+ 	Real getLambda(int numberFacets);
+	Real getN(int numberFacets);
+	Real getDihedralAngle(int numberFacets);
 
 	//Merging Library
 	void mergeCells();
@@ -378,13 +378,13 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	void setPoreNetwork();
 	void setListOfPores();
 	void getQuantities();
-	double porePressureFromPcS(CellHandle cell, double saturation);
-	double getSolidVolumeInCell(CellHandle cell);
+	Real porePressureFromPcS(CellHandle cell, Real saturation);
+	Real getSolidVolumeInCell(CellHandle cell);
 	
-	double getConstantC4(CellHandle cell);  
-	double getConstantC3(CellHandle cell);
-	double dsdp(CellHandle cell, double pw);
-	double poreSaturationFromPcS(CellHandle cell,double pw);
+	Real getConstantC4(CellHandle cell);  
+	Real getConstantC3(CellHandle cell);
+	Real dsdp(CellHandle cell, Real pw);
+	Real poreSaturationFromPcS(CellHandle cell,Real pw);
 	
 	void reTriangulate();
 	void readTriangulation();
@@ -400,26 +400,26 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	void makeListOfPoresInCells(bool fast);
 
         
-	std::vector<double> leftOverVolumePerSphere;
-	std::vector<double> untreatedAreaPerSphere;
+	std::vector<Real> leftOverVolumePerSphere;
+	std::vector<Real> untreatedAreaPerSphere;
 	std::vector<unsigned int> finishedUpdating;
-	std::vector<double> waterVolume;
+	std::vector<Real> waterVolume;
 	std::vector< std::vector<unsigned int> > tetrahedra;
-	std::vector< std::vector<double> > solidFractionSpPerTet;
-	std::vector<double> deltaVoidVolume;
-	std::vector<double> leftOverDVPerSphere;
-	std::vector<double> saturationList;
+	std::vector< std::vector<Real> > solidFractionSpPerTet;
+	std::vector<Real> deltaVoidVolume;
+	std::vector<Real> leftOverDVPerSphere;
+	std::vector<Real> saturationList;
 	std::vector<bool> hasInterfaceList;
-	std::vector<double> listOfFlux;
-	std::vector<double> listOfMergedVolume;
+	std::vector<Real> listOfFlux;
+	std::vector<Real> listOfMergedVolume;
 
 	
-	Eigen::SparseMatrix<double> aMatrix;
-	typedef Eigen::Triplet<double> ETriplet;
+	Eigen::SparseMatrix<Real> aMatrix;
+	typedef Eigen::Triplet<Real> ETriplet;
 	std::vector<ETriplet> tripletList;
-	Eigen::SparseLU<Eigen::SparseMatrix<double,Eigen::ColMajor>,Eigen::COLAMDOrdering<int> > eSolver;
+	Eigen::SparseLU<Eigen::SparseMatrix<Real,Eigen::ColMajor>,Eigen::COLAMDOrdering<int> > eSolver;
 	
-	int getCell2(double posX, double posY, double posZ){	//Should be fixed properly
+	int getCell2(Real posX, Real posY, Real posZ){	//Should be fixed properly
 	  RTriangulation& tri = solver->T[solver->currentTes].Triangulation();
 	  CellHandle cell = tri.locate(CGT::Sphere(posX,posY,posZ));
 	  return cell->info().id;
@@ -475,8 +475,8 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	void computeOnePhaseFlow() {scene = Omega::instance().getScene().get(); if (!solver) cerr<<"no solver!"<<endl; solver->gaussSeidel(scene->dt);initSolver(*solver);}
 	///manipulate/get/set on pore geometry
 	bool isCellNeighbor(unsigned int cell1, unsigned int cell2);
-	void setPoreThroatRadius(unsigned int cell1, unsigned int cell2, double radius);
-	double getPoreThroatRadius(unsigned int cell1, unsigned int cell2);
+	void setPoreThroatRadius(unsigned int cell1, unsigned int cell2, Real radius);
+	Real getPoreThroatRadius(unsigned int cell1, unsigned int cell2);
 
 	CELL_SCALAR_GETTER(bool,.isWRes,cellIsWRes)
 	CELL_SCALAR_GETTER(bool,.isNWRes,cellIsNWRes)
@@ -507,53 +507,53 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(TwoPhaseFlowEngine,TwoPhaseFlowEngineT,"documentation here",
-	((double,surfaceTension,0.0728,,"Water Surface Tension in contact with air at 20 Degrees Celsius is: 0.0728(N/m)"))
+	((Real,surfaceTension,0.0728,,"Water Surface Tension in contact with air at 20 Degrees Celsius is: 0.0728(N/m)"))
 	((bool,recursiveInvasion,true,,"If true the invasion stops only when no entry pc is less than current capillary pressure, implying simultaneous invasion of many pores. Else only one pore invasion per invasion step."))
 	((bool,initialWetting,true,,"Initial wetting saturated (=true) or non-wetting saturated (=false)"))
 	((bool, isPhaseTrapped,true,,"If True, both phases can be entrapped by the other, which would correspond to snap-off. If false, both phases are always connected to their reservoirs, thus no snap-off."))
 	((bool, isInvadeBoundary, true,,"Invasion side boundary condition. If True, pores of side boundary can be invaded; if False, the pore throats connecting side boundary are closed, those pores are excluded in saturation calculation."))	
 	((bool, drainageFirst, true,,"If true, activate drainage first (initial saturated), then imbibition; if false, activate imbibition first (initial unsaturated), then drainage."))
-	((double,dtDynTPF,0.0,,"Parameter which stores the smallest time step, based on the residence time"))
+	((Real,dtDynTPF,0.0,,"Parameter which stores the smallest time step, based on the residence time"))
 	((int,entryPressureMethod,1,,"integer to define the method used to determine the pore throat radii and the according entry pressures. 1)radius of entry pore throat based on MS-P method; 2) radius of the inscribed circle; 3) radius of the circle with equivalent surface area of the pore throat."))
-// 	((double,partiallySaturatedPores,false,,"Include partially saturated pores or not?"))
+// 	((Real,partiallySaturatedPores,false,,"Include partially saturated pores or not?"))
 
 	//BEGIN Latest dynamic/pore merging things (to clean maybe)
-	((double,entryMethodCorrection,float(entryPressureMethod),,"Parameter that is used in computing entry pressure of a pore throat: P_ij =  entryMethodCorrection * surfaceTension / radius_porethroat "))
+	((Real,entryMethodCorrection,float(entryPressureMethod),,"Parameter that is used in computing entry pressure of a pore throat: P_ij =  entryMethodCorrection * surfaceTension / radius_porethroat "))
 	//Dynamic TwoPhaseFlow
 	((vector<bool>, bndCondIsWaterReservoir, vector<bool>(6,false),,"Boundary conditions, if bndCondIsPressure[] = True, is it air or water boundary condition? True is water reservoir"))
 	((unsigned int,maxIDMergedCells,0,,"maximum number of merged ID, this is computed in mergeCells()"))
-	((double,waterPressurePartiallySatPores,0.0,,"water pressure based on the volume-averaged water pressure in partially-saturated pore units (i.e. pore units having an interface)"))
-	((double,waterPressure,0.0,,"Volume-averaged water pressure"))
-	((double,waterSaturation,0.0,,"Water saturation, excluding the boundary cells"))
-	((double,voidVolume,0.0,,"total void volume, excluding boundary cells"))
+	((Real,waterPressurePartiallySatPores,0.0,,"water pressure based on the volume-averaged water pressure in partially-saturated pore units (i.e. pore units having an interface)"))
+	((Real,waterPressure,0.0,,"Volume-averaged water pressure"))
+	((Real,waterSaturation,0.0,,"Water saturation, excluding the boundary cells"))
+	((Real,voidVolume,0.0,,"total void volume, excluding boundary cells"))
   	((bool,stopSimulation, false,,"Boolean to indicate that dynamic flow simulations cannot find a solution (or next time step). If True, stop simulations"))
   	((bool,debugTPF, false,,"Print debuging messages two phase flow engine "))
-	((double,airWaterInterfacialArea,0.0,,"Air-water interfacial area, based on the pore-unit assembly and regular-shaped pore units"))
-	((double,areaAveragedPressure,0.0,,"Air-water interfacial area averaged water pressure "))
-	((double,maximumRatioPoreThroatoverPoreBody,0.90,,"maximum ratio of pore throat radius over pore body radius, this is used during merging of tetrahedra."))
-	((double,totalWaterVolume,0.0,,"total watervolume"))
+	((Real,airWaterInterfacialArea,0.0,,"Air-water interfacial area, based on the pore-unit assembly and regular-shaped pore units"))
+	((Real,areaAveragedPressure,0.0,,"Air-water interfacial area averaged water pressure "))
+	((Real,maximumRatioPoreThroatoverPoreBody,0.90,,"maximum ratio of pore throat radius over pore body radius, this is used during merging of tetrahedra."))
+	((Real,totalWaterVolume,0.0,,"total watervolume"))
 	((string,modelRunName,"dynamicDrainage",,"Name of simulation, to be implemented into output files"))
-	((double,safetyFactorTimeStep,1.0,,"Safey coefficient for time step"))
-	((double,fluxInViaWBC,0.0,,"Total water flux over water boundary conditions"))
-	((double, accumulativeFlux,0.0,,"accumulative influx of water"))
-	((double, truncationPrecision,1e-6,,"threshold at which a saturation is truncated"))
+	((Real,safetyFactorTimeStep,1.0,,"Safey coefficient for time step"))
+	((Real,fluxInViaWBC,0.0,,"Total water flux over water boundary conditions"))
+	((Real, accumulativeFlux,0.0,,"accumulative influx of water"))
+	((Real, truncationPrecision,1e-6,,"threshold at which a saturation is truncated"))
 	((unsigned int, numberOfPores, 0,,"Number of pores (i.e. number of tetrahedra, but compensated for merged tetrahedra"))
 	((bool, firstDynTPF, true,,"this bool activated the initialization of the dynamic flow engine, such as merging and defining initial values"))
 	((bool, keepTriangulation, false,,"this bool activated triangulation or not during initialization"))
  	((bool, remesh, false,,"update triangulation? -- YET TO BE IMPLEMENTED"))                         //FIXME - trinagulation of unsaturated pore units still to be implemented properly
 	((bool, deformation, false,,"Boolean to indicate whether simulations of dynamic flow are withing a deformating packing or not. If true, change of void volume due to deformation is considered in flow computations."))
 	((int, iterationTPF, -1,,"Iteration number"))
-	((double, initialPC, 2000.0,,"Initial capillary pressure of the water-air inside the packing"))
-	((double, accumulativeDeformationFlux, 0.0,,"accumulative internal flux caused by deformation"))
+	((Real, initialPC, 2000.0,,"Initial capillary pressure of the water-air inside the packing"))
+	((Real, accumulativeDeformationFlux, 0.0,,"accumulative internal flux caused by deformation"))
 	((bool, solvePressureSwitch, true,,"solve for pressure during actionTPF()"))
-	((double, deltaTimeTruncation, 0.0,,"truncation of time step, to avoid very small time steps during local imbibition, NOTE it does affect the mass conservation not set to 0"))
-	((double, waterBoundaryPressure, 0.0,,"Water pressure at boundary used in computations, is set automaticaly, but this value can be used to change water pressure during simulations"))
-	((double, waterVolumeTruncatedLost, 0.0,,"Water volume that has been truncated."))
+	((Real, deltaTimeTruncation, 0.0,,"truncation of time step, to avoid very small time steps during local imbibition, NOTE it does affect the mass conservation not set to 0"))
+	((Real, waterBoundaryPressure, 0.0,,"Water pressure at boundary used in computations, is set automaticaly, but this value can be used to change water pressure during simulations"))
+	((Real, waterVolumeTruncatedLost, 0.0,,"Water volume that has been truncated."))
 	((bool, getQuantitiesUpdateCont, false,,"Continuous update of various macro-scale quantities or not. Note that the updating quantities is computationally expensive"))
-	((double, simpleWaterPressure, 0.0,,"Water pressure based on averaging over pore volume"))
-	((double, centroidAverageWaterPressure, 0.0,,"Water pressure based on centroid-corrected averaging, see Korteland et al. (2010) - what is the correct definition of average pressure?"))
-	((double, fractionMinSaturationInvasion, -1.0,,"Set the threshold saturation at which drainage can occur (Sthr = fractionMinSaturationInvasion), note that -1 implied the conventional definition of Sthr"))
-	((vector<double>, setFractionParticles, vector<double>(scene->bodies->size(),0.0),,"Correction fraction for swelling of particles by mismatch of surface area of particles with those from actual surface area in pore units"))
+	((Real, simpleWaterPressure, 0.0,,"Water pressure based on averaging over pore volume"))
+	((Real, centroidAverageWaterPressure, 0.0,,"Water pressure based on centroid-corrected averaging, see Korteland et al. (2010) - what is the correct definition of average pressure?"))
+	((Real, fractionMinSaturationInvasion, -1.0,,"Set the threshold saturation at which drainage can occur (Sthr = fractionMinSaturationInvasion), note that -1 implied the conventional definition of Sthr"))
+	((vector<Real>, setFractionParticles, vector<Real>(scene->bodies->size(),0.0),,"Correction fraction for swelling of particles by mismatch of surface area of particles with those from actual surface area in pore units"))
        	((bool,primaryTPF, true,,"Boolean to indicate whether the initial conditions are for primary drainage of imbibition (dictated by drainageFirst) or secondary drainage or imbibition. Note that during simulations, a switch from drainage to imbibition or vise versa can easily be made by changing waterBoundaryPressure"))
        	((bool,swelling, false,,"If true, include swelling of particles during TPF computations"))
 	((bool,useFastInvasion, false,,"use fast version of invasion"))
