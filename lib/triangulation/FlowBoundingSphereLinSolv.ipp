@@ -116,9 +116,9 @@ FlowBoundingSphereLinSolv<_Tesselation,FlowType>::FlowBoundingSphereLinSolv(): F
 
 
 template<class _Tesselation, class FlowType>
-void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::swapFwd (double* v, int i) {double temp = v[i]; v[i]=v[i+1]; v[i+1]=temp;}
+void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::swapFwd (Real* v, int i) {Real temp = v[i]; v[i]=v[i+1]; v[i+1]=temp;}
 template<class _Tesselation, class FlowType>
-void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::swapFwd (int* v, int i) {double temp = v[i]; v[i]=v[i+1]; v[i+1]=temp;}
+void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::swapFwd (int* v, int i) {Real temp = v[i]; v[i]=v[i+1]; v[i+1]=temp;}
 
 //spatial sort traits to use with a pair of CGAL::sphere pointers and integer.
 //template<class _Triangulation>
@@ -197,7 +197,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setLinearSystem(Real dt)
 	vector<int> clen;
 	vector<int> is;
 	vector<int> js;
-	vector<double> vs;
+	vector<Real> vs;
 	if (!areCellsOrdered) {
 		T_nnz=0;
 		ncols=0;
@@ -443,7 +443,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setLinearSystemFullGS(Real
 		//FIXME: does it really help? test by commenting this "sorting" line
 		spatial_sort(orderedCells.begin(),orderedCells.end(), CellTraits_for_spatial_sort<RTriangulation>());
 
-// 		double pZero=0;
+// 		Real pZero=0;
 // 		if (yMinId>=0 and yMaxId>yMinId) pZero = abs((boundary(yMinId).value-boundary(yMaxId).value)/2);
 		gsP.resize(ncols+1);
 // 		_gsP.resize(ncols+1);
@@ -481,7 +481,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setLinearSystemFullGS(Real
 			}
 			gsP[cell->info().index]=cell->info().pression;
 			//Add diagonal term
-			double num = (cell->info().kNorm())[0]+ (cell->info().kNorm())[1]+ (cell->info().kNorm())[2]+ (cell->info().kNorm())[3];
+			Real num = (cell->info().kNorm())[0]+ (cell->info().kNorm())[1]+ (cell->info().kNorm())[2]+ (cell->info().kNorm())[3];
 			if (fluidBulkModulus>0) num += (1.f/(dt*fluidBulkModulus*cell->info().invVoidVolume()));
 			fullAvalues[cell->info().index][4] = 1.f/num;
 			++T_nnz;
@@ -534,7 +534,7 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::vectorizedGaussSeidel(Rea
 	copyCellsToGs(dt);
 
 	int j = 0;
-	double dp_max, p_max, sum_p, p_moy, dp_moy, sum_dp;
+	Real dp_max, p_max, sum_p, p_moy, dp_moy, sum_dp;
 
 #ifdef GS_OPEN_MP
 	const int num_threads=1;
@@ -610,7 +610,7 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::vectorizedGaussSeidel(Rea
 }
 
 template<class _Tesselation, class FlowType>
-void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::sortV(int k1, int k2, int* is, double* ds){
+void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::sortV(int k1, int k2, int* is, Real* ds){
 	for (int k=k1; k<k2; k++) {
 		int kk=k;
 		while (kk>=k1 && is[kk]>is[kk+1]) {
@@ -661,7 +661,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::cholmodSolve(Real dt)
 	if (!isLinearSystemSet || (isLinearSystemSet && reApplyBoundaryConditions()) || !updatedRHS) ncols = setLinearSystem(dt);
 	copyCellsToLin(dt);
 	cholmod_dense* B = CHOLMOD(zeros)(ncols, 1, Achol->xtype, &com); //cholmod_l_zeros(ncols, 1, Achol->xtype, &com);
-	double* B_x =(double *) B->x;
+	Real* B_x =(Real *) B->x;
 	for (int k=0; k<ncols; k++) B_x[k]=T_bv[k];
 	if (!factorizedEigenSolver) {
 		openblas_set_num_threads(numFactorizeThreads);
@@ -693,7 +693,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::cholmodSolve(Real dt)
 	if (!factorizeOnly){
 		openblas_set_num_threads(numSolveThreads);
 		cholmod_dense* ex = CHOLMOD(solve)(CHOLMOD_A, L, B, &com); // cholmod_l_solve(CHOLMOD_A, L, B, &com);
-		double* e_x =(double *) ex->x;
+		Real* e_x =(Real *) ex->x;
 		for (int k=0; k<ncols; k++) {
 			T_x[k] = e_x[k];
 		}
@@ -775,8 +775,8 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setNewCellTemps(bool addT
 {
    	Tesselation& Tes = T[currentTes];
 	const long sizeCells = Tes.cellHandles.size();
-	double cavityInternalEnergy = 0;
-	double cavityVolume = 0;
+	Real cavityInternalEnergy = 0;
+	Real cavityVolume = 0;
 	#ifdef YADE_OPENMP
 	#pragma omp parallel for
 	#endif
@@ -799,7 +799,7 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setNewCellTemps(bool addT
 			cavityVolume += 1./cell->info().invVoidVolume();
 		}
 	}
-	double cavityTemp;
+	Real cavityTemp;
 	if (controlCavityPressure) {
 		cavityTemp = cavityInternalEnergy/(cavityVolume*fluidCp*fluidRho); //use cavityFluidDensity?
 	#ifdef YADE_OPENMP
@@ -821,8 +821,8 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::taucsSolve(Real /*dt*/)
 {
 #ifdef TAUCS_LIB
 	if (debugOut) cerr <<endl<<"TAUCS solve"<<endl;
-	double t = taucs_ctime();//timer
-	double t2 = taucs_ctime();//global timer
+	Real t = taucs_ctime();//timer
+	Real t2 = taucs_ctime();//global timer
 	if (!isLinearSystemSet || (isLinearSystemSet && reApplyBoundaryConditions())) {
 		ncols = setLinearSystem(dt);
 		if (debugOut) cerr << "Assembling the matrix : " <<  taucs_ctime()-t << endl; t = taucs_ctime();}
@@ -879,11 +879,11 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolve(Real /*dt*/)
 	#ifndef PARDISO
 	return 0;
 	#else
-	double iniT = taucs_ctime();
+	Real iniT = taucs_ctime();
 
 	if (debugOut) cerr << "_entering pardiso_" << endl;
 	/* Matrix data. */
-	double t = taucs_ctime();//timer
+	Real t = taucs_ctime();//timer
 	bool wasLSystemSet= isLinearSystemSet;
 	if (!isLinearSystemSet || (isLinearSystemSet && reApplyBoundaryConditions())) {
 		ncols = setLinearSystem(dt);
@@ -1020,7 +1020,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolveTest()
 	return 0;
 	#else
 	/* Matrix data. */
-	double t = taucs_ctime();//timer
+	Real t = taucs_ctime();//timer
 	bool wasLSystemSet= isLinearSystemSet;
 	int    n = setLinearSystem();
 // 	ncols=n;//for VectorizesGS
