@@ -309,7 +309,7 @@ void TwoPhaseFlowEngine::computePoreThroatRadiusMethod1()
 }
 Real TwoPhaseFlowEngine::computeEffPoreThroatRadius(CellHandle cell, int j)
 {
-    Real rInscribe = std::abs(solver->computeEffectiveRadius(cell, j));
+    Real rInscribe = math::abs(solver->computeEffectiveRadius(cell, j));
     CellHandle cellh = CellHandle(cell);
     int facetNFictious = solver->detectFacetFictiousVertices (cellh,j);
     Real r;
@@ -343,7 +343,7 @@ Real TwoPhaseFlowEngine::computeMSPRcByPosRadius(const Vector3r& posA, const Rea
     g[1] = ((e[1]-rC-rA)>0) ? 0.5*(e[1]-rC-rA):0 ;
     g[2] = ((e[2]-rA-rB)>0) ? 0.5*(e[2]-rA-rB):0 ;
     
-    Real rmin= (std::max(g[0],std::max(g[1],g[2]))==0) ? 1.0e-11:std::max(g[0],std::max(g[1],g[2])) ;
+    Real rmin= (math::max(g[0],math::max(g[1],g[2]))==0) ? 1.0e-11:math::max(g[0],math::max(g[1],g[2])) ;
     Real rmax= computeEffRcByPosRadius(posA, rA, posB, rB, posC, rC);
     if(rmin>rmax) { cerr<<"WARNING! rmin>rmax. rmin="<<rmin<<" ,rmax="<<rmax<<endl; }
     
@@ -360,7 +360,7 @@ Real TwoPhaseFlowEngine::computeMSPRcByPosRadius(const Vector3r& posA, const Rea
 Real TwoPhaseFlowEngine::bisection(const Vector3r& posA, const Real& rA, const Vector3r& posB, const Real& rB, const Vector3r& posC, const Real& rC, Real a, Real b)
 {
     Real m = 0.5*(a+b);
-    if (std::abs(b-a)>computeEffRcByPosRadius(posA, rA, posB, rB, posC, rC)*1.0e-6) {
+    if (math::abs(b-a)>computeEffRcByPosRadius(posA, rA, posB, rB, posC, rC)*1.0e-6) {
         if ( computeDeltaForce(posA, rA, posB, rB, posC, rC,m) * computeDeltaForce(posA, rA, posB, rB, posC, rC,a) < 0 ) {
             b = m; return bisection(posA, rA, posB, rB, posC, rC, a,b);}
         else {a = m; return bisection(posA, rA, posB, rB, posC, rC, a,b);}
@@ -716,7 +716,7 @@ Real TwoPhaseFlowEngine::getChi(int numberFacets)
 	else if(numberFacets == 10){chi = 0.4396;}//Octahedron + hexahedron
 	else if(numberFacets == 12){chi =0.583; } //Icosahedra
   	else if(numberFacets == 20){chi = 0.565;} // Dodecahedron
-	else{ chi = 0.0893*std::log(float(numberFacets))+0.326;}//Other pore shapes
+	else{ chi = 0.0893*math::log(float(numberFacets))+0.326;}//Other pore shapes
 	return chi;
   }
 }
@@ -734,7 +734,7 @@ Real TwoPhaseFlowEngine::getLambda(int numberFacets)
 	else if(numberFacets == 10){lambda = 0.77102;}//Octahedron + hexahedron
 	else if(numberFacets == 12){lambda =0.771025; } //Icosahedra
   	else if(numberFacets == 20){lambda = 0.50722;} // Dodecahedron
-	else{ lambda = 7.12*std::pow(numberFacets,-0.89);} //Other pore shapes
+	else{ lambda = 7.12*math::pow(numberFacets,-0.89);} //Other pore shapes
 	return lambda;
   }
 
@@ -761,12 +761,12 @@ Real TwoPhaseFlowEngine::getDihedralAngle(int numberFacets)
     if(numberFacets == 0){return 0; cout << endl << "Pore with zero throats? Check your data";}
       else{
       Real DihedralAngle = 0.0;
-	if(numberFacets == 4){DihedralAngle = 1.0*std::atan(2.0*std::sqrt(2.0));}//Tetrahedra
-	else if(numberFacets == 6){DihedralAngle = 1.0*std::acos(-1.0 / 3.0);}//Octahedra
+	if(numberFacets == 4){DihedralAngle = 1.0*math::atan(2.0*math::sqrt(2.0));}//Tetrahedra
+	else if(numberFacets == 6){DihedralAngle = 1.0*math::acos(-1.0 / 3.0);}//Octahedra
 	else if(numberFacets == 8){DihedralAngle = 0.5*3.1415926535;}//Cube
 	else if(numberFacets == 10){DihedralAngle = (1./4.)*3.1415926535; /*cout << endl << "dihedral angle requested for octa + hexahedron!";*/ }//Octahedron + hexahedron NOTE this should not be requested for calculations!
-	else if(numberFacets == 12){DihedralAngle = std::acos((-1.0 / 3.0)*std::sqrt(5.0)); } //Icosahedra
-  	else if(numberFacets == 20){DihedralAngle = std::acos((-1.0 / 5.0)*std::sqrt(5.0));} // Dodecahedron
+	else if(numberFacets == 12){DihedralAngle = math::acos((-1.0 / 3.0)*math::sqrt(5.0)); } //Icosahedra
+  	else if(numberFacets == 20){DihedralAngle = math::acos((-1.0 / 5.0)*math::sqrt(5.0));} // Dodecahedron
 	else{ DihedralAngle = (1./4.)*3.1415926535;} //Other pore shapes
 	return DihedralAngle;
   }
@@ -774,7 +774,7 @@ Real TwoPhaseFlowEngine::getDihedralAngle(int numberFacets)
 
 Real TwoPhaseFlowEngine::getConstantC3(CellHandle cell)
 {
-    Real c1 = 54.92*std::pow(Real(cell->info().numberFacets),-1.14);
+    Real c1 = 54.92*math::pow(Real(cell->info().numberFacets),-1.14);
     if(cell->info().numberFacets == 4){c1 = 8.291;}
     if(cell->info().numberFacets == 6){c1 = 2.524;}
     if(cell->info().numberFacets == 8){c1 = 2.524;}
@@ -1345,7 +1345,7 @@ void TwoPhaseFlowEngine::assignWaterVolumesTriangulation()
 	  if(saveID == 1e6){
 	    cell->info().saturation = -1;
 	    for(unsigned int i=0;i<4;i++){
-	      untreatedAreaPerSphere[cell->vertex(i)->info().id()] += std::abs(solver->fractionalSolidArea(cell,i));
+	      untreatedAreaPerSphere[cell->vertex(i)->info().id()] += math::abs(solver->fractionalSolidArea(cell,i));
 	    }
 	  } 
 	}
@@ -2031,8 +2031,8 @@ void TwoPhaseFlowEngine::solvePressure()
 	fluxInViaWBC += boundaryFlux * scene->dt;
 	
 	  
- 	if(!deformation && std::abs(boundaryFlux * scene->dt + (waterBefore - waterAfter)) / std::abs(boundaryFlux * scene->dt) > 1e-3 && std::abs(boundaryFlux) > 1e-18){	//FIXME test has to optimized for deforming pore units
- 	  std::cerr << endl << "No volume balance! Flux balance: WBFlux:" << std::abs(boundaryFlux * scene->dt + (waterBefore - waterAfter)) / std::abs(boundaryFlux * scene->dt)  << " " <<boundaryFlux * scene->dt << "Flux: " << summFluxList*scene->dt <<  "deltaVolume: " << waterBefore - waterAfter  << "Flux in IFACE: "<< summFluxUnsat * scene->dt << " lostVolume: " << lostVolume * scene->dt;
+ 	if(!deformation && math::abs(boundaryFlux * scene->dt + (waterBefore - waterAfter)) / math::abs(boundaryFlux * scene->dt) > 1e-3 && math::abs(boundaryFlux) > 1e-18){	//FIXME test has to optimized for deforming pore units
+ 	  std::cerr << endl << "No volume balance! Flux balance: WBFlux:" << math::abs(boundaryFlux * scene->dt + (waterBefore - waterAfter)) / math::abs(boundaryFlux * scene->dt)  << " " <<boundaryFlux * scene->dt << "Flux: " << summFluxList*scene->dt <<  "deltaVolume: " << waterBefore - waterAfter  << "Flux in IFACE: "<< summFluxUnsat * scene->dt << " lostVolume: " << lostVolume * scene->dt;
 // 	  stopSimulation = true;
  	}
 	// --------------------------------------find new dt -----------------------------------------------------
