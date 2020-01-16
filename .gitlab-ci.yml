@@ -223,13 +223,13 @@ make_asan_float128:
       - screenshots
   timeout: 6 hours
 
-make_asan_mpfr40:
+make_asan_mpfr150:
   <<: *make_definition
   before_script:
 #    # there can be only one before_script:, so the line below cannot be in a separate template
 #    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else export TESTS_AFTER_MAKE="TESTS_AFTER_MAKE"; fi
     - export TESTS_AFTER_MAKE="TESTS_AFTER_MAKE";
-    - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 -DENABLE_ASAN=1 -DREAL_DECIMAL_PLACES=40 -DENABLE_MPFR=ON $EXTRA_CMAKE_ARGS"
+    - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 -DENABLE_ASAN=1 -DREAL_DECIMAL_PLACES=150 -DENABLE_MPFR=ON $EXTRA_CMAKE_ARGS"
     - echo $EXTRA_CMAKE_ARGS
     - export ASAN_OPTIONS=detect_leaks=0:log_path=stdout:verify_asan_link_order=false
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
@@ -241,13 +241,13 @@ make_asan_mpfr40:
       - screenshots
   timeout: 6 hours
 
-make_asan_bf40:
+make_asan_bf150:
   <<: *make_definition
   before_script:
 #    # there can be only one before_script:, so the line below cannot be in a separate template
 #    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else export TESTS_AFTER_MAKE="TESTS_AFTER_MAKE"; fi
     - export TESTS_AFTER_MAKE="TESTS_AFTER_MAKE";
-    - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 -DENABLE_ASAN=1 -DREAL_DECIMAL_PLACES=40 -DENABLE_MPFR=OFF $EXTRA_CMAKE_ARGS"
+    - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 -DENABLE_ASAN=1 -DREAL_DECIMAL_PLACES=150 -DENABLE_MPFR=OFF $EXTRA_CMAKE_ARGS"
     - echo $EXTRA_CMAKE_ARGS
     - export ASAN_OPTIONS=detect_leaks=0:log_path=stdout:verify_asan_link_order=false
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
@@ -328,25 +328,25 @@ makeHP_float128:
     - echo $EXTRA_CMAKE_ARGS
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
 
-makeHP_mpfr40:
+makeHP_mpfr150:
   <<: *make_definition
   <<: *artifacts_definition
   before_script:
 ## Comment this for now, because that is the main reason for this branch.
 ##  # there can be only one before_script:, so the line below cannot be in a separate template
 ##  - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
-    - export EXTRA_CMAKE_ARGS="-DREAL_DECIMAL_PLACES=40 -DENABLE_MPFR=ON $EXTRA_CMAKE_ARGS"
+    - export EXTRA_CMAKE_ARGS="-DREAL_DECIMAL_PLACES=150 -DENABLE_MPFR=ON $EXTRA_CMAKE_ARGS"
     - echo $EXTRA_CMAKE_ARGS
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
 
-makeHP_bf40:
+makeHP_bf150:
   <<: *make_definition
   <<: *artifacts_definition
   before_script:
 ## Comment this for now, because that is the main reason for this branch.
 ##  # there can be only one before_script:, so the line below cannot be in a separate template
 ##  - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
-    - export EXTRA_CMAKE_ARGS="-DREAL_DECIMAL_PLACES=40 -DENABLE_MPFR=OFF $EXTRA_CMAKE_ARGS"
+    - export EXTRA_CMAKE_ARGS="-DREAL_DECIMAL_PLACES=150 -DENABLE_MPFR=OFF $EXTRA_CMAKE_ARGS"
     - echo $EXTRA_CMAKE_ARGS
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
 
@@ -500,22 +500,22 @@ testHP_float128:
   needs: ["makeHP_float128"]
   timeout: 4 hours
 
-testHP_mpfr40:
+testHP_mpfr150:
   <<: *test_definition
 ##<<: *skip_wip_test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
   dependencies:
-    - makeHP_mpfr40
-  needs: ["makeHP_mpfr40"]
+    - makeHP_mpfr150
+  needs: ["makeHP_mpfr150"]
   timeout: 4 hours
 
-testHP_bf40:
+testHP_bf150:
   <<: *test_definition
 ##<<: *skip_wip_test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
   dependencies:
-    - makeHP_bf40
-  needs: ["makeHP_bf40"]
+    - makeHP_bf150
+  needs: ["makeHP_bf150"]
   timeout: 4 hours
 
 
@@ -636,22 +636,22 @@ checkHP_float128:
   needs: ["makeHP_float128"]
   timeout: 4 hours
 
-checkHP_mpfr40:
+checkHP_mpfr150:
   <<: *check_definition
 ##<<: *skip_wip_test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
   dependencies:
-    - makeHP_mpfr40
-  needs: ["makeHP_mpfr40"]
+    - makeHP_mpfr150
+  needs: ["makeHP_mpfr150"]
   timeout: 4 hours
 
-checkHP_bf40:
+checkHP_bf150:
   <<: *check_definition
 ##<<: *skip_wip_test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
   dependencies:
-    - makeHP_bf40
-  needs: ["makeHP_bf40"]
+    - makeHP_bf150
+  needs: ["makeHP_bf150"]
   timeout: 8 hours
 
 
