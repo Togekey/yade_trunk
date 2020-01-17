@@ -2,6 +2,7 @@
 #ifdef YADE_POTENTIAL_BLOCKS
 #pragma once
 
+#include <lib/compatibility/LapackCompatibility.hpp>
 #include <vector>
 #include <core/Shape.hpp>
 #include <Eigen/Core>
@@ -113,12 +114,4 @@ REGISTER_SERIALIZABLE(PotentialBlock);
 
 } // namespace yade
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-	void dgesv_(const int *N, const int *nrhs, ::yade::Real *Hessian, const int *lda, int *ipiv, ::yade::Real *gradient, const int *ldb, int *info);
-	void dsyev_(const char *jobz, const char *uplo, const int *N, ::yade::Real *A, const int *lda, ::yade::Real *W, ::yade::Real *work, int *lwork, int *info);
-#ifdef __cplusplus
-};
-#endif
 #endif // YADE_POTENTIAL_BLOCKS

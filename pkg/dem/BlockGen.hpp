@@ -13,6 +13,7 @@
 #include<lib/base/Math.hpp>
 #include<lib/serialization/Serializable.hpp>
 #include<lib/multimethods/Indexable.hpp>
+#include <lib/compatibility/LapackCompatibility.hpp>
 
 #include <ClpSimplexDual.hpp>
 #include <ClpSimplex.hpp>
@@ -246,14 +247,5 @@ class BlockGen : public FileGenerator {
 REGISTER_SERIALIZABLE(BlockGen);
 
 } // namespace yade
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-	void dgesv_(const int *N, const int *nrhs, ::yade::Real *Hessian, const int *lda, int *ipiv, ::yade::Real *gradient, const int *ldb, int *info);
-	void dsyev_(const char *jobz, const char *uplo, const int *N, ::yade::Real *A, const int *lda, ::yade::Real *W, ::yade::Real *work, int *lwork, int *info);
-#ifdef __cplusplus
-};
-#endif
 
 #endif // YADE_POTENTIAL_BLOCKS
