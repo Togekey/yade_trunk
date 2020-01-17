@@ -43,6 +43,7 @@ extern "C" {
 #endif
 
 #if defined(YADE_REAL_BIT) and (YADE_REAL_BIT != 64)
+#include <lib/high-precision/Real.hpp>
 
 std::vector<double> toDoubleVec(const ::yade::Real* from, int size);
 
