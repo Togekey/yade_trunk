@@ -1,4 +1,5 @@
 #if defined(YADE_REAL_BIT) and (YADE_REAL_BIT != 64)
+#include "LapackCompatibility.hpp"
 #include <lib/high-precision/Real.hpp>
 #include <vector>
 
