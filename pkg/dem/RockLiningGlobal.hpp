@@ -154,35 +154,35 @@ extern "C" {
 #endif
 
 /* LAPACK LU */
-	//int dgesv(int varNo, int varNo2, Real *H, int varNo3, int *pivot, Real* g, int varNo4, int info){
-	 extern void dgesv_(const int *N, const int *nrhs, Real *Hessian, const int *lda, int *ipiv, Real *gradient, const int *ldb, int *info);
+	//int dgesv(int varNo, int varNo2, ::yade::Real *H, int varNo3, int *pivot, ::yade::Real* g, int varNo4, int info){
+	 extern void dgesv_(const int *N, const int *nrhs, ::yade::Real *Hessian, const int *lda, int *ipiv, ::yade::Real *gradient, const int *ldb, int *info);
 	// int ans;
 	// dgesv_(&varNo, &varNo2, H, &varNo3, pivot,g, &varNo4, &ans);
 	// return ans;
 	//}
 
 /* LAPACK Cholesky */
-	extern void dpbsv_(const char *uplo, const int *n, const int *kd, const int *nrhs, Real *AB, const int *ldab, Real *B, const int *ldb, int *info);
+	extern void dpbsv_(const char *uplo, const int *n, const int *kd, const int *nrhs, ::yade::Real *AB, const int *ldab, ::yade::Real *B, const int *ldb, int *info);
 
 /* LAPACK QR */
-	extern void dgels_(const char *Trans, const int *m, const int *n, const int *nrhs, Real *A, const int *lda, Real *B, const int *ldb, const Real *work, const int *lwork, int *info);
+	extern void dgels_(const char *Trans, const int *m, const int *n, const int *nrhs, ::yade::Real *A, const int *lda, ::yade::Real *B, const int *ldb, const ::yade::Real *work, const int *lwork, int *info);
 
 
 /*BLAS */
-	extern void dgemm_(const char *transA, const char *transB, const int *m, const int *n, const int *k, const Real *alpha, Real *A, const int *lda, Real *B, const int *ldb, const Real *beta, Real *C, const int *ldc);
+	extern void dgemm_(const char *transA, const char *transB, const int *m, const int *n, const int *k, const ::yade::Real *alpha, ::yade::Real *A, const int *lda, ::yade::Real *B, const int *ldb, const ::yade::Real *beta, ::yade::Real *C, const int *ldc);
 
-	extern void dgemv_(const char *trans, const int *m, const int *n, const Real *alpha, Real *A, const int *lda, Real *x, const int *incx, const Real *beta, Real *y, const int *incy);
+	extern void dgemv_(const char *trans, const int *m, const int *n, const ::yade::Real *alpha, ::yade::Real *A, const int *lda, ::yade::Real *x, const int *incx, const ::yade::Real *beta, ::yade::Real *y, const int *incy);
 
-	extern void dcopy_(const int *N, Real *x, const int *incx, Real *y, const int *incy);
+	extern void dcopy_(const int *N, ::yade::Real *x, const int *incx, ::yade::Real *y, const int *incy);
 
-	extern Real ddot_(const int *N, Real *x, const int *incx, Real *y, const int *incy);
+	extern ::yade::Real ddot_(const int *N, ::yade::Real *x, const int *incx, ::yade::Real *y, const int *incy);
 
-	extern void daxpy_(const int *N, const Real *da, Real *dx, const int *incx, Real *dy, const int *incy);
+	extern void daxpy_(const int *N, const ::yade::Real *da, ::yade::Real *dx, const int *incx, ::yade::Real *dy, const int *incy);
 
-	extern void dscal_(const int *N, const Real *alpha, Real *x, const int *incx);
+	extern void dscal_(const int *N, const ::yade::Real *alpha, ::yade::Real *x, const int *incx);
 
 
-	void dsyev_(const char *jobz, const char *uplo, const int *N, Real *A, const int *lda, Real *W, Real *work, int *lwork, int *info);
+	void dsyev_(const char *jobz, const char *uplo, const int *N, ::yade::Real *A, const int *lda, ::yade::Real *W, ::yade::Real *work, int *lwork, int *info);
 
 
 #ifdef __cplusplus
