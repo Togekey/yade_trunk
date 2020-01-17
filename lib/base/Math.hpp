@@ -74,8 +74,6 @@
 // https://en.cppreference.com/w/cpp/language/qualified_lookup
 // https://en.cppreference.com/w/cpp/language/namespace
 
-using Real=::yade::Real; // FIXME - remove this line
-
 namespace yade { // Cannot have #include directive inside.
 
 

@@ -21,14 +21,14 @@ template <typename Scalar> Eigen::Matrix<Scalar, 3, 3> matrixFromEulerAnglesXYZ(
 // better to use that, than reinvent own Euler angles.
 #include <unsupported/Eigen/EulerAngles>
 
-inline yade::Matrix3r makeFromEulerAngle(Real x, Real y, Real z)
+inline yade::Matrix3r makeFromEulerAngle(::yade::Real x, ::yade::Real y, ::yade::Real z)
 {
-	yade::Matrix3r ret = Eigen::EulerAngles<Real, Eigen::EulerSystemXYZ>(x, y, z).toRotationMatrix();
-	assert(ret == matrixFromEulerAnglesXYZ<Real>(x, y, z));
+	yade::Matrix3r ret = Eigen::EulerAngles<::yade::Real, Eigen::EulerSystemXYZ>(x, y, z).toRotationMatrix();
+	assert(ret == matrixFromEulerAnglesXYZ<::yade::Real>(x, y, z));
 	return ret;
 }
 #else
-inline yade::Matrix3r makeFromEulerAngle(Real x, Real y, Real z) { return matrixFromEulerAnglesXYZ<Real>(x, y, z); }
+inline yade::Matrix3r makeFromEulerAngle(::yade::Real x, ::yade::Real y, ::yade::Real z) { return matrixFromEulerAnglesXYZ<::yade::Real>(x, y, z); }
 #endif
 
 namespace yade { // Cannot have #include directive inside.
