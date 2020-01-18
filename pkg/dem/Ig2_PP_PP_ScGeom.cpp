@@ -770,8 +770,13 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 // MatrixXr c=MatrixXr::Zero(varNo,1);
 // c[3] = 1.0;
 
+#if (YADE_REAL_BIT <= 64)
 	Real blasA1[(3+planeNoA)*varNo];
 	Real blasA2[(3+planeNoB)*varNo];
+#else
+	std::vector<Real> blasA1((3+planeNoA)*varNo,/* fill with */ 0);
+	std::vector<Real> blasA2((3+planeNoB)*varNo,/* fill with */ 0);
+#endif
 	/* Second order cone constraints */
 	/* A1 */
 	//MatrixXr A1(3+planeNoA,varNo);
@@ -784,7 +789,14 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
 	// A1 << QAs,MatrixXr::Zero(3,1+planeNoAB),
 	// MatrixXr::Zero(planeNoA,4),kAp*MatrixXr::Identity(planeNoA, planeNoA),MatrixXr::Zero(planeNoA,planeNoB);
+
+#if (YADE_REAL_BIT <= 64)
 	memset(blasA1,0.0,sizeof(blasA1));
+#endif
+	// the standard way, perfectly optimized by compiler.
+	// NOTE: It is unnecessary here, beacuse it was already filled with zeros when creating it. It's only to show how to fill std::vector.
+	//std::fill(blasA1.begin() , blasA1.end() , 0);
+
 	for (int i=0; i<3; i++) {
 		blasA1[i] = blasQAs[i];
 		blasA1[i+planeNoA3] = blasQAs[i+3];
@@ -806,7 +818,9 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
 	// A2 << QBs,MatrixXr::Zero(3,1+planeNoAB),
 	// MatrixXr::Zero(planeNoB,4),MatrixXr::Zero(planeNoB,planeNoA),kBp*MatrixXr::Identity(planeNoB, planeNoB);
+#if (YADE_REAL_BIT <= 64)
 	memset(blasA2,0.0,sizeof(blasA2));
+#endif
 	for (int i=0; i<3; i++) {
 		blasA2[i] = blasQBs[i];
 		blasA2[i+planeNoB3] = blasQBs[i+3];
@@ -828,9 +842,13 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 	b1[2] = -b1temp[2];
 #endif
 
+#if (YADE_REAL_BIT <= 64)
 	Real blasB1[planeNoA3];
-	Real blasB1temp[3];
 	memset(blasB1,0.0,sizeof(blasB1));
+#else
+	std::vector<Real> blasB1( planeNoA3 , /* fill with */ 0);
+#endif
+	Real blasB1temp[3];
 // blasM = 3;   blasN=3;
 //  blasLDA = 3;    blasAlpha = -1.0;  blasBeta=0.0;  blasLDC = 3;
 // dgemv_(&transA, &blasM, &blasN, &blasAlpha, &blasQAs[0], &blasLDA, &blasPosA[0], &incx, &blasBeta, &blasB1temp[0], &incy);
@@ -848,9 +866,13 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 	b2[2] = -b2temp[2];
 #endif
 
+#if (YADE_REAL_BIT <= 64)
 	Real blasB2[planeNoB3];
-	Real blasB2temp[3];
 	memset(blasB2,0.0,sizeof(blasB2));
+#else
+	std::vector<Real> blasB2( planeNoB3 , /* fill with */ 0);
+#endif
+	Real blasB2temp[3];
 //  blasM = 3;   blasN=3; blasLDA = 3; blasAlpha=-1.0; blasBeta=0.0;
 // dgemv_(&transA, &blasM, &blasN, &blasAlpha, &blasQBs[0], &blasLDA, &blasPosB[0], &incx, &blasBeta, &blasB2temp[0], &incy);
 	dgemv_(&blasNT, &blas3, &blas3, &blasNeg1, &blasQBs[0], &blas3, &blasPosB[0], &incx, &blas0, &blasB2temp[0], &incy);
@@ -863,8 +885,13 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 // AL<<P1Q, MatrixXr::Zero(planeNoA,1), -1.0*MatrixXr::Identity(planeNoA,planeNoA), MatrixXr::Zero(planeNoA,planeNoB), //cwise()
 //	      P2Q, MatrixXr::Zero(planeNoB,1), MatrixXr::Zero(planeNoB,planeNoA), -1.0*MatrixXr::Identity(planeNoB,planeNoB);
 
+#if (YADE_REAL_BIT <= 64)
 	Real blasAL[planeNoAB*varNo];
 	memset(blasAL,0.0,sizeof(blasAL));
+#else
+	std::vector<Real> blasAL(planeNoAB*varNo ,  /* fill with */ 0);
+	//std::fill(blasAL.begin() , blasAL.end() , 0);
+#endif
 	for (int i=0; i<planeNoA; i++) {
 		blasAL[i] = blasP1Q[i];
 		blasAL[i+planeNoAB] = blasP1Q[i+planeNoA];
@@ -920,8 +947,12 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
 	Real u1;
 	Real u2;
+#if (YADE_REAL_BIT <= 64)
 	Real blasCCtranspose[varNo2];
 	memset(blasCCtranspose,0.0,sizeof(blasCCtranspose));
+#else
+	std::vector<Real> blasCCtranspose( varNo2 , 0 );
+#endif
 	blasCCtranspose[3+varNo*3]=1.0;
 
 	Real blasCa1[varNo2];
@@ -955,9 +986,13 @@ bool Ig2_PP_PP_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 	dgemm_(&blasT, &blasNT, &varNo, &varNo, &planeNoB3, &blasNeg1, &blasA2[0], &planeNoB3, &blasA2[0], &planeNoB3, &blas1, &blasCa2[0], &varNo);
 
 	/* DL */
+#if (YADE_REAL_BIT <= 64)
 	Real blasDL[planeNoAB*planeNoAB];
-	blasCount = 0;
 	memset(blasDL,0.0,sizeof(blasDL));
+#else
+	std::vector<Real> blasDL( planeNoAB*planeNoAB , 0);
+#endif
+	blasCount = 0;
 
 //#endif
 
