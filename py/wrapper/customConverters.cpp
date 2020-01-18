@@ -272,7 +272,7 @@ try {
 	boost::python::to_python_converter<y::Se3r, y::custom_se3_to_tuple>();
 
 	y::custom_OpenMPAccumulator_from_float();
-	boost::python::to_python_converter<y::OpenMPAccumulator<Real>, y::custom_OpenMPAccumulator_to_float>();
+	boost::python::to_python_converter<y::OpenMPAccumulator<y::Real>, y::custom_OpenMPAccumulator_to_float>();
 	y::custom_OpenMPAccumulator_from_int();
 	boost::python::to_python_converter<y::OpenMPAccumulator<int>, y::custom_OpenMPAccumulator_to_int>();
 	// todo: OpenMPAccumulator<int>

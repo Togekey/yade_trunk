@@ -13,6 +13,7 @@ try {
 	using SpherePack                       = ::yade::SpherePack;
 	using Vector3r                         = ::yade::Vector3r;
 	using Matrix3r                         = ::yade::Matrix3r;
+	using Real                             = ::yade::Real;
 	boost::python::scope().attr("__doc__") = "Creation, manipulation, IO for generic sphere packings.";
 	YADE_SET_DOCSTRING_OPTS;
 	boost::python::class_<SpherePack>(
