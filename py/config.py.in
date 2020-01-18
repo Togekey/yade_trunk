@@ -14,10 +14,10 @@ if (libPATH[1:] == '{LIBRARY_OUTPUT_PATH}'): libPATH='lib'
 libDir=os.path.abspath(prefix+'/'+libPATH+'/yade${SUFFIX}')
 confDir=os.environ['HOME']+'/.yade${SUFFIX}'
 libstdcxx='${libstdcxx}'
-highPrecisionBits         =64
-highPrecisionDecimalPlaces=15
-highPrecisionMpmath       =False
-highPrecisionName         ='PrecisionDouble'
+highPrecisionBits         =${REAL_PRECISION_BITS}
+highPrecisionDecimalPlaces=${REAL_DECIMAL_PLACES}
+highPrecisionMpmath       =${MPMATH_IS_USED}
+highPrecisionName         ='${REAL_PREC_NAME}'
 
 features='${CONFIGURED_FEATS}'.split(' ')
 if (features[0]==''): features=features[1:]
