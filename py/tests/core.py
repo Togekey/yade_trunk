@@ -13,6 +13,7 @@ from yade import utils
 from yade import *
 from math import *
 from yade.minieigenHP import *
+import yade.config
 
 ## TODO tests
 class TestForce(unittest.TestCase): pass

@@ -11,6 +11,7 @@ from yade import utils
 from yade import *
 from math import *
 from yade.minieigenHP import *
+import yade.config
 
 class TestSimpleClump(unittest.TestCase):
 	"Test things on a simple clump composed of 2 spheres."
