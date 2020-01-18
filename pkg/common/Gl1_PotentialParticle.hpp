@@ -9,7 +9,7 @@
 #include <vector>
 
 #ifdef YADE_VTK
-
+#include <lib/compatibility/VTKCompatibility.hpp>
 #include <vtkImplicitFunction.h>
 #include <vtkPolyData.h>
 #include <vtkRenderWindow.h>
@@ -75,11 +75,13 @@ public:
 	// Description
 	// Evaluate function
 	Real FunctionValue(Real x[3]);
-#if (YADE_REAL_BIT != 64)
+#if defined(YADE_REAL_BIT) and (YADE_REAL_BIT != 64)
 	// unfortunately vtkImplicitFunction only works with double. The VTK library would need to be patched.
 	// The workaround is to convert double arguments to Real. Precision is lost along the way.
+	// Or stop using vtkImplicitFunction and use your own functions.
 	double FunctionValue(double x[3])
 	{
+		// convert double arguments to Real (with loss of precision)
 		Real r[3] = { static_cast<Real>(x[0]), static_cast<Real>(x[1]), static_cast<Real>(x[2]) };
 		return static_cast<double>(FunctionValue(r));
 	}
@@ -97,8 +99,8 @@ public:
 	// Evaluate gradient for function
 	virtual void EvaluateGradient(
 	        double /*x*/[3], double /*n*/[3]) {}; // FIXME - better use Vector3r here instead of Real[3] (here I only fix the unused parameter warning).
-	//                                                 ↑     you would need to change the virtual function signature in file vtkImplicitFunction.h in VTK library.
-	//                                                       VTK library would need a patch. / Janek
+	//                                                 ↑     you would need to change the virtual function signature in file vtkImplicitFunction.h in VTK library. Which of course cannot be done
+	//                                                       without sending a patch to VTK library authors. So better to use your own function instead of vtkImplicitFunction. / Janek
 
 	// If you need to set parameters, add methods here
 
