@@ -1,4 +1,6 @@
 #pragma once
+#include <lib/high-precision/Real.hpp>
+#include <lib/high-precision/RealIO.hpp>
 #include <fstream>
 #include <iostream>
 #include <boost/lexical_cast.hpp>
@@ -10,7 +12,7 @@ enum DataType     {INT,FLOAT};
 // Really simplistic struct for vtk file creation
 struct basicVTKwritter
 {
-	typedef double WriteType; // maybe later turn this class into a template class
+	using WriteType = ::yade::Real; // maybe later turn this class into a template class
 
 	std::ofstream file;
 	unsigned int nbVertices, nbCells;
@@ -42,7 +44,7 @@ struct basicVTKwritter
 
 	private:
 		std::string conv(const WriteType& v) {
-			return boost::lexical_cast<std::string>(v);
+			return ::yade::toString(v);
 		}
 };
 
