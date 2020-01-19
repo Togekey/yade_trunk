@@ -35,6 +35,15 @@
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
 
+
+// Note about using high precisision Real:
+// for start create a file for coinor compatibility lib/compatibility/CoinorCompatibility.hpp,
+// and wrap there all the calls to external coinor library.
+// This would be similar to wrapper/converter how lib/compatibility/LapackCompatibility.cpp is done
+// Then try to replace these functions with native Eigen high-precision Real routines of linear programming.
+//
+// Also all memset(…) calls should be replaced with std::fill(…) of std::vector like it is done in pkg/dem/Ig2_PP_PP_ScGeom.cpp
+
 namespace yade { // Cannot have #include directive inside.
 
 using math::min; // using inside .cpp file is ok.
@@ -1693,7 +1702,7 @@ bool BlockGen::contactDetectionLPCLPglobal(struct Discontinuity joint, struct Bl
 	model2.setColumnUpper(2, COIN_DBL_MAX);
 	model2.setColumnUpper(3, COIN_DBL_MAX);
 
-	Real rowLower[numberRows]; //TODO: Check whether to replace C array with std::vector<>
+	Real rowLower[numberRows]; //TODO: Check whether to replace C array with std::vector<> - that would be great, but first replace model2.addRow with something that can take argument std::vector<Real>
 	Real rowUpper[numberRows]; //TODO: Check whether to replace C array with std::vector<>
 
 	// Rows
@@ -1797,7 +1806,7 @@ bool BlockGen::contactBoundaryLPCLP(struct Discontinuity joint, struct Block blo
 	model2.setColumnUpper(1, COIN_DBL_MAX);
 	model2.setColumnUpper(2, COIN_DBL_MAX);
 
-	Real rowLower[numberRows]; //TODO: Check whether to replace C array with std::vector<>
+	Real rowLower[numberRows]; //TODO: Check whether to replace C array with std::vector<> - that would be great, but first replace model2.addRow with something that can take argument std::vector<Real>
 	Real rowUpper[numberRows]; //TODO: Check whether to replace C array with std::vector<>
 
 	// Rows
@@ -1999,7 +2008,7 @@ bool BlockGen::checkRedundancyLPCLP(struct Discontinuity joint, struct Block blo
 		       int numberElements = numberRows * numberColumns;
 		       // Arrays will be set to default values
 		      model2.resize(numberRows, numberColumns);
-		      Real * elements = new Real [numberElements]; //TODO: Check whether to replace C array with std::vector<>
+		      Real * elements = new Real [numberElements]; //TODO: Check whether to replace C array with std::vector<> - This would be great. But CoinPackedMatrix accepts pointers only. Is there another library that can calculate the same thing?
 		      CoinBigIndex * starts = new CoinBigIndex [numberColumns+1];
 		      int * rows = new int [numberElements]; //TODO: Check whether to replace C array with std::vector<>
 		      int * lengths = new int[numberColumns]; //TODO: Check whether to replace C array with std::vector<>
