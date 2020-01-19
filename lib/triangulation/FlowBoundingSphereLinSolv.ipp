@@ -48,6 +48,9 @@ namespace CGT
 #define F77_FUNC(func)  func ## _
 #endif
 /* PARDISO prototype. */
+// Note about using high precisision Real, for start move these prototypes to file lib/compatibility/PardisoCompatibility.hpp,
+// and do similar wrapper/converter like lib/compatibility/LapackCompatibility.cpp is done
+// then try to replace it with native Eigen high-precision Real roooutines.
 extern  "C" int F77_FUNC(pardisoinit)
     (void *, int *, int *, int *, double *, int *);
 
