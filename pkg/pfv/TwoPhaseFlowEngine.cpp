@@ -91,7 +91,6 @@ void PhaseCluster::solvePressure()
 		}
 		//comC.useGPU=useGPU; //useGPU;
 		//FIXME: is it safe to share "comC" among parallel cluster resolution?
-		#if (not defined(NO_CHOLMOD))
 		if (not factorized) {
 			cholmod_triplet* T = cholmod_l_allocate_triplet(ncols,ncols, T_nnz, 1, CHOLMOD_REAL, &(comC));
 			for(unsigned k=0;k<T_nnz;k++) {
@@ -123,7 +122,7 @@ void PhaseCluster::solvePressure()
 		}
 		//clean
 		cholmod_l_free_dense(&B, &(comC));
-		#endif
+		
 #endif
 }
 

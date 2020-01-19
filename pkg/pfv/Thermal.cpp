@@ -81,10 +81,8 @@ void ThermalEngine::action()
 	if (!conduction)
 		thermoMech = false; //don't allow thermoMech if conduction is not activated
 	if (advection) {
-#ifdef LINSOLV
 		flow->solver->initializeInternalEnergy(); // internal energy of cells
 		flow->solver->augmentConductivityMatrix(scene->dt);
-#endif
 	}
 	if (debug)
 		cout << "advection done" << endl;
@@ -96,20 +94,16 @@ void ThermalEngine::action()
 	if (unboundCavityBodies)
 		unboundCavityParticles();
 	if (advection && fluidConduction) { // need to avoid duplicating energy, so reinitializing pore energy before conduction
-#ifdef LINSOLV
 		flow->solver->setNewCellTemps(false);
 		flow->solver->initializeInternalEnergy();
 		computeFluidFluidConduction();
-#endif
 	}
 	if (debug)
 		cout << "conduction done" << endl;
 	if (conduction && runConduction)
 		computeNewParticleTemperatures();
-#ifdef LINSOLV
 	if (advection)
 		flow->solver->setNewCellTemps(fluidConduction); // in case of fluid conduction, the delta temps are added to, not replaced
-#endif
 	if (debug)
 		cout << "temps set" << endl;
 	if (delT > 0 && runConduction)
@@ -158,11 +152,11 @@ void ThermalEngine::setReynoldsNumbers()
 		for (int j = 0; j < 4; j++) {
 			if (!cell->neighbor(j)->info().isFictious) {
 				l          = cell->info() - cell->neighbor(j)->info();
-				charLength = math::sqrt(l.squared_length());
+				charLength = sqrt(l.squared_length());
 			}
 		}
-		const Real avgCellFluidVel = math::sqrt(cell->info().averageVelocity().squared_length());
-		Real       Reynolds        = flow->solver->fluidRho * avgCellFluidVel * charLength / flow->viscosity;
+		const Real avgCellFluidVel = sqrt(cell->info().averageVelocity().squared_length());
+		double       Reynolds        = flow->solver->fluidRho * avgCellFluidVel * charLength / flow->viscosity;
 		if (Reynolds < 0 || math::isnan(Reynolds)) {
 			cerr << "Reynolds is negative or nan" << endl;
 			Reynolds = 0;
@@ -554,11 +548,11 @@ void ThermalEngine::computeFluidFluidConduction()
 		else
 			fluidToSolidRatio = cell->info().facetFluidSurfacesRatio[facetPair.second];
 		//if (flow->thermalPorosity>0) fluidConductionAreaFactor=flow->thermalPorosity;
-		area = fluidConductionAreaFactor * math::sqrt(cell->info().facetSurfaces[facetPair.second].squared_length()) * fluidToSolidRatio;
-		//area = math::sqrt(fluidSurfK.squared_length());
+		area = fluidConductionAreaFactor * sqrt(cell->info().facetSurfaces[facetPair.second].squared_length()) * fluidToSolidRatio;
+		//area = sqrt(fluidSurfK.squared_length());
 		//poreVector = cell->info() - neighborCell->info();
 		poreVector = cellBarycenter(cell) - cellBarycenter(neighborCell); // voronoi was breaking for hexagonal packings
-		distance   = math::sqrt(poreVector.squared_length());
+		distance   = sqrt(poreVector.squared_length());
 		if (distance < minimumFluidCondDist)
 			distance = minimumFluidCondDist;
 		//cout << "conduction distance" << distance << endl;
@@ -614,10 +608,8 @@ CVector ThermalEngine::cellBarycenter(const CellHandle& cell)
 
 void ThermalEngine::computeNewPoreTemperatures()
 {
-#ifdef LINSOLV
 	bool addToDeltaTemp = false;
 	flow->solver->setNewCellTemps(addToDeltaTemp);
-#endif
 }
 
 void ThermalEngine::computeNewParticleTemperatures()
@@ -896,9 +888,9 @@ void ThermalEngine::resetFlowBoundaryTemps()
 //         Real pv13N2 = pow(M[0][1],2) +pow(M[1][1],2) +pow(M[2][1],2);
 //         Real pv14N2 = pow(M[0][2],2) +pow(M[1][2],2) +pow(M[2][2],2);
 //
-//         Real pv12N = math::sqrt(pv12N2);
-//         Real pv13N = math::sqrt(pv13N2);
-//         Real pv14N = math::sqrt(pv14N2);
+//         Real pv12N = sqrt(pv12N2);
+//         Real pv13N = sqrt(pv13N2);
+//         Real pv14N = sqrt(pv14N2);
 //
 //         Real cp12 = (M[0][0]*M[0][1]+M[1][0]*M[1][1]+M[2][0]*M[2][1]);
 //         Real cp13 = (M[0][0]*M[0][2]+M[1][0]*M[1][2]+M[2][0]*M[2][2]);

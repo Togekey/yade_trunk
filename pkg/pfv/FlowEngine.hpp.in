@@ -289,19 +289,10 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		void	exportTriplets(string filename) {if (useSolver==3) solver->exportTriplets(filename.c_str());
 				else cerr<<"available for Cholmod solver (useSolver==3)"<<endl;}
 		void	cholmodStats() {
-		#if (not defined(NO_CHOLMOD))
 					cerr << cholmod_print_common((char*)string("PFV Cholmod factorization").c_str(),&(solver->eSolver.cholmod()))<<endl;
 					cerr << "cholmod method:" << solver->eSolver.cholmod().selected<<endl;
-					cerr << "METIS called:"<<solver->eSolver.cholmod().called_nd<<endl;
-		#endif
-		}
-		bool	metisUsed() {
-		#if (not defined(NO_CHOLMOD))
-			return bool(solver->eSolver.cholmod().called_nd);
-		#else
-			return false;
-		#endif
-		}
+					cerr << "METIS called:"<<solver->eSolver.cholmod().called_nd<<endl;}
+		bool	metisUsed() {return bool(solver->eSolver.cholmod().called_nd);}
 		#endif
 
 		virtual ~TemplateFlowEngine_@TEMPLATE_FLOW_NAME@();
@@ -466,9 +457,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		.def("averageSlicePressure",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::averageSlicePressure,(boost::python::arg("posY")),"Measure slice-averaged pore pressure at height posY")
 		.def("averagePressure",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::averagePressure,"Measure averaged pore pressure in the entire volume, the cells adjacent to the boundaries are ignored if includeBoundaries=False")
 		.def("updateBCs",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::updateBCs,"Update the boundary condition to reflect changes of boundary pressure (needed typically after changing :yref:`FlowEngine::bndCondValue`). It is not sufficient to reflect changes of the type of boundary condition (:yref:`FlowEngine::bndCondIsPressure`), in such case re-triangulation or at least updating the linear system is needed (see :yref:`FlowEngine::updateTriangulation` and :yref:`FlowEngine::updateLinearSystem`). Conversely, the update is not necessary for changing the value of point-wise imposed pressure (:yref:`FlowEngine::imposePressure`)")
-#ifdef LINSOLV
 		.def("resetLinearSystem",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::pyResetLinearSystem,"trigger rebuild of the linear system while keeping the same triangulation")
-#endif
 		.def("emulateAction",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::emulateAction,"get scene and run action (may be used to manipulate an engine outside the timestepping loop).")
 		.def("getCell",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getCell,(boost::python::arg("pos")),"get id of the cell containing (X,Y,Z).")
 		.def("getIncidentCells",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getIncidentCells,(boost::python::arg("vertexId")),"get ids of all cells of which vertexId is a vertex. Typical usage is for getting cells indident to a boundary.")

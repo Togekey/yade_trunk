@@ -9,7 +9,7 @@
 
 #ifdef FLOW_ENGINE
 
-#if defined(LINSOLV) and (not defined(NO_CHOLMOD))
+#ifdef LINSOLV
 #include <cholmod.h>
 #endif
 //For pyRunString
@@ -137,9 +137,7 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 			}
 
 			backgroundSolver = shared_ptr<FlowSolver> (new FlowSolver);
-			#if (not defined(NO_CHOLMOD))
 			if (metisForced) {backgroundSolver->eSolver.cholmod().nmethods=1; backgroundSolver->eSolver.cholmod().method[0].ordering=CHOLMOD_METIS;}
-			#endif
 			backgroundSolver->imposedP = vector<pair<CGT::Point,Real> >(solver->imposedP);
 			backgroundSolver->imposedF = vector<pair<CGT::Point,Real> >(solver->imposedF);
 			backgroundSolver->imposedCavity = vector<CGT::Point>(solver->imposedCavity);
@@ -314,30 +312,14 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
 void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::setForceMetis ( bool force )
 {
-	#if (not defined(NO_CHOLMOD))
         if (force) {
 		metisForced=true;
 		solver->eSolver.cholmod().nmethods=1;
 		solver->eSolver.cholmod().method[0].ordering=CHOLMOD_METIS;
-	} else {
-		cholmod_defaults(&(solver->eSolver.cholmod()));
-		metisForced=false;
-	}
-	#else
-		metisForced=false;
-	if(force) {
-		std::cerr << "cannot setForceMetis, because cholmod is not allowed.\n";
-	}
-	#endif
+	} else {cholmod_defaults(&(solver->eSolver.cholmod())); metisForced=false;}
 }
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
-bool TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::getForceMetis () {
-	#if (not defined(NO_CHOLMOD))
-	return (solver->eSolver.cholmod().nmethods==1);
-	#else
-		throw std::runtime_error("cannot call getForceMetis() because cholmod is not allowed.");
-	#endif
-	}
+bool TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::getForceMetis () {return (solver->eSolver.cholmod().nmethods==1);}
 #endif
 template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
 void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::buildTriangulation ( Solver& flow )
@@ -624,12 +606,11 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 		else cell->info().dv() += dVol*invDeltaT; // thermalEngine resets dv() to zero and starts adding to it before this.
                 cell->info().volume() = newVol;
 		if (defTolerance>0) { //if the criterion is not used, then we skip these updates a save a LOT of time when Nthreads > 1
-			// the (YADE_REAL_BIT==64) check means that for other Real types a proper std::atomic or mutex implementation would be faster.
-			#if defined(YADE_OPENMP) and (YADE_REAL_BIT==64)
+			#ifdef YADE_OPENMP
 			#pragma omp atomic
 			#endif
 			totVol+=cell->info().volumeSign*newVol;
-			#if defined(YADE_OPENMP) and (YADE_REAL_BIT==64)
+			#ifdef YADE_OPENMP
 			#pragma omp atomic
 			#endif
                 	totDVol+=dVol;}

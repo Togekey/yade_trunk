@@ -49,12 +49,12 @@ namespace CGT
 #endif
 /* PARDISO prototype. */
 extern  "C" int F77_FUNC(pardisoinit)
-    (void *, int *, int *, int *, Real *, int *);
+    (void *, int *, int *, int *, double *, int *);
 
 extern  "C" int F77_FUNC(pardiso)
     (void *, int *, int *, int *, int *, int *,
-     Real *, int *, int *, int *, int *, int *,
-     int *, Real *, Real *, int *, Real *);
+     double *, int *, int *, int *, int *, int *,
+     int *, double *, double *, int *, double *);
 #endif
 
 #ifdef XVIEW
@@ -66,7 +66,7 @@ FlowBoundingSphereLinSolv<_Tesselation,FlowType>::~FlowBoundingSphereLinSolv()
 	#ifdef TAUCS_LIB
 	if (Fccs) taucs_ccs_free(Fccs);
 	#endif
-	#if defined(SUITESPARSE_VERSION_4) and (not defined(NO_CHOLMOD))
+	#ifdef SUITESPARSE_VERSION_4
 	if (useSolver == 4){
 		if (getCHOLMODPerfTimings) gettimeofday (&start, NULL);
 		CHOLMOD(free_sparse)(&Achol, &com);
@@ -100,7 +100,7 @@ FlowBoundingSphereLinSolv<_Tesselation,FlowType>::FlowBoundingSphereLinSolv(): F
 	numFactorizeThreads=1;
 	numSolveThreads=1;
 	#endif
-	#if defined(SUITESPARSE_VERSION_4) and (not defined(NO_CHOLMOD))
+	#ifdef SUITESPARSE_VERSION_4
 	CHOLMOD(start)(&com);
 	//CHOLMOD(wildcard)();
 	factorExists=false;
@@ -169,7 +169,7 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::resetLinearSystem() {
 template<class _Tesselation, class FlowType>
 int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setLinearSystem(Real dt)
 {
-	#if defined(SUITESPARSE_VERSION_4) and (not defined(NO_CHOLMOD))
+	#ifdef SUITESPARSE_VERSION_4
 	if (!multithread && factorExists && useSolver==4){
 		if (getCHOLMODPerfTimings) gettimeofday (&start, NULL);
 		CHOLMOD(free_sparse)(&Achol, &com);
@@ -339,7 +339,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setLinearSystem(Real dt)
 			A.data().squeeze();
 			A.setFromTriplets(tripletList.begin(), tripletList.end());
 		#endif
-		#if defined(SUITESPARSE_VERSION_4) and (not defined(NO_CHOLMOD))
+		#ifdef SUITESPARSE_VERSION_4
 		}else if (useSolver==4){
 			if (getCHOLMODPerfTimings) gettimeofday (&start, NULL);
 			cholmod_triplet* trip = CHOLMOD(allocate_triplet)(ncols,ncols, T_nnz, 1, CHOLMOD_REAL, &com);
@@ -563,8 +563,8 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::vectorizedGaussSeidel(Rea
 		#endif
 
 		for (int ii=1; ii<=ncols; ii++) {
-			Real** Acols = &(fullAcolumns[ii][0]); Real* Avals = &(fullAvalues[ii][0]);
-			Real dp = (((gsB[ii]-gsdV[ii]+Avals[0]*(*Acols[0])
+			double** Acols = &(fullAcolumns[ii][0]); double* Avals = &(fullAvalues[ii][0]);
+			double dp = (((gsB[ii]-gsdV[ii]+Avals[0]*(*Acols[0])
 			               +Avals[1]*(*Acols[1])
 			               +Avals[2]*(*Acols[2])
 			               +Avals[3]*(*Acols[3])) * Avals[4])
@@ -630,19 +630,15 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::eigenSolve(Real dt)
 	VectorXr eb(ncols); VectorXr ex(ncols);
 	for (int k=0; k<ncols; k++) eb[k]=T_bv[k];
 	if (!factorizedEigenSolver) {
-		#if (not defined(NO_CHOLMOD))
 		eSolver.setMode(Eigen::CholmodSupernodalLLt);
-		#endif
 		openblas_set_num_threads(numFactorizeThreads);
 		eSolver.compute(A);
 		//Check result
-		#if (not defined(NO_CHOLMOD))
 		if (eSolver.cholmod().status>0) {
 			cerr << "something went wrong in Cholesky factorization, use LDLt as fallback this time" << eSolver.cholmod().status << endl;
 			eSolver.setMode(Eigen::CholmodLDLt);
 			eSolver.compute(A);
 		}
-		#endif
 		factorizedEigenSolver = true;
 	}
 	// backgroundAction only wants to factorize, no need to solve and copy to cells.
@@ -661,7 +657,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::eigenSolve(Real dt)
 template<class _Tesselation, class FlowType>
 int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::cholmodSolve(Real dt)
 {
-	#if defined(SUITESPARSE_VERSION_4) and (not defined(NO_CHOLMOD))
+#ifdef SUITESPARSE_VERSION_4
 	if (!isLinearSystemSet || (isLinearSystemSet && reApplyBoundaryConditions()) || !updatedRHS) ncols = setLinearSystem(dt);
 	copyCellsToLin(dt);
 	cholmod_dense* B = CHOLMOD(zeros)(ncols, 1, Achol->xtype, &com); //cholmod_l_zeros(ncols, 1, Achol->xtype, &com);
@@ -706,7 +702,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::cholmodSolve(Real dt)
 	}
 	CHOLMOD(free_dense)(&B, &com); //cholmod_l_free_dense(&B, &com);
 #else
-	cerr<<"Flow engine not compiled with CHOLMOD, nothing computed if useSolver=4, dt="<<dt<<endl;
+	cerr<<"Flow engine not compiled with CHOLMOD, nothing computed if useSolver=4"<<endl;
 #endif
 	return 0;
 }
@@ -835,9 +831,9 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::taucsSolve(Real /*dt*/)
 	if (debugOut) cerr << "Updating dv's (Yade->LinSolver) : " <<  taucs_ctime()-t << endl; t = taucs_ctime();
 	//taucs_logfile("stdout");//! VERY USEFULL!!!!!!!!!!! (disable to exclude output time from taucs_ctime() measurments)
 
-	taucs_Real* x = &T_x[0];// the unknown vector to solve Ax=b
-	taucs_Real* bod = &bodv[0];
-	taucs_Real* xod = &xodv[0];
+	taucs_double* x = &T_x[0];// the unknown vector to solve Ax=b
+	taucs_double* bod = &bodv[0];
+	taucs_double* xod = &xodv[0];
 
 	if (Fccs==NULL) {
 		if (debugOut) cerr << "_entering taucs_" << endl;
@@ -1002,7 +998,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolve(Real /*dt*/)
 		pTime2N++; pTime2+=(taucs_ctime()-iniT);
 	}
 	if (pTimeInt>99) {
-		cout <<"Pardiso.....  "<<pTime1/(Real) pTime1N << " s/iter for "<<pTime1N<<"/"<<(pTime2N+pTime1N)<<" std iter., "<< pTime2/pTime2N <<" s/iter for "<<pTime2N<<"/"<<(pTime2N+pTime1N)<<" retriangulation iter."<<endl;
+		cout <<"Pardiso.....  "<<pTime1/(double) pTime1N << " s/iter for "<<pTime1N<<"/"<<(pTime2N+pTime1N)<<" std iter., "<< pTime2/pTime2N <<" s/iter for "<<pTime2N<<"/"<<(pTime2N+pTime1N)<<" retriangulation iter."<<endl;
 		pTime1=0;pTime2=0;pTime1N=0;pTime2N=0;pTimeInt=0;}
 	pTimeInt++;
 	/* ..  Convert matrix back to 0-based C-notation.                       */
@@ -1032,7 +1028,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolveTest()
 	t=taucs_ctime();
 	int*    ia = T_A->colptr;
 	int*    ja = T_A->rowind;
-	Real*  a = T_A->values.d;
+	double*  a = T_A->values.d;
 
 	if (!wasLSystemSet) for (int k=0; k<n; k++) sortV(ia[k],ia[k+1]-1,ja,a);
 	cout<<taucs_ctime()-t<<"s for ordering CCS format"<<endl;
@@ -1042,9 +1038,9 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolveTest()
 //    int mtype = -2;        /* Real symmetric matrix */
 	int mtype = 2;        /* Real symmetric positive def. matrix */
 	/* RHS and solution vectors. */
-	Real*   b = &T_b[0];
+	double*   b = &T_b[0];
 	P_x.resize(n);
-	Real* x = &P_x[0];// the unknown vector to solve Ax=b
+	double* x = &P_x[0];// the unknown vector to solve Ax=b
 	int      nrhs = 1;          /* Number of right hand sides. */
 
 	/* Internal solver memory pointer pt,                  */
@@ -1053,7 +1049,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolveTest()
 	void    *pt[64];
 	/* Pardiso control parameters. */
 	int      iparm[64];
-	Real   dparm[64];
+	double   dparm[64];
 	int      maxfct, mnum, phase, error, msglvl, solver;
 	/* Number of processors. */
 	int      num_procs;
@@ -1061,7 +1057,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::pardisoSolveTest()
 	char    *var;
 	int      i;
 
-	Real   ddum;              /* Double dummy */
+	double   ddum;              /* Double dummy */
 	int      idum;              /* Integer dummy. */
 	/* ..  Setup Pardiso control parameters.                     */
 	error = 0;
@@ -1171,24 +1167,24 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::taucsSolveTest()
 #ifdef TAUCS_LIB
     cout <<endl<<"TAUCS solve test"<<endl;
 
-    Real t = taucs_ctime();//timer
+    double t = taucs_ctime();//timer
     ncols = setLinearSystem();
 
 //taucs_logfile("stdout");//! VERY USEFULL!!!!!!!!!!! (disable to exclude output time from taucs_ctime() measurments)
 
 // allocate TAUCS solution vector
     T_x.resize(ncols);
-    Real* x = &*T_x.begin();// the unknown vector to solve Ax=b
+    double* x = &*T_x.begin();// the unknown vector to solve Ax=b
     cout << "Assembling the matrix2 : " <<  taucs_ctime()-t << endl;
     t =taucs_ctime();
 // solve the linear system
     void* F = NULL;
 
 //Allocate reoredered x and b
-    vector <Real> bodv(ncols);
-    taucs_Real* bod = &*bodv.begin();
-    vector <Real> xodv(ncols);
-    taucs_Real* xod = &*xodv.begin();
+    vector <double> bodv(ncols);
+    taucs_double* bod = &*bodv.begin();
+    vector <double> xodv(ncols);
+    taucs_double* xod = &*xodv.begin();
 
 
     int*         perm;
@@ -1196,7 +1192,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::taucsSolveTest()
     taucs_ccs_matrix*  Aod;
 
     t = taucs_ctime();
-    Real t2 = taucs_ctime();
+    double t2 = taucs_ctime();
 // 1) Reordering
     taucs_ccs_order(T_A, &perm, &invperm, "metis");
     Aod = taucs_ccs_permute_symmetrically(T_A, perm, invperm);
@@ -1210,7 +1206,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::taucsSolveTest()
     cout << "Factoring : " <<  taucs_ctime()-t << endl;
     t = taucs_ctime();
 // 3) Back substitution and reodering the solution back
-Real t4 = taucs_ctime();
+double t4 = taucs_ctime();
 // for (int k=0;k<10;k++){
 
     taucs_supernodal_solve_llt(F, xod, bod);
@@ -1220,7 +1216,7 @@ Real t4 = taucs_ctime();
 //     cout << "B4) Deordering : " <<  taucs_ctime()-t << endl;
     t = taucs_ctime();
 // }
-	Real T4=taucs_ctime()-t4;
+	double T4=taucs_ctime()-t4;
     cout <<  "Solving : " <<  T4 << endl;
     cout << "Low level reordered total time : " <<  taucs_ctime()-t2 << endl;
     t2 = taucs_ctime();

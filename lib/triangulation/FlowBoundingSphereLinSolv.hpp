@@ -23,19 +23,11 @@
 //#define LINSOLV // should be defined at cmake step
 // #define TAUCS_LIB //comment this if TAUCS lib is not available, it will disable PARDISO lib as well
 
-// FIXME - use a templatized solver that can work with a non-double Real type, maybe this:
-//         https://eigen.tuxfamily.org/dox/group__SparseCholesky__Module.html
-//         according to documentation only this one uses `double`: https://eigen.tuxfamily.org/dox/classEigen_1_1CholmodDecomposition.html
-//         others seem to be general and templatized. So maybe they are faster? especially when compiling with -Ofast ?
 #ifdef LINSOLV
 	#include <Eigen/Sparse>
 	#include <Eigen/SparseCore>
-#ifdef NO_CHOLMOD
-	#include<Eigen/IterativeLinearSolvers>
-#else
 	#include <Eigen/CholmodSupport>
 	#include <cholmod.h>
-#endif
 #endif
 
 #ifdef TAUCS_LIB
@@ -109,11 +101,12 @@ public:
 	//Eigen::SparseMatrix<::yade::math::Complex,RowMajor> Ga; for row major stuff?
 	typedef Eigen::Triplet<Real> ETriplet;
 	std::vector<ETriplet> tripletList;//The list of non-zero components in Eigen sparse matrix
-#ifdef NO_CHOLMOD
-	Eigen::BiCGSTAB<Eigen::SparseMatrix<Real>, Eigen::IncompleteLUT<Real> > eSolver;
-#else
+// cholmod requires Real==double. So it cannot work with arbitrary precision types. Below is an example to make it work:
+// #ifdef NO_CHOLMOD
+//	Eigen::BiCGSTAB<Eigen::SparseMatrix<Real>, Eigen::IncompleteLUT<Real> > eSolver;
+// #else
 	Eigen::CholmodDecomposition<Eigen::SparseMatrix<double>, Eigen::Lower > eSolver;
-#endif
+// #endif
 	bool factorizedEigenSolver;
 	void exportMatrix(const char* filename) {ofstream f; f.open(filename); f<<A; f.close();};
 	void exportTriplets(const char* filename) {ofstream f; f.open(filename);
@@ -124,7 +117,7 @@ public:
 	int numFactorizeThreads;
 	int numSolveThreads;
 	#endif
-	#if defined(SUITESPARSE_VERSION_4) and (not defined(NO_CHOLMOD))
+	#ifdef SUITESPARSE_VERSION_4
 	// cholmod direct solver (useSolver=4)
 
 	cholmod_triplet* cholT;
