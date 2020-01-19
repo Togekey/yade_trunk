@@ -8,16 +8,25 @@
 #ifdef FLOW_ENGINE
 #pragma once
 
-//#define NO_CHOLMOD
+// Notes about itegrating this code with high precision Real
+//
 // cholmod requires Real==double. So it cannot work with arbitrary precision types.
-// I tried following solvers in its place:
+// I tried following solvers in its place (by putting '#define NO_CHOLMOD' and conditioanlly selecting another one, then I removed it):
 //    Eigen::BiCGSTAB<Eigen::SparseMatrix<Real>, Eigen::IncompleteLUT<Real> > eSolver;
 //    Eigen::CholmodDecomposition<Eigen::SparseMatrix<double>, Eigen::Lower > eSolver;
 //    Eigen::BiCGSTAB<Eigen::SparseMatrix<Real>, Eigen::IdentityPreconditioner > eSolver;
 //    Eigen::DGMRES<Eigen::SparseMatrix<double>, Eigen::IdentityPreconditioner> eSolver;
 //    Eigen::SparseLU<Eigen::SparseMatrix<Real> > eSolver;
 // They weren't satisfactory. But it is very close to have all of yade to support Real type. Only the solver needs to be raplaced.
-// Eigen also can use parallelized solvers. Since long time we had EIGEN_DONT_PARALLELIZE defined. Maybe it's time to undefine it? https://gitlab.com/libeigen/eigen/merge_requests/36^M
+// For a more detailed example see into file lib/compatibility/LapackCompatibility.cpp
+//
+// So we can use a templatized solver that can work with a non-double Real type, maybe this:
+//    https://eigen.tuxfamily.org/dox/group__SparseCholesky__Module.html
+// to documentation only this one uses `double`: https://eigen.tuxfamily.org/dox/classEigen_1_1CholmodDecomposition.html
+// seem to be general and templatized. So maybe they are faster? especially when compiling with -Ofast ?
+//
+// Another note: Eigen can use parallelized solvers. Since long time we had #define EIGEN_DONT_PARALLELIZE in Math.hpp (moved to Real.hpp).
+// Maybe it's time to undefine it?
 // 
 
 //#define LINSOLV // should be defined at cmake step
