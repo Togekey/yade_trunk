@@ -163,26 +163,17 @@ public:
 
 	// Evaluate function
 	Real FunctionValue(Real x[3]);
-#if (YADE_REAL_BIT != 64)
-	// unfortunately vtkImplicitFunction only works with double. The VTK library would need to be patched.
-	// The workaround is to convert double arguments to Real. Precision is lost along the way.
-	double FunctionValue(double x[3])
-	{
-		Real r[3] = { static_cast<Real>(x[0]), static_cast<Real>(x[1]), static_cast<Real>(x[2]) };
-		return static_cast<double>(FunctionValue(r));
-	}
-#endif
-	virtual double EvaluateFunction(double x[3])
+	Real EvaluateFunction(Real x[3])
 	{
 		//return this->vtkImplicitFunction::EvaluateFunction(x);
 		return FunctionValue(x);
 	};
 
-	virtual double EvaluateFunction(double x, double y, double z) { return this->vtkImplicitFunction::EvaluateFunction(x, y, z); };
+	Real EvaluateFunction(Real x, Real y, Real z) { return this->vtkImplicitFunction::EvaluateFunction(x, y, z); };
 
 	// Evaluate gradient for function
-	virtual void EvaluateGradient(
-	        double /*x*/[3], double /*n*/[3]) {}; // FIXME - better use Vector3r here instead of Real[3] (here I only fix the unused parameter warning).
+	void EvaluateGradient(
+	        Real /*x*/[3], Real /*n*/[3]) {}; // FIXME - better use Vector3r here instead of Real[3] (here I only fix the unused parameter warning).
 
 	// If you need to set parameters, add methods here
 
