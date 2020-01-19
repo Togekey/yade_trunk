@@ -35,6 +35,15 @@
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
 
+
+// Note about using high precisision Real:
+// for start create a file for coinor compatibility lib/compatibility/CoinorCompatibility.hpp,
+// and wrap there all the calls to external coinor library.
+// This would be similar to wrapper/converter how lib/compatibility/LapackCompatibility.cpp is done
+// Then try to replace these functions with native Eigen high-precision Real routines of linear programming.
+//
+// Also all memset(…) calls should be replaced with std::fill(…) of std::vector like it is done in pkg/dem/Ig2_PP_PP_ScGeom.cpp
+
 namespace yade { // Cannot have #include directive inside.
 
 CREATE_LOGGER(BlockGen);
