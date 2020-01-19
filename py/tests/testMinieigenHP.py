@@ -203,7 +203,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		# The Vector4 bug was fixed only recently, don't test if there's nothing to test
 		if(not hasattr(mne, 'Vector4')): return
 		a4r = mne.Vector4(2.1,1.1,4.3,5.5)
-		b4r = mne.Vector4(3.1,5.1,5.2,-5.4)
+		b4r = mne.Vector4(3.1,5.1,5.2,-5.0)
 		c4r = a4r + b4r
 		#self.assertEqual(c4r.eigenFlags(),352)
 		#self.assertEqual(c4r.eigenStorageOrder(),0)
@@ -212,7 +212,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeError( c4r[0] , mpmath.mpf("5.2") )
 		self.checkRelativeError( c4r[1] , mpmath.mpf("6.2") )
 		self.checkRelativeError( c4r[2] , mpmath.mpf("9.5") )
-		self.checkRelativeError( c4r[3] , mpmath.mpf("0.1") )
+		self.checkRelativeError( c4r[3] , mpmath.mpf("0.5") )
 
 		c4r *= 3
 
@@ -220,7 +220,7 @@ class ExtendedMinieigenTests(unittest.TestCase):
 		self.checkRelativeError( c4r[0] , mpmath.mpf("15.6") )
 		self.checkRelativeError( c4r[1] , mpmath.mpf("18.6") )
 		self.checkRelativeError( c4r[2] , mpmath.mpf("28.5") )
-		self.checkRelativeError( c4r[3] , mpmath.mpf("0.3") )
+		self.checkRelativeError( c4r[3] , mpmath.mpf("1.5") )
 
 		from minieigen import Vector4
 		self.checkRelativeError( c4r[0] , eval(c4r.__str__())[0] )
