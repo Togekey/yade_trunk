@@ -5,8 +5,6 @@
 
 #ifdef YADE_POTENTIAL_BLOCKS
 
-#include <lib/compatibility/DoubleCompatibility.hpp>
-
 #include "Ig2_PB_PB_ScGeom.hpp"
 #include <pkg/dem/ScGeom.hpp>
 //#include <pkg/dem/PotentialBlock.hpp>
@@ -768,8 +766,7 @@ bool Ig2_PB_PB_ScGeom::customSolveAnalyticCentre(const shared_ptr<Shape>& cm1, c
 		blasP2[3*i]=s2->a[i]; blasP2[3*i+1]=s2->b[i]; blasP2[3*i+2]=s2->c[i]; d2[i] = s2->d[i] + s2->r;
 	}
 	int incx =1; int incy=1;
-	int blas3 = 3; char blasNT = 'N'; char blasT= 'T'; Real blas0 = 0.0; Real blas1 = 1.0; Real blasNeg1 = -1.0;
-	std::vector<Real> HessTemp( 3*totalPlanes , /* fill with */ 0 );
+	int blas3 = 3; char blasNT = 'N'; char blasT= 'T'; Real blas0 = 0.0; Real blas1 = 1.0; Real blasNeg1 = -1.0; Real HessTemp[3*totalPlanes];
 	dgemm_(&blasNT, &blasNT, &blas3, &planeNoA, &blas3, &blas1, &blasQ1[0], &blas3, &blasP1[0], &blas3, &blas0, &blasP1Q[0], &blas3); /*Matrix mulitplication Q1*P1 */
 	dgemm_(&blasNT, &blasNT, &blas3, &planeNoB, &blas3, &blas1, &blasQ2[0], &blas3, &blasP2[0], &blas3, &blas0, &blasP2Q[0], &blas3); /*Matrix mulitplication Q2*P2 */
 
@@ -782,14 +779,12 @@ bool Ig2_PB_PB_ScGeom::customSolveAnalyticCentre(const shared_ptr<Shape>& cm1, c
 
 	int iter=0;
 	Real xx [3]; xx[0]=0.0; xx[1]=0.0; xx[2]=0.0; Real blasStep[3];
-	std::vector<Real> grad( 3 , 0 );
-	std::vector<Real> Hess( 9 , 0 );
+	Real grad [3];
+	Real Hess [9];
 	Real Atranspose[totalPlanes*3];
 	Real B [totalPlanes]; Real D [totalPlanes]; Real Dinvert [totalPlanes];
-	std::vector<Real> Ddiag( totalPlanes*totalPlanes , 0);
-	Real oriMinD = 9999999;
-	//std::fill(Ddiag.begin() , Ddiag.end() , 0);
-	//memset(Ddiag,0.0,sizeof(Ddiag));
+	Real Ddiag[totalPlanes*totalPlanes]; Real oriMinD = 9999999;
+	memset(Ddiag,0.0,sizeof(Ddiag));
 	//int planeNoA3 = planeNoA*3; int planeNoB3 = planeNoB*3; int totalPlanes3 = totalPlanes*3;
 
 	for (int i=0; i<planeNoA; i++){
@@ -826,11 +821,11 @@ bool Ig2_PB_PB_ScGeom::customSolveAnalyticCentre(const shared_ptr<Shape>& cm1, c
 		orival = val;
 		if(iter==0 && Mathr::Sign(oriMinD)*1.0<0.0 ){std::cout<<"oriMinD: "<<oriMinD<<endl; converge = false; break;}
 		/* g = A(T)*(1./d) */
-		//memset(grad,0.0,sizeof(grad));
+		memset(grad,0.0,sizeof(grad));
 		dgemv_(&blasNT, &blas3, &totalPlanes, &blas1, &Atranspose[0], &blas3, &Dinvert[0], &incx, &blas0, &grad[0], &incy);
 		/* H = A(t)*diag(1/d^2)*A */
-		//memset(HessTemp,0.0,sizeof(HessTemp));
-		//memset(Hess,0.0,sizeof(Hess));
+		memset(HessTemp,0.0,sizeof(HessTemp));
+		memset(Hess,0.0,sizeof(Hess));
 		dgemm_(&blasNT, &blasNT, &blas3, &totalPlanes, &totalPlanes, &blas1, &Atranspose[0], &blas3, &Ddiag[0], &totalPlanes, &blas0, &HessTemp[0], &blas3);
 		dgemm_(&blasNT, &blasT, &blas3, &blas3, &totalPlanes, &blas1, &HessTemp[0], &blas3, &Atranspose[0], &blas3, &blas0, &Hess[0], &blas3);
 
@@ -867,7 +862,7 @@ bool Ig2_PB_PB_ScGeom::customSolveAnalyticCentre(const shared_ptr<Shape>& cm1, c
 					blasStep[i]=-1.0*grad[i]; //g[i];
 				}
 				int ipiv[varNo]; int bColNo=1;
-				dgesv_( &varNo, &bColNo, &Hess[0], &varNo, ipiv, blasStep, &varNo, &info);
+				dgesv_( &varNo, &bColNo, Hess, &varNo, ipiv, blasStep, &varNo, &info);
 			}
 		//#endif
 		#if 0
@@ -1050,22 +1045,22 @@ model2.setColumnUpper(1,  COIN_DBL_MAX);
 model2.setColumnUpper(2,  COIN_DBL_MAX);
 model2.setColumnUpper(3,  COIN_DBL_MAX);
 
-double rowLower[numberRows];
-double rowUpper[numberRows];
+Real rowLower[numberRows];
+Real rowUpper[numberRows];
 
 // Rows
-for( int i=0; i<planeNoA;   i++ ){ rowUpper[i]            = static_cast<double>( s1->d[i] + s1->r + Q1pos1(i,0) ); }
-for( int i=0; i<planeNoB;   i++ ){ rowUpper[planeNoA + i] = static_cast<double>( s2->d[i] + s2->r + Q2pos2(i,0) ); }
+for( int i=0; i<planeNoA;   i++ ){ rowUpper[i]            = s1->d[i] + s1->r + Q1pos1(i,0); }
+for( int i=0; i<planeNoB;   i++ ){ rowUpper[planeNoA + i] = s2->d[i] + s2->r + Q2pos2(i,0); }
 for( int k=0; k<numberRows; k++ ){ rowLower[k] = -COIN_DBL_MAX; }
 
 for( int i=0; i < planeNoA; i++ ){
 	int rowIndex[] = {0, 1, 2, 3};
-	double rowValue[] = ARRAY_4_DOUBLE(AQ1(i,0), AQ1(i,1), AQ1(i,2), -1.0);
+	Real rowValue[] = {AQ1(i,0), AQ1(i,1), AQ1(i,2), -1.0};
 	model2.addRow(4, rowIndex, rowValue,rowLower[i], rowUpper[i]);
 }
 for( int i=0; i < planeNoB; i++ ){
 	int rowIndex[] = {0, 1, 2, 3};
-	double rowValue[] = ARRAY_4_DOUBLE(AQ2(i,0), AQ2(i,1), AQ2(i,2), -1.0);
+	Real rowValue[] = {AQ2(i,0), AQ2(i,1), AQ2(i,2), -1.0};
 	model2.addRow(4, rowIndex, rowValue,rowLower[planeNoA+i], rowUpper[planeNoA+i]);
 }
 
@@ -1077,7 +1072,7 @@ model2.setLogLevel(0);
    //model2.writeMps("a.mps");
 
           // Alternatively getColSolution()
-          double* columnPrimal = model2.primalColumnSolution();
+          Real * columnPrimal = model2.primalColumnSolution();
 
     xGlobal = Vector3r(columnPrimal[0],columnPrimal[1],columnPrimal[2])/rescale;
     contactPoint = xGlobal;
@@ -1498,8 +1493,7 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
  // MatrixXr c=MatrixXr::Zero(varNo,1);
  // c[3] = 1.0;
 
-  std::vector<Real> blasA1((3+planeNoA)*varNo , /* fill with */ 0);
-  std::vector<Real> blasA2((3+planeNoB)*varNo , /* fill with */ 0);
+  Real blasA1[(3+planeNoA)*varNo];  Real blasA2[(3+planeNoB)*varNo];
   /* Second order cone constraints */
   /* A1 */
   //MatrixXr A1(3+planeNoA,varNo);
@@ -1510,7 +1504,7 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
   // A1 << QAs,MatrixXr::Zero(3,1+planeNoAB),
   // MatrixXr::Zero(planeNoA,4),kAp*MatrixXr::Identity(planeNoA, planeNoA),MatrixXr::Zero(planeNoA,planeNoB);
-  //memset(blasA1,0.0,sizeof(blasA1));
+  memset(blasA1,0.0,sizeof(blasA1));
   for (int i=0; i<3; i++){
 	blasA1[i] = blasQAs[i];  blasA1[i+planeNoA3] = blasQAs[i+3];  blasA1[i+2*planeNoA3] = blasQAs[i+6];
   }
@@ -1528,7 +1522,7 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 
   // A2 << QBs,MatrixXr::Zero(3,1+planeNoAB),
   // MatrixXr::Zero(planeNoB,4),MatrixXr::Zero(planeNoB,planeNoA),kBp*MatrixXr::Identity(planeNoB, planeNoB);
-  //memset(blasA2,0.0,sizeof(blasA2));
+  memset(blasA2,0.0,sizeof(blasA2));
   for (int i=0; i<3; i++){
 	blasA2[i] = blasQBs[i];  blasA2[i+planeNoB3] = blasQBs[i+3];  blasA2[i+2*(planeNoB3)] = blasQBs[i+6];
   }
@@ -1546,9 +1540,8 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
   b1[0] = -b1temp[0];		b1[1]= -b1temp[1];	b1[2] = -b1temp[2];
 #endif
 
-  std::vector<Real> blasB1 ( planeNoA3 , 0 );
-  Real blasB1temp[3];
-  //memset(blasB1,0.0,sizeof(blasB1));
+  Real blasB1[planeNoA3]; Real blasB1temp[3];
+  memset(blasB1,0.0,sizeof(blasB1));
  // blasM = 3;   blasN=3;
 //  blasLDA = 3;    blasAlpha = -1.0;  blasBeta=0.0;  blasLDC = 3;
 // dgemv_(&transA, &blasM, &blasN, &blasAlpha, &blasQAs[0], &blasLDA, &blasPosA[0], &incx, &blasBeta, &blasB1temp[0], &incy);
@@ -1562,9 +1555,8 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
   b2[0] = -b2temp[0];		b2[1]= -b2temp[1];	b2[2] = -b2temp[2];
 #endif
 
-  std::vector<Real> blasB2( planeNoB3 , 0 );
-  Real blasB2temp[3];
-  //memset(blasB2,0.0,sizeof(blasB2));
+  Real blasB2[planeNoB3]; Real blasB2temp[3];
+  memset(blasB2,0.0,sizeof(blasB2));
  //  blasM = 3;   blasN=3; blasLDA = 3; blasAlpha=-1.0; blasBeta=0.0;
  // dgemv_(&transA, &blasM, &blasN, &blasAlpha, &blasQBs[0], &blasLDA, &blasPosB[0], &incx, &blasBeta, &blasB2temp[0], &incy);
   dgemv_(&blasNT, &blas3, &blas3, &blasNeg1, &blasQBs[0], &blas3, &blasPosB[0], &incx, &blas0, &blasB2temp[0], &incy);
@@ -1575,8 +1567,8 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
  // AL<<P1Q, MatrixXr::Zero(planeNoA,1), -1.0*MatrixXr::Identity(planeNoA,planeNoA), MatrixXr::Zero(planeNoA,planeNoB), //cwise()
 //	      P2Q, MatrixXr::Zero(planeNoB,1), MatrixXr::Zero(planeNoB,planeNoA), -1.0*MatrixXr::Identity(planeNoB,planeNoB);
 
-  std::vector<Real> blasAL( planeNoAB*varNo , 0 );
-  //memset(blasAL,0.0,sizeof(blasAL));
+  Real blasAL[planeNoAB*varNo];
+  memset(blasAL,0.0,sizeof(blasAL));
   for (int i=0; i<planeNoA; i++){
 	blasAL[i] = blasP1Q[i];  blasAL[i+planeNoAB] = blasP1Q[i+planeNoA];  blasAL[i+2*planeNoAB] = blasP1Q[i+2*planeNoA];
 	blasAL[i+(4+i)*planeNoAB] = -1.0;
@@ -1619,8 +1611,8 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
   }
 
   Real u1; Real u2;
-  std::vector<Real> blasCCtranspose( varNo2 , 0 );
-  //memset(blasCCtranspose,0.0,sizeof(blasCCtranspose));
+  Real blasCCtranspose[varNo2];
+  memset(blasCCtranspose,0.0,sizeof(blasCCtranspose));
   blasCCtranspose[3+varNo*3]=1.0;
 
    Real blasCa1[varNo2];
@@ -1651,8 +1643,8 @@ bool Ig2_PB_PB_ScGeom::customSolve(const shared_ptr<Shape>& cm1, const State& st
 	  dgemm_(&blasT, &blasNT, &varNo, &varNo, &planeNoB3, &blasNeg1, &blasA2[0], &planeNoB3, &blasA2[0], &planeNoB3, &blas1, &blasCa2[0], &varNo);
 
 /* DL */
-std::vector<Real> blasDL( planeNoAB*planeNoAB , 0 );  blasCount = 0;
-//memset(blasDL,0.0,sizeof(blasDL));
+Real blasDL[planeNoAB*planeNoAB];  blasCount = 0;
+memset(blasDL,0.0,sizeof(blasDL));
 
 //#endif
 
