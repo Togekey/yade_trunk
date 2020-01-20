@@ -16,8 +16,8 @@ type						bits		decimal places			notes
 ``float``					``32``		``6``				hardware accelerated (not useful, it is only for testing purposes)
 ``double``					``64``		``15``				hardware accelerated
 ``long double``					``80``		``18``				hardware accelerated
-``boost::multiprecision::float128``		``128``		``33``				depending on processor type it may be hardware accelerated
-``boost::multiprecision::mpfr``			``Nbit``	``Nbit/(log(2)/log(10))``	uses external mpfr library
+``boost::multiprecision::float128``		``128``		``33``				depending on processor type it may be hardware accelerated, `wrapped by boost <https://www.boost.org/doc/libs/1_72_0/libs/multiprecision/doc/html/boost_multiprecision/tut/floats/float128.html>`__
+``boost::multiprecision::mpfr``			``Nbit``	``Nbit/(log(2)/log(10))``	uses external mpfr library, `wrapped by boost <https://www.boost.org/doc/libs/1_72_0/libs/multiprecision/doc/html/boost_multiprecision/tut/floats/mpfr_float.html>`__
 ``boost::multiprecision::cpp_bin_float``	``Nbit``	``Nbit/(log(2)/log(10))``	uses boost only, but is slower
 =============================================== =============== =============================== ==================================================================
 
