@@ -17,6 +17,12 @@ This module has four purposes:
    will be faster than mpmath because mpmath is a purely python library (which was one of the main
    difficulties when writing :ysrc:`lib/high-precision/ToFromPythonConverter.hpp`)
 
+If another math function is needed it should be added to following files:
+
+1. :ysrc:`lib/high-precision/MathFunctions.hpp`
+2. :ysrc:`py/high-precision/_math.cpp`
+3. :ysrc:`py/tests/testMath.py`
+
 """
 # all C++ functions are accessible now:
 from yade._math import *
