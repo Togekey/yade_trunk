@@ -224,6 +224,7 @@ names of the Debian-packages.
 
 
 
+.. _yadeCompilation:
 
 Compilation
 ^^^^^^^^^^^

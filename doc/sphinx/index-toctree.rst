@@ -76,6 +76,8 @@ Performance enhancements
 .. toctree::
   :maxdepth: 2
 
+  highPrecisionReal.rst
+
   GPUacceleration.rst
 ..  
   mpy.rst
