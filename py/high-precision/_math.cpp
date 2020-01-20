@@ -315,8 +315,8 @@ try {
 	        R"""(:return: ``bool``, True if ``a`` is approximately equal ``b`` with provided ``eps``, see also `here <https://stackoverflow.com/questions/15051367/how-to-compare-vectors-approximately-in-eigen>`__)""");
 	py::def("isApproxOrLessThan",
 	        static_cast<bool (*)(const Real&, const Real&, const Real&)>(&Eigen::internal::isApproxOrLessThan),
-	                (py::arg("a"), "b", "eps"),
-	                R"""(:return: ``bool``, True if ``a`` is approximately less than or equal ``b`` with provided ``eps``, see also `here <https://stackoverflow.com/questions/15051367/how-to-compare-vectors-approximately-in-eigen>`__)""");
+	        (py::arg("a"), "b", "eps"),
+	        R"""(:return: ``bool``, True if ``a`` is approximately less than or equal ``b`` with provided ``eps``, see also `here <https://stackoverflow.com/questions/15051367/how-to-compare-vectors-approximately-in-eigen>`__)""");
 #else
 	// older eigen 3.2 didn't use `const Real&` but was copying third argument by value `Real`
 	py::def("isMuchSmallerThan",
@@ -329,7 +329,8 @@ try {
 	        R"""(:return: ``bool``, True if ``a`` is approximately equal ``b`` with provided ``eps``, see also `here <https://stackoverflow.com/questions/15051367/how-to-compare-vectors-approximately-in-eigen>`__)""");
 	py::def("isApproxOrLessThan",
 	        static_cast<bool (*)(const Real&, const Real&, Real)>(&Eigen::internal::isApproxOrLessThan<Real>),
-	        (py::arg("a"), "b", "eps"),R"""(:return: ``bool``, True if ``a`` is approximately less than or equal ``b`` with provided ``eps``, see also `here <https://stackoverflow.com/questions/15051367/how-to-compare-vectors-approximately-in-eigen>`__)"""));
+	        (py::arg("a"), "b", "eps"),
+	        R"""(:return: ``bool``, True if ``a`` is approximately less than or equal ``b`` with provided ``eps``, see also `here <https://stackoverflow.com/questions/15051367/how-to-compare-vectors-approximately-in-eigen>`__)""");
 #endif
 
 	py::def("toLongDouble",

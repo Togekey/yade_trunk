@@ -7,8 +7,13 @@
 
 """
 When yade uses high-precision number as ``Real`` type the usual (old) ``import minieigen``
-has to be replaced with ``import yade.minieigenHP as minieigen``. This command ensures backward compatibility
-between both, because this module contains only these four lines:
+has to be replaced with:
+
+.. code-block:: python
+
+	import yade.minieigenHP as minieigen
+
+This command ensures backward compatibility between both because this module contains only these four lines:
 
 .. code-block:: python
 
