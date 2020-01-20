@@ -181,7 +181,7 @@ class SimpleTests(unittest.TestCase):
 		self.assertEqual(mth.rint(r),round(r))
 		self.assertTrue((mth.round(r)==round(r)) or (r%1==0.5)) # ignore rounding 0.5 up or down.
 		self.checkRelativeError(mth.tgamma(r),mpmath.gamma(r),functionName="tgamma")
-		self.assertEqual(mth.trunc(r),int(r))
+		self.assertEqual(mth.trunc(abs(r)),int(abs(r)))
 
 		self.checkRelativeError(mth.fabs(r),abs(r),functionName="fabs")
 
