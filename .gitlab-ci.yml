@@ -92,12 +92,13 @@ stages:
     - if [[ ${SKIP_TEST} == "SKIP_TEST" ]] ; then echo -e "\n\e[93m===\nSkipping this build, because it's a WIP merge request.\n===\e[0m\n"; else make install -j $JOBSNUM; fi
     - make clean
     - ccache -s
+    - cd ../build
+    - if [[ ${TESTS_AFTER_MAKE} == "TESTS_AFTER_MAKE" ]] ; then xvfb-run -s "-screen 0 1600x1200x24" make doc; fi
     - cd ..
     - if [[ ${TESTS_AFTER_MAKE} == "TESTS_AFTER_MAKE" ]] ; then install/bin/yade-ci --test ; fi
     - if [[ ${TESTS_AFTER_MAKE} == "TESTS_AFTER_MAKE" ]] ; then install/bin/yade-ci --check; fi
     - if [[ ${TESTS_AFTER_MAKE} == "TESTS_AFTER_MAKE" ]] ; then xvfb-run -a -s "-screen 0 1600x1200x16" scripts/checks-and-tests/gui/testGui.sh; fi
-    - cd build
-    - if [[ ${TESTS_AFTER_MAKE} == "TESTS_AFTER_MAKE" ]] ; then xvfb-run -s "-screen 0 1600x1200x24" make doc; fi
+    - if [[ ${TESTS_AFTER_MAKE} == "TESTS_AFTER_MAKE" ]] ; then install/bin/yade-ci --quickperformance -j8; fi
   tags:
     - fast
 
@@ -241,6 +242,7 @@ make_clang:
   script:
     - if [[ ${SKIP_TEST} == "SKIP_TEST" ]] ; then echo -e "\n\e[93m===\nSkipping this test, because it's a WIP merge request.\n===\e[0m\n"; else install/bin/yade-ci --test; fi
     - if [[ ${SKIP_TEST} == "SKIP_TEST" ]] || [[ ${NO_GUI} == "NO_GUI" ]] ; then echo -e "\n\e[93m===\nSkipping GUI test.\n===\e[0m\n"; else xvfb-run -a -s "-screen 0 1600x1200x16" scripts/checks-and-tests/gui/testGui.sh; fi
+    - if [[ ${SKIP_TEST} == "SKIP_TEST" ]] ; then echo -e "\n\e[93m===\nSkipping --quickperformance -j8 test, because it's a WIP merge request.\n===\e[0m\n"; else install/bin/yade-ci --quickperformance -j8; fi
     - cat /etc/os-release
   timeout: 25 minutes
   artifacts:
