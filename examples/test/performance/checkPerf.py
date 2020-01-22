@@ -45,7 +45,7 @@ if(yade.runtime.opts.stdperformance):
 	print("\033[93m Running --stdperformance test: 200000 spheres, "+str(iterN)+" iterations, average over "+str(numberTests)+" runs. Threads: "+str(numThreads)+"\033[0m")
 elif(yade.runtime.opts.quickperformance):
 	radRAD      = [23.658]
-	iterN       = [5000]
+	iterN       = [2000]
 	coefCor     = [110]
 	numberTests = 2
 	print("\033[93m Running --quickperformance test: 5000 spheres, "+str(iterN)+" iterations, average over "+str(numberTests)+" runs. Threads: "+str(numThreads)+"\033[0m")
@@ -199,10 +199,12 @@ print("Number of threads: ", os.environ['OMP_NUM_THREADS'])
 print("___________________________________________________")
 print()
 
-print("CPU info:")
-cmd = "lscpu"
-#cpuinfo=subprocess.check_output(cmd, shell=True) # needs python >=2.7.0
-process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-cpuinfo = process.communicate()[0].decode().lstrip('model name\t:').strip()
-print(cpuinfo)
+if(not yade.runtime.opts.quickperformance):
+	print("CPU info:")
+	cmd = "lscpu"
+	#cpuinfo=subprocess.check_output(cmd, shell=True) # needs python >=2.7.0
+	process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+	cpuinfo = process.communicate()[0].decode().lstrip('model name\t:').strip()
+	print(cpuinfo)
+
 sys.exit(0)
