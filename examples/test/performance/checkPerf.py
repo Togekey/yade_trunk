@@ -37,18 +37,18 @@ coefCor=[
 numberTests = 3
 numThreads=os.environ['OMP_NUM_THREADS'] if (len(os.environ['OMP_NUM_THREADS'])==2) else ('0'+os.environ['OMP_NUM_THREADS'])
 
-if(yade.runtime.opts.oneperformance):
+if(yade.runtime.opts.stdperformance):
 	radRAD      = [80.91]
 	iterN       = [2000]
 	coefCor     = [2]
-	numberTests = 5
-	print("\033[93m Running --oneperformance test: 200000 spheres, 2000 iterations, average over 5 runs. Threads: "+str(numThreads)+"\033[0m")
+	numberTests = 10
+	print("\033[93m Running --stdperformance test: 200000 spheres, "+str(iterN)+" iterations, average over "+str(numberTests)+" runs. Threads: "+str(numThreads)+"\033[0m")
 elif(yade.runtime.opts.quickperformance):
 	radRAD      = [23.658]
 	iterN       = [5000]
 	coefCor     = [110]
 	numberTests = 2
-	print("\033[93m Running --quickperformance test: 5000 spheres, 5000 iterations, average over 2 runs. Threads: "+str(numThreads)+"\033[0m")
+	print("\033[93m Running --quickperformance test: 5000 spheres, "+str(iterN)+" iterations, average over "+str(numberTests)+" runs. Threads: "+str(numThreads)+"\033[0m")
 else:
 	print("\033[93m Running regular --performance test. Threads: "+str(numThreads)+"\033[0m")
 
@@ -70,7 +70,7 @@ def calcAverageSoFar(numberSoFar,iterVelSoFar,lenTests):
 	return iterVelNumpy , avgVel , dispVel
 
 
-for z in range(numberTests):
+while len(iterVel) < numberTests:
 	for i in range(len(radRAD)):
 		rR = radRAD[i]
 		nbIter=iterN[i]
@@ -131,6 +131,25 @@ for z in range(numberTests):
 		iterVel += [nbIter/(tEnd-tStart)]
 		testTime += [tEnd-tStart]
 		particlesNumber += [len(O.bodies)]
+	if((len(radRAD) == 1) and yade.runtime.opts.stdperformance and ( numberTests >= 5 ) and ( len(iterVel) >= numberTests )):
+		# this loop will keep removing outliers which are too far away from average result. Must have have at least 5 results for this to work
+		iterVelNumpy , avgVel , dispVel = calcAverageSoFar( len(iterVel) , iterVel , len(radRAD) )
+		if (dispVel>1.0):
+			# standard deviation is too big, remove two largest outliers. Better to remove two, otherwise if the situation changed (another program was stopped) only the last result would be kept being removed.
+			for zz in range(2):
+				pos=None
+				maxDiff=0
+				for z in range(len(iterVel)):
+					diff = abs(avgVel-iterVel[z])
+					if (diff > maxDiff):
+						maxDiff = diff
+						pos     = z
+					#print("\033[93m maxDiff="+str(maxDiff)+" pos="+str(pos)+"\033[0m")
+				# will remove position 'pos' from the results.
+				print("\033[93m Standard deviation "+str(dispVel)+" too large, removing result number: "+str(pos)+"\033[0m")
+				del iterVel[pos]
+				del testTime[pos]
+				del particlesNumber[pos]
 
 tEndAll=time.time()
 commonTime = tEndAll-tStartAll
@@ -141,7 +160,7 @@ print()
 
 print("___________________________________________________")
 print()
-print("SUMMARY")
+print("\033[93m SUMMARY\033[0m")
 print()
 scoreIterVel=0.0
 
@@ -150,7 +169,7 @@ for i in range(len(radRAD)):
 	if (dispVel>10.):
 		print("Calculation velocity is unstable, try to close all programs and start performance tests again")
 	
-	print(particlesNumber[i]," spheres, calculation velocity=",avgVel, "iter/sec +/-",dispVel,"%")
+	print(particlesNumber[i]," spheres,\033[93m calculation velocity=",avgVel, "iter/sec +/-",dispVel,"%\033[0m")
 	data+=[[particlesNumber[i],avgVel,avgVel*dispVel/100.]]
 	scoreIterVel+=avgVel/coefCor[i]*1000.0
 print()
