@@ -134,7 +134,7 @@ while len(iterVel) < numberTests:
 	if((len(radRAD) == 1) and yade.runtime.opts.stdperformance and ( numberTests >= 5 ) and ( len(iterVel) >= numberTests )):
 		# this loop will keep removing outliers which are too far away from average result. Must have have at least 5 results for this to work
 		iterVelNumpy , avgVel , dispVel = calcAverageSoFar( len(iterVel) , iterVel , len(radRAD) )
-		if (dispVel>1.0):
+		if (dispVel>2.0):
 			# standard deviation is too big, remove two largest outliers. Better to remove two, otherwise if the situation changed (another program was stopped) only the last result would be kept being removed.
 			for zz in range(2):
 				pos=None
