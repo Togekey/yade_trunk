@@ -61,6 +61,15 @@ initIter = 1	# number of initial iterations excluded from performance check (e.g
 
 tStartAll=time.time()
 
+def calcAverageSoFar(numberSoFar,iterVelSoFar,lenTests):
+	iterVelNumpy=numpy.empty(numberSoFar)
+	for z in range(numberSoFar):
+		iterVelNumpy[z]=iterVelSoFar[z*lenTests+i]
+	avgVel = numpy.average(iterVelNumpy)
+	dispVel = numpy.std(iterVelNumpy)/numpy.average(iterVelNumpy)*100.0
+	return iterVelNumpy , avgVel , dispVel
+
+
 for z in range(numberTests):
 	for i in range(len(radRAD)):
 		rR = radRAD[i]
@@ -135,13 +144,9 @@ print()
 print("SUMMARY")
 print()
 scoreIterVel=0.0
+
 for i in range(len(radRAD)):
-	iterAv=0.0
-	iterVelNumpy=numpy.empty(numberTests)
-	for z in range(numberTests):
-		iterVelNumpy[z]=iterVel[z*len(radRAD)+i]
-	avgVel = numpy.average(iterVelNumpy)
-	dispVel = numpy.std(iterVelNumpy)/numpy.average(iterVelNumpy)*100.0
+	iterVelNumpy , avgVel , dispVel = calcAverageSoFar( numberTests , iterVel , len(radRAD) )
 	if (dispVel>10.):
 		print("Calculation velocity is unstable, try to close all programs and start performance tests again")
 	
