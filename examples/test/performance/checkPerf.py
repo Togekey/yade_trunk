@@ -137,11 +137,11 @@ import subprocess
 cmd = "cat /proc/cpuinfo | grep \'model name\' | uniq"
 #processor = subprocess.check_output(cmd, shell=True).lstrip('model name\t:').strip() # needs python >=2.7.0
 process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-processor = process.communicate()[0].lstrip('model name\t:').strip()
+processor = process.communicate()[0].decode().lstrip('model name\t:').strip()
 cmd = "cat /proc/cpuinfo | grep processor | wc -l"
 #cores = subprocess.check_output("cat /proc/cpuinfo | grep processor | wc -l", shell=True).strip() # needs python >=2.7.0 
 process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-cores = process.communicate()[0].strip()
+cores = process.communicate()[0].decode().strip()
 header='# '+ processor + ' ('+cores+' cores)'
 numThreads=os.environ['OMP_NUM_THREADS'] if (len(os.environ['OMP_NUM_THREADS'])==2) else ('0'+os.environ['OMP_NUM_THREADS'])
 filename=version+"_j"+numThreads+".dat"
@@ -162,6 +162,6 @@ print("CPU info:")
 cmd = "lscpu"
 #cpuinfo=subprocess.check_output(cmd, shell=True) # needs python >=2.7.0
 process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-cpuinfo = process.communicate()[0].lstrip('model name\t:').strip()
+cpuinfo = process.communicate()[0].decode().lstrip('model name\t:').strip()
 print(cpuinfo)
 sys.exit(0)
