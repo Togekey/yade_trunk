@@ -37,7 +37,7 @@ regular :ref:`installation instructions <install-from-source-code>`. With extra 
 	1. Patch the older ``python-minieigen`` debian package with `these patches <https://gitlab.com/cosurgi/minieigen-real/tree/master/patches>`__, the patches already included in the debian package are also required.
 	2. Or copy `the patched minieigen files <https://gitlab.com/cosurgi/minieigen-real/tree/master/minieigen-local>`__ into local directory and pass the extra cmake argument ``MINIEIGEN_INCLUDE_PATH=…``, relative to this path the sources should reside inside ``minieigen`` subdirectory. The path ``/usr/include/minieigen`` is used by default to find the minieigen sources.
 
-3. A g++ compiler version 9.2.1 or higher is required. It shall be noted that upgrading compiler only on an existing linux installation is difficult and it is not recommended. A simpler solution is to upgrade current linux installation.
+3. A g++ compiler version 9.2.1 or higher is required. It shall be noted that upgrading only the compiler on an existing linux installation is difficult and it is not recommended. A simpler solution is to upgrade entire linux installation.
 
 4. During cmake invocation specify:
 
