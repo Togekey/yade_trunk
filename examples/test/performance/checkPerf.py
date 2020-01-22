@@ -5,7 +5,8 @@ from __future__ import print_function
 from builtins import range
 from yade import pack,export,geom,timing,bodiesHandling
 import time,numpy
-	
+
+# The original regular test parameters
 radRAD=[
 	23.658,				#5000 elements
 	40.455,				#25000 elements
@@ -33,12 +34,29 @@ coefCor=[
 	#0.1,
 ]
 
+numberTests = 3
+numThreads=os.environ['OMP_NUM_THREADS'] if (len(os.environ['OMP_NUM_THREADS'])==2) else ('0'+os.environ['OMP_NUM_THREADS'])
+
+if(yade.runtime.opts.oneperformance):
+	radRAD      = [80.91]
+	iterN       = [2000]
+	coefCor     = [2]
+	numberTests = 5
+	print("\033[93m Running --oneperformance test: 200000 spheres, 2000 iterations, average over 5 runs. Threads: "+str(numThreads)+"\033[0m")
+elif(yade.runtime.opts.quickperformance):
+	radRAD      = [23.658]
+	iterN       = [5000]
+	coefCor     = [110]
+	numberTests = 2
+	print("\033[93m Running --quickperformance test: 5000 spheres, 5000 iterations, average over 2 runs. Threads: "+str(numThreads)+"\033[0m")
+else:
+	print("\033[93m Running regular --performance test. Threads: "+str(numThreads)+"\033[0m")
+
 iterVel=[]
 testTime=[]
 particlesNumber=[]
 data=[]
 
-numberTests = 3
 initIter = 1	# number of initial iterations excluded from performance check (e.g. Collider is initialised in first step therefore exclude first step from performance check)
 
 tStartAll=time.time()
@@ -143,7 +161,6 @@ cmd = "cat /proc/cpuinfo | grep processor | wc -l"
 process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
 cores = process.communicate()[0].decode().strip()
 header='# '+ processor + ' ('+cores+' cores)'
-numThreads=os.environ['OMP_NUM_THREADS'] if (len(os.environ['OMP_NUM_THREADS'])==2) else ('0'+os.environ['OMP_NUM_THREADS'])
 filename=version+"_j"+numThreads+".dat"
 #numpy.savetxt(filename,numpy.array(data),fmt=['%i','%g','%g'], header=header) # needs numpy >=1.7.0
 fid = open( filename, 'w' )
