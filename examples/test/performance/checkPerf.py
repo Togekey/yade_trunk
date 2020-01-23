@@ -61,16 +61,16 @@ initIter = 1	# number of initial iterations excluded from performance check (e.g
 
 tStartAll=time.time()
 
-def calcAverageSoFar(numberSoFar,iterVelSoFar,lenTests):
+def calcAverageSoFar(numberSoFar,iterVelSoFar,lenTests,ii):
 	iterVelNumpy=numpy.empty(numberSoFar)
 	for z in range(numberSoFar):
-		iterVelNumpy[z]=iterVelSoFar[z*lenTests+i]
+		iterVelNumpy[z]=iterVelSoFar[z*lenTests+ii]
 	avgVel = numpy.average(iterVelNumpy)
 	dispVel = numpy.std(iterVelNumpy)/numpy.average(iterVelNumpy)*100.0
 	return iterVelNumpy , avgVel , dispVel
 
 
-while len(iterVel) < numberTests:
+while len(iterVel) < (numberTests*len(radRAD)):
 	for i in range(len(radRAD)):
 		rR = radRAD[i]
 		nbIter=iterN[i]
@@ -133,7 +133,7 @@ while len(iterVel) < numberTests:
 		particlesNumber += [len(O.bodies)]
 	if((len(radRAD) == 1) and yade.runtime.opts.stdperformance and ( numberTests >= 5 ) and ( len(iterVel) >= numberTests )):
 		# this loop will keep removing outliers which are too far away from average result. Must have have at least 5 results for this to work
-		iterVelNumpy , avgVel , dispVel = calcAverageSoFar( len(iterVel) , iterVel , len(radRAD) )
+		iterVelNumpy , avgVel , dispVel = calcAverageSoFar( len(iterVel) , iterVel , len(radRAD) , 0 )
 		if (dispVel>2.0):
 			# standard deviation is too big, remove two largest outliers. Better to remove two, otherwise if the situation changed (another program was stopped) only the last result would be kept being removed.
 			for zz in range(2):
@@ -165,7 +165,7 @@ print()
 scoreIterVel=0.0
 
 for i in range(len(radRAD)):
-	iterVelNumpy , avgVel , dispVel = calcAverageSoFar( numberTests , iterVel , len(radRAD) )
+	iterVelNumpy , avgVel , dispVel = calcAverageSoFar( numberTests , iterVel , len(radRAD) , i )
 	if (dispVel>10.):
 		print("Calculation velocity is unstable, try to close all programs and start performance tests again")
 	
