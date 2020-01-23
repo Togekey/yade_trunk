@@ -111,15 +111,15 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 		int threadNum = omp_get_thread_num();
 		for (auto i = chunks[k] + 1; i < chunks[k + 1]; i++) {
 			const Bounds viInit = v[i];
-			long         j      = i - 1;
-			if (not(j >= chunks[k] && v[j] > viInit))
-				continue; //else we need to assign v[j+1] after the 'while'
-			const bool viInitBB  = viInit.flags.hasBB;
-			const bool isMin     = viInit.flags.isMin;
-			while (j >= chunks[k] && v[j] > viInit) {
-				v[j + 1] = v[j];
-				if (isMin && !v[j].flags.isMin && doCollide && viInitBB && v[j].flags.hasBB && (viInit.id != v[j].id)) {
-					const Body::id_t& id1 = v[j].id;
+			auto         j      = i;
+			if (not(j > chunks[k] && v[j-1] > viInit))
+				continue; //else we need to assign v[j] after the 'while'
+			const bool viInitBB = viInit.flags.hasBB;
+			const bool isMin    = viInit.flags.isMin;
+			while (j > chunks[k] && v[j-1] > viInit) {
+				v[j] = v[j-1];
+				if (isMin && !v[j-1].flags.isMin && doCollide && viInitBB && v[j-1].flags.hasBB && (viInit.id != v[j-1].id)) {
+					const Body::id_t& id1 = v[j-1].id;
 					const Body::id_t& id2 = viInit.id;
 //(see #0 if compilation fails)
 #ifdef YADE_MPI
@@ -131,11 +131,11 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 					    && !interactions->found(id1, id2))
 #endif
 
-						newInteractions[threadNum].push_back(std::pair<Body::id_t, Body::id_t>(v[j].id, viInit.id));
+						newInteractions[threadNum].push_back(std::pair<Body::id_t, Body::id_t>(v[j-1].id, viInit.id));
 				}
 				j--;
 			}
-			v[j + 1] = viInit;
+			v[j] = viInit;
 		}
 	}
 	///In the second sort, the chunks are connected consistently.
@@ -152,14 +152,14 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 			if (!(v[i] < v[i - 1]))
 				break; //contiguous chunks now connected consistently
 			const Bounds viInit   = v[i];
-			long         j        = i - 1; /* cache hasBB; otherwise 1% overall performance hit */
+			auto         j        = i; /* cache hasBB; otherwise 1% overall performance hit */
 			const bool   viInitBB = viInit.flags.hasBB;
 			const bool   isMin    = viInit.flags.isMin;
 
-			while (j >= halfChunkStart && viInit < v[j]) {
-				v[j + 1] = v[j];
-				if (isMin && !v[j].flags.isMin && doCollide && viInitBB && v[j].flags.hasBB && (viInit.id != v[j].id)) {
-					const Body::id_t& id1 = v[j].id;
+			while (j > halfChunkStart && viInit < v[j-1]) {
+				v[j] = v[j-1];
+				if (isMin && !v[j-1].flags.isMin && doCollide && viInitBB && v[j-1].flags.hasBB && (viInit.id != v[j-1].id)) {
+					const Body::id_t& id1 = v[j-1].id;
 					const Body::id_t& id2 = viInit.id;
 //FIXME: do we need the check with found(id1,id2) here? It is checked again below...
 #ifdef YADE_MPI
@@ -170,11 +170,11 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 					if (spatialOverlap(id1, id2) && Collider::mayCollide(Body::byId(id1, scene).get(), Body::byId(id2, scene).get())
 					    && !interactions->found(id1, id2))
 #endif
-						newInteractions[threadNum].push_back(std::pair<Body::id_t, Body::id_t>(v[j].id, viInit.id));
+						newInteractions[threadNum].push_back(std::pair<Body::id_t, Body::id_t>(v[j-1].id, viInit.id));
 				}
 				j--;
 			}
-			v[j + 1] = viInit;
+			v[j] = viInit;
 			if (j < halfChunkStart)
 				parallelFailed = true;
 		}
