@@ -133,6 +133,10 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 
 						newInteractions[threadNum].push_back(std::pair<Body::id_t, Body::id_t>(v[j].id, viInit.id));
 				}
+				// j is unsigned. doing j-- to it will jump to 4294967295
+				if(j==0) {
+					break;
+				}
 				j--;
 			}
 			v[j + 1] = viInit;
