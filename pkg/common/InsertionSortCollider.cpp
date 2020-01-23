@@ -114,8 +114,9 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 			auto         j      = i - 1;
 			if (not(j >= chunks[k] && v[j] > viInit))
 				continue; //else we need to assign v[j+1] after the 'while'
-			const bool viInitBB = viInit.flags.hasBB;
-			const bool isMin    = viInit.flags.isMin;
+			const bool viInitBB  = viInit.flags.hasBB;
+			const bool isMin     = viInit.flags.isMin;
+			bool       belowZero = false;
 			while (j >= chunks[k] && v[j] > viInit) {
 				v[j + 1] = v[j];
 				if (isMin && !v[j].flags.isMin && doCollide && viInitBB && v[j].flags.hasBB && (viInit.id != v[j].id)) {
@@ -134,12 +135,17 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 						newInteractions[threadNum].push_back(std::pair<Body::id_t, Body::id_t>(v[j].id, viInit.id));
 				}
 				// j is unsigned. doing j-- to it will jump to 4294967295
-				if(j==0) {
+				if (j == 0) {
+					belowZero = true;
 					break;
 				}
 				j--;
 			}
-			v[j + 1] = viInit;
+			if (belowZero) {
+				v[0] = viInit;
+			} else {
+				v[j + 1] = viInit;
+			}
 		}
 	}
 	///In the second sort, the chunks are connected consistently.
