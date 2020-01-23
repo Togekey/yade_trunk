@@ -7,7 +7,7 @@
 #include <core/Scene.hpp>
 #include <pkg/common/Dispatching.hpp>
 #include <pkg/common/Sphere.hpp>
-#include <limits>
+
 #include <boost/static_assert.hpp>
 #ifdef YADE_OPENMP
 #include <omp.h>
@@ -111,12 +111,12 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 		int threadNum = omp_get_thread_num();
 		for (auto i = chunks[k] + 1; i < chunks[k + 1]; i++) {
 			const Bounds viInit = v[i];
-			auto         j      = i - 1;
+			long         j      = i - 1;
 			if (not(j >= chunks[k] && v[j] > viInit))
 				continue; //else we need to assign v[j+1] after the 'while'
 			const bool viInitBB  = viInit.flags.hasBB;
 			const bool isMin     = viInit.flags.isMin;
-			while (j != std::numeric_limits<decltype(j)>::max() and j >= chunks[k] && v[j] > viInit) {
+			while (j >= chunks[k] && v[j] > viInit) {
 				v[j + 1] = v[j];
 				if (isMin && !v[j].flags.isMin && doCollide && viInitBB && v[j].flags.hasBB && (viInit.id != v[j].id)) {
 					const Body::id_t& id1 = v[j].id;
@@ -152,11 +152,11 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 			if (!(v[i] < v[i - 1]))
 				break; //contiguous chunks now connected consistently
 			const Bounds viInit   = v[i];
-			auto         j        = i - 1; /* cache hasBB; otherwise 1% overall performance hit */
+			long         j        = i - 1; /* cache hasBB; otherwise 1% overall performance hit */
 			const bool   viInitBB = viInit.flags.hasBB;
 			const bool   isMin    = viInit.flags.isMin;
 
-			while (j != std::numeric_limits<decltype(j)>::max() and j >= halfChunkStart && viInit < v[j]) {
+			while (j >= halfChunkStart && viInit < v[j]) {
 				v[j + 1] = v[j];
 				if (isMin && !v[j].flags.isMin && doCollide && viInitBB && v[j].flags.hasBB && (viInit.id != v[j].id)) {
 					const Body::id_t& id1 = v[j].id;
