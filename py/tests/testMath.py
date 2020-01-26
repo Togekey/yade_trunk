@@ -212,15 +212,16 @@ class SimpleTests(unittest.TestCase):
 			print("Skipping test of CgalNumTraits")
 			return
 		self.assertEqual(mth.CGAL_Is_valid(r),True)
-		self.checkRelativeError(mth.CGAL_Square(r),mpmath.power(r,2),functionName="pow")
-		self.checkRelativeError(mth.CGAL_Sqrt(abs(r)),mpmath.sqrt(abs(r)),functionName="sqrt")
-		for kk in range(5):
-			k=kk+1
-			self.checkRelativeError(mth.CGAL_Kth_root(k,abs(r)),mpmath.power(abs(r),1/mpmath.mpf(k)),functionName="pow")
-		# CGAL uses double for intervals
-		interval = mth.CGAL_To_interval(r)
-		self.checkRelativeError(r,interval[0],1e-14)
-		self.checkRelativeError(r,interval[1],1e-14)
+		if(r != 0):
+			self.checkRelativeError(mth.CGAL_Square(r),mpmath.power(r,2),functionName="pow")
+			self.checkRelativeError(mth.CGAL_Sqrt(abs(r)),mpmath.sqrt(abs(r)),functionName="sqrt")
+			for kk in range(5):
+				k=kk+1
+				self.checkRelativeError(mth.CGAL_Kth_root(k,abs(r)),mpmath.power(abs(r),1/mpmath.mpf(k)),functionName="pow")
+			# CGAL uses double for intervals
+			interval = mth.CGAL_To_interval(r)
+			self.checkRelativeError(r,interval[0],1e-14)
+			self.checkRelativeError(r,interval[1],1e-14)
 		self.assertEqual(mth.CGAL_Is_finite(r),True)
 		if(r==0): self.assertEqual(mth.CGAL_Sgn(r),0)
 		if(r> 0): self.assertEqual(mth.CGAL_Sgn(r),1)
@@ -228,6 +229,16 @@ class SimpleTests(unittest.TestCase):
 		self.assertEqual(mth.CGAL_Sgn(0),0)
 		self.assertEqual(mth.CGAL_Sgn(2.5),1)
 		self.assertEqual(mth.CGAL_Sgn(-2.3),-1)
+
+	def testCgalNumTraits(self):
+		self.checkCgalNumTraits(0)
+		self.checkCgalNumTraits(0.5)
+		self.checkCgalNumTraits(-1.5)
+		self.checkCgalNumTraits(55.5)
+		self.assertEqual(mth.CGAL_Is_valid(mpmath.mpf('nan')),False)
+		self.assertEqual(mth.CGAL_Is_valid(mpmath.mpf('inf')),True) # interesting - CGAL treats inf as valid
+		self.assertEqual(mth.CGAL_Is_finite(mpmath.mpf('nan')),False)
+		self.assertEqual(mth.CGAL_Is_finite(mpmath.mpf('inf')),False)
 
 	def twoArgMathCheck(self,r1,r2):
 		self.checkRelativeComplexError(mth.sin (mpmath.mpc(r1,r2)),mpmath.sin (mpmath.mpc(r1,r2)),functionName="csin")
