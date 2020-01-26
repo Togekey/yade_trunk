@@ -239,6 +239,7 @@ class SimpleTests(unittest.TestCase):
 		self.assertEqual(mth.CGAL_Is_valid(mpmath.mpf('inf')),True) # interesting - CGAL treats inf as valid
 		self.assertEqual(mth.CGAL_Is_finite(mpmath.mpf('nan')),False)
 		self.assertEqual(mth.CGAL_Is_finite(mpmath.mpf('inf')),False)
+		self.assertEqual(mth.CGAL_simpleTest(),mpmath.mpf("3.0"))
 
 	def twoArgMathCheck(self,r1,r2):
 		self.checkRelativeComplexError(mth.sin (mpmath.mpc(r1,r2)),mpmath.sin (mpmath.mpc(r1,r2)),functionName="csin")

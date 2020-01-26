@@ -91,6 +91,19 @@ std::pair<double, double> test_CGAL_To_interval(const Real& x) { return CGAL::Re
 int                       test_CGAL_Sgn(const Real& x) { return int(CGAL::Real_embeddable_traits<Real>::Sgn()(x)); }
 bool                      test_CGAL_Is_finite(const Real& x) { return CGAL::Real_embeddable_traits<Real>::Is_finite()(x); }
 
+
+namespace yade {
+Real testSimpleCgalNumTraitsCalculation()
+{
+	CGALpoint  x(Real(1), Real(1), Real(1));
+	CGALpoint  p1(Real(0), Real(0), Real(0));
+	CGALvector v1(Real(1), Real(1), Real(1));
+	Plane      P(p1, v1);
+	Real h = P.a() * x.x() + P.b() * x.y() + P.c() * x.z() + P.d();
+	return ((h > 0.) - (h < 0.)) * pow(h, 2) / (CGALvector(P.a(), P.b(), P.c())).squared_length();
+}
+}
+
 #endif
 
 struct Var {
@@ -672,6 +685,13 @@ CGAL's function ``Is_finite``, as described in `CGAL algebraic <https://doc.cgal
 to python for :ysrccommit:`testing<ff600a80018d21c03626c720cda08967b043c1c8/py/tests/testMath.py#L207>` of CGAL numerical traits.
 
 :return: ``bool`` indicating if the ``Real`` argument is finite.
+)""");
+	py::def("CGAL_simpleTest",
+	        ::yade::testSimpleCgalNumTraitsCalculation,
+	        R"""(
+Tests a simple CGAL calculation. Distance between plane and point, uses CGAL's sqrt and pow.
+
+:return: 3.0
 )""");
 #else
 	py::scope().attr("testCgalNumTraits") = false;
