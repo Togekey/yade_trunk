@@ -39,7 +39,7 @@ numThreads=os.environ['OMP_NUM_THREADS'] if (len(os.environ['OMP_NUM_THREADS'])=
 
 if(yade.runtime.opts.stdperformance):
 	radRAD      = [30.77]
-	iterN       = [7000]
+	iterN       = [7000 if yade.config.highPrecisionDecimalPlaces < 40 else 2000]
 	coefCor     = [9]
 	numberTests = 10
 	print("\033[93m Running --stdperformance test: 10000 spheres, "+str(iterN)+" iterations, average over "+str(numberTests)+" runs. Threads: "+str(numThreads)+"\033[0m")
@@ -139,7 +139,7 @@ while len(iterVel) < (numberTests*len(radRAD)):
 		for outliers in range(3):
 			iterVelNumpy , avgVel , dispVel = calcAverageSoFar( len(iterVel) , iterVel , len(radRAD) , 0 )
 			# remove only if standard deviation is too big.
-			if (dispVel>2.0):
+			if (dispVel>1.0):
 				pos=None
 				maxDiff=0
 				for z in range(len(iterVel)):
