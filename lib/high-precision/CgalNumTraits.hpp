@@ -126,7 +126,7 @@ public:
 			// use CGAL workaround for long double if there is an IEEE compiler bug
 			return Real_embeddable_traits<long double>::Is_finite()(static_cast<long double>(x));
 #else
-			return (x == x) and (is_valid(x - x));
+			return ::yade::math::isfinite(x);
 #endif
 		}
 	};
