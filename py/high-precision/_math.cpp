@@ -696,6 +696,23 @@ Tests a simple CGAL calculation. Distance between plane and point, uses CGAL's s
 #else
 	py::scope().attr("testCgalNumTraits") = false;
 #endif
+#ifndef YADE_IGNORE_IEEE_INFINITY_NAN
+	py::def("isnan",
+	        ::yade::math::isnan,
+	        (py::arg("x")),
+	        R"""(:return: ``bool`` indicating if the ``Real`` argument is NaN. Depending on compilation options wraps ``::boost::multiprecision::isnan(…)`` or `std::isnan(…) <https://en.cppreference.com/w/cpp/numeric/math/isnan>`__ function.)""");
+	py::def("isinf",
+	        ::yade::math::isinf,
+	        (py::arg("x")),
+	        R"""(:return: ``bool`` indicating if the ``Real`` argument is Inf. Depending on compilation options wraps ``::boost::multiprecision::isinf(…)`` or `std::isinf(…) <https://en.cppreference.com/w/cpp/numeric/math/isinf>`__ function.)""");
+	py::def("isfinite",
+	        ::yade::math::isfinite,
+	        (py::arg("x")),
+	        R"""(:return: ``bool`` indicating if the ``Real`` argument is Inf. Depending on compilation options wraps ``::boost::multiprecision::isfinite(…)`` or `std::isfinite(…) <https://en.cppreference.com/w/cpp/numeric/math/isfinite>`__ function.)""");
+	py::scope().attr("hasInfinityNan") = true;
+#else
+	py::scope().attr("hasInfinityNan") = false;
+#endif
 
 } catch (...) {
 	LOG_FATAL("Importing this module caused an exception and this module is in an inconsistent state now.");
