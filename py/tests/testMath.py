@@ -230,13 +230,33 @@ class SimpleTests(unittest.TestCase):
 		self.assertEqual(mth.CGAL_Sgn(2.5),1)
 		self.assertEqual(mth.CGAL_Sgn(-2.3),-1)
 
+	def testInfinityNaN(self):
+		if(mth.hasInfinityNan==False):
+			print("Skipping inf,nan regular test\n")
+			print("\033[91m *** Warning: usually YADE needs Inf and NaN for most of the calculations. *** \033[0m")
+			return
+		self.assertEqual(mth.isinf   (mpmath.mpf( 1   )),False)
+		self.assertEqual(mth.isinf   (mpmath.mpf('nan')),False)
+		self.assertEqual(mth.isinf   (mpmath.mpf('inf')),True )
+		self.assertEqual(mth.isnan   (mpmath.mpf( 1   )),False)
+		self.assertEqual(mth.isnan   (mpmath.mpf('nan')),True )
+		self.assertEqual(mth.isnan   (mpmath.mpf('inf')),False)
+		self.assertEqual(mth.isfinite(mpmath.mpf( 1   )),True )
+		self.assertEqual(mth.isfinite(mpmath.mpf('nan')),False)
+		self.assertEqual(mth.isfinite(mpmath.mpf('inf')),False)
+
 	def testCgalNumTraits(self):
+		if(mth.testCgalNumTraits==False):
+			print("Skipping test of CgalNumTraits")
+			return
 		self.checkCgalNumTraits(0)
 		self.checkCgalNumTraits(0.5)
 		self.checkCgalNumTraits(-1.5)
 		self.checkCgalNumTraits(55.5)
-		self.assertEqual(mth.CGAL_Is_valid(mpmath.mpf('nan')),False)
-		self.assertEqual(mth.CGAL_Is_valid(mpmath.mpf('inf')),True) # interesting - CGAL treats inf as valid
+		self.assertEqual(mth.CGAL_Is_valid (mpmath.mpf( 1   )),True )
+		self.assertEqual(mth.CGAL_Is_valid (mpmath.mpf('nan')),False)
+		self.assertEqual(mth.CGAL_Is_valid (mpmath.mpf('inf')),True )
+		self.assertEqual(mth.CGAL_Is_finite(mpmath.mpf( 1   )),True )
 		self.assertEqual(mth.CGAL_Is_finite(mpmath.mpf('nan')),False)
 		self.assertEqual(mth.CGAL_Is_finite(mpmath.mpf('inf')),False)
 		self.assertEqual(mth.CGAL_simpleTest(),mpmath.mpf("3.0"))
