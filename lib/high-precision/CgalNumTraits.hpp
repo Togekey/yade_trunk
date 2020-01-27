@@ -5,6 +5,8 @@
 *  GNU General Public License v2 or later. See file LICENSE for details. *
 *************************************************************************/
 
+#if (YADE_REAL_BIT > 64) and defined(YADE_CGAL)
+
 #ifndef YADE_REAL_MATH_NAMESPACE
 #error "This file cannot be included alone, include Real.hpp instead"
 #endif
@@ -167,5 +169,6 @@ using ::yade::math::sqrt;
 
 }
 
-#endif
+#endif // CGAL_NUM_TRAITS_HPP
+#endif // (YADE_REAL_BIT > 64) and defined(YADE_CGAL)
 
