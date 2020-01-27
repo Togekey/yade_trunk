@@ -23,6 +23,11 @@
 #include <sstream>
 #include <string>
 
+#if (YADE_REAL_BIT <= 80)
+#include <lib/base/Logging.hpp>
+#include <boost/lexical_cast.hpp>
+#endif
+
 namespace yade {
 namespace math {
 	// guaranteed maximum precision
@@ -45,14 +50,24 @@ namespace math {
 	// These are just an inline convenience functions. They are the same as using std::stringstream.
 	inline Real fromStringReal(const std::string& st)
 	{
+#if (YADE_REAL_BIT > 80)
 		Real ret;
 		std::stringstream s{st};
 		s >> ret;
 		return ret;
+#else
+		return boost::lexical_cast<math::UnderlyingReal>(st);
+#endif
 	};
 
 	inline Complex fromStringComplex(const std::string& st)
 	{
+#if (YADE_REAL_BIT <= 80)
+// NOTE: if reading complex is needed, the lack of standard approach to nonfinite numbers will need a workaround here.
+//       fortunately ArbitraryComplex_from_python does not use this. It uses fromStringReal separately for each component.
+//       and we usually deal only with input from python. So that's good. And probably we will never see following message:
+LOG_NOFILTER(R"""(Warning: Reading complex number "(nan,nan)" or "(inf,0)" is not handled correctly by stringstream)""");
+#endif
 		Complex ret;
 		std::stringstream s{st};
 		s >> ret;

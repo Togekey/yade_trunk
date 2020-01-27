@@ -10,6 +10,8 @@
 
 #include <boost/python.hpp>
 
+#include <lib/high-precision/RealIO.hpp>
+
 /*************************************************************************/
 /*************************        Real          **************************/
 /*************************************************************************/
@@ -58,7 +60,12 @@ template <typename ArbitraryReal> struct ArbitraryReal_from_python {
 		void* storage = ((boost::python::converter::rvalue_from_python_storage<ArbitraryReal>*)(data))->storage.bytes;
 		new (storage) ArbitraryReal;
 		ArbitraryReal* val = (ArbitraryReal*)storage;
-		ss >> *val;
+		if (std::is_same<ArbitraryReal, ::yade::math::Real>::value) {
+			// ensure that "nan" "inf" are read correctly
+			*val = ::yade::math::fromStringReal(ss.str());
+		} else {
+			ss >> *val;
+		}
 		data->convertible = storage;
 	}
 };
@@ -121,8 +128,14 @@ template <typename ArbitraryComplex> struct ArbitraryComplex_from_python {
 		new (storage) ArbitraryComplex;
 		ArbitraryComplex*                     val = (ArbitraryComplex*)storage;
 		typename ArbitraryComplex::value_type re { 0 }, im { 0 };
-		ss_real >> re;
-		ss_imag >> im;
+		if (std::is_same<typename ArbitraryComplex::value_type, ::yade::math::Real>::value) {
+			// ensure that "nan" "inf" are read correctly
+			re = ::yade::math::fromStringReal(ss_real.str());
+			im = ::yade::math::fromStringReal(ss_imag.str());
+		} else {
+			ss_real >> re;
+			ss_imag >> im;
+		}
 		*val              = ArbitraryComplex(re, im); // must explicitly call the constructor, static_cast won't work.
 		data->convertible = storage;
 	}
