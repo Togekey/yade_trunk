@@ -43,7 +43,7 @@ public:
 #if defined(CGAL_CFG_IEEE_754_BUG) and (YADE_REAL_BIT == 80)
 		return Is_valid<long double>()(static_cast<long double>(x));
 #else
-		return (x == x);
+		return not ::yade::math::isnan(x);
 #endif
 	}
 };
