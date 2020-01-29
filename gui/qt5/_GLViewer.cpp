@@ -1,6 +1,5 @@
 #include "GLViewer.hpp"
 #include "OpenGLManager.hpp"
-#include <lib/compatibility/DoubleCompatibility.hpp>
 #include <lib/base/AliasNamespaces.hpp>
 #include <lib/base/Logging.hpp>
 #include <lib/pyutil/doc_opts.hpp>
@@ -66,7 +65,7 @@ public:
 	void set_##property(const Vector3r& t)                                                                                                                 \
 	{                                                                                                                                                      \
 		GLV;                                                                                                                                           \
-		setter(qglviewer::Vec(THREE_DOUBLES(t[0], t[1], t[2])));                                                                                                      \
+		setter(qglviewer::Vec((static_cast<double>(t[0])), (static_cast<double>( t[1])), (static_cast<double>( t[2]))));                                                                                                      \
 	}
 	VEC_GET_SET(upVector, glv->camera()->upVector, glv->camera()->setUpVector);
 	VEC_GET_SET(lookAt, glv->camera()->position() + glv->camera()->viewDirection, glv->camera()->lookAt);
@@ -130,12 +129,12 @@ public:
 	void fitAABB(const Vector3r& min, const Vector3r& max)
 	{
 		GLV;
-		glv->camera()->fitBoundingBox(qglviewer::Vec(THREE_DOUBLES(min[0], min[1], min[2])), qglviewer::Vec(THREE_DOUBLES(max[0], max[1], max[2])));
+		glv->camera()->fitBoundingBox(qglviewer::Vec((static_cast<double>(min[0])), (static_cast<double>( min[1])), (static_cast<double>( min[2]))), qglviewer::Vec((static_cast<double>(max[0])), (static_cast<double>( max[1])), (static_cast<double>( max[2]))));
 	}
 	void fitSphere(const Vector3r& center, Real radius)
 	{
 		GLV;
-		glv->camera()->fitSphere(qglviewer::Vec(THREE_DOUBLES(center[0], center[1], center[2])), static_cast<double>(radius));
+		glv->camera()->fitSphere(qglviewer::Vec((static_cast<double>(center[0])), (static_cast<double>( center[1])), (static_cast<double>( center[2]))), static_cast<double>(radius));
 	}
 	void showEntireScene()
 	{

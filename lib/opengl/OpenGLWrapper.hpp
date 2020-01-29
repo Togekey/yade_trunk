@@ -12,7 +12,6 @@
 #endif
 
 #include <lib/base/Math.hpp>
-#include <lib/compatibility/DoubleCompatibility.hpp>
 #include <type_traits>
 
 // https://stackoverflow.com/questions/7064039/how-to-prevent-non-specialized-template-instantiation/7064062
@@ -67,8 +66,6 @@ template <typename Type> inline void glMaterial(GLenum face, GLenum pname, Type 
 template <typename Type> inline void glMaterialv(GLenum face, GLenum pname, Type param) { static_assert(dontCallThis<Type>::value, "Bad arg Type"); }
 template <typename Type> inline void glMultMatrix(const Type*) { static_assert(dontCallThis<Type>::value, "Bad arg Type"); }
 
-///	Template Specializations
-
 #if defined(YADE_REAL_BIT) and (YADE_REAL_BIT != 64)
 template <> inline void glMultMatrix<yade::Real>(const yade::Real* m)
 {
@@ -78,111 +75,163 @@ template <> inline void glMultMatrix<yade::Real>(const yade::Real* m)
 	glMultMatrixd(mm);
 }
 
-template <> inline void glRotate<yade::Real>(yade::Real angle, yade::Real x, yade::Real y, yade::Real z) { glRotated(FOUR_DOUBLES(angle, x, y, z)); }
+///	Template Specializations
+
+template <> inline void glRotate<yade::Real>(yade::Real angle, yade::Real x, yade::Real y, yade::Real z)
+{
+	glRotated((static_cast<double>(angle)), (static_cast<double>(x)), (static_cast<double>(y)), (static_cast<double>(z)));
+}
+
 template <typename Type1, typename Type2, typename Type3, typename Type4> inline void glRotate(Type1 angle, Type2 x, Type3 y, Type4 z)
 {
-	glRotated(FOUR_DOUBLES(angle, x, y, z));
+	glRotated((static_cast<double>(angle)), (static_cast<double>(x)), (static_cast<double>(y)), (static_cast<double>(z)));
 }
-template <> inline void glScale<yade::Real>(yade::Real x, yade::Real y, yade::Real z) { glScaled(THREE_DOUBLES(x, y, z)); }
-template <> inline void glTranslate<yade::Real>(yade::Real x, yade::Real y, yade::Real z) { glTranslated(THREE_DOUBLES(x, y, z)); }
-template <typename Type1, typename Type2, typename Type3> inline void glTranslate(Type1 x, Type2 y, Type3 z) { glTranslated(THREE_DOUBLES(x, y, z)); }
-template <> inline void                                               glVertex2<yade::Real>(yade::Real x, yade::Real y) { glVertex2d(TWO_DOUBLES(x, y)); }
-template <> inline void glVertex3<yade::Real>(yade::Real x, yade::Real y, yade::Real z) { glVertex3d(THREE_DOUBLES(x, y, z)); }
-template <typename Type1, typename Type2, typename Type3> inline void glVertex3(Type1 x, Type2 y, Type3 z) { glVertex3d(THREE_DOUBLES(x, y, z)); }
 
+template <> inline void glScale<yade::Real>(yade::Real x, yade::Real y, yade::Real z)
+{
+	glScaled((static_cast<double>(x)), (static_cast<double>(y)), (static_cast<double>(z)));
+}
+
+template <> inline void glTranslate<yade::Real>(yade::Real x, yade::Real y, yade::Real z)
+{
+	glTranslated((static_cast<double>(x)), (static_cast<double>(y)), (static_cast<double>(z)));
+}
+
+template <typename Type1, typename Type2, typename Type3> inline void glTranslate(Type1 x, Type2 y, Type3 z)
+{
+	glTranslated((static_cast<double>(x)), (static_cast<double>(y)), (static_cast<double>(z)));
+}
+
+template <> inline void glVertex2<yade::Real>(yade::Real x, yade::Real y) { glVertex2d((static_cast<double>(x)), (static_cast<double>(y))); }
+
+template <> inline void glVertex3<yade::Real>(yade::Real x, yade::Real y, yade::Real z)
+{
+	glVertex3d((static_cast<double>(x)), (static_cast<double>(y)), (static_cast<double>(z)));
+}
+template <typename Type1, typename Type2, typename Type3> inline void glVertex3(Type1 x, Type2 y, Type3 z)
+{
+	glVertex3d((static_cast<double>(x)), (static_cast<double>(y)), (static_cast<double>(z)));
+}
 
 template <> inline void glVertex2v<yade::Vector3r>(const yade::Vector3r v)
 {
-	VEC3_TO_ARRAY_DOUBLE(v, mm);
+	const double mm[3] = { (static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])) };
 	glVertex2dv(mm);
 }
 template <> inline void glVertex3v<yade::Vector3r>(const yade::Vector3r v)
 {
-	VEC3_TO_ARRAY_DOUBLE(v, mm);
+	const double mm[3] = { (static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])) };
 	glVertex3dv(mm);
 }
 
 template <> inline void glNormal3v<yade::Vector3r>(const yade::Vector3r v)
 {
-	VEC3_TO_ARRAY_DOUBLE(v, mm);
+	const double mm[3] = { (static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])) };
 	glNormal3dv(mm);
 }
 template <> inline void glIndexv<const yade::Vector3r>(const yade::Vector3r c)
 {
-	VEC3_TO_ARRAY_DOUBLE(c, mm);
+	const double mm[3] = { (static_cast<double>(c[0])), (static_cast<double>(c[1])), (static_cast<double>(c[2])) };
 	glIndexdv(mm);
 }
 template <> inline void glColor3v<yade::Vector3r>(const yade::Vector3r v)
 {
-	VEC3_TO_ARRAY_DOUBLE(v, mm);
+	const double mm[3] = { (static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])) };
 	glColor3dv(mm);
 }
 template <> inline void glColor4v<yade::Vector4r>(const yade::Vector4r v)
 {
-	VEC4_TO_ARRAY_DOUBLE(v, m4);
+	const double m4[4] = { (static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])), (static_cast<double>(v[3])) };
 	glColor4dv(m4);
 }
 template <> inline void glTexCoord1v<yade::Vector3r>(const yade::Vector3r v)
 {
-	VEC3_TO_ARRAY_DOUBLE(v, mm);
+	const double mm[3] = { (static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])) };
 	glTexCoord1dv(mm);
 }
 template <> inline void glTexCoord2v<yade::Vector3r>(const yade::Vector3r v)
 {
-	VEC3_TO_ARRAY_DOUBLE(v, mm);
+	const double mm[3] = { (static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])) };
 	glTexCoord2dv(mm);
 }
 template <> inline void glTexCoord3v<yade::Vector3r>(const yade::Vector3r v)
 {
-	VEC3_TO_ARRAY_DOUBLE(v, mm);
+	const double mm[3] = { (static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])) };
 	glTexCoord3dv(mm);
 }
 template <> inline void glTexCoord4v<yade::Vector4r>(const yade::Vector4r v)
 {
-	VEC4_TO_ARRAY_DOUBLE(v, m4);
+	const double m4[4] = { (static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])), (static_cast<double>(v[3])) };
 	glTexCoord4dv(m4);
 }
 template <> inline void glRasterPos2v<yade::Vector3r>(const yade::Vector3r v)
 {
-	VEC3_TO_ARRAY_DOUBLE(v, mm);
+	const double mm[3] = { (static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])) };
 	glRasterPos2dv(mm);
 }
 template <> inline void glRasterPos3v<yade::Vector3r>(const yade::Vector3r v)
 {
-	VEC3_TO_ARRAY_DOUBLE(v, mm);
+	const double mm[3] = { (static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])) };
 	glRasterPos3dv(mm);
 }
 template <> inline void glRasterPos4v<yade::Vector4r>(const yade::Vector4r v)
 {
-	VEC4_TO_ARRAY_DOUBLE(v, m4);
+	const double m4[4] = { (static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])), (static_cast<double>(v[3])) };
 	glRasterPos4dv(m4);
 }
 
 
-template <> inline void glNormal3<yade::Real>(yade::Real nx, yade::Real ny, yade::Real nz) { glNormal3d(THREE_DOUBLES(nx, ny, nz)); }
-template <typename Type1, typename Type2, typename Type3> inline void glNormal3(Type1 x, Type2 y, Type3 z) { glNormal3d(THREE_DOUBLES(x, y, z)); }
+template <> inline void glNormal3<yade::Real>(yade::Real nx, yade::Real ny, yade::Real nz)
+{
+	glNormal3d((static_cast<double>(nx)), (static_cast<double>(ny)), (static_cast<double>(nz)));
+}
+template <typename Type1, typename Type2, typename Type3> inline void glNormal3(Type1 x, Type2 y, Type3 z)
+{
+	glNormal3d((static_cast<double>(x)), (static_cast<double>(y)), (static_cast<double>(z)));
+}
 
 
 template <> inline void glIndex<yade::Real>(yade::Real c) { glIndexd(static_cast<double>(c)); }
-template <> inline void glColor3<yade::Real>(yade::Real red, yade::Real green, yade::Real blue) { glColor3d(THREE_DOUBLES(red, green, blue)); }
+template <> inline void glColor3<yade::Real>(yade::Real red, yade::Real green, yade::Real blue)
+{
+	glColor3d((static_cast<double>(red)), (static_cast<double>(green)), (static_cast<double>(blue)));
+}
 template <> inline void glColor4<yade::Real>(yade::Real red, yade::Real green, yade::Real blue, yade::Real alpha)
 {
-	glColor4d(FOUR_DOUBLES(red, green, blue, alpha));
+	glColor4d((static_cast<double>(red)), (static_cast<double>(green)), (static_cast<double>(blue)), (static_cast<double>(alpha)));
 }
 template <> inline void glTexCoord1<yade::Real>(yade::Real s) { glTexCoord1d(static_cast<double>(s)); }
-template <> inline void glTexCoord2<yade::Real>(yade::Real s, yade::Real t) { glTexCoord2d(TWO_DOUBLES(s, t)); }
-template <> inline void glTexCoord3<yade::Real>(yade::Real s, yade::Real t, yade::Real r) { glTexCoord3d(THREE_DOUBLES(s, t, r)); }
-template <> inline void glTexCoord4<yade::Real>(yade::Real s, yade::Real t, yade::Real r, yade::Real q) { glTexCoord4d(FOUR_DOUBLES(s, t, r, q)); }
-template <> inline void glRasterPos2<yade::Real>(yade::Real x, yade::Real y) { glRasterPos2d(TWO_DOUBLES(x, y)); }
-template <> inline void glRasterPos3<yade::Real>(yade::Real x, yade::Real y, yade::Real z) { glRasterPos3d(THREE_DOUBLES(x, y, z)); }
-template <> inline void glRasterPos4<yade::Real>(yade::Real x, yade::Real y, yade::Real z, yade::Real w) { glRasterPos4d(FOUR_DOUBLES(x, y, z, w)); }
-template <> inline void glRect<yade::Real>(yade::Real x1, yade::Real y1, yade::Real x2, yade::Real y2) { glRectd(FOUR_DOUBLES(x1, y1, x2, y2)); }
+template <> inline void glTexCoord2<yade::Real>(yade::Real s, yade::Real t) { glTexCoord2d((static_cast<double>(s)), (static_cast<double>(t))); }
+template <> inline void glTexCoord3<yade::Real>(yade::Real s, yade::Real t, yade::Real r)
+{
+	glTexCoord3d((static_cast<double>(s)), (static_cast<double>(t)), (static_cast<double>(r)));
+}
+template <> inline void glTexCoord4<yade::Real>(yade::Real s, yade::Real t, yade::Real r, yade::Real q)
+{
+	glTexCoord4d((static_cast<double>(s)), (static_cast<double>(t)), (static_cast<double>(r)), (static_cast<double>(q)));
+}
+template <> inline void glRasterPos2<yade::Real>(yade::Real x, yade::Real y) { glRasterPos2d((static_cast<double>(x)), (static_cast<double>(y))); }
+template <> inline void glRasterPos3<yade::Real>(yade::Real x, yade::Real y, yade::Real z)
+{
+	glRasterPos3d((static_cast<double>(x)), (static_cast<double>(y)), (static_cast<double>(z)));
+}
+template <> inline void glRasterPos4<yade::Real>(yade::Real x, yade::Real y, yade::Real z, yade::Real w)
+{
+	glRasterPos4d((static_cast<double>(x)), (static_cast<double>(y)), (static_cast<double>(z)), (static_cast<double>(w)));
+}
+template <> inline void glRect<yade::Real>(yade::Real x1, yade::Real y1, yade::Real x2, yade::Real y2)
+{
+	glRectd((static_cast<double>(x1)), (static_cast<double>(y1)), (static_cast<double>(x2)), (static_cast<double>(y2)));
+}
 
-inline void gluCylinder(GLUquadric* a, yade::Real b, yade::Real c, yade::Real d, int e, int f) { gluCylinder(a, THREE_DOUBLES(b, c, d), e, f); }
+inline void gluCylinder(GLUquadric* a, yade::Real b, yade::Real c, yade::Real d, int e, int f)
+{
+	gluCylinder(a, (static_cast<double>(b)), (static_cast<double>(c)), (static_cast<double>(d)), e, f);
+}
 inline void glutSolidSphere(yade::Real a, int b, int c) { glutSolidSphere(static_cast<double>(a), b, c); }
 inline void glutWireSphere(yade::Real a, int b, int c) { glutWireSphere(static_cast<double>(a), b, c); }
-inline void glutSolidTorus(yade::Real a, yade::Real b, int c, int d) { glutSolidTorus(TWO_DOUBLES(a, b), c, d); }
-inline void glutWireTorus(yade::Real a, yade::Real b, int c, int d) { glutWireTorus(TWO_DOUBLES(a, b), c, d); }
+inline void glutSolidTorus(yade::Real a, yade::Real b, int c, int d) { glutSolidTorus((static_cast<double>(a)), (static_cast<double>(b)), c, d); }
+inline void glutWireTorus(yade::Real a, yade::Real b, int c, int d) { glutWireTorus((static_cast<double>(a)), (static_cast<double>(b)), c, d); }
 inline void glutSolidCube(yade::Real a) { glutSolidCube(static_cast<double>(a)); }
 inline void glutWireCube(yade::Real a) { glutWireCube(static_cast<double>(a)); }
 
@@ -224,10 +273,16 @@ template <> inline void glMultMatrix<double>(const double* m) { glMultMatrixd(m)
 template <> inline void glRotate<double>(double angle, double x, double y, double z) { glRotated(angle, x, y, z); }
 
 template <> inline void glScale<double>(double x, double y, double z) { glScaled(x, y, z); }
-template <> inline void glScalev<yade::Vector3r>(const yade::Vector3r v) { glScaled(THREE_DOUBLES(v[0], v[1], v[2])); }
+template <> inline void glScalev<yade::Vector3r>(const yade::Vector3r v)
+{
+	glScaled((static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])));
+}
 
 template <> inline void glTranslate<double>(double x, double y, double z) { glTranslated(x, y, z); }
-template <> inline void glTranslatev<yade::Vector3r>(const yade::Vector3r v) { glTranslated(THREE_DOUBLES(v[0], v[1], v[2])); }
+template <> inline void glTranslatev<yade::Vector3r>(const yade::Vector3r v)
+{
+	glTranslated((static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2])));
+}
 
 template <> inline void glVertex2<double>(double x, double y) { glVertex2d(x, y); }
 template <> inline void glVertex2<int>(int x, int y) { glVertex2i(x, y); }

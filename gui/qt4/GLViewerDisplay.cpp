@@ -11,7 +11,6 @@
 #include"GLViewer.hpp"
 #include"OpenGLManager.hpp"
 
-#include<lib/compatibility/DoubleCompatibility.hpp>
 #include<lib/opengl/OpenGLWrapper.hpp>
 #include<core/Body.hpp>
 #include<core/Scene.hpp>

@@ -11,7 +11,6 @@
 #include"GLViewer.hpp"
 #include"OpenGLManager.hpp"
 
-#include<lib/compatibility/DoubleCompatibility.hpp>
 #include<lib/opengl/OpenGLWrapper.hpp>
 #include<core/Body.hpp>
 #include<core/Scene.hpp>
@@ -107,7 +106,7 @@ void GLViewer::wheelEvent(QWheelEvent* event){
 	Real distStep=1e-3*sceneRadius();
 	Real dist=event->delta()*manipulatedFrame()->wheelSensitivity()*distStep;
 	Vector3r normal=renderer->clipPlaneSe3[manipulatedClipPlane].orientation*Vector3r(0,0,1);
-	qglviewer::Vec newPos=manipulatedFrame()->position()+qglviewer::Vec(THREE_DOUBLES(normal[0],normal[1],normal[2]))*static_cast<double>(dist);
+	qglviewer::Vec newPos=manipulatedFrame()->position()+qglviewer::Vec((static_cast<double>(normal[0])), (static_cast<double>(normal[1])), (static_cast<double>(normal[2]))*static_cast<double>(dist));
 	manipulatedFrame()->setPosition(newPos);
 	renderer->clipPlaneSe3[manipulatedClipPlane].position=Vector3r(newPos[0],newPos[1],newPos[2]);
 	updateGLViewer();

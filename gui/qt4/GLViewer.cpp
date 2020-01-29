@@ -11,7 +11,6 @@
 #include"GLViewer.hpp"
 #include"OpenGLManager.hpp"
 
-#include<lib/compatibility/DoubleCompatibility.hpp>
 #include<lib/opengl/OpenGLWrapper.hpp>
 #include<core/Body.hpp>
 #include<core/Scene.hpp>
@@ -131,7 +130,7 @@ void GLViewer::startClipPlaneManipulation(int planeNo){
 	mouseMovesManipulatedFrame(xyPlaneConstraint.get());
 	manipulatedClipPlane=planeNo;
 	const Se3r se3(renderer->clipPlaneSe3[planeNo]);
-	manipulatedFrame()->setPositionAndOrientation(qglviewer::Vec(THREE_DOUBLES(se3.position[0],se3.position[1],se3.position[2])),qglviewer::Quaternion(FOUR_DOUBLES(se3.orientation.x(),se3.orientation.y(),se3.orientation.z(),se3.orientation.w())));
+	manipulatedFrame()->setPositionAndOrientation(qglviewer::Vec((static_cast<double>(se3.position[0])), (static_cast<double>(se3.position[1])), (static_cast<double>(se3.position[2]))),qglviewer::Quaternion((static_cast<double>(se3.orientation.x())), (static_cast<double>(se3.orientation.y())), (static_cast<double>(se3.orientation.z())), (static_cast<double>(se3.orientation.w()))));
 	string grp=strBoundGroup();
 	displayMessage("Manipulating clip plane #"+boost::lexical_cast<string>(planeNo+1)+(grp.empty()?grp:" (bound planes:"+grp+")"));
 }
@@ -190,7 +189,7 @@ void GLViewer::keyPressEvent(QKeyEvent *e)
 		}
 		else if(manipulatedClipPlane>=0 && manipulatedClipPlane!=planeId) {
 			const Quaternionr& o=renderer->clipPlaneSe3[planeId].orientation;
-			manipulatedFrame()->setOrientation(qglviewer::Quaternion(FOUR_DOUBLES(o.x(),o.y(),o.z(),o.w())));
+			manipulatedFrame()->setOrientation(qglviewer::Quaternion((static_cast<double>(o.x())), (static_cast<double>(o.y())), (static_cast<double>(o.z())), (static_cast<double>(o.w()))));
 			displayMessage("Copied orientation from plane #1");
 		}
 	}
@@ -221,7 +220,7 @@ void GLViewer::keyPressEvent(QKeyEvent *e)
 			Body::byId(Body::id_t(selection))->state->blockedDOFs=State::DOF_ALL;
 			Quaternionr& q = Body::byId(selection)->state->ori;
 			Vector3r&    v = Body::byId(selection)->state->pos;
-			manipulatedFrame()->setPositionAndOrientation(qglviewer::Vec(THREE_DOUBLES(v[0],v[1],v[2])),qglviewer::Quaternion(FOUR_DOUBLES(q.x(),q.y(),q.z(),q.w())));
+			manipulatedFrame()->setPositionAndOrientation(qglviewer::Vec((static_cast<double>(v[0])), (static_cast<double>(v[1])), (static_cast<double>(v[2]))),qglviewer::Quaternion((static_cast<double>(q.x())), (static_cast<double>(q.y())), (static_cast<double>(q.z())), (static_cast<double>(q.w()))));
 			mouseMovesManipulatedFrame();}
 	}
 	else if (e->key() == Qt::Key_T) camera()->setType(camera()->type()==qglviewer::Camera::ORTHOGRAPHIC ? qglviewer::Camera::PERSPECTIVE : qglviewer::Camera::ORTHOGRAPHIC);
@@ -307,7 +306,7 @@ void GLViewer::centerPeriodic(){
 	Vector3r halfSize=.5*scene->cell->getSize();
 	Real radius=math::max(halfSize[0],math::max(halfSize[1],halfSize[2]));
 	LOG_DEBUG("Periodic scene center="<<center<<", halfSize="<<halfSize<<", radius="<<radius);
-	setSceneCenter(qglviewer::Vec(THREE_DOUBLES(center[0],center[1],center[2])));
+	setSceneCenter(qglviewer::Vec((static_cast<double>(center[0])), (static_cast<double>(center[1])), (static_cast<double>(center[2]))));
 	setSceneRadius(static_cast<double>(radius*1.5));
 	showEntireScene();
 }
@@ -340,7 +339,7 @@ void GLViewer::centerMedianQuartile(){
 		interQuart[i]=*(coords[i].begin()+3*nBodies/4)-*(coords[i].begin()+nBodies/4);
 	}
 	LOG_DEBUG("Median position is"<<median<<", inter-quartile distance is "<<interQuart);
-	setSceneCenter(qglviewer::Vec(THREE_DOUBLES(median[0],median[1],median[2])));
+	setSceneCenter(qglviewer::Vec((static_cast<double>(median[0])), (static_cast<double>(median[1])), (static_cast<double>(median[2]))));
 	setSceneRadius(static_cast<double>(2*(interQuart[0]+interQuart[1]+interQuart[2])/3.));
 	showEntireScene();
 }
@@ -374,7 +373,7 @@ void GLViewer::centerScene(){
 	Vector3r halfSize = (max-min)*0.5;
 	Real radius=math::max(halfSize[0],math::max(halfSize[1],halfSize[2])); if(radius<=0) radius=1;
 	LOG_DEBUG("Scene center="<<center<<", halfSize="<<halfSize<<", radius="<<radius);
-	setSceneCenter(qglviewer::Vec(THREE_DOUBLES(center[0],center[1],center[2])));
+	setSceneCenter(qglviewer::Vec((static_cast<double>(center[0])), (static_cast<double>(center[1])), (static_cast<double>(center[2]))));
 	setSceneRadius(static_cast<double>(radius*1.5));
 	showEntireScene();
 }
