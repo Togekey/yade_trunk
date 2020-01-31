@@ -16,13 +16,23 @@
 #error "This file cannot be included alone, include Real.hpp instead"
 #endif
 
+// FIXME: replace typedef with using
+
 namespace yade {
+
+template<typename Scalar> using Vector2 = Eigen::Matrix<Scalar,2,1>;
+template<typename Scalar> using Vector3 = Eigen::Matrix<Scalar,3,1>;
+template<typename Scalar> using Vector6 = Eigen::Matrix<Scalar,6,1>;
+template<typename Scalar> using Matrix3 = Eigen::Matrix<Scalar,3,3>;
+template<typename Scalar> using Matrix6 = Eigen::Matrix<Scalar,6,6>;
 
 // integral type for indices, to avoid compiler warnings with int
 typedef Eigen::Matrix<int, 1, 1>::Index Index;
 typedef Eigen::Matrix<int, 2, 1>        Vector2i;
 typedef Eigen::Matrix<int, 3, 1>        Vector3i;
 typedef Eigen::Matrix<int, 6, 1>        Vector6i;
+using Matrix3i = Matrix3<int>;
+using Matrix6i = Matrix6<int>;
 
 /*************************************************************************/
 /*************************        Real          **************************/

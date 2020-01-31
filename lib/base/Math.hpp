@@ -1,15 +1,15 @@
-// © 2010 Václav Šmilauer <eudoxos@arcig.cz>
-//   2012 Anton Gladky
-//   2019 Janek Kozicki
+/*************************************************************************
+*  2010 Václav Šmilauer                                                  *
+*  2012 Anton Gladky                                                     *
+*  2019 Janek Kozicki                                                    *
+*                                                                        *
+*  This program is free software; it is licensed under the terms of the  *
+*  GNU General Public License v2 or later. See file LICENSE for details. *
+*************************************************************************/
 
 #pragma once
 
-#ifdef QUAD_PRECISION
-	using quad = long double;
-	using Real = quad;
-#else
-	using Real = double;
-#endif
+#include <lib/high-precision/Real.hpp>
 
 #include <cassert>
 #include <iostream>
@@ -49,8 +49,6 @@
 	#define YADE_PTR_DYN_CAST ::boost::dynamic_pointer_cast
 #endif
 
-#define EIGEN_DONT_PARALLELIZE
-
 #ifdef YADE_MASK_ARBITRARY
 	#include <bitset>
 #endif
@@ -62,27 +60,12 @@
 #include<boost/serialization/nvp.hpp>
 #include<boost/serialization/is_bitwise_serializable.hpp>
 
-// This is temporary - before finalizing high precision Real merge.
-namespace yade {
-using Real    = ::Real;
-using Complex = ::std::complex<Real>; // complex is by default enabled in minieigen, this is needed for full interoperability.
-namespace math {
-	using Real           = ::yade::Real;
-	using UnderlyingReal = ::yade::Real;
-}
-}
-
-// The functions will now appear in yade::math namespace. So all of the other code can be transitioned from using ::std:: to using ::yade::math::
-// After transition to high precision this define YADE_REAL_MATH_NAMESPACE will depend on the type of the UnderlyingReal used
-// see https://gitlab.com/yade-dev/trunk/blob/highPrecisionReal/lib/high-precision/Real.hpp
-// It can be ::std or ::boost::multiprecision, also ::mpfr works but is not used (crrently)
-#define YADE_REAL_MATH_NAMESPACE ::std
-#include <lib/high-precision/MathFunctions.hpp>
-#undef YADE_REAL_MATH_NAMESPACE
-
 // https://en.cppreference.com/w/cpp/language/unqualified_lookup
 // https://en.cppreference.com/w/cpp/language/qualified_lookup
 // https://en.cppreference.com/w/cpp/language/namespace
+
+using Real=::yade::Real; // FIXME - remove this line
+
 namespace yade { // Cannot have #include directive inside.
 
 
@@ -104,41 +87,6 @@ using std::swap;
 using std::type_info;
 using std::vector;
 using boost::shared_ptr;
-
-template<typename Scalar> using Vector2 = Eigen::Matrix<Scalar,2,1>;
-using Vector2i = Vector2<int>;
-using Vector2r = Vector2<Real>;
-
-template <typename Scalar> using Vector4 = Eigen::Matrix<Scalar, 4, 1>;
-using Vector4r  = Vector4<Real>;
-using Vector4i = Vector4<int>;
-
-template<typename Scalar> using Vector3 = Eigen::Matrix<Scalar,3,1>;
-using Vector3i = Vector3<int>;
-using Vector3r = Vector3<Real>;
-
-template<typename Scalar> using Vector6 = Eigen::Matrix<Scalar,6,1>;
-using Vector6i = Vector6<int>;
-using Vector6r = Vector6<Real>;
-
-template<typename Scalar> using Matrix3 = Eigen::Matrix<Scalar,3,3>;
-using Matrix3i = Matrix3<int>;
-using Matrix3r = Matrix3<Real>;
-
-template<typename Scalar> using Matrix6 = Eigen::Matrix<Scalar,6,6>;
-using Matrix6i = Matrix6<int>;
-using Matrix6r = Matrix6<Real>;
-
-using VectorXr  = Eigen::Matrix<Real, Eigen::Dynamic, 1>; // It's only for this double → Real merge request to work. In !366 it is moved to lib/high-precision/MathEigenTypes.hpp
-using MatrixXr = Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>;
-
-using Quaternionr = Eigen::Quaternion<Real>;
-using AngleAxisr  = Eigen::AngleAxis<Real>;
-using AlignedBox2r = Eigen::AlignedBox<Real,2>;
-using AlignedBox3r = Eigen::AlignedBox<Real,3>;
-
-using Eigen::AngleAxis;
-using Eigen::Quaternion;
 
 // in some cases, we want to initialize types that have no default constructor (OpenMPAccumulator, for instance)
 // template specialization will help us here
@@ -234,7 +182,7 @@ Vector6<Scalar> tensor_toVoigt(const Matrix3<Scalar>& m, bool strain=false){
 const Real NaN(std::numeric_limits<Real>::signaling_NaN());
 
 // void quaternionToEulerAngles (const Quaternionr& q, Vector3r& eulerAngles,Real threshold=1e-6f);
-template<typename Scalar> void quaterniontoGLMatrix(const Quaternion<Scalar>& q, Scalar m[16]){
+template<typename Scalar> void quaterniontoGLMatrix(const Eigen::Quaternion<Scalar>& q, Scalar m[16]){
 	Scalar w2=2.*q.w(), x2=2.*q.x(), y2=2.*q.y(), z2=2.*q.z();
 	Scalar x2w=w2*q.w(), y2w=y2*q.w(), z2w=z2*q.w();
 	Scalar x2x=x2*q.x(), y2x=y2*q.x(), z2x=z2*q.x();
@@ -245,27 +193,6 @@ template<typename Scalar> void quaterniontoGLMatrix(const Quaternion<Scalar>& q,
 	m[2]=z2x-y2w;      m[6]=z2y+x2w;      m[10]=1.-(x2x+y2y); m[14]=0;
 	m[3]=0.;           m[7]=0.;           m[11]=0.;           m[15]=1.;
 }
-
-// se3
-template <class Scalar>
-class Se3
-{
-	public :
-		Vector3<Scalar>	position;
-		Quaternion<Scalar>	orientation;
-		Se3(){};
-		Se3(Vector3<Scalar> rkP, Quaternion<Scalar> qR){ position = rkP; orientation = qR; }
-		Se3(const Se3<Scalar>& s){position = s.position;orientation = s.orientation;}
-		Se3(Se3<Scalar>& a,Se3<Scalar>& b){
-			position  = b.orientation.inverse()*(a.position - b.position);  
-			orientation = b.orientation.inverse()*a.orientation;
-		}
-		Se3<Scalar> inverse(){ return Se3(-(orientation.inverse()*position), orientation.inverse());}
-		void toGLMatrix(float m[16]){ orientation.toGLMatrix(m); m[12] = position[0]; m[13] = position[1]; m[14] = position[2];}
-		Vector3<Scalar> operator * (const Vector3<Scalar>& b ){return orientation*b+position;}
-		Se3<Scalar> operator * (const Quaternion<Scalar>& b ){return Se3<Scalar>(position , orientation*b);}
-		Se3<Scalar> operator * (const Se3<Scalar>& b ){return Se3<Scalar>(orientation*b.position+position,orientation*b.orientation);}
-};
 
 // functions
 template<typename Scalar> Scalar unitVectorsAngle(const Vector3<Scalar>& a, const Vector3<Scalar>& b){ return acos(a.dot(b)); }
@@ -293,7 +220,6 @@ bool operator&&(bool b, const mask_t& g);
 using mask_t = int;
 #endif
 
-using Se3r = Se3<Real>;
 
 } // namespace yade
 

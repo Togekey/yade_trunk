@@ -65,6 +65,8 @@ using float_fast80_t = long double;
 #include <complex>
 #include <limits>
 
+#define EIGEN_DONT_PARALLELIZE
+
 #include <Eigen/Core>
 
 /*************************************************************************/
