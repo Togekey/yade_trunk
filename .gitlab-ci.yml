@@ -197,7 +197,7 @@ make_asan_long_double:
     - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 -DENABLE_ASAN=1 -DREAL_DECIMAL_PLACES=18 $EXTRA_CMAKE_ARGS"
     - echo $EXTRA_CMAKE_ARGS
     - export ASAN_OPTIONS=detect_leaks=0:log_path=stdout:verify_asan_link_order=false
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
   tags:
     - debug
   artifacts:
@@ -215,7 +215,7 @@ make_asan_float128:
     - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 -DENABLE_ASAN=1 -DREAL_DECIMAL_PLACES=33 $EXTRA_CMAKE_ARGS"
     - echo $EXTRA_CMAKE_ARGS
     - export ASAN_OPTIONS=detect_leaks=0:log_path=stdout:verify_asan_link_order=false
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
   tags:
     - debug
   artifacts:
@@ -233,7 +233,7 @@ make_asan_mpfr45:
     - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 -DENABLE_ASAN=1 -DREAL_DECIMAL_PLACES=45 -DENABLE_MPFR=ON $EXTRA_CMAKE_ARGS"
     - echo $EXTRA_CMAKE_ARGS
     - export ASAN_OPTIONS=detect_leaks=0:log_path=stdout:verify_asan_link_order=false
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
   tags:
     - debug
   artifacts:
@@ -251,7 +251,7 @@ make_asan_bf45:
     - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 -DENABLE_ASAN=1 -DREAL_DECIMAL_PLACES=45 -DENABLE_MPFR=OFF $EXTRA_CMAKE_ARGS"
     - echo $EXTRA_CMAKE_ARGS
     - export ASAN_OPTIONS=detect_leaks=0:log_path=stdout:verify_asan_link_order=false
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
   tags:
     - debug
   artifacts:
@@ -316,7 +316,7 @@ makeHP_long_double:
 ##  - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
     - export EXTRA_CMAKE_ARGS="-DREAL_DECIMAL_PLACES=18 $EXTRA_CMAKE_ARGS"
     - echo $EXTRA_CMAKE_ARGS
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
 
 makeHP_float128:
   <<: *make_definition
@@ -327,7 +327,7 @@ makeHP_float128:
 ##  - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
     - export EXTRA_CMAKE_ARGS="-DREAL_DECIMAL_PLACES=33 $EXTRA_CMAKE_ARGS"
     - echo $EXTRA_CMAKE_ARGS
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
 
 makeHP_mpfr45:
   <<: *make_definition
@@ -338,7 +338,7 @@ makeHP_mpfr45:
 ##  - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
     - export EXTRA_CMAKE_ARGS="-DREAL_DECIMAL_PLACES=45 -DENABLE_MPFR=ON $EXTRA_CMAKE_ARGS"
     - echo $EXTRA_CMAKE_ARGS
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
 
 makeHP_bf45:
   <<: *make_definition
@@ -349,7 +349,7 @@ makeHP_bf45:
 ##  - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
     - export EXTRA_CMAKE_ARGS="-DREAL_DECIMAL_PLACES=45 -DENABLE_MPFR=OFF $EXTRA_CMAKE_ARGS"
     - echo $EXTRA_CMAKE_ARGS
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
 
 make_SSE:
   <<: *make_definition
@@ -497,7 +497,7 @@ test_clang:
 testHP_long_double:
   <<: *test_definition
 ##<<: *skip_wip_test_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
   dependencies:
     - makeHP_long_double
   needs: ["makeHP_long_double"]
@@ -506,7 +506,7 @@ testHP_long_double:
 testHP_float128:
   <<: *test_definition
 ##<<: *skip_wip_test_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
   dependencies:
     - makeHP_float128
   needs: ["makeHP_float128"]
@@ -515,7 +515,7 @@ testHP_float128:
 testHP_mpfr45:
   <<: *test_definition
 ##<<: *skip_wip_test_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
   dependencies:
     - makeHP_mpfr45
   needs: ["makeHP_mpfr45"]
@@ -524,7 +524,7 @@ testHP_mpfr45:
 testHP_bf45:
   <<: *test_definition
 ##<<: *skip_wip_test_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
   dependencies:
     - makeHP_bf45
   needs: ["makeHP_bf45"]
@@ -641,7 +641,7 @@ check_clang:
 checkHP_long_double:
   <<: *check_definition
 ##<<: *skip_wip_test_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
   dependencies:
     - makeHP_long_double
   needs: ["makeHP_long_double"]
@@ -650,7 +650,7 @@ checkHP_long_double:
 checkHP_float128:
   <<: *check_definition
 ##<<: *skip_wip_test_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
   dependencies:
     - makeHP_float128
   needs: ["makeHP_float128"]
@@ -659,7 +659,7 @@ checkHP_float128:
 checkHP_mpfr45:
   <<: *check_definition
 ##<<: *skip_wip_test_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
   dependencies:
     - makeHP_mpfr45
   needs: ["makeHP_mpfr45"]
@@ -668,7 +668,7 @@ checkHP_mpfr45:
 checkHP_bf45:
   <<: *check_definition
 ##<<: *skip_wip_test_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-NEW-minieigen
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye-SMALLEST-PATCH-minieigen
   dependencies:
     - makeHP_bf45
   needs: ["makeHP_bf45"]
