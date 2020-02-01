@@ -138,6 +138,7 @@ using UnderlyingReal = ::mpfr::mpreal;
 #include "ThinRealWrapper.hpp"
 using Real = ThinRealWrapper<UnderlyingReal>;
 #include "ThinRealWrapperNumericLimits.hpp"
+#include "MathFunctions.hpp"
 using EigenTraitsReal = Real;
 namespace EigenCostReal {
 enum { ReadCost = 1, AddCost = 1, MulCost = 1 };
