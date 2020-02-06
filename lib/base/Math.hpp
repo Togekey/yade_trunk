@@ -125,7 +125,7 @@ struct Math{
 	static const Scalar RAD_TO_DEG;
 	static const Scalar EPSILON;
 	static const Scalar ZERO_TOLERANCE;
-	static Scalar Sign(Scalar f){ if(f<0) return -1; if(f>0) return 1; return 0; }
+	static Scalar Sign(Scalar f){ return ::yade::math::sign(f); }// { if(f<0) return -1; if(f>0) return 1; return 0; }
 
 	static Scalar UnitRandom(){ return ::yade::math::random01(); } //((double)rand()/((double)(RAND_MAX)))
 	static Scalar SymmetricRandom(){ return ::yade::math::unitRandom(); } //2.*(((double)rand())/((double)(RAND_MAX)))-1.
