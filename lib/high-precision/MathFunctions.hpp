@@ -471,6 +471,7 @@ namespace math {
 
 	static inline Real unitRandom() { return random01(); }
 	static inline Real random() { return random01() * 2 - 1; }
+	static inline Real symmetricRandom() { return random(); }
 
 }
 // do we want such alias?

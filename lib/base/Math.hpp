@@ -125,7 +125,7 @@ struct Math{
 	static const Scalar ZERO_TOLERANCE;
 	static Scalar Sign(Scalar f){ return ::yade::math::sign(f); }// { if(f<0) return -1; if(f>0) return 1; return 0; }
 	static Scalar UnitRandom(){ return ::yade::math::unitRandom(); } //((double)rand()/((double)(RAND_MAX)))
-	static Scalar SymmetricRandom(){ return ::yade::math::random(); } //2.*(((double)rand())/((double)(RAND_MAX)))-1.
+	static Scalar SymmetricRandom(){ return ::yade::math::symmetricRandom(); } //2.*(((double)rand())/((double)(RAND_MAX)))-1.
 	static Scalar FastInvCos0(Scalar fValue) {
 	  Scalar fRoot = sqrt(((Scalar)1.0)-fValue);
 	  Scalar fResult = -(Scalar)0.0187293;
