@@ -194,6 +194,9 @@ BOOST_PYTHON_MODULE(_math)
 try {
 	YADE_SET_DOCSTRING_OPTS;
 
+	// Very important line: Verfifies that Real type satisfies all the requirements of RealTypeConcept
+	BOOST_CONCEPT_ASSERT((boost::math::concepts::RealTypeConcept<Real>));
+
 	long defprec  = std::numeric_limits<Real>::digits;
 	long max_exp2 = std::numeric_limits<Real>::max_exponent;
 	// This is registered in py/high-precision/_minieigenHP.cpp
@@ -364,9 +367,6 @@ try {
 	        R"""(:return: ``int`` converts ``Real`` type to ``int`` and returns a native python ``int``.)""");
 
 	expose_storage_ordering();
-
-	// Very important line: Verfifies that Real type satisfies all the requirements of RealTypeConcept
-	BOOST_CONCEPT_ASSERT((boost::math::concepts::RealTypeConcept<Real>));
 
 	// check overload (and namespace) resolution for all math functions. As a side effect they are exported to python, and can be unit-tested.
 #define YADE_PYEXPORT_MATH_1(func, DESC) py::def(#func, static_cast<Real (*)(const Real&)>(&::yade::math::func), (py::arg("x")), DESC);
