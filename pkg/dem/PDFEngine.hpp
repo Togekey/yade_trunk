@@ -58,7 +58,7 @@ public:
 	vector<string> getSuffixes() const { return vector<string>({"xx", "xy", "xz", "yx", "yy", "yz", "zx", "zy", "zz"}); }
 	vector<string> getDatas() const {
 		vector<string> out;
-		for(int i(0);i<3;i++) for(int j(0);j<3;j++) out.push_back(std::to_string(m_stress(i,j)));
+		for(int i(0);i<3;i++) for(int j(0);j<3;j++) out.push_back(math::toString(m_stress(i,j)));
 		return out;
 	}
 	void cleanData() { m_stress = Matrix3r::Zero(); }

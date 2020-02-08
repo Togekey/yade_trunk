@@ -145,7 +145,7 @@ PDFSpheresDistanceCalculator::PDFSpheresDistanceCalculator(string name) :
 
 vector<string> PDFSpheresDistanceCalculator::getDatas() const
 {
-	return vector<string>({std::to_string(m_h/m_N)});
+	return vector<string>({math::toString(m_h/m_N)});
 }
 
 void PDFSpheresDistanceCalculator::cleanData()
@@ -185,7 +185,7 @@ vector<string> PDFSpheresVelocityCalculator::getSuffixes() const
 vector<string> PDFSpheresVelocityCalculator::getDatas() const
 {
 	vector<string> ret;
-	for(int i(0);i<3;i++) ret.push_back(std::to_string(m_vel(i)/m_N));
+	for(int i(0);i<3;i++) ret.push_back(math::toString(m_vel(i)/m_N));
 	return ret;
 }
 
@@ -226,7 +226,7 @@ PDFSpheresIntrsCalculator::PDFSpheresIntrsCalculator(string name, bool (*fp)(sha
 
 vector<string> PDFSpheresIntrsCalculator::getDatas() const
 {
-	return vector<string>({std::to_string(m_P)});
+	return vector<string>({math::toString(m_P)});
 }
 
 void PDFSpheresIntrsCalculator::cleanData()
