@@ -44,7 +44,7 @@ struct basicVTKwritter
 
 	private:
 		std::string conv(const WriteType& v) {
-			return ::yade::toString(v);
+			return ::yade::math::toString(v);
 		}
 };
 
