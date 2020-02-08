@@ -7,16 +7,14 @@
 // TODO: of course all these functions should be replaced to use Eigen, MatrixXr and VectorXr.
 //       Here are only some workaround/wrappers to use (double precision only) lapack-fortran.
 //
-// As an example which should help in accomplishing this task:
-//
-/* This is a very simple code that works with Eigen and solves a system of linear equations.
+/* This is an example which should help in accomplishing this task, it works with Eigen and solves a system of linear equations.
    https://eigen.tuxfamily.org/dox/group__MatrixfreeSolverExample.html
-#include <iostream>
-#include <Eigen/Core>
-#include <Eigen/Dense>
-#include <Eigen/IterativeLinearSolvers>
-#include <unsupported/Eigen/IterativeSolvers>
-int main()
+// example: #include <iostream>
+// example: #include <Eigen/Core>
+// example: #include <Eigen/Dense>
+// example: #include <Eigen/IterativeLinearSolvers>
+// example: #include <unsupported/Eigen/IterativeSolvers>
+// example: int main()
 {
 	int n = 10;
 	Eigen::SparseMatrix<double> A = MatrixXr::Random(n,n).sparseView(0.5,1);
