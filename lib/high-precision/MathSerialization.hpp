@@ -47,14 +47,14 @@ namespace serialization {
 	template <class Archive> void save(Archive& ar, const ::yade::math::Real& a, unsigned int)
 	{
 		// TODO: maybe we can find a faster method for float128
-		std::string v = ::yade::toString(a);
+		std::string v = ::yade::math::toString(a);
 		ar & BOOST_SERIALIZATION_NVP(v);
 	}
 	template <class Archive> void load(Archive& ar, ::yade::math::Real& a, unsigned int)
 	{
 		std::string v{};
 		ar & BOOST_SERIALIZATION_NVP(v);
-		a = ::yade::fromStringReal(v);
+		a = ::yade::math::fromStringReal(v);
 	}
 #endif
 #if (YADE_REAL_BIT == 80)

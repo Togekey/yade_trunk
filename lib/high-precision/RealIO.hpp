@@ -75,17 +75,6 @@ LOG_NOFILTER(R"""(Warning: Reading complex number "(nan,nan)" or "(inf,0)" is no
 	};
 
 }
-using yade::math::fromStringComplex;
-using yade::math::fromStringReal;
-using yade::math::toString;
 }
 
-#if (YADE_REAL_BIT > 64)
-
-namespace std {
-inline std::string to_string(const ::yade::math::Real& val) { return ::yade::toString(val); };
-inline std::string to_string(const ::yade::math::Complex& val) { return ::yade::toString(val); };
-}
-
-#endif
 
