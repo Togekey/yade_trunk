@@ -114,7 +114,7 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 		int threadNum = omp_get_thread_num();
 		for (auto i = chunks[k] + 1; i < chunks[k + 1]; i++) {
 			const Bounds viInit = v[i];
-			auto         j      = i - 1;
+			signed long  j      = i - 1;
 			if (not(j >= chunks[k] && v[j] > viInit))
 				continue; //else we need to assign v[j+1] after the 'while'
 			const bool viInitBB = viInit.flags.hasBB;
@@ -155,7 +155,7 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 			if (!(v[i] < v[i - 1]))
 				break; //contiguous chunks now connected consistently
 			const Bounds viInit   = v[i];
-			long         j        = i - 1; /* cache hasBB; otherwise 1% overall performance hit */
+			signed long  j        = i - 1; /* cache hasBB; otherwise 1% overall performance hit */
 			const bool   viInitBB = viInit.flags.hasBB;
 			const bool   isMin    = viInit.flags.isMin;
 
@@ -496,7 +496,7 @@ void InsertionSortCollider::action()
 		//1000 bodies is heuristic minimum above which parallel sort is called
 		if (!periodic)
 			for (int i = 0; i < 3; i++)
-/*
+
 #ifdef YADE_OPENMP
 			{
 				if (ompThreads <= 1 || nBodies < 1000)
@@ -505,11 +505,11 @@ void InsertionSortCollider::action()
 					insertionSortParallel(BB[i], interactions, scene);
 			}
 #else
-*/
+
 			{
 				insertionSort(BB[i], interactions, scene);
 			}
-//#endif
+#endif
 		else
 			for (int i = 0; i < 3; i++)
 				insertionSortPeri(BB[i], interactions, scene);

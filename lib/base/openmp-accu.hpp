@@ -37,7 +37,7 @@ class OpenMPArrayAccumulator{
 					if(succ!=0) throw std::runtime_error("OpenMPArrayAccumulator: posix_memalign failed to allocate memory.");
 					if(oldChunk){ // initialized to NULL initially, that must not be copied and freed
 #if (YADE_REAL_BIT > 64)
-#warning "OpenMPArrayAccumulator hasn't been tested on high precision Real type. And it is disabled by default in CMakeLists.txt. It is possible that this memcpy may work for long double and float128, but not higher types. So better to replace it too."
+//#warning "OpenMPArrayAccumulator hasn't been tested on high precision Real type. And it is disabled by default in CMakeLists.txt. It is possible that this memcpy may work for long double and float128, but not higher types. So better to replace it too."
 #endif
 						memcpy(/*dest*/(void*)chunks[th],/*src*/oldChunk,nCL*CLS); // preserve old data
 						free(oldChunk); // deallocate old storage

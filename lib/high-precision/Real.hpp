@@ -186,6 +186,7 @@ namespace math {
 	using Complex = std::complex<UnderlyingReal>;
 }
 }
+#include "NumericLimits.hpp"
 
 #endif
 
@@ -228,8 +229,8 @@ static_assert(sizeof(Complex) == sizeof(std::complex<math::UnderlyingReal>), "Th
 #error "Specify either YADE_REAL_MPFR or YADE_REAL_BBFLOAT"
 #endif
 #if defined(__INTEL_COMPILER) and (YADE_REAL_BIT > 80) and (YADE_REAL_BIT <= 128)
-#warning "Intel compiler notes, see: https://www.boost.org/doc/libs/1_71_0/libs/multiprecision/doc/html/boost_multiprecision/tut/floats/float128.html"
-#warning "Intel compiler notes: about using flags -Qoption,cpp,--extended_float_type"
+//#warning "Intel compiler notes, see: https://www.boost.org/doc/libs/1_71_0/libs/multiprecision/doc/html/boost_multiprecision/tut/floats/float128.html"
+//#warning "Intel compiler notes: about using flags -Qoption,cpp,--extended_float_type"
 #endif
 
 #endif

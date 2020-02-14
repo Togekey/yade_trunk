@@ -61,7 +61,7 @@ public:
 
 public:
 	// default constructor
-	ThinComplexWrapper() BOOST_NOEXCEPT_IF(boost::has_nothrow_default_constructor<WrappedComplex>::value) = default;
+	ThinComplexWrapper() BOOST_NOEXCEPT_IF(boost::has_nothrow_default_constructor<WrappedComplex>::value) : val(0) {};
 	// copy constructor
 	ThinComplexWrapper(const ThinComplexWrapper& initVal) BOOST_NOEXCEPT_IF(boost::has_nothrow_copy_constructor<WrappedComplex>::value) = default;
 	// copy assignment operator

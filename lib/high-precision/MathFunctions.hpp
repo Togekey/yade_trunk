@@ -133,7 +133,7 @@ namespace math {
 	{
 		using ::std::asinh;
 		using YADE_REAL_MATH_NAMESPACE::asinh;
-		return asinh(static_cast<const UnderlyingReal&>(a));
+		return 0;//asinh(static_cast<const UnderlyingReal&>(a));
 	}
 	inline Real acos(const Real& a)
 	{
@@ -145,7 +145,7 @@ namespace math {
 	{
 		using ::std::acosh;
 		using YADE_REAL_MATH_NAMESPACE::acosh;
-		return acosh(static_cast<const UnderlyingReal&>(a));
+		return 0;//acosh(static_cast<const UnderlyingReal&>(a));
 	}
 	inline Real atan(const Real& a)
 	{
@@ -157,7 +157,7 @@ namespace math {
 	{
 		using ::std::atanh;
 		using YADE_REAL_MATH_NAMESPACE::atanh;
-		return atanh(static_cast<const UnderlyingReal&>(a));
+		return 0;//atanh(static_cast<const UnderlyingReal&>(a));
 	}
 	inline Real atan2(const Real& a, const Real& b)
 	{
@@ -183,7 +183,7 @@ namespace math {
 	{
 		using ::std::log1p;
 		using YADE_REAL_MATH_NAMESPACE::log1p;
-		return log1p(static_cast<const UnderlyingReal&>(a));
+		return 0;//log1p(static_cast<const UnderlyingReal&>(a));
 	}
 	inline Real log2(const Real& a)
 	{
@@ -222,7 +222,7 @@ namespace math {
 	{
 		using ::std::expm1;
 		using YADE_REAL_MATH_NAMESPACE::expm1;
-		return expm1(static_cast<const UnderlyingReal&>(a));
+		return 0;//expm1(static_cast<const UnderlyingReal&>(a));
 	}
 	inline Real pow(const Real& a, const Real& b)
 	{
@@ -238,7 +238,7 @@ namespace math {
 	{
 		using ::std::cbrt;
 		using YADE_REAL_MATH_NAMESPACE::cbrt;
-		return cbrt(static_cast<const UnderlyingReal&>(a));
+		return 0;//cbrt(static_cast<const UnderlyingReal&>(a));
 	}
 	inline Real hypot(const Real& a, const Real& b)
 	{
@@ -396,19 +396,19 @@ namespace math {
 	{
 		using ::std::erf;
 		using YADE_REAL_MATH_NAMESPACE::erf;
-		return erf(static_cast<const UnderlyingReal&>(a));
+		return 0;//erf(static_cast<const UnderlyingReal&>(a));
 	}
 	inline Real erfc(const Real& a)
 	{
 		using ::std::erfc;
 		using YADE_REAL_MATH_NAMESPACE::erfc;
-		return erfc(static_cast<const UnderlyingReal&>(a));
+		return 0;//erfc(static_cast<const UnderlyingReal&>(a));
 	}
 	inline Real lgamma(const Real& a)
 	{
 		using ::std::lgamma;
 		using YADE_REAL_MATH_NAMESPACE::lgamma;
-		return lgamma(static_cast<const UnderlyingReal&>(a));
+		return 0;//lgamma(static_cast<const UnderlyingReal&>(a));
 	}
 
 // These will be available in C++17, we could use the ones from boost, if they become necessary.
@@ -425,12 +425,15 @@ namespace math {
 	static_assert(std::is_same<UnderlyingReal, boost::multiprecision::float128>::value, "Incorrect type, please file a bug report.");
 	inline Real tgamma(const Real& a)
 	{
+		return 0;
+		/*
 		if (a >= 0) {
 			return YADE_REAL_MATH_NAMESPACE::tgamma(static_cast<UnderlyingReal>(a));
 		} else {
 			return abs(YADE_REAL_MATH_NAMESPACE::tgamma(static_cast<UnderlyingReal>(a)))
 			        * ((static_cast<unsigned long long>(floor(abs(a))) % 2 == 0) ? -1 : 1);
 		}
+		*/
 	}
 #else
 	inline Real tgamma(const Real& a)
