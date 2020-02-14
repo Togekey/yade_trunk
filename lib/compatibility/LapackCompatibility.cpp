@@ -1,3 +1,4 @@
+#if 0
 #if defined(YADE_REAL_BIT) and (YADE_REAL_BIT != 64)
 #include "LapackCompatibility.hpp"
 #include <lib/high-precision/Real.hpp>
@@ -190,6 +191,8 @@ void dsyev_(const char *jobz, const char *uplo, const int *N, ::yade::Real *A_Re
 	toRealArrPtr( work_double , work_Real, work_double.size() );
 
 }
+
+#endif
 
 #endif
 

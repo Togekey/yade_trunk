@@ -11,7 +11,7 @@ class TestLibVersions(unittest.TestCase):
 		print("cmake versions: ", cmakeVer)
 		print("C++ versions: ", cppVer)
 		print("\n")
-		yade.libVersions.printAllVersions(True)
+		#yade.libVersions.printAllVersions(True)
 		yade.libVersions.printAllVersions(False)
 		for key,val in cmakeVer.items():
 			if((key in cppVer) and (len(val)==2) and (len(cppVer[key])==2)):
