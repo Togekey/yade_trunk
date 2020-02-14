@@ -41,7 +41,7 @@ if(yade.runtime.opts.stdperformance):
 	radRAD      = [30.77]
 	iterN       = [7000 if yade.config.highPrecisionDecimalPlaces < 40 else 2000]
 	coefCor     = [9]
-	numberTests = [10 if yade.config.highPrecisionDecimalPlaces < 40 else 2]
+	numberTests = 10 if yade.config.highPrecisionDecimalPlaces < 40 else 2
 	print("\033[93m Running --stdperformance test: 10000 spheres, "+str(iterN)+" iterations, average over "+str(numberTests)+" runs. Threads: "+str(numThreads)+"\033[0m")
 elif(yade.runtime.opts.quickperformance):
 	radRAD      = [23.658]
