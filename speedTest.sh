@@ -1,5 +1,5 @@
 # start this script with command:
-#   unbuffer ./speedTest.sh | tee -a ./speedIntelBenchmark.txt
+#   unbuffer ./speedTest.sh | tee -a ./speedIntelBenchmark_CPU_SMT_OFF_j16.txt
 # Note: unbuffer is in package 'expect'
 
 # import Intel compiler settings and PATH
