@@ -22,8 +22,9 @@ def check():
                 ue = ph.ue;
                 u = ph.u;
                 
-                u_ = m_radius*math.exp(-8/9*(O.time+0.5*O.dt)/m_tauc);
+                u_ = m_radius*math.exp(-8/9*O.time/m_tauc);
                 ul = m_radius * m_roughness*2 + 4./3.*math.pi*m_radius**3*m_density*m_gravity/ph.kn;
+                
                 u_ = max(u_,ul); # Take roughness into account
                 
                 #plot.addData( t = O.time, u=u, u_=u_);
@@ -31,7 +32,7 @@ def check():
                 if abs(u-u_) > m_tol:
                     raise YadeCheckError("The moving body should be at position %.5e and is at position %.5e"%(u_,u));
 
-mat = O.materials.append(CohFrictMat(density=m_density,young=1e7,poisson=0.3,frictionAngle=radians(60)))
+mat = O.materials.append(CohFrictMat(density=m_density,young=1e9,poisson=0.3,frictionAngle=radians(60)))
 
 # add two spheres
 O.bodies.append([
@@ -55,15 +56,10 @@ O.engines=[ForceResetter(),
                            [law]),
            NewtonIntegrator(damping=0., gravity=(0,m_gravity,0),label="newton" ),
            GlobalStiffnessTimeStepper(active=0,timeStepUpdateInterval=100,timestepSafetyCoefficient=0.8, defaultDt=1e-10,label="TimeStepper",viscEl=False),
-           PyRunner(command='check()',iterPeriod=500)
+           PyRunner(command='check()',iterPeriod=10000)
            ]
 
-O.dt = 1.e-4;
+O.dt = 1.e-5;
 #plot.plots = {'t':('u','u_')};
 
-<<<<<<< 88aa250ff37d2b4abc2c98e8b48ec5337df6220c
 O.run(100000, True)
-
-=======
-O.run(700000, True);
->>>>>>> accelerate two checkScripts
