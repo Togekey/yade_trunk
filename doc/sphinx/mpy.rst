@@ -40,7 +40,7 @@ For demonstrating the steps in the implemented parallel algorithm let us conider
 
 .. _fig-scene:
 .. figure:: fig/schema0.*
-	:width: 9cm
+	:width: 25%
 	:align: center
 
 
@@ -49,20 +49,27 @@ on the dommain decomposition algorithm is presented in the later section of this
 
 In the function :yref:`yade.mpy.splitScene()`, the collider settings are changed, in particular the verlet sweep distance of the :yref:`InsertionSortCollider.sweepLength` is extended. The verletDist is an important factor controlling the efficiency of the simulations. The reason for this will become evident in the later steps. 
 
-**Bounds dispatching** : In the next step, the :yref:`Body.bound` is dispatched with the :yref:`Aabb` extended as shown in figure `fig-regularbounds`_ (in dotted lines). Note that the :yref:`Subdomain` :yref:`Aabb` is obtained from taking the min and max of the owned bodies, see second half of 
-figure `fig-regularbounds`_, with solid coloured lines for the subdomain :yref:`Aabb`. At this time, the min and max of other subdomains are unknown. 
+**Bounds dispatching** : In the next step, the :yref:`Body.bound` is dispatched with the :yref:`Aabb` extended as shown in figure `fig-regularbounds`_ (in dotted lines). Note that the :yref:`Subdomain` :yref:`Aabb` is obtained from taking the min and max of the owned bodies, see figure `fig-subDBounds`_  
+with solid coloured lines for the subdomain :yref:`Aabb`. At this time, the min and max of other subdomains are unknown. 
 
 .. _fig-regularbounds:
-.. figure:: fig/schema1.*
-	:width: 9cm
+.. figure:: fig/schema1a.*
+	:width: 25%
 	:align: center
+
+
+.. _fig-subDBounds:
+.. figure:: fig/schema1b.*
+	:width: 25%
+	:align: center
+
 
 **Update of Domain bounds** : Once the bounds for the regular bodies and the *local subdomain* has been dispatched, information on the other subdomain bounds are obtained via the function :yref:`yade.mpy.updateDomainBounds`. In this collective communication, each subdomain broadcasts 
 its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdomain-bounds`_  shows a schematic in which each subdomain has received the :yref:`Aabb.min` and :yref:`Aabb.max` of the other subdomains. 
 
 .. _fig-subdomain-bounds:
 .. figure:: fig/schema2.*
-    :width: 16cm
+    :width: 40%
     :align: center
     
 **Parallel Collision detection** : 
@@ -72,7 +79,7 @@ its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdo
 
  .. _fig-schema-localIntersections:
  .. figure:: fig/schema3.*
-    :width: 16cm
+    :width: 40%
     :align: center
 
 - Next step involves in obtaining the ids of the remote bodies intersecting with the current subdomain (:yref:`Subdomain.mirrorIntersections`). Each subdomain sends its list of local body intersections to the respective remote subdomains and also receives the list  of intersecting ids from theother subdomains. 
@@ -81,8 +88,8 @@ its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdo
   subdomains. This operation sets the stage for communication of the body states to/from the other subdomains. 
 
  .. _fig-mirrorIntersections:
- .. figure:: fig/sendbodies.*
-    :width: 16cm
+ .. figure:: fig/sendBodies.*
+    :width: 40%
     :align: center
 
 
@@ -93,7 +100,7 @@ are sent. Figure `fig-sendRecvStates`_ shows a schematic in which the states of 
 
 .. _fig-sendRecvStates:
 .. figure:: fig/schema4.*
-    :width: 16cm
+    :width: 40%
     :align: center
         
 
@@ -206,12 +213,20 @@ Merging is an expensive task which requires the communication of large messages 
     :align: center
 
 
+    
+    
  .. _fig-domainDecompose:
  .. figure:: fig/dd1.*
     :width: 16cm
     :align: center
 
 
+    
+.. _fig-domainDecompose:
+ .. figure:: fig/reallocBody.*
+    :width: 16cm
+    :align: center
+    
 
 Passive mode
 ------------
@@ -235,7 +250,16 @@ Reduction (partial sums)
 Control variables
 _________________
 
- - VERBOSE_OUTPUT
+ - VERBOSE_OUTPUT : Details on each *operation/step* (such as :yref:`yade.mpy.splitScene`, :yref:`yade.mpy.parallelCollide` etc) is printed on the console, useful for debugging purposes
+ - ACCUMULATE_FORCES : Control force summation on bodies owned by the master. 
+ - ERASE_REMOTE_MASTER : Erase remote bodies in the master subdomain or keep them as unbounded ? Useful for fast merge.
+ - OPTIMIZE_COM, USE_CPP_MPI : Use optimized communication functions and MPI functions from :yref:`Subdomain` class 
+ - YADE_TIMING : Report timing statistics, prints time spent in communications, collision detection and other operations. 
+ - DISTRIBUTED_INSERT : Bodies are created and inserted by each subdomain. 
+ - DOMAIN_DECOMPOSITION : If true, the bisection decomposition algorithm is used to assign bodies to the workers/subdomains. 
+ - REALLOCATE_FREQUENCY : if > 0, bodies are migrated between subdomains for efficient load balancing. 
+ - FLUID_COUPLING : Flag for coupling with OpenFOAM. 
+ 
 
 
 Various remarks
