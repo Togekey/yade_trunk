@@ -22,15 +22,14 @@ The number of subdomains depends on argument 'n' of mpiexec. Since rank=0 is not
 '''
 
 NSTEPS=1000 #turn it >0 to see time iterations, else only initilization TODO!HACK
-#NSTEPS=50 #turn it >0 to see time iterations, else only initilization
 N=50; M=50; #(columns, rows) per thread
 
 #################
 # Check MPI world
-# This is to know if it was run with or without mpiexec (see preamble of this script)
+# This is to know if it was run with or without mpi (see preamble of this script)
 import os
 rank = os.getenv('OMPI_COMM_WORLD_RANK')
-if rank is not None: #mpiexec was used
+if rank is not None: #mpi is used
 	rank=int(rank)
 	numThreads=int(os.getenv('OMPI_COMM_WORLD_SIZE'))
 else: #non-mpi execution, numThreads will still be used as multiplier for the problem size (2 => multiplier is 1)
@@ -54,7 +53,7 @@ for sd in range(0,numThreads-1):
 		for j in range(M):
 			id = O.bodies.append(sphere((sd*N+i+j/30.,j,0),0.500,color=col)) #a small shift in x-positions of the rows to break symmetry
 			ids.append(id)
-	if rank is not None:# assigning subdomain!=0 in single thread would freeze the particles (Newton skips them)
+	if rank is not None:# assigning subdomain!=0 in single thread (rank==None) would freeze the particles since Newton would skip them
 		for id in ids: O.bodies[id].subdomain = sd+1
 
 WALL_ID=O.bodies.append(box(center=(numThreads*N*0.5,-0.5,0),extents=(2*numThreads*N,0,2),fixed=True))
@@ -64,7 +63,7 @@ collider.targetInterv = 0
 newton.gravity=(0,-10,0) #else nothing would move
 tsIdx=O.engines.index(timeStepper) #remove the automatic timestepper. Very important: we don't want subdomains to use many different timesteps...
 O.engines=O.engines[0:tsIdx]+O.engines[tsIdx+1:]
-O.dt=0.001 #this very small timestep will make it possible to run 2000 iter without merging
+O.dt=0.001 #this very small timestep will make it possible to run 2000 iter without triggering collision detection, else:
 #O.dt=0.1*PWaveTimeStep() #very important, we don't want subdomains to use many different timesteps...
 
 
