@@ -6,11 +6,10 @@ MPI parallelization
 The module mpy :yref:`yade.mpy` implements parallelization by domain decomposition (distributed memory) using the Message Passing Interface (MPI) implemented by OpenMPI. It aims at exploiting large numbers of cores, where shared memory techniques (OpenMP) are helpess.
 The shared memory and the distributed memory approaches are compatible, i.e. it is possible to run hybrid jobs using both, as shown below (and it may well be the optimal solution in many cases).
 
-Most calls to OpenMPI library are done in Python using mpi4py. For the sake of efficiency some critical communications are triggered via python wrappers of C++ functions, wherein messages are produced, sent/received, and processed.
+Most calls to OpenMPI library are done in Python using `mpi4py<https://mpi4py.readthedocs.io>`_. For the sake of efficiency some critical communications are triggered via python wrappers of C++ functions, wherein messages are produced, sent/received, and processed.
 
-Disclaimer: even though the mpy module provides the function :yref:`yade.mpy.mpirun`, which may seem as a simple replacement for O.run(), setting up a simulation with mpy might be deceptively triavial.
-It is anticipated that, in general, a simple replacement of "run" by "mpirun" in an arbitrary script will not work. To understand why, and to tackle the problems, basic knowledge of how MPI works will certainly help (specifically mpi4py).
-
+.. note:: Disclaimer: even though the `yade.mpy` module provides the function :yref:`mpirun<yade.mpy.mpirun>`, which may seem as a simple replacement for `O.run()`, setting up a simulation with mpy might be deceptively triavial.
+As of now, it is anticipated that, in general, a simple replacement of "run" by "mpirun" in an arbitrary script will not speedup anything and may even fail miserably (it could be improved in the future). To understand why, and to tackle the problems, basic knowledge of how MPI works will certainly help (specifically `mpi4py<https://mpi4py.readthedocs.io>`_), and carefull reading of this page is *mandatory*. Suggestions on how to improve this documentation or the implementation are welcome. The expected lazy questions along the line "I want to increase performance but mpy does not work, what can I do?" will be ignored and be refered to this page for the time being.
 
 
 Concepts
@@ -33,10 +32,13 @@ The intersections and mirror intersections are updated automatically as part of 
 
 Two overlapping subdomains and their intersections. In this situation we have *SubD1.intersections[SubD2.subdomain]=[id4,id5]* and *SubD1.mirrorIntersections[SubD2.subdomain]=[id1]*, with *SubD1* and *SubD2* instances of :yref:`Subdomain`.
 
+
+.. _sect_mpi_implementation:
+
 Implementation
 ---------------
 
-For demonstrating the steps in the implemented parallel algorithm let us conider the example script :ysrc:`examples/mpi/testMPI_2D.py`. Executing this script (interactive or passive mode) with three MPI processes generates the following scene as shown in `fig-scene`_. 
+For demonstrating the main internal steps in the implemented parallel algorithm let us conider the example script :ysrc:`examples/mpi/testMPI_2D.py`. Executing this script (interactive or passive mode) with three MPI processes generates the scene as shown in `fig-scene`_ and execute :yref:`mpirun<yade.mpy.mpirun>`. That function will trigger the steps described hereafter.
 
 .. _fig-scene:
 .. figure:: fig/schema0.*
@@ -44,10 +46,12 @@ For demonstrating the steps in the implemented parallel algorithm let us conider
 	:align: center
 
 
-In this scene, we have three MPI processes (three subdomains)  and the raw bodies are partitioned among the subdomains/ranks 1 and 2. The master process with subdomain=0 holds the boundary/wall type body. Bodies can be manually assigned or automatically assigned via a domain decomposition algorithm. Details 
-on the dommain decomposition algorithm is presented in the later section of this documnent. 
+In this scene, we have three MPI processes (three subdomains) and the raw bodies are partitioned among the subdomains/ranks 1 and 2. The master process with subdomain=0 holds the boundary/wall type body. Bodies can be manually assigned or automatically assigned via a domain decomposition algorithm. Details 
+on the dommain decomposition algorithm is presented in the later section of this document. 
 
-In the function :yref:`yade.mpy.splitScene()`, the collider settings are changed, in particular the verlet sweep distance of the :yref:`InsertionSortCollider.sweepLength` is extended. The verletDist is an important factor controlling the efficiency of the simulations. The reason for this will become evident in the later steps. 
+**Scene splitting** :
+
+In the function :yref:`yade.mpy.splitScene`, called at the beginning of mpi execution, specific engines are added silently to the scene in order to handle what will happen next. That very intrusive operation can even change settings of some pre-existing engines, in particular :yref:`InsertionSortCollider`, to make them behave with MPI-friendlyness. :yref:`InsertionSortCollider.verletDist` is an important factor controlling the efficiency of the simulations. The reason for this will become evident in the later steps. 
 
 **Bounds dispatching** : In the next step, the :yref:`Body.bound` is dispatched with the :yref:`Aabb` extended as shown in figure `fig-regularbounds`_ (in dotted lines). Note that the :yref:`Subdomain` :yref:`Aabb` is obtained from taking the min and max of the owned bodies, see figure `fig-subDBounds`_  
 with solid coloured lines for the subdomain :yref:`Aabb`. At this time, the min and max of other subdomains are unknown. 
@@ -82,9 +86,9 @@ its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdo
     :width: 40%
     :align: center
 
-- Next step involves in obtaining the ids of the remote bodies intersecting with the current subdomain (:yref:`Subdomain.mirrorIntersections`). Each subdomain sends its list of local body intersections to the respective remote subdomains and also receives the list  of intersecting ids from theother subdomains. 
+- Next step involves in obtaining the ids of the remote bodies intersecting with the current subdomain (:yref:`Subdomain.mirrorIntersections`). Each subdomain sends its list of local body intersections to the respective remote subdomains and also receives the list of intersecting ids from the other subdomains. 
   If the remote bodies do not exist within the current subdomain's :yref:`BodyContainer`, the subdomain then *requests* these remote bodies from the respective subdomain.  A schematic of this operation is shown in figure `fig-schema-mirrorIntersections`_, 
-  in which subdomain=1 receives three bodies from subdomain=2, and 1 body from subdomain=0. subdomain=2 receives three bodies from subdomain=1. subdomain=0 only sends its bodies and does NOT receieve from the worker 
+  in which subdomain=1 receives three bodies from subdomain=2, and 1 body from subdomain=0. subdomain=2 receives three bodies from subdomain=1. subdomain=0 only sends its bodies and does *not* receieve from the worker 
   subdomains. This operation sets the stage for communication of the body states to/from the other subdomains. 
 
  .. _fig-mirrorIntersections:
@@ -186,7 +190,7 @@ CODE
 
 **Automatic initialization**
 
-Effectively running DEM in parallel on the basis of just the above commands is probably accessible to good hackers but it would be tedious and computationaly innefficient. mpy provides the function mpirun which automatizes most of the steps required for the consistent time integration of a distributed scene. This includes, mainly, splitting the scene in subdomains based on indices assigned to bodies and handling collisions between the subdomains as time integration proceeds.
+Effectively running DEM in parallel on the basis of just the above commands is probably accessible to good hackers but it would be tedious and computationaly innefficient. mpy provides the function mpirun which automatizes most of the steps required for the consistent time integration of a distributed scene, as described in :ref:`introduction <sect_implementation_example2D>`. This includes, mainly, splitting the scene in subdomains based on rank assigned to bodies and handling collisions between the subdomains as time integration proceeds. 
 
 If needed the first execution of mpirun will call the function initialize(), which can therefore be omitted on user's side in most cases.
 
@@ -202,7 +206,7 @@ Merging is an expensive task which requires the communication of large messages 
 
 **Don't know how to split? Leave it to mpirun**
 
- mpirun will decide by itself how to distribute the bodies across several subdomains if XXX=True. In such case the difference between the sequential script and its mpi version is limited to importing mpy and calling mpirun after turning that flag on.
+ mpirun will decide by itself how to distribute the bodies across several subdomains if XXX=True. In such case the difference between the sequential script and its mpi version is limited to importing mpy and calling mpirun after turning that flag ON.
 
  [CODE]
  [BRIEF NOTES ON BISSECTION ALGORITHM - reference?]
@@ -244,7 +248,10 @@ Distributed scene construction
 Problems to expect
 ------------------
 
+.. _sect_mpi_reduction
+
 Reduction (partial sums)
+------------------------
 
 
 Control variables
