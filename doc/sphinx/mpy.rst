@@ -3,13 +3,14 @@
 MPI parallelization
 ===================
 
-The module mpy :yref:`yade.mpy` implements parallelization by domain decomposition (distributed memory) using the Message Passing Interface (MPI) implemented by OpenMPI. It aims at exploiting large numbers of cores, where shared memory techniques (OpenMP) are helpess.
+The module :yref:`yade.mpy` implements parallelization by domain decomposition (distributed memory) using the Message Passing Interface (MPI) implemented by OpenMPI. It aims at exploiting large numbers of cores, where shared memory techniques (OpenMP) are helpess.
 The shared memory and the distributed memory approaches are compatible, i.e. it is possible to run hybrid jobs using both, as shown below (and it may well be the optimal solution in many cases).
 
-Most calls to OpenMPI library are done in Python using `mpi4py<https://mpi4py.readthedocs.io>`_. For the sake of efficiency some critical communications are triggered via python wrappers of C++ functions, wherein messages are produced, sent/received, and processed.
+Most calls to OpenMPI library are done in Python using `mpi4py <https://mpi4py.readthedocs.io>`_. For the sake of efficiency some critical communications are triggered via python wrappers of C++ functions, wherein messages are produced, sent/received, and processed.
 
 .. note:: Disclaimer: even though the `yade.mpy` module provides the function :yref:`mpirun<yade.mpy.mpirun>`, which may seem as a simple replacement for `O.run()`, setting up a simulation with mpy might be deceptively triavial.
-As of now, it is anticipated that, in general, a simple replacement of "run" by "mpirun" in an arbitrary script will not speedup anything and may even fail miserably (it could be improved in the future). To understand why, and to tackle the problems, basic knowledge of how MPI works will certainly help (specifically `mpi4py<https://mpi4py.readthedocs.io>`_), and carefull reading of this page is *mandatory*. Suggestions on how to improve this documentation or the implementation are welcome. The expected lazy questions along the line "I want to increase performance but mpy does not work, what can I do?" will be ignored and be refered to this page for the time being.
+    As of now, it is anticipated that, in general, a simple replacement of "run" by "mpirun" in an arbitrary script will not speedup anything and may even fail miserably (it could be improved in the future). To understand why, and to tackle the problems, basic knowledge of how MPI works will certainly help (specifically `mpi4py <https://mpi4py.readthedocs.io>`_), and carefull reading of this page is mandatory.
+    Suggestions on how to improve this documentation or the implementation are welcome. Uninformed questions might be simply ignored and be refered to this page for the time being.
 
 
 Concepts
@@ -38,10 +39,10 @@ Two overlapping subdomains and their intersections. In this situation we have *S
 Implementation
 ---------------
 
-For demonstrating the main internal steps in the implemented parallel algorithm let us conider the example script :ysrc:`examples/mpi/testMPI_2D.py`. Executing this script (interactive or passive mode) with three MPI processes generates the scene as shown in `fig-scene`_ and execute :yref:`mpirun<yade.mpy.mpirun>`. That function will trigger the steps described hereafter.
+For demonstrating the main internal steps in the implemented parallel algorithm let us conider the example script :ysrc:`examples/mpi/testMPI_2D.py`. Executing this script (interactive or passive mode) with three MPI processes generates the scene as shown in `fig-scene`_. It then executes :yref:`mpirun<yade.mpy.mpirun>`, which triggers the steps described hereafter.
 
 .. _fig-scene:
-.. figure:: fig/schema0.*
+.. figure:: fig/mpy_schema0.*
 	:width: 25%
 	:align: center
 
@@ -57,13 +58,13 @@ In the function :yref:`yade.mpy.splitScene`, called at the beginning of mpi exec
 with solid coloured lines for the subdomain :yref:`Aabb`. At this time, the min and max of other subdomains are unknown. 
 
 .. _fig-regularbounds:
-.. figure:: fig/schema1a.*
+.. figure:: fig/mpy_schema1a.*
 	:width: 25%
 	:align: center
 
 
 .. _fig-subDBounds:
-.. figure:: fig/schema1b.*
+.. figure:: fig/mpy_schema1b.*
 	:width: 25%
 	:align: center
 
@@ -72,7 +73,7 @@ with solid coloured lines for the subdomain :yref:`Aabb`. At this time, the min 
 its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdomain-bounds`_  shows a schematic in which each subdomain has received the :yref:`Aabb.min` and :yref:`Aabb.max` of the other subdomains. 
 
 .. _fig-subdomain-bounds:
-.. figure:: fig/schema2.*
+.. figure:: fig/mpy_schema2.*
     :width: 40%
     :align: center
     
@@ -82,7 +83,7 @@ its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdo
   then used to build the :yref:`Subdomain.intersections` list. 
 
  .. _fig-schema-localIntersections:
- .. figure:: fig/schema3.*
+ .. figure:: fig/mpy_schema3.*
     :width: 40%
     :align: center
 
@@ -92,18 +93,17 @@ its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdo
   subdomains. This operation sets the stage for communication of the body states to/from the other subdomains. 
 
  .. _fig-mirrorIntersections:
- .. figure:: fig/sendBodies.*
+ .. figure:: fig/mpy_sendBodies.*
     :width: 40%
     :align: center
 
 
 **Update states** :  
 
-Once the subdomains and the associated intersecting bodies, and remote bodies are identified, :yref:`State` of these bodies are sent and received every timestep. In the case of an interaction with the master subdomain (subdomain=0), the interaction forces and torques
-are sent. Figure `fig-sendRecvStates`_ shows a schematic in which the states of the remote bodies between subdomain=1 and subdomain=2 are communicated. Subdomain=0 receives forces and torques from subdomain=1 and subdomain=2. 
+Once the subdomains and the associated intersecting bodies, and remote bodies are identified, :yref:`State` of these bodies are sent and received every timestep, by peer-to-peer communications between the interacting subdomains. In the case of an interaction with the master subdomain (subdomain=0), only the total force and torque exerted on master's bodies by a given subdomain are sent. Figure `fig-sendRecvStates`_ shows a schematic in which the states of the remote bodies between subdomain=1 and subdomain=2 are communicated. Subdomain=0 receives forces and torques from subdomain=1 and subdomain=2. 
 
 .. _fig-sendRecvStates:
-.. figure:: fig/schema4.*
+.. figure:: fig/mpy_schema4.*
     :width: 40%
     :align: center
         
