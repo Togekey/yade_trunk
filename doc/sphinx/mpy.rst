@@ -209,8 +209,8 @@ Merging is an expensive task which requires the communication of large messages 
  mpirun will decide by itself how to distribute the bodies across several subdomains if XXX=True. In such case the difference between the sequential script and its mpi version is limited to importing mpy and calling mpirun after turning the :code:`DOMAIN_DECOMPOSITION` flag ON.  
  
  The automatic splitting of bodies to subdomains is based on the Orthogonal Recursive Bisection Algortithm of Berger [Berger1987]_, and [Fleissner2007]_. The partitioning is based on bisecting the space into several levels, with the longest axis in each level chosen as 
- the bisection axis. The number of levels is determined as :math:`int(log_{2}(N_{w}))` with :math:`N_{w}` being the number of worker subdomains. A schematic of this decomposition is shown in `fig-bisectionAlgo`_, totally there are 4 subdomains. At the initial stage (level = 0),  we assume 
- that subdomain=1 contains the information of the body positions, the longest axis is first determined, this forms the splitting axis/plane. The median of this sorted list is determined, and bodies with positions less than the median is coloured with the current subdomain, (SD=1) and the other half is coloured with 
+ the bisection axis. The number of levels is determined as :math:`int(log_{2}(N_{w}))` with :math:`N_{w}` being the number of worker subdomains. A schematic of this decomposition is shown in `fig-bisectionAlgo`_, totally there are 4 worker subdomains. At the initial stage (level = 0),  we assume 
+ that subdomain=1 contains the information of the body positions (and bodies), the longest axis is first determined, this forms the splitting axis/plane. The list containing the body positions is sorted along the split axis, and the median of this sorted list is determined. The bodies with positions less than the median is coloured with the current subdomain, (SD=1) and the other half is coloured with 
  SD = 2, the subdomain colouring is determined using the following rule::
       
       if (subdomain <  1<<level) : this subdomain gets the bodies with position lower than the median. 
@@ -231,7 +231,7 @@ Merging is an expensive task which requires the communication of large messages 
     :width: 40%
     :align: center
 
- The present implementation can be found in :yref:`yade.bisectionDecomposition`, and a parallel version can be found `here. <https://github.com/bchareyre/yade-mpi/blob/593a4d6abf7e488ab1ac633a1e6725ac301b2a14/py/tree_decomp.py>`_
+ The present implementation can be found in :ysrc:`py/bisectionDecomposition.py`, and a parallel version can be found `here. <https://github.com/bchareyre/yade-mpi/blob/593a4d6abf7e488ab1ac633a1e6725ac301b2a14/py/tree_decomp.py>`_
     
 
 
