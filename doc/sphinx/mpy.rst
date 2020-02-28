@@ -206,44 +206,59 @@ Merging is an expensive task which requires the communication of large messages 
 
 **Don't know how to split? Leave it to mpirun**
 
- mpirun will decide by itself how to distribute the bodies across several subdomains if XXX=True. In such case the difference between the sequential script and its mpi version is limited to importing mpy and calling mpirun after turning that flag ON.
-
- [CODE]
- [BRIEF NOTES ON BISSECTION ALGORITHM - reference?]
+ mpirun will decide by itself how to distribute the bodies across several subdomains if XXX=True. In such case the difference between the sequential script and its mpi version is limited to importing mpy and calling mpirun after turning the :code:`DOMAIN_DECOMPOSITION` flag ON.  
  
+ The automatic splitting of bodies to subdomains is based on the Orthogonal Recursive Bisection Algortithm of Berger [Berger1987]_, and [Fleissner2007]_. The partitioning is based on bisecting the space into several levels, with the longest axis in each level chosen as 
+ the bisection axis. The number of levels is determined as :math:`int(log_{2}(N_{w}))` with :math:`N_{w}` being the number of worker subdomains. A schematic of this decomposition is shown in `fig-bisectionAlgo`_, totally there are 4 subdomains. At the initial stage (level = 0),  we assume 
+ that subdomain=1 contains the information of the body positions, the longest axis is first determined, this forms the splitting axis/plane. The median of this sorted list is determined, and bodies with positions less than the median is coloured with the current subdomain, (SD=1) and the other half is coloured with 
+ SD = 2, the subdomain colouring is determined using the following rule::
+      
+      if (subdomain <  1<<level) : this subdomain gets the bodies with position lower than the median. 
+      if ((subdomain >  1<<level) and (subdomain <  1<<(level+1) ) ) : this subdomain gets the bodies with position greater than median, from subdomain - (1<<level) 
+      
+     
+ This process is continued until the number of levels are reached.
+   
  .. _fig-bisectionAlgo:
- .. figure:: fig/recursive_bisection.*
-    :width: 16cm
+ .. figure:: fig/mpy_recursuveBisection.*
+    :width: 40%
     :align: center
 
-
-    
-    
+ Figure `fig-domainDecompose`_ shows the resulting partitioning obtained using the ORB algorithm : (a) for 4 subdomains, (b) for 8 subdomains. Odd number of worker subdomains are also supported with the present implementation.
+ 
  .. _fig-domainDecompose:
- .. figure:: fig/dd1.*
-    :width: 16cm
+ .. figure:: fig/mpy_ddcmp.*
+    :width: 40%
     :align: center
 
+ The present implementation can be found in :yref:`yade.bisectionDecomposition`, and a parallel version can be found `here. <https://github.com/bchareyre/yade-mpi/blob/593a4d6abf7e488ab1ac633a1e6725ac301b2a14/py/tree_decomp.py>`_
+    
 
-    
-.. _fig-domainDecompose:
- .. figure:: fig/reallocBody.*
-    :width: 16cm
-    :align: center
-    
 
 Passive mode
 ------------
 
+Running in passive mode is straightforward, one just needs to set the number of timesteps as an argument for the :yref:`yade.mpy.mpirun` function. If a scene merge is required, the *withMerge* argument of :yref:`yade.mpy.mpirun` has to be set to true. 
+The simulation (:ysrc:`examples/mpi/vtkRecorderExample.py`) is executed with the following command::
+  
+  mpiexec -np NUMSUBD+1 yade-mpi vtkRecorderExample.py 
 
-
+where *NUMSUBD* corresponds to the required number of worker subdomains.    
 
 
 Centralized scene construction
 ------------------------------
+In the centralized method of scene construction, the master subdoamin generates/creates all the bodies (including subdomain), assigns subdomains to tbe bodies and performs the necessary modifications to the engines and collider settings. This scene is  then broadcasted to the workers. 
+The workers receives the scene, identifies its respective bodies via :yref:`Body.subdomain` attribute, as worker :code:`rank==b.subdomain` . For large numer of bodies and processes, the centralized scene construction and distribution would take siginificant time for initialization. 
+
 
 Distributed scene construction
 ------------------------------
+
+As mentioned in the previous section, the main draw back of the method of centralized scene construction and broadcast leads to long initialization times, an alternative method would be to use the distributed scene construction. 
+In this mode of scene construction ther workers first initialize their :yref:`BodyContainer` with the global total number of bodies in the simulation. Each subdomain then creates and inserts bodies at specific location of the initialized but empty :yref:`BodyContainer` using 
+:yref:`BodyContainer.insertAtId` function. The user is in charge of setting up the subdomains and partitioning the bodies, an example showing the use of distributed insertion can be found here :ysrc:`examples/mpi/parallelBodyInsert3D.py`. 
+
 
 Problems to expect
 ------------------
