@@ -30,6 +30,7 @@ The intersections and mirror intersections are updated automatically as part of 
 .. _fig-subdomains:
 .. figure:: fig/subdomains.*
 	:width: 12cm
+	:align: center
 
 Two overlapping subdomains and their intersections. In this situation we have *SubD1.intersections[SubD2.subdomain]=[id4,id5]* and *SubD1.mirrorIntersections[SubD2.subdomain]=[id1]*, with *SubD1* and *SubD2* instances of :yref:`Subdomain`.
 
@@ -194,24 +195,97 @@ Effectively running DEM in parallel on the basis of just the above commands is p
 
 If needed the first execution of mpirun will call the function initialize(), which can therefore be omitted on user's side in most cases.
 
-Here is a concrete example where a floor is assigned to master and multiple groups of spheres are assigned to subdomains:
+Here is a concrete example where a floor is assigned to master and multiple groups of spheres are assigned to subdomains::
+
+	NSTEPS=5000 #turn it >0 to see time iterations, else only initilization 
+	numThreads = 4 # number of threads to be spawned, (in interactive mode).
+
+	import os
+	from yade import mpy as mp
+
+	#materials 
+	young = 5e6
+	compFricDegree = 0.0
+	O.materials.append(FrictMat(young=young, poisson=0.5, frictionAngle = radians(compFricDegree), density= 2600, label='sphereMat'))
+	O.materials.append(FrictMat(young=young*100, poisson = 0.5, frictionAngle = compFricDegree, density =2600, label='wallMat'))
 
 
-[CODE] test3D
-[COMMENTS] merge/not, erase/master/not, w_interaction/not...
+	#add spheres
+	
+	mn,mx=Vector3(0,0,0),Vector3(90,180,90)
+	pred = pack.inAlignedBox(mn,mx)
+	O.bodies.append(pack.regularHexa(pred,radius=2.80,gap=0, material='sphereMat'))
 
+	#walls (floor)
+	
+	wallIds=aabbWalls([Vector3(-360,-1,-360),Vector3(360,360,360)],thickness=10.0, material='wallMat')
+	O.bodies.append(wallIds)
 
-If withMerge=True the bodies in master are updated to reflect in the master scene the evolution of their distributed counterparts. This is done once after finishing the required number of iterations in mpirun. This *merge* operation can include updating interactions.
-Merging is an expensive task which requires the communication of large messages and, therefore, it should be done purposely and at a reasonable frequency. It can even be the main bottleneck for massively parallel scenes. Nevertheless it can be usefull for debugging using the 3D view, or for various post-processing tasks. Beyond that it is not required for a proper time integration in general.
+	#engines 
+	O.engines=[
+		ForceResetter(),
+		InsertionSortCollider([
+			Bo1_Sphere_Aabb(),
+			Bo1_Box_Aabb()], label = 'collider'), # always add labels. 
+		InteractionLoop(
+			[Ig2_Sphere_Sphere_ScGeom(),Ig2_Box_Sphere_ScGeom()],
+			[Ip2_FrictMat_FrictMat_FrictPhys()],
+			[Law2_ScGeom_FrictPhys_CundallStrack()], 
+			label="interactionLoop"
+		),
+		GlobalStiffnessTimeStepper(timestepSafetyCoefficient=0.3,  timeStepUpdateInterval=100, parallelMode=True, label = 'timeStepper'),
+		NewtonIntegrator(damping=0.1,gravity = (0, -0.1, 0), label='newton'), 
+		VTKRecorder(fileName='spheres/3d-vtk-', recorders=['spheres', 'intr', 'boxes'], parallelMode=True,iterPeriod=500), #use .pvtu to open spheres, .pvtp for ints, and .vtu for boxes.
+	]
+
+	#set a custom verletDist for efficiency. 
+	collider.verletDist = 1.5
+
+	#########  RUN  ##########
+	# customize mpy
+	mp.ERASE_REMOTE_MASTER = True   #keep remote bodies in master? 
+	mp.DOMAIN_DECOMPOSITION= True	#automatic splitting/domain decomposition
+	#mp.mpirun(NSTEPS)		#passive mode run 
+	mp.MERGE_W_INTERACTIONS = False
+	mp.mpirun(NSTEPS,numThreads,withMerge=True) # interactive run, numThreads is the number of workers to be initialized, see below for withMerge explanation.
+	mp.mergeScene()  #merge scene after run. 
+	if mp.rank == 0: O.save('mergedScene.yade')
+
+	#demonstrate getting stuff from workers, here we get kinetic energy from worker subdomains, notice that the master (mp.rank = 0), uses the sendCommand to tell workers to compute kineticEnergy. 
+	if mp.rank==0:
+		print("kinetic energy from workers: "+str(mp.sendCommand([1,2],"kineticEnergy()",True)))
+		
+
+The script is then executed as follows::
+  
+  yade-mpi-version script.py 
+
+For running further timesteps, the mp.mpirun command has to be entered into the console
+  
+.. ipython::
+
+	:suppress:
+	
+	Yade [0]: mp.mpirun(100,4,withMerge=False) #run for 100 steps and no scene merge. 
+	
+	Yade [1]: mp.sendCommand([1,2],"kineticEnergy()",True) # get kineticEnergy from workers 1 and 2. 
+	
+	Yade [2]: mp.mpirun(1,4,withMerge=True) #run for 1 step and merge scene into master. 
+
+If withMerge=True the bodies in master are updated to reflect in the master scene the evolution of their distributed counterparts. This is done once after finishing the required number of iterations in mpirun. This *merge* operation can include updating interactions,
+Merging is an expensive task which requires the communication of large messages and, therefore, it should be done purposely and at a reasonable frequency. It can even be the main bottleneck for massively parallel scenes. Nevertheless it can be usefull for debugging using the 3D view, or for various post-processing tasks. 
+The *MERGE_W_INTERACTIONS* provides full merge, i.e. the interactions in the worker subdomains and between the subdomains are included, else only the position and states of the bodies are use. The merge operation is not required for a proper time integration in general. 
+For MPI cases, the *parallelMode* flag for :yref:`GlobalStiffnessTimeStepper` and :yref:`VTKRecorder` have to be turned on. 
+ 
 
 **Don't know how to split? Leave it to mpirun**
 
- mpirun will decide by itself how to distribute the bodies across several subdomains if XXX=True. In such case the difference between the sequential script and its mpi version is limited to importing mpy and calling mpirun after turning the :code:`DOMAIN_DECOMPOSITION` flag ON.  
+ mpirun will decide by itself how to distribute the bodies across several subdomains if *DOMAIN_DECOMPOSITION* =True. In such case the difference between the sequential script and its mpi version is limited to importing mpy and calling mpirun after turning the *DOMAIN_DECOMPOSITION* flag.  
  
- The automatic splitting of bodies to subdomains is based on the Orthogonal Recursive Bisection Algortithm of Berger [Berger1987]_, and [Fleissner2007]_. The partitioning is based on bisecting the space into several levels, with the longest axis in each level chosen as 
- the bisection axis. The number of levels is determined as :math:`int(log_{2}(N_{w}))` with :math:`N_{w}` being the number of worker subdomains. A schematic of this decomposition is shown in `fig-bisectionAlgo`_, totally there are 4 worker subdomains. At the initial stage (level = 0),  we assume 
- that subdomain=1 contains the information of the body positions (and bodies), the longest axis is first determined, this forms the splitting axis/plane. The list containing the body positions is sorted along the split axis, and the median of this sorted list is determined. The bodies with positions less than the median is coloured with the current subdomain, (SD=1) and the other half is coloured with 
- SD = 2, the subdomain colouring is determined using the following rule::
+ The automatic splitting of bodies to subdomains is based on the Orthogonal Recursive Bisection Algortithm of Berger [Berger1987]_, and [Fleissner2007]_. The partitioning is based on bisecting the space at several *levels*, with the longest axis in each level chosen as 
+ the bisection axis. The number of levels is determined as :math:`int(log_{2}(N_{w}))` with :math:`N_{w}` being the number of worker subdomains. A schematic of this decomposition is shown in `fig-bisectionAlgo`_, with 4 worker subdomains. At the initial stage (level = 0),  we assume 
+ that subdomain=1 contains the information of the body positions (and bodies), the longest axis is first determined, this forms the bisectioning axis/plane. The list containing the body positions is sorted along the bisection axis, and the median of this sorted list is determined. The bodies with positions (bisection coordinate) less than the median is coloured with the current subdomain, (SD=1) and the other half is coloured with 
+ SD = 2, the subdomain colouring at each level is determined using the following rule::
       
       if (subdomain <  1<<level) : this subdomain gets the bodies with position lower than the median. 
       if ((subdomain >  1<<level) and (subdomain <  1<<(level+1) ) ) : this subdomain gets the bodies with position greater than median, from subdomain - (1<<level) 
@@ -241,7 +315,7 @@ Passive mode
 Running in passive mode is straightforward, one just needs to set the number of timesteps as an argument for the :yref:`yade.mpy.mpirun` function. If a scene merge is required, the *withMerge* argument of :yref:`yade.mpy.mpirun` has to be set to true. 
 The simulation (:ysrc:`examples/mpi/vtkRecorderExample.py`) is executed with the following command::
   
-  mpiexec -np NUMSUBD+1 yade-mpi vtkRecorderExample.py 
+  mpiexec -np NUMSUBD+1 yade-mpi-verison vtkRecorderExample.py 
 
 where *NUMSUBD* corresponds to the required number of worker subdomains.    
 
@@ -255,9 +329,9 @@ The workers receives the scene, identifies its respective bodies via :yref:`Body
 Distributed scene construction
 ------------------------------
 
-As mentioned in the previous section, the main draw back of the method of centralized scene construction and broadcast leads to long initialization times, an alternative method would be to use the distributed scene construction. 
-In this mode of scene construction ther workers first initialize their :yref:`BodyContainer` with the global total number of bodies in the simulation. Each subdomain then creates and inserts bodies at specific location of the initialized but empty :yref:`BodyContainer` using 
-:yref:`BodyContainer.insertAtId` function. The user is in charge of setting up the subdomains and partitioning the bodies, an example showing the use of distributed insertion can be found here :ysrc:`examples/mpi/parallelBodyInsert3D.py`. 
+As mentioned in the previous section, the main draw back with the method of centralized scene construction is that the scene broadcast from the master to workers leads to long initialization times. An alternative method would be to use the distributed scene construction. 
+In this mode of scene construction ther workers first *initialize* an empty their :yref:`BodyContainer` with the global total number of bodies in the simulation. Each subdomain then creates and inserts bodies at specific location of the initialized but empty :yref:`BodyContainer` using 
+:yref:`BodyContainer.insertAtId` function. The distributed mode is activated by setting the :code:`DISTRIBUTED_INSERT` flag ON, the user is in charge of setting up the subdomains and partitioning the bodies, an example showing the use of distributed insertion can be found in :ysrc:`examples/mpi/parallelBodyInsert3D.py`. 
 
 
 Problems to expect
@@ -277,12 +351,14 @@ _________________
  - ERASE_REMOTE_MASTER : Erase remote bodies in the master subdomain or keep them as unbounded ? Useful for fast merge.
  - OPTIMIZE_COM, USE_CPP_MPI : Use optimized communication functions and MPI functions from :yref:`Subdomain` class 
  - YADE_TIMING : Report timing statistics, prints time spent in communications, collision detection and other operations. 
- - DISTRIBUTED_INSERT : Bodies are created and inserted by each subdomain. 
+ - DISTRIBUTED_INSERT : Bodies are created and inserted by each subdomain, used for distributed scene construction. 
  - DOMAIN_DECOMPOSITION : If true, the bisection decomposition algorithm is used to assign bodies to the workers/subdomains. 
- - REALLOCATE_FREQUENCY : if > 0, bodies are migrated between subdomains for efficient load balancing. 
+ - MINIMAL_INTERSECTIONS : Reduces the size of position/velocity communications (at the end of the colliding phase, we can exclude those bodies with no interactions besides body<->subdomain from intersections). 
+ - REALLOCATE_FREQUENCY : if > 0, bodies are migrated between subdomains for efficient load balancing.
+ - REALLOCATE_MINIMAL : Intersections are minimized before reallocations, hence minimizing the number of reallocated bodies
+ - USE_CPP_REALLOC : Use optimized C++ functions to perform body reallocations
  - FLUID_COUPLING : Flag for coupling with OpenFOAM. 
  
-
 
 Various remarks
 _______________
