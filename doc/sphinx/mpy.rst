@@ -145,43 +145,70 @@ A pool of yade instances can be spawned with mpy.initialize() as illustrated her
 
 	Yade [5]: from yade import mpy as mp
 
-	Yade [6]: mp.initialize(3)
-	Master: I will spawn  2  workers
-	->  [6]: (0, 3)
-
-
-.. ipython::
-
 	@doctest
-	Yade [1]: 1+1
-	->  [1]: 4
+	Yade [6]: mp.initialize(4)
+	Master: I will spawn  3  workers
+	->  [6]: (0, 4)
 
 
-CODE
+.. .. ipython::
+.. 
+.. 	@doctest
+.. 	Yade [1]: 1+1
+.. 	->  [1]: 4
+
 
 After mp.initialize(np) the parent instance of yade takes the role of master process (rank=0). It is the only one executing the commands typed directly in the prompt.
-The other instances (rank=1 to rank=np-1) are idle and they wait for commands sent from master.
+The other instances (rank=1 to rank=np-1) are idle and they wait for commands sent from master. Sending commands to the other instances can be done with `mpy.sendCommand()`, which by default returns the result or the list of results. We use that command below to verify that the spawned workers point to different (still empty) scenes:
 
-CODE
+.. ipython::
+	:verbatim:
+	
+	Yade [8]: print(len(O.bodies))
+	4
 
-Sending commands to the other instances can be done with mpy.sendCommand(), which by default returns the result or the list of results.
+	Yade [9]: print( mp.sendCommand(executors="all",command="str(O)",wait=True) ) # check scene pointers
+	['<yade.wrapper.Omega object at 0x7f6db7012300>', '<yade.wrapper.Omega object at 0x7f94c79ec300>', '<yade.wrapper.Omega object at 0x7f5519742300>', '<yade.wrapper.Omega object at 0x7f264dd80300>']
 
-CODE (check that scene pointers are different)
-CODE (len(bodies) = 1,0,0,0,...)
+	Yade [10]: print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) ) #check content
+	[4, 0, 0, 0]
 
-Sending commands makes it possible to manage all types of message passing using calls to mpi4py. Every picklable python object (namely, nearly all Yade objects) can be transmitted this way:
+Sending commands makes it possible to manage all types of message passing using calls to the underlying mpi4py (see mpi4py documentation for more functionalities).
 
-CODE (send body)
-CODE (len(bodies) = 1,0,0,0,...)
+.. ipython::
+	:verbatim:
+	
+	Yade [3]: mp.sendCommand(executors=1,command="message=comm.recv(source=0); print('received',message)")
+
+	Yade [4]: mp.comm.send("hello",dest=1)
+	received hello
+
+Every picklable python object (namely, nearly all Yade objects) can be transmitted this way. Remark hereafter the use of :yref:`mpy.mprint <yade.mpy.mprint>` (identifies the worker by number and by font colors). Note also that the commands passed via `sendCommand` are executed in the context of the mpy module, for this reason `comm`, `mprint`, `rank` and all objects of the module are accessed without the "mp." prefix.
+
+.. ipython::
+	:verbatim:
+
+	Yade [3]: mp.sendCommand(executors=1,command="O.bodies.append(comm.recv(source=0))",wait=False) # leaves the worker idle waiting for an argument to append()
+
+	Yade [4]: b=Body(shape=Sphere(radius=0.7))  # now create body in the context of master
+
+	Yade [5]: mp.comm.send(b,dest=1) # send it to worker 1
+
+	Yade [6]: mp.sendCommand(executors="all",command="mprint('received',[b.shape.radius if hasattr(b.shape,'radius') else None for b in O.bodies])")
+	Master: received [None, 0.5, 0.5, 0.5] 
+	Worker1: received [0.7] 
+	Worker3: received [] 
+	Worker2: received [] 
+	->  [5]: [None, None, None, None] # printing yields no return value, hence that empty list
 
 
 **Explicit initialization from python script**
 
-Though usefull, the function sendCommand() is not enough to efficiently manipulate the yade instances in all cases. Even basic features of the python language are missing, e.g. function definitions and loops are a problem - in fact every code fragment which can't fit on a single line is. That is a reason why the mpy module provides a mechanism to initialize from a script.
+Though usefull for advanced operations, the function sendCommand() is not enough to efficiently manipulate the yade instances in all cases. Even basic features of the python language are missing, e.g. function definitions and loops are a problem - in fact every code fragment which can't fit on a single line is. In practice the mpy module provides a mechanism to initialize from a script.
 
-Whenever Yade is started with a script as argument the script name will be remembered, and if initialize() is executed (in the script itself or interactively in the prompt) all Yade instances will be initialized with that same script. It makes distributing function definitions and simulation parameters trivial (and even distributing scene constructions as seen later). This behaviour is very close to what happens very classicaly in the passive mode, i.e. all processes execute the same program.
+Whenever Yade is started with a script as argument the script name will be remembered, and if initialize() is executed (in the script itself or interactively in the prompt) all Yade instances will be initialized with that same script. It makes distributing function definitions and simulation parameters trivial (and even distributing scene constructions as seen later). This behaviour is very close to what happens classicaly with MPI: all processes execute the same program.
 
-If the previous commands are pasted into a script used to start Yade, there is a small surprise, now all instances insert the body.
+If the first of this section commands are pasted into a script used to start Yade, there is a small surprise, now all instances insert the same bodies as master.
 
 CODE
 
