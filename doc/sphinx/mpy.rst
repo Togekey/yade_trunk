@@ -40,7 +40,7 @@ Two overlapping subdomains and their intersections. In this situation we have *S
 Implementation
 ---------------
 
-For demonstrating the main internal steps in the implemented parallel algorithm let us conider the example script :ysrc:`examples/mpi/testMPI_2D.py`. Executing this script (interactive or passive mode) with three MPI processes generates the scene as shown in `fig-scene`_. It then executes :yref:`mpirun<yade.mpy.mpirun>`, which triggers the steps described hereafter.
+For demonstrating the main internal steps in the implemented parallel algorithm let us consider the example script :ysrc:`examples/mpi/testMPI_2D.py`. Executing this script (interactive or passive mode) with three MPI processes generates the scene as shown in `fig-scene`_. It then executes :yref:`mpirun<yade.mpy.mpirun>`, which triggers the steps described hereafter.
 
 .. _fig-scene:
 .. figure:: fig/mpy_schema0.*
@@ -133,7 +133,10 @@ A pool of yade instances can be spawned with mpy.initialize() as illustrated her
 
 	Yade [1]: from yade.utils import *
 	
+.. Note: most of the blocks in next ipython directives executes correctly, however it gives slightly different output through sphinx pipeline, unfortunately. Comment out the verbatim to make sphinx effectively execute these mpi sections. 
+	
 .. ipython::
+	:verbatim:
 
 	Yade [2]: wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
 
@@ -160,19 +163,21 @@ After mp.initialize(np) the parent instance of yade takes the role of master pro
 The other instances (rank=1 to rank=np-1) are idle and they wait for commands sent from master. Sending commands to the other instances can be done with `mpy.sendCommand()`, which by default returns the result or the list of results. We use that command below to verify that the spawned workers point to different (still empty) scenes:
 
 .. ipython::
+	:verbatim:
 	
 	Yade [8]: len(O.bodies)
 	 ->  [8]: 4
 
 	Yade [9]: mp.sendCommand(executors="all",command="str(O)") # check scene pointers
-	 ->  [9]: ['<yade.wrapper.Omega object at 0x7f6db7012300>', '<yade.wrapper.Omega object at 0x7f94c79ec300>', '<yade.wrapper.Omega object at 0x7f5519742300>', '<yade.wrapper.Omega object at 0x7f264dd80300>']
+	->  [9]: ['<yade.wrapper.Omega object at 0x7f6db7012300>', '<yade.wrapper.Omega object at 0x7f94c79ec300>', '<yade.wrapper.Omega object at 0x7f5519742300>', '<yade.wrapper.Omega object at 0x7f264dd80300>']
 
 	Yade [10]: mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) #check content
-	 ->  [10]: [4, 0, 0, 0]
+	->  [10]: [4, 0, 0, 0]
 
 Sending commands makes it possible to manage all types of message passing using calls to the underlying mpi4py (see mpi4py documentation for more functionalities).
 
 .. ipython::
+	:verbatim:
 	
 	Yade [3]: mp.sendCommand(executors=1,command="message=comm.recv(source=0); print('received',message)")
 
