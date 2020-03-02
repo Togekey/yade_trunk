@@ -132,10 +132,8 @@ A pool of yade instances can be spawned with mpy.initialize() as illustrated her
 	Yade [0]: O.reset()
 
 	Yade [1]: from yade.utils import *
-
-
+	
 .. ipython::
-	:verbatim:
 
 	Yade [2]: wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
 
@@ -162,28 +160,26 @@ After mp.initialize(np) the parent instance of yade takes the role of master pro
 The other instances (rank=1 to rank=np-1) are idle and they wait for commands sent from master. Sending commands to the other instances can be done with `mpy.sendCommand()`, which by default returns the result or the list of results. We use that command below to verify that the spawned workers point to different (still empty) scenes:
 
 .. ipython::
-	:verbatim:
 	
-	Yade [8]: print(len(O.bodies))
-	4
+	Yade [8]: len(O.bodies)
+	 ->  [8]: 4
 
-	Yade [9]: print( mp.sendCommand(executors="all",command="str(O)",wait=True) ) # check scene pointers
-	['<yade.wrapper.Omega object at 0x7f6db7012300>', '<yade.wrapper.Omega object at 0x7f94c79ec300>', '<yade.wrapper.Omega object at 0x7f5519742300>', '<yade.wrapper.Omega object at 0x7f264dd80300>']
+	Yade [9]: mp.sendCommand(executors="all",command="str(O)") # check scene pointers
+	 ->  [9]: ['<yade.wrapper.Omega object at 0x7f6db7012300>', '<yade.wrapper.Omega object at 0x7f94c79ec300>', '<yade.wrapper.Omega object at 0x7f5519742300>', '<yade.wrapper.Omega object at 0x7f264dd80300>']
 
-	Yade [10]: print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) ) #check content
-	[4, 0, 0, 0]
+	Yade [10]: mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) #check content
+	 ->  [10]: [4, 0, 0, 0]
 
 Sending commands makes it possible to manage all types of message passing using calls to the underlying mpi4py (see mpi4py documentation for more functionalities).
 
 .. ipython::
-	:verbatim:
 	
 	Yade [3]: mp.sendCommand(executors=1,command="message=comm.recv(source=0); print('received',message)")
 
 	Yade [4]: mp.comm.send("hello",dest=1)
 	received hello
 
-Every picklable python object (namely, nearly all Yade objects) can be transmitted this way. Remark hereafter the use of :yref:`mpy.mprint <yade.mpy.mprint>` (identifies the worker by number and by font colors). Note also that the commands passed via `sendCommand` are executed in the context of the mpy module, for this reason `comm`, `mprint`, `rank` and all objects of the module are accessed without the "mp." prefix.
+Every picklable python object (namely, nearly all Yade objects) can be transmitted this way. Remark hereafter the use of :yref:`mpy.mprint <yade.mpy.mprint>` (identifies the worker by number and by font colors). Note also that the commands passed via `sendCommand` are executed in the context of the mpy module, for this reason `comm`, `mprint`, `rank` and all objects of the module are accessed without the `mp.` prefix.
 
 .. ipython::
 	:verbatim:
@@ -208,14 +204,69 @@ Though usefull for advanced operations, the function sendCommand() is not enough
 
 Whenever Yade is started with a script as argument the script name will be remembered, and if initialize() is executed (in the script itself or interactively in the prompt) all Yade instances will be initialized with that same script. It makes distributing function definitions and simulation parameters trivial (and even distributing scene constructions as seen later). This behaviour is very close to what happens classicaly with MPI: all processes execute the same program.
 
-If the first of this section commands are pasted into a script used to start Yade, there is a small surprise, now all instances insert the same bodies as master.
+If the first of this section commands are pasted into a script used to start Yade, there is a small surprise: all instances insert the same bodies as master. Here is the script:
 
-CODE
+.. code-block:: python
 
-That's because all instances executed the script in the initialize() phase. Though logical, this result is not what we want usually if we try to split a simulation into pieces. The solution (typical of all mpi programs) is to use rank of the process in conditionals:
+	# script 'test1.py'
+	wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
+	for x in range(-1,2):
+	O.bodies.append(sphere((x,0.5,0),0.5))
+	from yade import mpy as mp
+	mp.initialize(4)
+	print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
+	print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) )
 
-CODE
+and the output reads:
 
+.. code-block:: none
+	
+	$ yade test1.py 
+	...
+	Running script test1.py
+	Master: will spawn  3  workers 
+	None
+	None
+	None
+	None
+	None
+	None
+	['<yade.wrapper.Omega object at 0x7feb979403a0>', '<yade.wrapper.Omega object at 0x7f5b61ae9440>', '<yade.wrapper.Omega object at 0x7fdd466b8440>', '<yade.wrapper.Omega object at 0x7f8dc7b73440>']
+	[4, 4, 4, 4]
+
+That's because all instances executed the script in the initialize() phase. Though logical, this result is not what we want usually if we try to split a simulation into pieces. The solution (typical of all mpi programs) is to use the `rank` of the process in conditionals. In order to produce the same result as before, the script can be modified as follows.
+
+.. code-block:: python
+
+	# script 'test2.py'
+	from yade import mpy as mp
+	mp.initialize(4)
+	if mp.rank==0: # only master
+		wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
+		for x in range(-1,2):
+		O.bodies.append(sphere((x,0.5,0),0.5))
+
+		print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
+		print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) )
+		
+		
+		print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
+		
+.. code-block:: none
+
+	Running script test2.py
+	Master: will spawn  3  workers 
+	['<yade.wrapper.Omega object at 0x7f21a8c8d3a0>', '<yade.wrapper.Omega object at 0x7f3142e43440>', '<yade.wrapper.Omega object at 0x7fb699b1a440>', '<yade.wrapper.Omega object at 0x7f1e4231e440>']
+	[4, 0, 0, 0]
+
+
+We can also use `rank` to insert bodies in different regions of space, as found in example :ysrc:`examples/mpi/helloMPI.py`. The key part of that script is the line with rank-dependent positions.
+
+.. code-block:: python
+
+	mp.sendCommand(executors=[1,2],command= "ids=O.bodies.append([sphere((xx,1.5+rank,0),0.5) for xx in range(-1,2)])")
+
+	
 **Automatic initialization**
 
 Effectively running DEM in parallel on the basis of just the above commands is probably accessible to good hackers but it would be tedious and computationaly innefficient. mpy provides the function mpirun which automatizes most of the steps required for the consistent time integration of a distributed scene, as described in :ref:`introduction <sect_implementation_example2D>`. This includes, mainly, splitting the scene in subdomains based on rank assigned to bodies and handling collisions between the subdomains as time integration proceeds. 
@@ -285,13 +336,13 @@ Here is a concrete example where a floor is assigned to master and multiple grou
 
 The script is then executed as follows::
   
-  yade-mpi-version script.py 
+  yade script.py 
 
 For running further timesteps, the mp.mpirun command has to be entered into the console
   
 .. ipython::
-
-	:suppress:
+	:verbatim:
+.. 	:suppress:
 	
 	Yade [0]: mp.mpirun(100,4,withMerge=False) #run for 100 steps and no scene merge. 
 	
