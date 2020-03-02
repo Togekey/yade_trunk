@@ -180,7 +180,7 @@ def initialize(np):
 	if(process_count<np):
 		numThreads=np
 		if not yade.runtime.opts.mpi_mode: #MASTER only, the workers will be already in mpi_mode
-			mprint("I will spawn ",numThreads-process_count," workers")
+			mprint("will spawn ",numThreads-process_count," workers")
 			if (userScriptInCheckList==""): #normal case
 				comm = MPI.COMM_WORLD.Spawn(sys.yade_argv[0], args=sys.yade_argv[1:],maxprocs=numThreads-process_count).Merge()
 			else: #HACK, otherwise, handle execution from checkList.py otherwise will we run checkList.py in parallel
@@ -212,7 +212,7 @@ def spawnedProcessWaitCommand():
 		if command=="exit": #this is to terminate the waiting loop remotely
 			O.subD.comm.send(None,dest=s.source,tag=_RETURN_VALUE_)
 			break
-		wprint("I will now execute ",command)
+		wprint("will now execute ",command)
 		try:
 			exec(command)
 		except:
@@ -224,7 +224,7 @@ def sendCommand(executors,command,wait=True,workerToWorker=False):
 	Send a command to a worker (or list of) from master or from another worker. executors="all" is accepted, then even master will execute the command.
 	'''
 	start=time.time()
-	if (rank>0 and not workerToWorker): mprint("sendCommand ignored by worker", rank, ", pass workerToWorker=True to force it"); return
+	if (rank>0 and not workerToWorker): wprint("sendCommand ignored by worker", rank, ", pass workerToWorker=True to force it"); return
 	if (executors=="all"): executors=list(range(numThreads))
 	argIsList=isinstance(executors,list)
 	toMaster = (argIsList and 0 in executors) or executors==0
@@ -980,7 +980,7 @@ def parallelCollide():
 				requestedIds=timing_comm.recv("parallelCollide",source=worker, tag=_MIRROR_INTERSECTIONS_)
 				wprint("requested: ",len(requestedIds),"from ",worker)
 				if(len(requestedIds)>0):
-					wprint("I will now send ",len(requestedIds)," to ",worker)
+					wprint("will now send ",len(requestedIds)," to ",worker)
 					subD.sendBodies(worker,requestedIds)
 		for worker in requestedSomethingFrom:
 			subD.receiveBodies(worker)
