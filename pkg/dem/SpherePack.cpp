@@ -11,8 +11,8 @@
 
 namespace yade { // Cannot have #include directive inside.
 
-using math::max;
 using math::min; // using inside .cpp file is ok.
+using math::max;
 
 // not a serializable in the sense of YADE_PLUGIN
 

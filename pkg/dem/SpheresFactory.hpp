@@ -12,10 +12,10 @@ class SpheresFactory : public GlobalEngine {
 protected:
 	// Pick random position of a sphere. Should be override in derived engine.
 	virtual void pickRandomPosition(Vector3r& /*picked position*/, Real /*sphere's radius*/);
-	vector<Real> PSDCurMean;  //Current value of material in each bin
-	vector<Real> PSDCurProc;  //Current value of material in each bin, in procents
+	vector<Real> PSDCurMean; //Current value of material in each bin
+	vector<Real> PSDCurProc; //Current value of material in each bin, in procents
 	vector<Real> PSDNeedProc; //Need value of procent in each bin
-	bool         PSDuse;      //PSD or not
+	bool         PSDuse; //PSD or not
 public:
 	virtual void action();
 	struct SpherCoord {

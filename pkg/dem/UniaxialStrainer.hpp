@@ -1,8 +1,8 @@
-// 2008 © Václav Šmilauer <eudoxos@arcig.cz>
+// 2008 © Václav Šmilauer <eudoxos@arcig.cz> 
 #pragma once
-#include <core/Scene.hpp>
-#include <pkg/common/BoundaryController.hpp>
-#include <pkg/dem/Shop.hpp>
+#include<core/Scene.hpp>
+#include<pkg/dem/Shop.hpp>
+#include<pkg/common/BoundaryController.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -12,22 +12,21 @@ namespace yade { // Cannot have #include directive inside.
  *
  * This engine should be run once forces on particles have been computed.
  */
-class UniaxialStrainer : public BoundaryController {
-private:
-	bool  needsInit;
-	void  computeAxialForce();
-	Real  axisCoord(Body::id_t id) { return Body::byId(id, scene)->state->pos[axis]; };
-	Real& axisVel(Body::id_t id) { return Body::byId(id, scene)->state->vel[axis]; };
-	void  init();
+class UniaxialStrainer: public BoundaryController {
+	private:
+		bool needsInit;
+		void computeAxialForce();
+		Real axisCoord(Body::id_t id){ return Body::byId(id,scene)->state->pos[axis]; };
+		Real& axisVel(Body::id_t id){ return Body::byId(id,scene)->state->vel[axis]; };
+		void init();
+	public:
+		virtual bool isActivated(){ return active; }
+		Real sumPosForces,sumNegForces;
+		Real initAccelTime_s /* value always in s, computed from initAccelTime */;
+		/** coordinates of pos/neg bodies in the direction of axis */
+		vector<Real> posCoords,negCoords;
 
-public:
-	virtual bool isActivated() { return active; }
-	Real         sumPosForces, sumNegForces;
-	Real         initAccelTime_s /* value always in s, computed from initAccelTime */;
-	/** coordinates of pos/neg bodies in the direction of axis */
-	vector<Real> posCoords, negCoords;
-
-	virtual void action();
+		virtual void action();
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR(UniaxialStrainer,BoundaryController,"Axial displacing two groups of bodies in the opposite direction with given strain rate.",
 			((Real,strainRate,NaN,,"Rate of strain, starting at 0, linearly raising to strainRate. [-]"))
@@ -59,3 +58,4 @@ public:
 REGISTER_SERIALIZABLE(UniaxialStrainer);
 
 } // namespace yade
+
