@@ -123,7 +123,7 @@ The first two flavors may not be used very often in practice, however understand
 
 **Explicit initialization from python prompt**
 
-A pool of yade instances can be spawned with mpy.initialize() as illustrated hereafter. Mind that the next sequences of commands are supposed to be typed directly in the python prompt after starting yade normally, it will not give exactly the same result if it is pasted into a script executed by Yade (see the next section on automatic initialization).
+A pool of yade instances can be spawned with mpy.initialize() as illustrated hereafter. Mind that the next sequences of commands are supposed to be typed directly in the python prompt after starting yade, it will not give exactly the same result if it is pasted into a script executed by Yade (see the next section on automatic initialization).
 
 .. initialize the context for next "ipython" sections
 .. ipython::
@@ -209,7 +209,7 @@ Though usefull for advanced operations, the function sendCommand() is not enough
 
 Whenever Yade is started with a script as argument the script name will be remembered, and if initialize() is executed (in the script itself or interactively in the prompt) all Yade instances will be initialized with that same script. It makes distributing function definitions and simulation parameters trivial (and even distributing scene constructions as seen later). This behaviour is very close to what happens classicaly with MPI: all processes execute the same program.
 
-If the first of this section commands are pasted into a script used to start Yade, there is a small surprise: all instances insert the same bodies as master. Here is the script:
+If the first commands above are pasted into a script used to start Yade, there is a small surprise: all instances insert the same bodies as master. Here is the script:
 
 .. code-block:: python
 
@@ -239,7 +239,7 @@ and the output reads:
 	['<yade.wrapper.Omega object at 0x7feb979403a0>', '<yade.wrapper.Omega object at 0x7f5b61ae9440>', '<yade.wrapper.Omega object at 0x7fdd466b8440>', '<yade.wrapper.Omega object at 0x7f8dc7b73440>']
 	[4, 4, 4, 4]
 
-That's because all instances executed the script in the initialize() phase. Though logical, this result is not what we want usually if we try to split a simulation into pieces. The solution (typical of all mpi programs) is to use the `rank` of the process in conditionals. In order to produce the same result as before, the script can be modified as follows.
+That's because all instances executed the script in the initialize() phase. Though logical, this result is not what we want usually if we try to split a simulation into pieces. The solution (typical of all mpi programs) is to use the `rank` of the process in conditionals. In order to produce the same result as before, for instance, the script can be modified as follows.
 
 .. code-block:: python
 
@@ -265,16 +265,18 @@ That's because all instances executed the script in the initialize() phase. Thou
 	[4, 0, 0, 0]
 
 
-We can also use `rank` to insert bodies in different regions of space, as found in example :ysrc:`examples/mpi/helloMPI.py`. The key part of that script is the line with rank-dependent positions.
+We could also use `rank` to assign bodies from different regions of space to different workers, as found in example :ysrc:`examples/mpi/helloMPI.py`, with rank-dependent positions:
 
 .. code-block:: python
 
 	mp.sendCommand(executors=[1,2],command= "ids=O.bodies.append([sphere((xx,1.5+rank,0),0.5) for xx in range(-1,2)])")
+	
+
 
 	
 **Automatic initialization**
 
-Effectively running DEM in parallel on the basis of just the above commands is probably accessible to good hackers but it would be tedious and computationaly innefficient. mpy provides the function mpirun which automatizes most of the steps required for the consistent time integration of a distributed scene, as described in :ref:`introduction <sect_implementation_example2D>`. This includes, mainly, splitting the scene in subdomains based on rank assigned to bodies and handling collisions between the subdomains as time integration proceeds. 
+Effectively running DEM in parallel on the basis of just the above commands would be tedious and computationaly innefficient. mpy provides the function mpirun which automatizes most of the steps required for the consistent time integration of a distributed scene, as described in :ref:`introduction <sect_implementation_example2D>`. This includes, mainly, splitting the scene in subdomains based on rank assigned to bodies and handling collisions between the subdomains as time integration proceeds. 
 
 If needed the first execution of mpirun will call the function initialize(), which can therefore be omitted on user's side in most cases.
 
@@ -412,7 +414,7 @@ The workers receives the scene, identifies its respective bodies via :yref:`Body
 Distributed scene construction
 ------------------------------
 
-As mentioned in the previous section, the main draw back with the method of centralized scene construction is that the scene broadcast from the master to workers leads to long initialization times. An alternative method would be to use the distributed scene construction. 
+As mentioned in the previous section, the main draw back with the method of centralized scene construction is that the scene broadcast from the master to workers leads to long initialization times. An alternative method is to use the distributed scene construction. 
 In this mode of scene construction ther workers first *initialize* an empty their :yref:`BodyContainer` with the global total number of bodies in the simulation. Each subdomain then creates and inserts bodies at specific location of the initialized but empty :yref:`BodyContainer` using 
 :yref:`BodyContainer.insertAtId` function. The distributed mode is activated by setting the :code:`DISTRIBUTED_INSERT` flag ON, the user is in charge of setting up the subdomains and partitioning the bodies, an example showing the use of distributed insertion can be found in :ysrc:`examples/mpi/parallelBodyInsert3D.py`. 
 
