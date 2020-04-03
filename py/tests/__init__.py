@@ -50,7 +50,7 @@ def testAll():
 	TestResult object for further examination."""
 	suite=unittest.defaultTestLoader.loadTestsFromNames(allTestsFQ)
 	import doctest
-	if(yade.config.highPrecisionMpmath == False):
+	if(yade.config.highPrecisionDecimalPlaces == 15):
 		# docstest checks the printed output. So high precision output causes failures such as:   Expected: 2000.0    Got: mpf('2000.0')
 		for mod in allModules:
 			suite.addTest(doctest.DocTestSuite(mod))
