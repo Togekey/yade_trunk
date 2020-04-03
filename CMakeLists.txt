@@ -595,16 +595,6 @@ IF(NOT (${REAL_PRECISION_BITS} EQUAL 64))
   ENDIF(ENABLE_MPI)
 ENDIF(NOT (${REAL_PRECISION_BITS} EQUAL 64))
 
-IF(${REAL_PRECISION_BITS} GREATER 128)
-  IF(ENABLE_OPENMP)
-     MESSAGE(STATUS "OpenMP was disabled automatically because memcpy(…) in OpenMPAccumulator does not work correctly with precision different than 'double', 'long double' or 'float128'.")
-     SET(ENABLE_OPENMP OFF)
-  ENDIF(ENABLE_OPENMP)
-  IF(ENABLE_OPENMP)
-    MESSAGE(FATAL_ERROR "Cannot (yet) use ENABLE_OPENMP with precision higher than 128 bits")
-  ENDIF(ENABLE_OPENMP)
-ENDIF(${REAL_PRECISION_BITS} GREATER 128)
-
 # This is for testing compilation with Real as float. Only useful to have wider testing coverage, not for real world use.
 IF(${REAL_PRECISION_BITS} EQUAL 32)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=float-conversion -Wno-error=narrowing")
