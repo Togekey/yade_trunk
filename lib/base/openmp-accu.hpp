@@ -11,7 +11,7 @@
 
 namespace yade { // Cannot have #include directive inside.
 
-#ifdef YADE_OPENMP
+#if defined(YADE_OPENMP) and (YADE_REAL_BIT <= 128)
 // O(1) access container which stores data in contiguous chunks of memory
 // each chunk belonging to one thread
 template<typename T>
