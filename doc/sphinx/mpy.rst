@@ -16,11 +16,13 @@ Most calls to OpenMPI library are done in Python using `mpi4py <https://mpi4py.r
 Concepts
 ________
 
-**subdomain**: a (sub)set of bodies attached to one MPI process after domain decomposition. The corresponding class in Yade is :yref:`Subdomain`, a `Shape` instance with helper functions for MPI communications. In some sense `Subdomain` is to subscribed bodies what :yref:`Clump` (another `Shape`) is to clump members.
+**subdomain**: a (sub)set of bodies attached to one MPI process after domain decomposition - with or without spatial coherence. The corresponding class in Yade is :yref:`Subdomain`, a `Shape` instance with helper functions for MPI communications. In some sense `Subdomain` is to subscribed bodies what :yref:`Clump` (another `Shape`) is to clump members.
 
 **rank**: subdomain index from 0 to *N*-1  (with *N* the number of mpi processes) to identify subdomains. The rank of the subdomain a body belongs to can be retrieved as :yref:`Body.subdomain`. Each subdomain corresponds to an instance of yade and a specific scene during parallel execution. The rank of the scene is given by :yref:`Scene.subdomain`.
 
 **master**: refers to subdomain with *rank* =0. This subdomain does not behave like others. In general master will handle boundary conditions and it will control transitions and termination of the whole simulation. Unlike standard subdomains it may not contain a large number of raw bodies (i.e. not beyond objects bounding the scene such as walls or boxes). In interactive execution master is the process responding to the python prompt.
+
+**splitting and merging**: cutting a master :yref:`Scene` into a set of smaller, distributed, scenes is called "splitting". The split is undone by a 'merge', by which all bodies and (optionally) all interactions are sent back to the master thread. Splitting, running, then merging, should leave the scene just as if no MPI had been used at all (i.e. as if the same number of iterations had been executed in single-thread). Therefore normal O.run() after that should work as usual.
 
 **intersections**: subsets of bodies in a subdomain intersected by the bounding box of other subdomains (see `fig-subdomains`_). *intersection(i,j)* refers to the bodies owned by current (*i*) subdomain and intersecting subdomain *j* (retrieved as :yref:`O._sceneObj.subD.intersections[j]<Subdomain.intersections>`); *mirrorIntersection(i,j)* refers to bodies owned by *j* and intersecting current domain (retrieved as :yref:`O._sceneObj.subD.mirrorIntersections[j]<Subdomain.mirrorIntersections>`). The bodies are listed by :yref:`Body.id`. By definition *intersection(i,j)=mirrorIntersection(j,i)*.
 
@@ -37,8 +39,8 @@ Two overlapping subdomains and their intersections. In this situation we have *S
 
 .. _sect_mpi_implementation:
 
-Implementation
----------------
+Walkthrough
+-----------
 
 For demonstrating the main internal steps in the implemented parallel algorithm let us consider the example script :ysrc:`examples/mpi/testMPI_2D.py`. Executing this script (interactive or passive mode) with three MPI processes generates the scene as shown in `fig-scene`_. It then executes :yref:`mpirun<yade.mpy.mpirun>`, which triggers the steps described hereafter.
 
@@ -88,7 +90,7 @@ its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdo
     :width: 40%
     :align: center
 
-- Next step involves in obtaining the ids of the remote bodies intersecting with the current subdomain (:yref:`Subdomain.mirrorIntersections`). Each subdomain sends its list of local body intersections to the respective remote subdomains and also receives the list of intersecting ids from the other subdomains. 
+- Next step involves obtaining the ids of the remote bodies intersecting with the current subdomain (:yref:`Subdomain.mirrorIntersections`). Each subdomain sends its list of local body intersections to the respective remote subdomains and also receives the list of intersecting ids from the other subdomains. 
   If the remote bodies do not exist within the current subdomain's :yref:`BodyContainer`, the subdomain then *requests* these remote bodies from the respective subdomain.  A schematic of this operation is shown in figure `fig-schema-mirrorIntersections`_, 
   in which subdomain=1 receives three bodies from subdomain=2, and 1 body from subdomain=0. subdomain=2 receives three bodies from subdomain=1. subdomain=0 only sends its bodies and does *not* receieve from the worker 
   subdomains. This operation sets the stage for communication of the body states to/from the other subdomains. 
@@ -107,18 +109,20 @@ Once the subdomains and the associated intersecting bodies, and remote bodies ar
 .. figure:: fig/mpy_schema4.*
     :width: 40%
     :align: center
-        
 
-        
+
+
 Execution
 _________
 
-This section presents methods to execute yade with MPI multiprocessing. In principle the number of processes $np$ can be larger than the number of available cores without problem (this is called oversubscribing, it may also fail depending on OS and MPI implementation). There is no performance gain to expect from oversubscribing, and in production it should be avoided. However it can be useful for experiments (e.g. for testing the examples in this page on a single-core machine).
+This section presents methods to execute yade with MPI support. The mpy modules tries to retain from yade design an important feature: interactive access to the objects of scene (or of multiple scenes in this case), as explained below. Interactive execution does not use the `mpiexec` command of OpenMPI, a pool of workers is spawned by the mpy module after yade startup. In production one may use passive jobs instead, and in that case `mpiexec` will preceed the call to yade.
+
+.. note:: Most examples in this page use 4 mpi processes. It is not a problem, in principle, to run the examples even if the number of available cores is less than 4 (this is called oversubscribing, it may also fail depending on OS and MPI implementation). There is no performance gain to expect from oversubscribing, and in production it should be avoided, but it is useful for experiments (e.g. for testing the examples in this page on a single-core machine).
 
 
 Interactive mode
 ----------------
-The interactive mode aims primarily at inspecting the simulation after some MPI execution, for debugging for instance. However, functions shown here (especially sendCommand()) may also be usefull to achieve advanced tasks such as controlling transitions between phases of a simulation, collecting and processing results.
+The interactive mode aims primarily at inspecting the simulation after some MPI execution for debugging. However, functions shown here (especially `sendCommand`) may also be usefull to achieve advanced tasks such as controlling transitions between phases of a simulation, collecting and processing results.
 The first two flavors may not be used very often in practice, however understanding them is a good way to understand what happens behind the scene.
 
 **Explicit initialization from python prompt**
@@ -200,23 +204,23 @@ Every picklable python object (namely, nearly all Yade objects) can be transmitt
 	Worker1: received [0.7] 
 	Worker3: received [] 
 	Worker2: received [] 
-	->  [5]: [None, None, None, None] # printing yields no return value, hence that empty list
+	->  [5]: [None, None, None, None] # printing yields no return value, hence that empty list, "wait=False" argument to sendCommand would suppress it
 
 
 **Explicit initialization from python script**
 
-Though usefull for advanced operations, the function sendCommand() is not enough to efficiently manipulate the yade instances in all cases. Even basic features of the python language are missing, e.g. function definitions and loops are a problem - in fact every code fragment which can't fit on a single line is. In practice the mpy module provides a mechanism to initialize from a script.
+Though usefull for advanced operations, the function sendCommand() is limited. Basic features of the python language are missing, e.g. function definitions and loops are a problem - in fact every code fragment which can't fit on a single line is. In practice the mpy module provides a mechanism to initialize from a script, where functions and variables will be declared.
 
-Whenever Yade is started with a script as argument the script name will be remembered, and if initialize() is executed (in the script itself or interactively in the prompt) all Yade instances will be initialized with that same script. It makes distributing function definitions and simulation parameters trivial (and even distributing scene constructions as seen later). This behaviour is very close to what happens classicaly with MPI: all processes execute the same program.
+Whenever Yade is started with a script as argument the script name will be remembered, and if mpy.initialize() is called (by the script itself or interactively in the prompt) all Yade instances will be initialized with that same script. It makes distributing function definitions and simulation parameters trivial (and even distributing scene constructions as seen below). This behaviour is what happens classicaly with MPI: all processes execute the same program.
 
-If the first commands above are pasted into a script used to start Yade, there is a small surprise: all instances insert the same bodies as master. Here is the script:
+If the first commands above are pasted into a script used to start Yade, there is a small surprise: all instances insert the same bodies as master (with interactive execution only master was inserting). Here is the script:
 
 .. code-block:: python
 
 	# script 'test1.py'
 	wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
 	for x in range(-1,2):
-	O.bodies.append(sphere((x,0.5,0),0.5))
+		O.bodies.append(sphere((x,0.5,0),0.5))
 	from yade import mpy as mp
 	mp.initialize(4)
 	print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
@@ -226,7 +230,7 @@ and the output reads:
 
 .. code-block:: none
 	
-	$ yade test1.py 
+	yade test1.py 
 	...
 	Running script test1.py
 	Master: will spawn  3  workers 
@@ -239,7 +243,10 @@ and the output reads:
 	['<yade.wrapper.Omega object at 0x7feb979403a0>', '<yade.wrapper.Omega object at 0x7f5b61ae9440>', '<yade.wrapper.Omega object at 0x7fdd466b8440>', '<yade.wrapper.Omega object at 0x7f8dc7b73440>']
 	[4, 4, 4, 4]
 
-That's because all instances executed the script in the initialize() phase. Though logical, this result is not what we want usually if we try to split a simulation into pieces. The solution (typical of all mpi programs) is to use the `rank` of the process in conditionals. In order to produce the same result as before, for instance, the script can be modified as follows.
+That's because all instances executed the script in the initialize() phase. "None" is printed 2x3 times because the script contains `print( mp.sendCommand(...))` twice, the workers try to execute that too, but for them `sendCommand` returns by default, hence the None.
+
+
+Though logical, this result is not what we want usually if we try to split a simulation into pieces. The solution (typical of all mpi programs) is to use the `rank` of the process in conditionals. In order to produce the same result as before, for instance, the script can be modified as follows.
 
 .. code-block:: python
 
@@ -253,8 +260,6 @@ That's because all instances executed the script in the initialize() phase. Thou
 
 		print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
 		print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) )
-		
-		
 		print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
 		
 .. code-block:: none
@@ -269,6 +274,7 @@ We could also use `rank` to assign bodies from different regions of space to dif
 
 .. code-block:: python
 
+	# rank is accessed without "mp." prefix as it is interpreted in mpy module's scope
 	mp.sendCommand(executors=[1,2],command= "ids=O.bodies.append([sphere((xx,1.5+rank,0),0.5) for xx in range(-1,2)])")
 	
 
@@ -276,7 +282,7 @@ We could also use `rank` to assign bodies from different regions of space to dif
 	
 **Automatic initialization**
 
-Effectively running DEM in parallel on the basis of just the above commands would be tedious and computationaly innefficient. mpy provides the function mpirun which automatizes most of the steps required for the consistent time integration of a distributed scene, as described in :ref:`introduction <sect_implementation_example2D>`. This includes, mainly, splitting the scene in subdomains based on rank assigned to bodies and handling collisions between the subdomains as time integration proceeds. 
+Effectively running a distibuted DEM simulation on the basis of just the above commands would still be tedious and computationaly innefficient. The mpy modules thus provides the function :yref:`mpy.mpirun <yade.mpy.mpirun>` to automatize most of the steps, as described in :ref:`introduction <sect_implementation_example2D>`. This includes, mainly, splitting the scene in subdomains based on rank assigned to bodies and handling collisions between the subdomains as time integration proceeds. 
 
 If needed the first execution of mpirun will call the function initialize(), which can therefore be omitted on user's side in most cases.
 
@@ -345,7 +351,7 @@ The script is then executed as follows::
   
   yade script.py 
 
-For running further timesteps, the mp.mpirun command has to be entered into the console
+For running further timesteps, the mp.mpirun command has to be executed in yade prompt:
   
 .. ipython::
 	:verbatim:
@@ -356,15 +362,18 @@ For running further timesteps, the mp.mpirun command has to be entered into the 
 	Yade [1]: mp.sendCommand([1,2],"kineticEnergy()",True) # get kineticEnergy from workers 1 and 2. 
 	
 	Yade [2]: mp.mpirun(1,4,withMerge=True) #run for 1 step and merge scene into master. 
+	
 
-If withMerge=True the bodies in master are updated to reflect in the master scene the evolution of their distributed counterparts. This is done once after finishing the required number of iterations in mpirun. This *merge* operation can include updating interactions,
-Merging is an expensive task which requires the communication of large messages and, therefore, it should be done purposely and at a reasonable frequency. It can even be the main bottleneck for massively parallel scenes. Nevertheless it can be usefull for debugging using the 3D view, or for various post-processing tasks. 
-The *MERGE_W_INTERACTIONS* provides full merge, i.e. the interactions in the worker subdomains and between the subdomains are included, else only the position and states of the bodies are use. The merge operation is not required for a proper time integration in general. 
-For MPI cases, the *parallelMode* flag for :yref:`GlobalStiffnessTimeStepper` and :yref:`VTKRecorder` have to be turned on. 
- 
 
 **Don't know how to split? Leave it to mpirun**
 
+Splitting an initial scene into subdomains and updating the subdomains after particle motion are critical issues in terms of efficiency.
+The mpi implementation has algorithms for both.
+
+.. note:: The mpy module has no requirement in terms of how the subdomains are defined. Even assigning the bodies randomly to subdomains would work. It would only be suboptimal as the number of interactions between subdomains would increase compared to a proper partition of space. Using the helper functions described here is not necessary.
+
+
+**Initial split**
  mpirun will decide by itself how to distribute the bodies across several subdomains if *DOMAIN_DECOMPOSITION* =True. In such case the difference between the sequential script and its mpi version is limited to importing mpy and calling mpirun after turning the *DOMAIN_DECOMPOSITION* flag.  
  
  The automatic splitting of bodies to subdomains is based on the Orthogonal Recursive Bisection Algortithm of Berger [Berger1987]_, and [Fleissner2007]_. The partitioning is based on bisecting the space at several *levels*, with the longest axis in each level chosen as 
@@ -391,8 +400,28 @@ For MPI cases, the *parallelMode* flag for :yref:`GlobalStiffnessTimeStepper` an
     :align: center
 
  The present implementation can be found in :ysrc:`py/bisectionDecomposition.py`, and a parallel version can be found `here. <https://github.com/bchareyre/yade-mpi/blob/593a4d6abf7e488ab1ac633a1e6725ac301b2a14/py/tree_decomp.py>`_
-    
 
+ 
+**Updating the decomposition (dynamic load balancing)**
+
+As the bodies move each subdomain may experience overall distorsion and diffusion of bodies to/from other subdomains. We want to keep the subdomains as compact as possible to minimize communications, instead. An algorithm does that dynamically if :yref:`mpy.REALLOCATE_FREQUENCY <yade.mpy.REALLOCATE_FREQUENCY>`>0. It exploits :yref:`InsertionSortCollider` to reassign bodies efficiently and in synchronicity with collision detection.
+
+The algorithm is *not* centralized in order to preserve scalability. It involves only peer-to-peer communications between the workers which share an intersection.
+
+The criterion for re-allocating bodies involves finding the position a median plane between two subdomains such that after discriminating bodies on the "+" and "-" side of that plane the total number in each subdomain is preserved. It results in the type of split shown in the video hereafter. Even though the median planes seem to rotate rather quickly at some point in this video, there are actually five collision detections between each re-allocation, i.e. thousands of time iterations to effectively rotate the split between two different colors. These progressive rotations are for good since the initial split would have resulted in flat discs, mostly.
+
+.. youtube:: Qb5vPjRPFRw
+
+**Merging**
+
+The possibility of a "merge" emerged in previous example, as an optional argument of `mpirun` or as a standalone function :yref:`mpy.mergeScene <yade.mpy.mergeScene>`. 
+
+If withMerge=True in mpirun then the bodies in master scene are updated to reflect the evolution of their distributed clones. This is done once after finishing the required number of iterations in mpirun. This *merge* operation can include updating interactions. :yref:`mpy.mergeScene <yade.mpy.mergeScene>` does the same within current iteration.
+Merging is an expensive task which requires the communication of large messages and, therefore, it should be done purposely and at a reasonable frequency. It can even be the main bottleneck for massively parallel scenes. Nevertheless it can be usefull for debugging using the 3D view, or for various post-processing tasks. 
+The *MERGE_W_INTERACTIONS* provides full merge, i.e. the interactions in the worker subdomains and between the subdomains are included, else only the position and states of the bodies are use. Merging with interactions should result in a usual yade scene, ready for further time-stepping in non-mpi mode or (more usefull) for some post-processing. The merge operation is not required for a proper time integration in general.
+
+
+For MPI cases, the *parallelMode* flag for :yref:`GlobalStiffnessTimeStepper` and :yref:`VTKRecorder` have to be turned on. 
 
 Passive mode
 ------------
@@ -400,23 +429,22 @@ Passive mode
 Running in passive mode is straightforward, one just needs to set the number of timesteps as an argument for the :yref:`yade.mpy.mpirun` function. If a scene merge is required, the *withMerge* argument of :yref:`yade.mpy.mpirun` has to be set to true. 
 The simulation (:ysrc:`examples/mpi/vtkRecorderExample.py`) is executed with the following command::
   
-  mpiexec -np NUMSUBD+1 yade-mpi-verison vtkRecorderExample.py 
+  mpiexec -np NUMSUBD+1 yade vtkRecorderExample.py 
 
 where *NUMSUBD* corresponds to the required number of worker subdomains.    
 
 
-Centralized scene construction
-------------------------------
-In the centralized method of scene construction, the master subdoamin generates/creates all the bodies (including subdomain), assigns subdomains to tbe bodies and performs the necessary modifications to the engines and collider settings. This scene is  then broadcasted to the workers. 
-The workers receives the scene, identifies its respective bodies via :yref:`Body.subdomain` attribute, as worker :code:`rank==b.subdomain` . For large numer of bodies and processes, the centralized scene construction and distribution would take siginificant time for initialization. 
+Centralized versus distributed scene construction
+-------------------------------------------------
+In the centralized method of scene construction, the master process creates all the bodies of a scene and assigns subdomains to them. As part of mpy initialization some engines will be modified or inserted, then the scene is broadcasted to the workers.
+Each worker receives the entire scene, identifies its assigned bodies via :yref:`Body.subdomain` (if worker's :code:`rank==b.subdomain` the bodies are retained) and erase the others. Such a scene construction was used in the previous example and it is by far the simplest. It makes no real difference with building a scene for non-MPI execution besides calling `mp.mpirun` instead or jusr `O.run`.
 
+For large number of bodies and processes, though, the centralized scene construction and distribution can take a significant time. It can also be memory bound since the memory usage is quadratic: suppose N bodies per thread on a 32-core node, centralized construction implies that 32 copies of the entire scene exist simultaneously in memory at some point in time (during the split), i.e. $32^2 N$ bodies on one single node. For massively parallel applications distributed construction should be prefered.
 
-Distributed scene construction
-------------------------------
+In distributed mode each worker instantiates its own bodies and insert them in the local :yref:`BodyContainer`. Attention need to be paid to properly assign bodies ids since no index should be owned by two different workers initially. Insertion of bodies  in :yref:`BodyContainer` with imposed ids is done with 
+:yref:`BodyContainer.insertAtId`. The distributed mode is activated by setting the :code:`DISTRIBUTED_INSERT` flag ON, the user is in charge of setting up the subdomains and partitioning the bodies, an example showing the use of distributed insertion can be found in :ysrc:`examples/mpi/parallelBodyInsert3D.py`. 
 
-As mentioned in the previous section, the main draw back with the method of centralized scene construction is that the scene broadcast from the master to workers leads to long initialization times. An alternative method is to use the distributed scene construction. 
-In this mode of scene construction ther workers first *initialize* an empty their :yref:`BodyContainer` with the global total number of bodies in the simulation. Each subdomain then creates and inserts bodies at specific location of the initialized but empty :yref:`BodyContainer` using 
-:yref:`BodyContainer.insertAtId` function. The distributed mode is activated by setting the :code:`DISTRIBUTED_INSERT` flag ON, the user is in charge of setting up the subdomains and partitioning the bodies, an example showing the use of distributed insertion can be found in :ysrc:`examples/mpi/parallelBodyInsert3D.py`. 
+The bissection algorithm can be used for defining the initial split, in the distributed case too, since it takes a points dataset as input. Provided that all workers work with the same dataset (e.g. the same sequence of a random number generator) they will all reach the same partitioning, and they can instanciate their bodies on this basis. 
 
 
 Problems to expect
@@ -426,6 +454,12 @@ Problems to expect
 
 Reduction (partial sums)
 ------------------------
+
+Quantities such as kinetic energy cannot be obtained for the entire scene just by summing the return value of `kineticEnergy()` from each subdomain.
+This is because each subdmomain may contain also images of bodies from intersecting subdomains and they may add their velocity, mass, or whatever is summed, to what is returned by each worker.
+Although some most-used functions of yade may progressively get mpi support to filter out bodies from remote domains, it is not standard yet and therefore partial sums may need to be implemented on a case-by-case basis.
+
+
 
 
 Control variables
@@ -439,7 +473,7 @@ _________________
  - DISTRIBUTED_INSERT : Bodies are created and inserted by each subdomain, used for distributed scene construction. 
  - DOMAIN_DECOMPOSITION : If true, the bisection decomposition algorithm is used to assign bodies to the workers/subdomains. 
  - MINIMAL_INTERSECTIONS : Reduces the size of position/velocity communications (at the end of the colliding phase, we can exclude those bodies with no interactions besides body<->subdomain from intersections). 
- - REALLOCATE_FREQUENCY : if > 0, bodies are migrated between subdomains for efficient load balancing.
+ - REALLOCATE_FREQUENCY : if > 0, bodies are migrated between subdomains for efficient load balancing. If =1 realloc. happens each time collider is triggered, else every N collision detection
  - REALLOCATE_MINIMAL : Intersections are minimized before reallocations, hence minimizing the number of reallocated bodies
  - USE_CPP_REALLOC : Use optimized C++ functions to perform body reallocations
  - FLUID_COUPLING : Flag for coupling with OpenFOAM. 
