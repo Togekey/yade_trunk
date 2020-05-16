@@ -210,14 +210,15 @@ def spawnedProcessWaitCommand():
 			time.sleep(0.001)
 		command = comm.recv(source=s.source,tag=_MASTER_COMMAND_)
 		if command=="exit": #this is to terminate the waiting loop remotely
-			O.subD.comm.send(None,dest=s.source,tag=_RETURN_VALUE_)
+			comm.send(None,dest=s.source,tag=_RETURN_VALUE_)
 			break
 		wprint("will now execute ",command)
 		try:
 			exec(command)
 		except:
-			O.subD.comm.send(None,dest=s.source,tag=_RETURN_VALUE_)
+			comm.send(None,dest=s.source,tag=_RETURN_VALUE_)
 			mprint(sys.exc_info())
+			raise
 		
 def sendCommand(executors,command,wait=True,workerToWorker=False):
 	'''
@@ -246,7 +247,10 @@ def sendCommand(executors,command,wait=True,workerToWorker=False):
 	resCommand=[]
 	if toMaster:#eval command on master since it wasn't done yet
 		try: resCommand = [eval(command)]
-		except: resCommand = [None]; mprint(sys.exc_info())
+		except:
+			resCommand = [None]
+			mprint(sys.exc_info())
+			raise
 	
 	if wait:
 		resCommand=resCommand+ [comm.recv(source=w,tag=_RETURN_VALUE_) for w in executors if w>0]
