@@ -112,8 +112,8 @@ and `GitLab <https://gitlab.com/yade-dev/>`__:
 
 * `source code on gitlab <https://gitlab.com/yade-dev/trunk>`__
 * `issue and bug tracking on gitlab <https://gitlab.com/yade-dev/trunk/issues>`__
-* `package downloads on launchpad <https://launchpad.net/yade/+download>`__
-* `yade-dev mailing list on launchpad <https://launchpad.net/~yade-dev>`__: yade-users@lists.launchpad.net
+* `release downloads on launchpad <https://launchpad.net/yade/+download>`__
+* `yade-dev mailing list on launchpad <https://launchpad.net/~yade-dev>`__: yade-dev@lists.launchpad.net
 * `yade-users mailing list on launchpad <https://launchpad.net/~yade-users>`__: yade-users@lists.launchpad.net
 * `questions and answers on launchpad <https://answers.launchpad.net/yade/>`__
 
@@ -121,7 +121,7 @@ The versioning software used is `GIT <http://git-scm.com/>`__, for which a short
 tutorial can be found in :ref:`yade-gitrepo-label`.
 GIT is a distributed revision control system. It is available packaged for all major linux distributions.
 
-The `suorce code <https://gitlab.com/yade-dev/>`__ is periodically
+The `source code <https://gitlab.com/yade-dev/>`__ is periodically
 imported to Launchpad for building PPA-packages.
 The repository `can be http-browsed <https://gitlab.com/yade-dev/trunk>`__.
 
@@ -561,7 +561,7 @@ Linking to ``inheritanceGraph*``
 
 	and rendered via LaTeX. To write a single dollar sign, escape it with backslash ``\\$``.
 	
-	Displayed mathematics (standalone equations) can be inserted as explained in `Math support in Sphinx <http://sphinx.pocoo.org/ext/math.html>`_.
+	Displayed mathematics (standalone equations) can be inserted as explained in `Math support for HTML outputs in Sphinx <http://www.sphinx-doc.org/en/master/usage/extensions/math.html>`_.
 
 
 .. _global-rst-anchors:
@@ -663,7 +663,7 @@ To have both speed and safety, Yade provides 2 macros:
 
 Basic numerics
 ---------------
-The floating point type to use in Yade ``Real``, which is by default typedef for ``double``. [#real]_ 
+The floating point type to use in Yade ``Real``, which is by default typedef for ``double`` (64 bits, 15 decimal places). [#real]_ 
 
 Yade uses the `Eigen <http://eigen.tuxfamily.org>`_ library for computations. It provides classes for 2d and 3d vectors, quaternions and 3x3 matrices templated by number type; their specialization for the ``Real`` type are typedef'ed with the "r" suffix, and occasionally useful integer types with the "i" suffix:
 
@@ -674,11 +674,11 @@ Yade uses the `Eigen <http://eigen.tuxfamily.org>`_ library for computations. It
 
 Yade additionally defines a class named :yref:`Se3r`, which contains spatial position (``Vector3r Se3r::position``) and orientation (``Quaternionr Se3r::orientation``), since they are frequently used one with another, and it is convenient to pass them as single parameter to functions.
 
-.. [#real] Historically, it was thought that Yade could be also run with single precision based on build-time parameter; it turned out however that the impact on numerical stability was such disastrous that this option is not available now. There is, however, ``QUAD_PRECISION`` parameter to scons, which will make ``Real`` a typedef for ``long double`` (extended precision; quad precision in the proper sense on IA64 processors); this option is experimental and is unlikely to be used in near future, though.
+.. [#real] See :ref:`high precision documentation<highPrecisionReal>` for additional details.
 
-Eigen provides full rich linear algebra functionality. Some code firther uses the [cgal]_ library for computational geometry.
+Eigen provides full rich linear algebra functionality. Some code further uses the [cgal]_ library for computational geometry.
 
-In Python, basic numeric types are wrapped and imported from the ``minieigen`` module; the types drop the ``r`` type qualifier at the end, the syntax is otherwise similar. ``Se3r`` is not wrapped at all, only converted automatically, rarely as it is needed, from/to a ``(Vector3,Quaternion)`` tuple/list.
+In Python, basic numeric types are wrapped and imported from the ``yade.minieigenHP`` module; the types drop the ``r`` type qualifier at the end, the syntax is otherwise similar. ``Se3r`` is not wrapped at all, only converted automatically, rarely as it is needed, from/to a ``(Vector3,Quaternion)`` tuple/list. See :ref:`high precision section <high-precision>` for more details.
 
 .. ipython::
 	:okexcept:
@@ -703,7 +703,7 @@ Run-time type identification (RTTI)
 
 Since serialization and dispatchers need extended type and inheritance information, which is not sufficiently provided by standard RTTI. Each yade class is therefore derived from ``Factorable`` and it must use macro to override its virtual functions providing this extended RTTI:
 
-``YADE_CLASS_BASE_DOC(Foo,Bar Baz,"Docstring)`` creates the following virtual methods (mediated via the ``REGISTER_CLASS_AND_BASE`` macro, which is not user-visible and should not be used directly):
+``YADE_CLASS_BASE_DOC(Foo,Bar Baz,"Docstring")`` creates the following virtual methods (mediated via the ``REGISTER_CLASS_AND_BASE`` macro, which is not user-visible and should not be used directly):
 
 * ``std::string getClassName()`` returning class name (``Foo``) as string. (There is the ``typeid(instanceOrType).name()`` standard c++ construct, but the name returned is compiler-dependent.)
 * ``unsigned getBaseClassNumber()`` returning number of base classes (in this case, 2).
@@ -774,7 +774,7 @@ All (serializable) types in Yade are one of the following:
 
 	YADE_CLASS_BASE_DOC_ATTRS(ThisClass,BaseClass,"class documentation",((type1,attribute1,initValue1,,"Documentation for attribute 1"))((type2,attribute2,initValue2,,"Documentation for attribute 2")));
 
-  Note that attributes are encodes in double parentheses, not separated by commas. Empty attribute list can be given simply by ``YADE_CLASS_BASE_DOC_ATTRS(ThisClass,BaseClass,"documentation",)`` (the last comma is mandatory), or by omiting ``ATTRS`` from macro name and last parameter altogether.
+  Note that attributes are encoded in double parentheses, not separated by commas. Empty attribute list can be given simply by ``YADE_CLASS_BASE_DOC_ATTRS(ThisClass,BaseClass,"documentation",)`` (the last comma is mandatory), or by omiting ``ATTRS`` from macro name and last parameter altogether.
 
 * Fundamental type: strings, various number types, booleans, ``Vector3r`` and others. Their "handlers" (serializers and deserializers) are defined in ``lib/serialization``.
 
@@ -867,7 +867,7 @@ We can create a mini-simulation (with only one GravityEngine):
 	Yade [2]: O.save('abc.xml')
 
 
-and the XML looks like this:
+and the XML save looks like this:
 
 .. literalinclude:: abc.xml
 	:language: xml
@@ -1036,6 +1036,8 @@ Expected parameters are indicated by macro name components separated with unders
 	``def_readonly`` will not work for custom types (such as std::vector), as it bypasses conversion registry; see :ref:`customconverters` for details.
 
 
+.. _exposeSpecialAttrs:
+
 Exposing function-attributes to GUI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1115,7 +1117,7 @@ The way of passing attributes given to ``YADE_CLASS_BASE_DOC_ATTRS`` in the ``at
 
 Multiple dispatch
 ------------------
-Multiple dispatch is generalization of virtual methods: a :yref:`Dispatcher` decides based on type(s) of its argument(s) which of its :yref:`Functors<Functor>` to call. Numer of arguments (currently 1 or 2) determines *arity* of the dispatcher (and of the functor): unary or binary. For example:
+Multiple dispatch is generalization of virtual methods: a :yref:`Dispatcher` decides based on type(s) of its argument(s) which of its :yref:`Functors<Functor>` to call. Number of arguments (currently 1 or 2) determines *arity* of the dispatcher (and of the functor): unary or binary. For example:
 
 .. code-block:: python
 
@@ -1129,7 +1131,7 @@ creates :yref:`InsertionSortCollider`, which internally contains :yref:`Collider
 	collider->boundDispatcher->add(new Bo1_Sphere_Aabb());
 	collider->boundDispatcher->add(new Bo1_Facet_Aabb());
 
-There are currenly 4 predefined dispatchers (see `dispatcher-names`_) and corresponding functor types. They are inherit from template instantiations of ``Dispatcher1D`` or ``Dispatcher2D`` (for functors, ``Functor1D`` or ``Functor2D``). These templates themselves derive from ``DynlibDispatcher`` (for dispatchers) and ``FunctorWrapper`` (for functors).
+There are currenly 4 predefined dispatchers (see `dispatcher-names`_) and corresponding functor types. They are inherited from template instantiations of ``Dispatcher1D`` or ``Dispatcher2D`` (for functors, ``Functor1D`` or ``Functor2D``). These templates themselves derive from ``DynlibDispatcher`` (for dispatchers) and ``FunctorWrapper`` (for functors).
 
 Example: IGeomDispatcher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1977,7 +1979,7 @@ and
 
 	Yade [3]: print(f2.dict())
 
-Wrapped classes also inherit from :yref:`Serializable` several special virtual methods: :yref:`dict()<Serializable::dict>` returning all registered class attributes as dictionary (shown above), :yref:`clone()<Serializable::clone>` returning copy of instance (by copying attribute values), :yref:`updateAttrs()<Serializable::updateAttrs>` and :yref:`updateExistingAttrs()<Serializable::updateExistingAttrs>` assigning attributes from given dictionary (the former thrown for unknown attribute, the latter doesn't).
+Wrapped classes also inherit from :yref:`Serializable` several special virtual methods: :yref:`dict()<Serializable::dict>` returning all registered class attributes as dictionary (shown above), :yref:`clone()<Serializable::clone>` returning copy of instance (by copying attribute values), :yref:`updateAttrs()<Serializable::updateAttrs>` and :yref:`updateExistingAttrs()<Serializable::updateExistingAttrs>` assigning attributes from given dictionary (the former thrown for unknown attribute, the latter doesn't). And :yref:`pyDictCustom()<Serializable::pyDictCustom>` explained also in :ref:`preceeding section<exposeSpecialAttrs>`.
 
 Read-only property ``name`` wraps c++ method ``getClassName()`` returning class name as string. (Since c++ class and the wrapper class always have the same name, getting python type using ``__class__`` and its property ``__name__`` will give the same value).
 
@@ -2026,11 +2028,11 @@ When an object is crossing c++/python boundary, boost::python's global "converte
 
 .. [#wrap]
 	Wrapped classes are automatically registered when the class wrapper is created. If wrapped class derives from another wrapped class (and if this dependency is declared with the ``boost::python::bases`` template, which Yade's classes do automatically), parent class must be registered before derived class, however. (This is handled via loop in ``Omega::buildDynlibDatabase``, which reiterates over classes, skipping failures, until they all successfully register)
-	Math classes (Vector3, Matrix3, Quaternion) are wrapped in minieigen, which is available as a separate package. Use your package manager to install it.
+	Math classes (Vector3, Matrix3, Quaternion) are wrapped in :yref:`yade.minieigenHP`. See :ref:`high precision documentation<highPrecisionReal>` for more details.
 
 
 Adding a new python/C++ module
-==============================
+============================
 
 Modules are placed in ``py/`` directory, the ``C++`` parts of the modules begin their name with an underscore ``_``. The procedure to add a new module is following:
 

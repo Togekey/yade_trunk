@@ -2,13 +2,8 @@
 Installation
 ###############
 
-<<<<<<< 4fba8328f452ccb0c13f756a7a388c49289a2023
 * Linux systems:
   Yade can be installed from packages (pre-compiled binaries) or source code. The choice depends on what you need: if you don't plan to modify Yade itself, package installation is easier. In the contrary case, you must download and   install the source code.
-=======
-* Linux systems
-  Yade can be installed from packages (pre-compiled binaries) or source code. The choice depends on what you need: if you don't plan to modify Yade itself, package installation is easier. In the contrary case, you must download and install the source code.
->>>>>>> a number of sphinx warnings and bib references fixed
 
 * Other Operating Systems:
   Jump to the `last section <https://yade-dem.org/doc/installation.html#yubuntu>`_ of this page.
@@ -68,6 +63,11 @@ To install the daily-version you need to add the repository to your
 - Ubuntu 18.04 **bionic**::
 
 	sudo bash -c 'echo "deb http://www.yade-dem.org/packages/ bionic main" >> /etc/apt/sources.list'
+
+
+- Ubuntu 20.04 **focal**::
+
+	sudo bash -c 'echo "deb http://www.yade-dem.org/packages/ focal main" >> /etc/apt/sources.list'
 
 
 Add the PGP-key AA915EEB as trusted and install ``yadedaily``::
@@ -186,11 +186,13 @@ need root privileges.
 		libvtk6-dev libeigen3-dev python3-xlib python3-pyqt5 pyqt5-dev-tools python3-mpi4py \
 		python3-pyqt5.qtwebkit gtk2-engines-pixbuf python3-pyqt5.qtsvg libqglviewer-dev-qt5 \
 		python3-pil libjs-jquery python3-sphinx python3-git libxmu-dev libxi-dev libcgal-dev \
-		help2man libbz2-dev zlib1g-dev python3-minieigen libopenblas-dev libsuitesparse-dev \
+		help2man libbz2-dev zlib1g-dev libopenblas-dev libsuitesparse-dev \
 		libmetis-dev python3-bibtexparser python3-future coinor-clp coinor-libclp-dev \
 		python3-mpmath libmpfr-dev libmpfrc++-dev
 
 * For **Ubuntu 16.04** ``libqglviewer-dev-qt5`` is to be replaced by ``libqglviewer-dev`` and ``python3-ipython`` by ``ipython3``.
+
+* The packages ``python3-mpmath libmpfr-dev libmpfrc++-dev`` in above list are required only if one wants to use high precision calculations. The latter two only if `mpfr <https://www.mpfr.org/>`_ will be used. See :ref:`high precision documentation<highPrecisionReal>` for more details.
 
 * For building documentation (the ``make doc`` invocation explained below) additional package ``texlive-xetex`` is required. On some multi-language systems an error ``Building format(s) --all. This may take some time... fmtutil failed.`` may occur, in that case a package ``locales-all`` is required.
 
@@ -199,12 +201,8 @@ are optional. Watch for notes and warnings/errors, which are shown
 by ``cmake`` during the configuration step. If the missing package is optional,
 some of Yade features will be disabled (see the messages at the end of the configuration).
 
-Additional packages, which can become mandatory later::
-
-		sudo apt-get install python-gts
-
 Some packages listed here are relatively new and they can be absent
-in your distribution (for example, libmetis-dev or python-gts). They can be
+in your distribution (for example, libmetis-dev). They can be
 installed from `yade-dem.org/packages <http://yade-dem.org/packages/>`_ or
 from our `external PPA <https://launchpad.net/~yade-users/+archive/external/>`_.
 If not installed the related features will be disabled automatically.
@@ -229,6 +227,7 @@ names of the Debian-packages.
 
 
 
+.. _yadeCompilation:
 
 Compilation
 ^^^^^^^^^^^
@@ -290,27 +289,23 @@ As of Yade version git-2315bd8 (or 2018.02b release), the following options are 
 	* ENABLE_DEFORM: enable constant volume deformation engine (OFF by default)
 	* ENABLE_OAR: generate a script for oar-based task scheduler (OFF by default)
 	* ENABLE_MPFR: use `mpfr <https://www.mpfr.org/>`_ in ``C++`` and `mpmath <http://mpmath.org/>`_ in ``python``. It can be used for higher precision ``Real`` or for CGAL exact predicates (OFF by default)
-	* REAL_PRECISION_BITS, REAL_DECIMAL_PLACES: specify either of them to use a custom calculation precision. By default double (64 bits, 15 decimal places) precision is used as ``Real`` type.
+	* REAL_PRECISION_BITS, REAL_DECIMAL_PLACES: specify either of them to use a custom calculation precision. By default double (64 bits, 15 decimal places) precision is used as ``Real`` type. See :ref:`high precision documentation<highPrecisionReal>` for additional details.
 	* runtimePREFIX: used for packaging, when install directory is not the same as runtime directory (/usr/local by default)
 	* CHUNKSIZE: specifiy the chunk size if you want several sources to be compiled at once. Increases compilation speed but RAM-consumption during compilation as well (1 by default)
 	* VECTORIZE: enables vectorization and alignment in Eigen3 library, experimental (OFF by default)
 	* USE_QT5: use QT5 for GUI (ON by default)
 	* CHOLMOD_GPU link Yade to custom SuiteSparse installation and activate GPU accelerated PFV (OFF by default)
 	* SUITESPARSEPATH: define this variable with the path to a custom suitesparse install
-	* PYTHON_VERSION: force python version to the given one, set -1 to automatically use the last version on the system (-1 by default)
+	* PYTHON_VERSION: force Python version to the given one, e.g. ``-DPYTHON_VERSION=3.5``. Set to -1 to automatically use the last version on the system (-1 by default)
 
 For using more extended parameters of cmake, please follow the corresponding
 documentation on `https://cmake.org/documentation <https://cmake.org/documentation/>`_.
 
-.. warning:: To provide Qt4→Qt5 migration one needs to provide an additional option USE_QT5.
- This option is ON by default but should be set according to the Qt version which was used
- to compile libQGLViewer. On Debian/Ubuntu operating systems libQGLViewer
+.. warning:: Only Qt5 is supported. On Debian/Ubuntu operating systems libQGLViewer
  of version 2.6.3 and higher are compiled against Qt5 (for other operating systems
- refer to the package archive of your distribution), so if you are using
- such version, please switch this option ON. Otherwise, if you mix Qt-versions a
+ refer to the package archive of your distribution). If you mix Qt-versions a
  ``Segmentation fault`` will appear just after Yade is started. To provide
- necessary build dependencies for Qt5, install ``python-pyqt5 pyqt5-dev-tools``
- instead of ``python-qt4 pyqt4-dev-tools``.
+ necessary build dependencies for Qt5, install ``python-pyqt5 pyqt5-dev-tools``.
 
 
 If cmake finishes without errors, you will see all enabled
@@ -394,28 +389,9 @@ These instructions use ``ccache`` and ``ld.gold`` to :ref:`speed-up compilation 
 Python 2 backward compatibility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Python 2 support ends at the beginning of 2020. However, Yade can be compiled and used with python 2:
+Following the end of Python 2 support (beginning of 2020), Yade compilation on a Python 2 ecosystem is no longer garanteed since the `6e097e95 <https://gitlab.com/yade-dev/trunk/-/tree/6e097e95368a9c63ce169a040f418d30c7ba307c>`_ trunk version. Python 2-compilation of the latter is still possible using the above ``PYTHON_VERSION`` cmake option, requiring Python 2 version of prerequisites packages whose list can be found in the corresponding paragraph (Python 2 backward compatibility) of the `historical doc <https://gitlab.com/yade-dev/trunk/-/blob/6e097e95368a9c63ce169a040f418d30c7ba307c/doc/sphinx/installation.rst>`_.
 
-* On **Ubuntu 18.04, 18.10**, **Debian 9, 10** and their derivatives install the python 2 version of the packages (and other required packages)::
-
-		sudo apt install cmake git freeglut3-dev libloki-dev libboost-all-dev fakeroot \
-		dpkg-dev build-essential g++ python-dev ipython python-matplotlib python-mpi4py \
-		libsqlite3-dev python-numpy python-tk gnuplot libgts-dev python-pygraphviz \
-		libvtk6-dev python-numpy libeigen3-dev python-xlib python-pyqt5 pyqt5-dev-tools \
-		python-pyqt5.qtwebkit gtk2-engines-pixbuf python-argparse python-pyqt5.qtsvg \
-		libqglviewer-dev-qt5 python-pil libjs-jquery python-sphinx python-git python-bibtex \
-		libxmu-dev libxi-dev libcgal-dev help2man libbz2-dev zlib1g-dev python-minieigen \
-		libopenblas-dev libsuitesparse-dev libmetis-dev libopenmpi-dev openmpi-bin \
-		openmpi-common python-bibtexparser python3-future python-future python-gts \
-		coinor-clp coinor-libclp-dev python-mpmath libmpfr-dev libmpfrc++-dev
-
-* For **Ubuntu 16.04** ``libqglviewer-dev-qt5`` is to be replaced by ``libqglviewer-dev``, ``python-pil`` is to be replaced by ``python-imaging``.
-
-* force python 2 in the cmake command line: ``cmake -DPYTHON_VERSION=2 -DCMAKE_INSTALL_PREFIX=../install ../trunk``
-
-Note that the cmake ``PYTHON_VERSION`` option can be set to force any python version, for example ``-DPYTHON_VERSION=3.5`` is valid.
-
-Also see notes about :ref:`converting python 2 scripts into python 3<convert-python2-to3>`.
+Ongoing development of Yade now assumes a Python 3 environment, and you may refer to some notes about :ref:`converting Python 2 scripts into Python 3<convert-python2-to3>` if needed.
 
 .. _speed-up:
 
@@ -465,14 +441,16 @@ GPU Acceleration
 The FlowEngine can be accelerated with CHOLMOD's GPU accelerated solver. The specific hardware and software requirements are outlined in the section :ref:`GPUacceleration`.
 
 Special builds
---------------
+------------
 
 The software can be compiled by a special way to find some specific bugs and problems in it: memory corruptions, data races, undefined behaviour etc.
 
 
 The listed sanitizers are runtime-detectors. They can only find the problems in the code, if the particular part of the code
-is executed. If you have written a new C++ class (constitutive law, engine etc.) try to run your python script with
+is executed. If you have written a new C++ class (constitutive law, engine etc.) try to run your Python script with
 the sanitized software to check, whether the problem in your code exist.
+
+.. _address-sanitizer:
 
 AddressSanitizer
 ^^^^^^^^^^^^^^^^^^^^^
