@@ -11,8 +11,8 @@
 # in last line the optional argument 'n' has the same meaning as with mpiexec, i.e. total number of bodies will be (n-1)*N*M but on single core
 ### Openmp:
 # yade-mpi -j4 -n -x testMPIxN.py N M n
-### Nexted MPI * OpenMP
-# needs testing...
+### Nested MPI * OpenMP ---> tested ok
+
 '''
 This script simulates spheres falling on a plate using a distributed memory approach based on mpy module
 The number of spheres assigned to one particular process (aka 'worker') is N*M, they form a regular patern.
