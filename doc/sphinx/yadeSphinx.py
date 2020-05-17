@@ -304,30 +304,32 @@ for bib in ('references','yade-articles','yade-theses','yade-conferences','citin
 
 # NOTE: for some unexplained reason, all code after the sphinx.main() invocation will not be executed (python exits) on docker images (gitlab), despite the try: except: statements.
 # Workaround: launch this script as many times as needed (3 times for doc compilations and 1 time for post workarounds), see CMakeLists.txt.
-if(writer != "workarounds" and writer == "html"):
+if(writer != "workarounds"):
 	genWrapperRst()
-	# HACK: must rewrite sys.argv, since reference generator in conf.py determines if we output latex/html by inspecting it
-	sys.argv=['sphinx-build','-a','-v','-T','-P','-E','-b','%s'%writer,'-d',outDir+'/doctrees','.',outDir+'/%s'%writer]
-	try:
-		sphinx.main(sys.argv)
-	except  Exception:
-		pass
-else :
+	runBuildParams=['sphinx-build','-a','-v','-T','-P','-E','-b','%s'%writer,'-d',outDir+'/doctrees','.',outDir+'/%s'%writer]
+
+	if (sphinx.version_info[0] == 1):
+		# In newer sphinx version sphinx.main was deprecated. Keep for backcompatability
+		sphinx.main(runBuildParams)
+	else:
+		import sphinx.cmd.build
+		sphinx.cmd.build.main(runBuildParams[1:])
+else:
 	#HTML FIXES:
 	makeBaseClassesClickable((outDir+'/html/yade.wrapper.html'),"html")
 	if (os.path.exists('/usr/share/javascript/jquery/jquery.js')): #Check, whether jquery.js installed in system
 	    os.system('rm '+ outDir+'/html/_static/jquery.js')
 	    os.system('cp /usr/share/javascript/jquery/jquery.js '+ outDir+'/html/_static/jquery.js')
 
-	##LATEX FIXES:
-	#makeBaseClassesClickable((outDir+'/latex/Yade.tex'),"latex")
-	####HACK: sphinx sometimes produces lots of backslashes in tex source on ipython outs (with are '\PYGZbs{}' in the source) -> remove them all.
-	#import re
-	#find_tex_backslashes=re.compile(r'^(\\PYG{g\+go}{)(\\PYGZbs{})*')
-	#with open(outDir+'/latex/Yade.tex','r',encoding="utf8") as f:
-		#lines=f.readlines()
-	#with open(outDir+'/latex/Yade.tex','w',encoding="utf8") as f:
-		#for l in lines:
-			#f.write(find_tex_backslashes.sub(r'\1',l))
-	####HACK
+	#LATEX FIXES:
+	makeBaseClassesClickable((outDir+'/latex/Yade.tex'),"latex")
+	###HACK: sphinx sometimes produces lots of backslashes in tex source on ipython outs (with are '\PYGZbs{}' in the source) -> remove them all.
+	import re
+	find_tex_backslashes=re.compile(r'^(\\PYG{g\+go}{)(\\PYGZbs{})*')
+	with open(outDir+'/latex/Yade.tex','r',encoding="utf8") as f:
+		lines=f.readlines()
+	with open(outDir+'/latex/Yade.tex','w',encoding="utf8") as f:
+		for l in lines:
+			f.write(find_tex_backslashes.sub(r'\1',l))
+	###HACK
 sys.exit()
