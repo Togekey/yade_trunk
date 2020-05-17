@@ -89,9 +89,8 @@ its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdo
     :align: center
 
 - Next step involves obtaining the ids of the remote bodies intersecting with the current subdomain (:yref:`Subdomain.mirrorIntersections`). Each subdomain sends its list of local body intersections to the respective remote subdomains and also receives the list of intersecting ids from the other subdomains. 
-  If the remote bodies do not exist within the current subdomain's :yref:`BodyContainer`, the subdomain then *requests* these remote bodies from the respective subdomain.  A schematic of this operation is shown in figure `fig-schema-mirrorIntersections`_, 
-  in which subdomain=1 receives three bodies from subdomain=2, and 1 body from subdomain=0. subdomain=2 receives three bodies from subdomain=1. subdomain=0 only sends its bodies and does *not* receieve from the worker 
-  subdomains. This operation sets the stage for communication of the body states to/from the other subdomains. 
+  If the remote bodies do not exist within the current subdomain's :yref:`BodyContainer`, the subdomain then *requests* these remote bodies from the respective subdomain.  A schematic of this operation is shown in figure `fig-mirrorIntersections`_, 
+  in which subdomain=1 receives three bodies from subdomain=2, and 1 body from subdomain=0. subdomain=2 receives three bodies from subdomain=1. subdomain=0 only sends its bodies and does *not* receive from the worker subdomains. This operation sets the stage for communication of the body states to/from the other subdomains. 
 
  .. _fig-mirrorIntersections:
  .. figure:: fig/mpy_sendBodies.*
@@ -215,7 +214,8 @@ Whenever Yade is started with a script as argument the script name will be remem
 
 If the first commands above are pasted into a script used to start Yade, there is a small surprise: all instances insert the same bodies as master (with interactive execution only master was inserting). Here is the script:
 
-.. code-block:: python
+.. ipython::
+	:verbatim:
 
 	# script 'test1.py'
 	wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
@@ -282,12 +282,14 @@ We could also use `rank` to assign bodies from different regions of space to dif
 mpirun (automatic initialization)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Effectively running a distibuted DEM simulation on the basis of just the above commands would be tedious. The mpy modules thus provides the function :yref:`mpy.mpirun <yade.mpy.mpirun>` to automatize most of the steps, as described in :ref:`introduction <sect_implementation_example2D>`. Mainly, splitting the scene in subdomains based on rank assigned to bodies and handling collisions between the subdomains as time integration proceeds (includes changing the engine list agressively to make this all happen).
+Effectively running a distibuted DEM simulation on the basis of just the above commands would be tedious. The mpy modules thus provides the function :yref:`mpy.mpirun <yade.mpy.mpirun>` to automatize most of the steps, as described in :ref:`introduction <sect_mpi_implementation>`. Mainly, splitting the scene in subdomains based on rank assigned to bodies and handling collisions between the subdomains as time integration proceeds (includes changing the engine list agressively to make this all happen).
 
 If needed, the first execution of mpirun will call the function initialize(), which can therefore be omitted on user's side in most cases.
 The subdomains will be merged into a centralized scene on master process at the end of the iterations depending on argument *withMerge*. 
 
-Here is a concrete example where a floor is assigned to master and multiple groups of spheres are assigned to subdomains::
+Here is a concrete example where a floor is assigned to master and multiple groups of spheres are assigned to subdomains:
+
+.. code-block:: python
 
 	NSTEPS=5000 #turn it >0 to see time iterations, else only initilization 
 	numThreads = 4 # number of threads to be spawned, (in interactive mode).
@@ -349,13 +351,13 @@ Here is a concrete example where a floor is assigned to master and multiple grou
 		
 
 The script is then executed as follows::
-  
-  yade script.py 
 
-For running further timesteps, the mp.mpirun command has to be executed in yade prompt::
-  
-.. ipython::
-	:verbatim:
+	yade script.py 
+
+For running further timesteps, the mp.mpirun command has to be executed in yade prompt:
+
+
+.. code-block:: python
 	
 	Yade [0]: mp.mpirun(100,4,withMerge=False) #run for 100 steps and no scene merge. 
 	
@@ -373,12 +375,12 @@ The functions `initialize` and `mpirun` described above handle both interactive 
 "Should", since what happens behind the scene is not exactly the same at startup, and it may surface in some occasions (let us know).
 
 Provided that a script calls :yref:`yade.mpy.mpirun` with a number of timesteps, the simulation (see e.g. :ysrc:`examples/mpi/vtkRecorderExample.py`) is executed with the following command::
-  
-  mpiexec -np NUMSUBD+1 yade vtkRecorderExample.py 
+
+	mpiexec -np NUMSUBD+1 yade vtkRecorderExample.py 
 
 where *NUMSUBD* corresponds to the required number of subdomains.
 
-.. note:: Remember that the master process counts one while it does not handle an ordinary subdomain, therefore the number of processes is always *NUMSUBD*+1.
+.. note:: Remember that the master process counts one while it does not handle an ordinary subdomain, therefore the number of processes is always *NUMSUBD* +1.
 	
 
 Splitting
@@ -454,6 +456,8 @@ The criterion for re-allocating bodies in the median filter involves finding the
 
 .. youtube:: Qb5vPjRPFRw
 
+.. _sect_mpi_construction:
+
 Centralized versus distributed scene construction
 -------------------------------------------------
 
@@ -465,28 +469,30 @@ For large number of bodies and processes, though, the centralized scene construc
 In distributed mode each worker instantiates its own bodies and insert them in the local :yref:`BodyContainer`. Attention need to be paid to properly assign bodies ids since no index should be owned by two different workers initially. Insertion of bodies  in :yref:`BodyContainer` with imposed ids is done with 
 :yref:`BodyContainer.insertAtId`. The distributed mode is activated by setting the :code:`DISTRIBUTED_INSERT` flag ON, the user is in charge of setting up the subdomains and partitioning the bodies, an example showing the use of distributed insertion can be found in :ysrc:`examples/mpi/parallelBodyInsert3D.py`. 
 
-The relevant fragment, where the filtering is done by skipping all steps of a loop but the one with proper rank (keep in mind that all workers will run the same loop but they all have a different rank each), reads::
+The relevant fragment, where the filtering is done by skipping all steps of a loop but the one with proper rank (keep in mind that all workers will run the same loop but they all have a different rank each), reads:
 
-#add spheres
-subdNo=0
-import itertools
-_id = 0 #will be used to count total number of bodies regardless of subdomain attribute, so that same ids are not reused for different bodies
-for x,y,z in itertools.product(range(int(Nx)),range(int(Ny)),range(int(Nz))):
-	subdNo+=1
-	if mp.rank!=subdNo: continue
-	ids=[]
-	for i in range(L):#(numThreads-1) x N x M x L spheres, one thread is for master and will keep only the wall, others handle spheres
-		for j in range(M):
-			for k in range(N):
-				dxOndy = 1/5.; dzOndy=1/15.  # shifts in x/y-positions to make columns inclines
-				px= x*L+i+j*dxOndy; pz= z*N+k+j*dzOndy; py = (y*M+j)*(1 -dxOndy**2 -dzOndy**2)**0.5 #so they are always nearly touching initialy
-				id = O.bodies.insertAtId(sphere((px,py,pz),0.500),_id+(N*M*L*(subdNo-1)))
-				_id+=1
-				ids.append(id)
-	for id in ids: O.bodies[id].subdomain = subdNo
-	
-	if mp.rank==0: #the wall belongs to master
-		WALL_ID=O.bodies.insertAtId(box(center=(Nx*L/2,-0.5,Nz*N/2),extents=(2*Nx*L,0,2*Nz*N),fixed=True),(N*M*L*(numThreads-1)))
+.. code-block:: python
+
+	#add spheres
+	subdNo=0
+	import itertools
+	_id = 0 #will be used to count total number of bodies regardless of subdomain attribute, so that same ids are not reused for different bodies
+	for x,y,z in itertools.product(range(int(Nx)),range(int(Ny)),range(int(Nz))):
+		subdNo+=1
+		if mp.rank!=subdNo: continue
+		ids=[]
+		for i in range(L):#(numThreads-1) x N x M x L spheres, one thread is for master and will keep only the wall, others handle spheres
+			for j in range(M):
+				for k in range(N):
+					dxOndy = 1/5.; dzOndy=1/15.  # shifts in x/y-positions to make columns inclines
+					px= x*L+i+j*dxOndy; pz= z*N+k+j*dzOndy; py = (y*M+j)*(1 -dxOndy**2 -dzOndy**2)**0.5 #so they are always nearly touching initialy
+					id = O.bodies.insertAtId(sphere((px,py,pz),0.500),_id+(N*M*L*(subdNo-1)))
+					_id+=1
+					ids.append(id)
+		for id in ids: O.bodies[id].subdomain = subdNo
+		
+		if mp.rank==0: #the wall belongs to master
+			WALL_ID=O.bodies.insertAtId(box(center=(Nx*L/2,-0.5,Nz*N/2),extents=(2*Nx*L,0,2*Nz*N),fixed=True),(N*M*L*(numThreads-1)))
 
 
 The bissection algorithm can be used for defining the initial split, in the distributed case too, since it takes a points dataset as input. Provided that all workers work with the same dataset (e.g. the same sequence of a random number generator) they will all reach the same partitioning, and they can instanciate their bodies on this basis. 
@@ -500,8 +506,7 @@ If withMerge=True in mpirun then the bodies in master scene are updated to refle
 Merging is an expensive task which requires the communication of large messages and, therefore, it should be done purposely and at a reasonable frequency. It can even be the main bottleneck for massively parallel scenes. Nevertheless it can be usefull for debugging using the 3D view, or for various post-processing tasks. 
 The *MERGE_W_INTERACTIONS* provides full merge, i.e. the interactions in the worker subdomains and between the subdomains are included, else only the position and states of the bodies are use. Merging with interactions should result in a usual yade scene, ready for further time-stepping in non-mpi mode or (more usefull) for some post-processing. The merge operation is not required for a proper time integration in general.
 
-.. _sect_mpi_construction
-
+.. _sect_mpi_construction:
 
 Hints and problems to expect
 ____________________________
@@ -515,7 +520,7 @@ For MPI cases, the *parallelMode* flag for :yref:`GlobalStiffnessTimeStepper` an
 For other things. Read next section and be carefull. If you feel like implementing MPI support for another couple engines that would be great (the two available exemples should help). Let us know!
 
 
-.. _sect_mpi_reduction
+.. _sect_mpi_reduction:
 
 Reduction (partial sums)
 ------------------------

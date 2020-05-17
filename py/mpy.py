@@ -522,11 +522,11 @@ def genLocalIntersections(subdomains):
 	Defines sets of bodies within current domain overlapping with other domains.
 	The structure of the data for domain 'k' is:
 	[[id1, id2, ...],  <----------- intersections[0] = ids of bodies in domain k interacting with master domain (subdomain k itself excluded)
-	 [id3, id4, ...],  <----------- intersections[1] = ids of bodies in domain k interacting with domain rank=1 (subdomain k itself excluded)
-	 ...
-	 [domain1, domain2, domain3, ...], <---------- intersections[k] = ranks (not ids!) of external domains interacting with domain k
-	 ...
-	 ]
+	[id3, id4, ...],  <----------- intersections[1] = ids of bodies in domain k interacting with domain rank=1 (subdomain k itself excluded)
+	...
+	[domain1, domain2, domain3, ...], <---------- intersections[k] = ranks (not ids!) of external domains interacting with domain k
+	...
+	]
 	'''
 	intersections=[[] for n in range(numThreads)]
 	for sdId in subdomains:

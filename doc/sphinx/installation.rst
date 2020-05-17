@@ -441,7 +441,7 @@ GPU Acceleration
 The FlowEngine can be accelerated with CHOLMOD's GPU accelerated solver. The specific hardware and software requirements are outlined in the section :ref:`GPUacceleration`.
 
 Special builds
-------------
+--------------
 
 The software can be compiled by a special way to find some specific bugs and problems in it: memory corruptions, data races, undefined behaviour etc.
 
@@ -453,7 +453,7 @@ the sanitized software to check, whether the problem in your code exist.
 .. _address-sanitizer:
 
 AddressSanitizer
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 `AddressSanitizer <https://clang.llvm.org/docs/AddressSanitizer.html>`_ is a memory error detector, which helps to find heap corruptions,
 out-of-bounds errors and many other memory errors, leading to crashes and even wrong results.
@@ -478,7 +478,7 @@ to run tests with the AddressSanitized-Yade on Debian 10 Buster is::
 If you add a new check script, it is being run automatically through the AddressSanitizer in the CI-pipeline.
 
 Yubuntu
-------------
+-------
 
 If you are not running a Linux system there is a way to create an Ubuntu `live-usb <http://en.wikipedia.org/wiki/Live_USB>`_ on any usb mass-storage device (minimum size 10GB). It is a way to boot the computer on a linux system with Yadedaily pre-installed without affecting the original system. More informations about this alternative are available `here <http://people.3sr-grenoble.fr/users/bchareyre/pubs/yubuntu/>`_ (see the README file first).
 
