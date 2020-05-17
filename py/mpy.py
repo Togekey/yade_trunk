@@ -5,13 +5,11 @@ This module defines mpirun(), a parallel implementation of run() using a distrib
 
 .. note:: Many internals of the mpy module listed on this page are not helpful to the user. Instead, please find :ref:`introductory material on mpy module<mpy>` in user manual.
 
-Notes to developpers:
-_____________________
 
 Logic:
 ------
 
-The distribution logic is as follows:
+The logic for an initially centralized scene is as follows:
 
 1. Instanciate a complete, ordinary, yade scene
 2. Insert subdomains as special yade bodies. This is somehow similar to adding a clump body on the top of clump members
@@ -21,13 +19,15 @@ The distribution logic is as follows:
 	- detect which assigned bodies are virtually in interaction with other domains (based on their bounding boxes) and communicate the lists to the relevant workers
 	- erase the bodies which are neither assigned nor virtually interacting with the subdomain
 
-4. Run a number of 'regular' iterations without re-running collision detection (verlet dist mechanism)
-
-5. In each regular iteration the workers will:
+4. Run a number of 'regular' iterations without re-running collision detection (verlet dist mechanism). In each regular iteration the workers will:
 
 	- calculate internal and cross-domains interactions
 	- execute Newton on assigned bodies (modified Newton skips other domains)
 	- send updated positions to other workers and partial force on floor to master
+	
+5. When one worker triggers collision detection all workers will follow. It will result in updating the intersections between subdomains.
+
+6. If enabled, bodies may be re-allocated to different domains just after a collision detection, based on a filter. Custom filters are possible. One is predidefined here (medianFilter)
 
 Rules:
 ------
@@ -1101,8 +1101,8 @@ def mpirun(nSteps,np=None,withMerge=False):
 
 def runOnSynchronouslPairs(workers,command):
 	'''
-	Locally (from one worker POV), this function runs mpi tasks defined by 'command' on the list of other workers (typically the list of interacting subdomains)
-	Globaly, it establish peer-to-peer connexions so that 'command' is executed symmetrically and simultaneously on both sides of each worker pair.
+	Locally (from one worker POV), this function runs interactive mpi tasks defined by 'command' on a list of other workers (typically the list of interacting subdomains).
+	Overall, peer-to-peer connexions are established so so that 'command' is executed symmetrically and simultaneously on both sides of each worker pair. I.e. if worker "i" executes "command" with argument "j" (index of another worker), then by design "j" will execute the same thing with argument "i" *simultaneously*.
 	
 	In many cases a similar series of data exchanges can be obtained more simply (and fastly) with asynchronous irecv+send like below.
 
@@ -1110,7 +1110,7 @@ def runOnSynchronouslPairs(workers,command):
 		m=comm.irecv(w)
 		comm.send(data,dest=w)
 	
-	However, it only works if the messages are all known in advance locally, before any communication. If the interaction with workers[1] depends on the result of a previous interaction with workers[0] OTOH, it needs synchronous execution. Synchronicity is also required if more than one blocking call is present in 'command', else an obvious deadlock as if 'irecv' was replaced by 'recv' in that naive loop.
+	The above only works if the messages are all known in advance locally, before any communication. If the interaction with workers[1] depends on the result of a previous interaction with workers[0] OTOH, it needs synchronous execution, hence this function. Synchronicity is also required if more than one blocking call is present in 'command', else an obvious deadlock as if 'irecv' was replaced by 'recv' in that naive loop.
 	Both cases occur with the 'medianFilter' algorithm, hence why we need this synchronous method.
 	
 	In this function pair connexions are established by the workers in a non-supervized and non-deterministic manner. Each time an interactive communication (i,j) is established 'command' is executed simultaneously by i and j. It is guaranted that all possible pairs are visited.
@@ -1128,9 +1128,10 @@ def runOnSynchronouslPairs(workers,command):
 	if True:
 		if 0 in workersTemp: workersTemp.remove(0) #don't talk to master
 		if rank==0: return #don't talk if you are master
+	
+	# now call the workers one by one until one of them reacts
 	s=MPI.Status();
 	sentTo=-1  #last worker to which connexion request was sent
-
 	while len(workersTemp)>0:
 		other=workersTemp[-1]
 		connected=False
