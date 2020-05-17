@@ -246,7 +246,7 @@ and the output reads:
 That's because all instances executed the script in the initialize() phase. "None" is printed 2x3 times because the script contains `print( mp.sendCommand(...))` twice, the workers try to execute that too, but for them `sendCommand` returns by default, hence the None.
 
 
-Though logical, this result is not what we want usually if we try to split a simulation into pieces. The solution (typical of all mpi programs) is to use the `rank` of the process in conditionals. In order to produce the same result as before, for instance, the script can be modified as follows.
+Though logical, this result is not what we want usually if we try to split a simulation into pieces. The solution (typical of all mpi programs) is to use the `rank` of the process in conditionals. Typically, some parts of a script will executed by master. In order to produce the same result as before, for instance, the script can be modified as follows.
 
 .. code-block:: python
 
