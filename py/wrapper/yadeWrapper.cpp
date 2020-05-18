@@ -1706,7 +1706,7 @@ try {
 	                &pyBodyContainer::getUseRedirection,
 	                &pyBodyContainer::setUseRedirection,
 	                "true if the scene uses up-to-date lists for boundedBodies and realBodies; turned true automatically 1/ after removal of bodies if "
-	                ":yref:`enableRedirection`=True, and 2/ in MPI execution.")
+			":yref:`enableRedirection=True <BodyContainer.enableRedirection>`, and 2/ in MPI execution.")
 	        .add_property(
 	                "enableRedirection",
 	                &pyBodyContainer::getEnableRedirection,
