@@ -112,15 +112,14 @@ Once the subdomains and the associated intersecting bodies, and remote bodies ar
 MPI initialization and communications
 _____________________________________
 
-This section presents methods to execute yade with MPI support. The mpy modules tries to retain from yade design an important feature: interactive access to the objects of scene (or of multiple scenes in this case), as explained below. Interactive execution does not use the `mpiexec` command of OpenMPI, a pool of workers is spawned by the mpy module after yade startup, instead. In production one may use passive jobs instead, and in that case `mpiexec` will preceed the call to yade.
+The mpy modules tries to retain from yade design an important feature: interactive access to the objects of scene (or of multiple scenes in this case), as explained below. Interactive execution does not use the `mpiexec` command of OpenMPI, a pool of workers is spawned by the mpy module after yade startup, instead. In production one may use passive jobs, and in that case `mpiexec` will preceed the call to yade.
 
-.. note:: Most examples in this page use 4 mpi processes. It is not a problem, in principle, to run the examples even if the number of available cores is less than 4 (this is called oversubscribing, it may also fail depending on OS and MPI implementation). There is no performance gain to expect from oversubscribing, and in production it should be avoided, but it is useful for experiments (e.g. for testing the examples in this page on a single-core machine).
+.. note:: Most examples in this page use 4 mpi processes. It is not a problem, in principle, to run the examples even if the number of available cores is less than 4 (this is called oversubscribing (it may also fail depending on OS and MPI implementation). There is no performance gain to expect from oversubscribing but it is useful for experiments (e.g. for testing the examples in this page on a single-core machine).
 
 
 Interactive mode
 ----------------
-The interactive mode aims primarily at inspecting the simulation after some MPI execution for debugging. However, functions shown here (especially `sendCommand`) may also be usefull to achieve advanced tasks such as controlling transitions between phases of a simulation, collecting and processing results.
-The first two flavors may not be used very often in practice, however understanding them is a good way to understand what happens behind the scene.
+The interactive mode aims primarily at inspecting the simulation after some MPI execution for debugging. Functions shown here (especially `sendCommand`) may also be usefull in the general case, to achieve advanced tasks such as controlling transitions between phases of a simulation, collecting and processing results.
 
 Explicit initialization from python prompt
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -191,7 +190,9 @@ Explicit initialization from python script
 
 Though usefull for advanced operations, the function sendCommand() is limited. Basic features of the python language are missing, e.g. function definitions and loops are a problem - in fact every code fragment which can't fit on a single line is. In practice the mpy module provides a mechanism to initialize from a script, where functions and variables will be declared.
 
-Whenever Yade is started with a script as argument the script name will be remembered, and if mpy.initialize() is called (by the script itself or interactively in the prompt) all Yade instances will be initialized with that same script. It makes distributing function definitions and simulation parameters trivial (and even distributing scene constructions as seen below). This behaviour is what happens classicaly with MPI: all processes execute the same program.
+Whenever Yade is started with a script as argument the script name will be remembered, and if mpy.initialize() is called (by the script itself or interactively in the prompt) all Yade instances will be initialized with that same script. It makes distributing function definitions and simulation parameters trivial (and even distributing scene constructions as seen below).
+
+This behaviour is what happens usually with MPI: all processes execute the same program. It is also what happens with "mpiexec -np N yade ...".
 
 If the first commands above are pasted into a script used to start Yade, there is a small surprise: all instances insert the same bodies as master (with interactive execution only master was inserting). Here is the script::
 
@@ -219,10 +220,10 @@ and the output reads::
 	['<yade.wrapper.Omega object at 0x7feb979403a0>', '<yade.wrapper.Omega object at 0x7f5b61ae9440>', '<yade.wrapper.Omega object at 0x7fdd466b8440>', '<yade.wrapper.Omega object at 0x7f8dc7b73440>']
 	[4, 4, 4, 4]
 
-That's because all instances executed the script in the initialize() phase. "None" is printed 2x3 times because the script contains `print( mp.sendCommand(...))` twice, the workers try to execute that too, but for them `sendCommand` returns by default, hence the None.
+That's because all instances execute the script in the initialize() phase. "None" is printed 2x3 times because the script contains `print( mp.sendCommand(...))` twice, the workers try to execute that too, but for them `sendCommand` returns by default, hence the None.
 
 
-Though logical, this result is not what we want usually if we try to split a simulation into pieces. The solution (typical of all mpi programs) is to use the `rank` of the process in conditionals. Typically, some parts of a script will executed by master. In order to produce the same result as before, for instance, the script can be modified as follows.::
+Though logical, this result is not what we want if we try to split a simulation into pieces. The solution (typical of all mpi programs) is to use the `rank` of the process in conditionals. Different parts of the script can then be executed, differently, by each worker, depending on its rank. In order to produce the same result as before for instance, the script can be modified as follows::
 
 	# script 'test2.py'
 	from yade import mpy as mp
@@ -254,9 +255,9 @@ We could also use `rank` to assign bodies from different regions of space to dif
 mpirun (automatic initialization)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Effectively running a distibuted DEM simulation on the basis of just the above commands would be tedious. The mpy modules thus provides the function :yref:`mpy.mpirun <yade.mpy.mpirun>` to automatize most of the steps, as described in :ref:`introduction <sect_mpi_implementation>`. Mainly, splitting the scene in subdomains based on rank assigned to bodies and handling collisions between the subdomains as time integration proceeds (includes changing the engine list agressively to make this all happen).
+Effectively running a distributed DEM simulation on the basis of just the above commands would be tedious. The mpy modules thus provides the function :yref:`mpy.mpirun <yade.mpy.mpirun>` to automatize most of the steps, as described in :ref:`introduction <sect_mpi_implementation>`. Mainly, splitting the scene in subdomains based on rank assigned to bodies and handling collisions between the subdomains as time integration proceeds (includes changing the engine list agressively to make this all happen).
 
-If needed, the first execution of mpirun will call the function initialize(), which can therefore be omitted on user's side in most cases.
+If needed, the first execution of mpirun will call the function initialize(), which can therefore be omitted on user's side.
 The subdomains will be merged into a centralized scene on master process at the end of the iterations depending on argument *withMerge*. 
 
 Here is a concrete example where a floor is assigned to master and multiple groups of spheres are assigned to subdomains::
