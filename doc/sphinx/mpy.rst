@@ -42,9 +42,9 @@ Two overlapping subdomains and their intersections. In this situation we have *S
 Walkthrough
 ___________
 
-For demonstrating the main internal steps in the implemented parallel algorithm let us consider the example script :ysrc:`examples/mpi/testMPI_2D.py`. Executing this script (interactive or passive mode) with three MPI processes generates the scene as shown in `fig-scene`_. It then executes :yref:`mpirun<yade.mpy.mpirun>`, which triggers the steps described hereafter.
+For demonstrating the main internal steps in the implemented parallel algorithm let us consider the example script :ysrc:`examples/mpi/testMPI_2D.py`. Executing this script (interactive or passive mode) with three MPI processes generates the scene as shown in `fig-scene-mpi`_. It then executes :yref:`mpirun<yade.mpy.mpirun>`, which triggers the steps described hereafter.
 
-.. _fig-scene:
+.. _fig-scene-mpi:
 .. figure:: fig/mpy_schema0.png
 	:width: 25%
 	:align: center
@@ -128,82 +128,18 @@ Explicit initialization from python prompt
 
 A pool of yade instances can be spawned with mpy.initialize() as illustrated hereafter. Mind that the next sequences of commands are supposed to be typed directly in the python prompt after starting yade, it will not give exactly the same result if it is pasted into a script executed by Yade (see the next section on automatic initialization).
 
-.. initialize the context for next "ipython" sections
-.. ipython::
-	:suppress:
 
-	Yade [0]: O.reset()
-
-	Yade [1]: from yade.utils import *
-	
-.. Note: most of the blocks in next ipython directives executes correctly, however it gives slightly different output through sphinx pipeline, unfortunately. Comment out the verbatim to make sphinx effectively execute these mpi sections. 
-	
-.. ipython::
-	:verbatim:
-
-	Yade [2]: wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
-
-	Yade [3]: for x in range(-1,2):
-	   ...:    O.bodies.append(sphere((x,0.5,0),0.5))
-	   ...:
-
-	Yade [5]: from yade import mpy as mp
-
-	@doctest
-	Yade [6]: mp.initialize(4)
-	Master: I will spawn  3  workers
-	->  [6]: (0, 4)
-
-
-.. .. ipython::
-.. 
-.. 	@doctest
-.. 	Yade [1]: 1+1
-.. 	->  [1]: 4
 
 
 After mp.initialize(np) the parent instance of yade takes the role of master process (rank=0). It is the only one executing the commands typed directly in the prompt.
 The other instances (rank=1 to rank=np-1) are idle and they wait for commands sent from master. Sending commands to the other instances can be done with `mpy.sendCommand()`, which by default returns the result or the list of results. We use that command below to verify that the spawned workers point to different (still empty) scenes:
 
-.. ipython::
-	:verbatim:
-	
-	Yade [8]: len(O.bodies)
-	 ->  [8]: 4
-
-	Yade [9]: mp.sendCommand(executors="all",command="str(O)") # check scene pointers
-	->  [9]: ['<yade.wrapper.Omega object at 0x7f6db7012300>', '<yade.wrapper.Omega object at 0x7f94c79ec300>', '<yade.wrapper.Omega object at 0x7f5519742300>', '<yade.wrapper.Omega object at 0x7f264dd80300>']
-
-	Yade [10]: mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) #check content
-	->  [10]: [4, 0, 0, 0]
 
 Sending commands makes it possible to manage all types of message passing using calls to the underlying mpi4py (see mpi4py documentation for more functionalities).
 
-.. ipython::
-	:verbatim:
-	
-	Yade [3]: mp.sendCommand(executors=1,command="message=comm.recv(source=0); print('received',message)")
-
-	Yade [4]: mp.comm.send("hello",dest=1)
-	received hello
 
 Every picklable python object (namely, nearly all Yade objects) can be transmitted this way. Remark hereafter the use of :yref:`mpy.mprint <yade.mpy.mprint>` (identifies the worker by number and by font colors). Note also that the commands passed via `sendCommand` are executed in the context of the mpy module, for this reason `comm`, `mprint`, `rank` and all objects of the module are accessed without the `mp.` prefix.
 
-.. ipython::
-	:verbatim:
-
-	Yade [3]: mp.sendCommand(executors=1,command="O.bodies.append(comm.recv(source=0))",wait=False) # leaves the worker idle waiting for an argument to append()
-
-	Yade [4]: b=Body(shape=Sphere(radius=0.7))  # now create body in the context of master
-
-	Yade [5]: mp.comm.send(b,dest=1) # send it to worker 1
-
-	Yade [6]: mp.sendCommand(executors="all",command="mprint('received',[b.shape.radius if hasattr(b.shape,'radius') else None for b in O.bodies])")
-	Master: received [None, 0.5, 0.5, 0.5] 
-	Worker1: received [0.7] 
-	Worker3: received [] 
-	Worker2: received [] 
-	->  [5]: [None, None, None, None] # printing yields no return value, hence that empty list, "wait=False" argument to sendCommand would suppress it
 
 
 Explicit initialization from python script
@@ -215,69 +151,19 @@ Whenever Yade is started with a script as argument the script name will be remem
 
 If the first commands above are pasted into a script used to start Yade, there is a small surprise: all instances insert the same bodies as master (with interactive execution only master was inserting). Here is the script:
 
-.. ipython::
-	:verbatim:
-
-	# script 'test1.py'
-	wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
-	for x in range(-1,2):
-		O.bodies.append(sphere((x,0.5,0),0.5))
-	from yade import mpy as mp
-	mp.initialize(4)
-	print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
-	print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) )
 
 and the output reads:
 
-.. code-block:: none
-	
-	yade test1.py 
-	...
-	Running script test1.py
-	Master: will spawn  3  workers 
-	None
-	None
-	None
-	None
-	None
-	None
-	['<yade.wrapper.Omega object at 0x7feb979403a0>', '<yade.wrapper.Omega object at 0x7f5b61ae9440>', '<yade.wrapper.Omega object at 0x7fdd466b8440>', '<yade.wrapper.Omega object at 0x7f8dc7b73440>']
-	[4, 4, 4, 4]
 
 That's because all instances executed the script in the initialize() phase. "None" is printed 2x3 times because the script contains `print( mp.sendCommand(...))` twice, the workers try to execute that too, but for them `sendCommand` returns by default, hence the None.
 
 
 Though logical, this result is not what we want usually if we try to split a simulation into pieces. The solution (typical of all mpi programs) is to use the `rank` of the process in conditionals. Typically, some parts of a script will executed by master. In order to produce the same result as before, for instance, the script can be modified as follows.
 
-.. code-block:: python
-
-	# script 'test2.py'
-	from yade import mpy as mp
-	mp.initialize(4)
-	if mp.rank==0: # only master
-		wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
-		for x in range(-1,2):
-		O.bodies.append(sphere((x,0.5,0),0.5))
-
-		print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
-		print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) )
-		print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
-		
-.. code-block:: none
-
-	Running script test2.py
-	Master: will spawn  3  workers 
-	['<yade.wrapper.Omega object at 0x7f21a8c8d3a0>', '<yade.wrapper.Omega object at 0x7f3142e43440>', '<yade.wrapper.Omega object at 0x7fb699b1a440>', '<yade.wrapper.Omega object at 0x7f1e4231e440>']
-	[4, 0, 0, 0]
 
 
 We could also use `rank` to assign bodies from different regions of space to different workers, as found in example :ysrc:`examples/mpi/helloMPI.py`, with rank-dependent positions:
 
-.. code-block:: python
-
-	# rank is accessed without "mp." prefix as it is interpreted in mpy module's scope
-	mp.sendCommand(executors=[1,2],command= "ids=O.bodies.append([sphere((xx,1.5+rank,0),0.5) for xx in range(-1,2)])")
-	
 
 
 mpirun (automatic initialization)
@@ -290,65 +176,6 @@ The subdomains will be merged into a centralized scene on master process at the 
 
 Here is a concrete example where a floor is assigned to master and multiple groups of spheres are assigned to subdomains:
 
-.. code-block:: python
-
-	NSTEPS=5000 #turn it >0 to see time iterations, else only initilization 
-	numThreads = 4 # number of threads to be spawned, (in interactive mode).
-
-	import os
-	from yade import mpy as mp
-
-	#materials 
-	young = 5e6
-	compFricDegree = 0.0
-	O.materials.append(FrictMat(young=young, poisson=0.5, frictionAngle = radians(compFricDegree), density= 2600, label='sphereMat'))
-	O.materials.append(FrictMat(young=young*100, poisson = 0.5, frictionAngle = compFricDegree, density =2600, label='wallMat'))
-
-
-	#add spheres
-	
-	mn,mx=Vector3(0,0,0),Vector3(90,180,90)
-	pred = pack.inAlignedBox(mn,mx)
-	O.bodies.append(pack.regularHexa(pred,radius=2.80,gap=0, material='sphereMat'))
-
-	#walls (floor)
-	
-	wallIds=aabbWalls([Vector3(-360,-1,-360),Vector3(360,360,360)],thickness=10.0, material='wallMat')
-	O.bodies.append(wallIds)
-
-	#engines 
-	O.engines=[
-		ForceResetter(),
-		InsertionSortCollider([
-			Bo1_Sphere_Aabb(),
-			Bo1_Box_Aabb()], label = 'collider'), # always add labels. 
-		InteractionLoop(
-			[Ig2_Sphere_Sphere_ScGeom(),Ig2_Box_Sphere_ScGeom()],
-			[Ip2_FrictMat_FrictMat_FrictPhys()],
-			[Law2_ScGeom_FrictPhys_CundallStrack()], 
-			label="interactionLoop"
-		),
-		GlobalStiffnessTimeStepper(timestepSafetyCoefficient=0.3,  timeStepUpdateInterval=100, parallelMode=True, label = 'timeStepper'),
-		NewtonIntegrator(damping=0.1,gravity = (0, -0.1, 0), label='newton'), 
-		VTKRecorder(fileName='spheres/3d-vtk-', recorders=['spheres', 'intr', 'boxes'], parallelMode=True,iterPeriod=500), #use .pvtu to open spheres, .pvtp for ints, and .vtu for boxes.
-	]
-
-	#set a custom verletDist for efficiency. 
-	collider.verletDist = 1.5
-
-	#########  RUN  ##########
-	# customize mpy
-	mp.ERASE_REMOTE_MASTER = True   #keep remote bodies in master? 
-	mp.DOMAIN_DECOMPOSITION= True	#automatic splitting/domain decomposition
-	#mp.mpirun(NSTEPS)		#passive mode run 
-	mp.MERGE_W_INTERACTIONS = False
-	mp.mpirun(NSTEPS,numThreads,withMerge=True) # interactive run, numThreads is the number of workers to be initialized, see below for withMerge explanation.
-	mp.mergeScene()  #merge scene after run. 
-	if mp.rank == 0: O.save('mergedScene.yade')
-
-	#demonstrate getting stuff from workers, here we get kinetic energy from worker subdomains, notice that the master (mp.rank = 0), uses the sendCommand to tell workers to compute kineticEnergy. 
-	if mp.rank==0:
-		print("kinetic energy from workers: "+str(mp.sendCommand([1,2],"kineticEnergy()",True)))
 		
 
 The script is then executed as follows::
@@ -358,13 +185,6 @@ The script is then executed as follows::
 For running further timesteps, the mp.mpirun command has to be executed in yade prompt:
 
 
-.. code-block:: python
-	
-	Yade [0]: mp.mpirun(100,4,withMerge=False) #run for 100 steps and no scene merge. 
-	
-	Yade [1]: mp.sendCommand([1,2],"kineticEnergy()",True) # get kineticEnergy from workers 1 and 2. 
-	
-	Yade [2]: mp.mpirun(1,4,withMerge=True) #run for 1 step and merge scene into master. 
 	
 
 Non-interactive execution
@@ -402,16 +222,6 @@ In order to impose a decomposition it is enough to assign :yref:`Body.subdomain`
 
 In the example script :ysrc:`examples/mpi/testMPI_2D.py` the spheres are generated as follows (centralized construction in this example, easily turned into distributed one). For each available worker a bloc of spheres is generated with a different position in space. The spheres in each block are assigned a subdomain rank (and a color for visualisation) so that they will be picked up by the right worker after mpirun(). 
 
-.. code-block:: python
-	
-	for sd in range(0,numThreads-1):
-		col = next(colorScale)
-		ids=[]
-		for i in range(N):#(numThreads-1) x N x M spheres, one thread is for master and will keep only the wall, others handle spheres
-			for j in range(M):
-				id = O.bodies.append(sphere((sd*N+i+j/30.,j,0),0.500,color=col)) #a small shift in x-positions of the rows to break symmetry
-				ids.append(id)
-			for id in ids: O.bodies[id].subdomain = sd+1
 
 
 Don't know how to split? Leave it to mpirun
@@ -477,28 +287,6 @@ In distributed mode each worker instantiates its own bodies and insert them in t
 
 The relevant fragment, where the filtering is done by skipping all steps of a loop but the one with proper rank (keep in mind that all workers will run the same loop but they all have a different rank each), reads:
 
-.. code-block:: python
-
-	#add spheres
-	subdNo=0
-	import itertools
-	_id = 0 #will be used to count total number of bodies regardless of subdomain attribute, so that same ids are not reused for different bodies
-	for x,y,z in itertools.product(range(int(Nx)),range(int(Ny)),range(int(Nz))):
-		subdNo+=1
-		if mp.rank!=subdNo: continue
-		ids=[]
-		for i in range(L):#(numThreads-1) x N x M x L spheres, one thread is for master and will keep only the wall, others handle spheres
-			for j in range(M):
-				for k in range(N):
-					dxOndy = 1/5.; dzOndy=1/15.  # shifts in x/y-positions to make columns inclines
-					px= x*L+i+j*dxOndy; pz= z*N+k+j*dzOndy; py = (y*M+j)*(1 -dxOndy**2 -dzOndy**2)**0.5 #so they are always nearly touching initialy
-					id = O.bodies.insertAtId(sphere((px,py,pz),0.500),_id+(N*M*L*(subdNo-1)))
-					_id+=1
-					ids.append(id)
-		for id in ids: O.bodies[id].subdomain = subdNo
-		
-		if mp.rank==0: #the wall belongs to master
-			WALL_ID=O.bodies.insertAtId(box(center=(Nx*L/2,-0.5,Nz*N/2),extents=(2*Nx*L,0,2*Nz*N),fixed=True),(N*M*L*(numThreads-1)))
 
 
 The bissection algorithm can be used for defining the initial split, in the distributed case too, since it takes a points dataset as input. Provided that all workers work with the same dataset (e.g. the same sequence of a random number generator) they will all reach the same partitioning, and they can instanciate their bodies on this basis. 
