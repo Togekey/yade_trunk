@@ -45,7 +45,7 @@ ___________
 For demonstrating the main internal steps in the implemented parallel algorithm let us consider the example script :ysrc:`examples/mpi/testMPI_2D.py`. Executing this script (interactive or passive mode) with three MPI processes generates the scene as shown in `fig-scene-mpi`_. It then executes :yref:`mpirun<yade.mpy.mpirun>`, which triggers the steps described hereafter.
 
 .. _fig-scene-mpi:
-.. figure:: fig/mpy_schema0.png
+.. figure:: fig/mpy-schema0.png
 	:width: 12cm
 	:align: center
 
