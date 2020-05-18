@@ -44,13 +44,13 @@ ___________
 
 For demonstrating the main internal steps in the implemented parallel algorithm let us consider the example script :ysrc:`examples/mpi/testMPI_2D.py`. Executing this script (interactive or passive mode) with three MPI processes generates the scene as shown in `fig-scene-mpi`_. It then executes :yref:`mpirun<yade.mpy.mpirun>`, which triggers the steps described hereafter.
 
-.. .. _fig-scene-mpi:
-.. .. figure:: fig/mpy_schema0.png
-.. 	:width: 12cm
-.. 	:align: center
-.. 
-.. In this scene, we have three MPI processes (three subdomains) and the raw bodies are partitioned among the subdomains/ranks 1 and 2. The master process with subdomain=0 holds the boundary/wall type body. Bodies can be manually assigned or automatically assigned via a domain decomposition algorithm. Details 
-.. on the dommain decomposition algorithm is presented in the later section of this document. 
+.. _fig-scene-mpi:
+.. figure:: fig/mpy_schema0.png
+	:width: 12cm
+	:align: center
+
+In this scene, we have three MPI processes (three subdomains) and the raw bodies are partitioned among the subdomains/ranks 1 and 2. The master process with subdomain=0 holds the boundary/wall type body. Bodies can be manually assigned or automatically assigned via a domain decomposition algorithm. Details 
+on the dommain decomposition algorithm is presented in the later section of this document. 
 .. 
 .. **Scene splitting** :
 .. 
