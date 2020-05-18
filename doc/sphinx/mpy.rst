@@ -564,6 +564,6 @@ _________
 
 
 .. _fig-mpy-benchmark:
- .. figure:: fig/mpy_benchmarkDahu.*
+.. figure:: fig/mpy_benchmarkDahu.*
     :width: 60%
     :align: center
