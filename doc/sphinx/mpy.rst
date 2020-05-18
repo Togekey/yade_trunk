@@ -30,7 +30,7 @@ The intersections and mirror intersections are updated automatically as part of 
 
 
 .. _fig-subdomains:
-.. figure:: fig/subdomains.*
+.. figure:: fig/subdomains.png
 	:width: 12cm
 	:align: center
 
@@ -45,10 +45,9 @@ ___________
 For demonstrating the main internal steps in the implemented parallel algorithm let us consider the example script :ysrc:`examples/mpi/testMPI_2D.py`. Executing this script (interactive or passive mode) with three MPI processes generates the scene as shown in `fig-scene`_. It then executes :yref:`mpirun<yade.mpy.mpirun>`, which triggers the steps described hereafter.
 
 .. _fig-scene:
-.. figure:: fig/mpy_schema0.*
+.. figure:: fig/mpy_schema0.png
 	:width: 25%
 	:align: center
-
 
 In this scene, we have three MPI processes (three subdomains) and the raw bodies are partitioned among the subdomains/ranks 1 and 2. The master process with subdomain=0 holds the boundary/wall type body. Bodies can be manually assigned or automatically assigned via a domain decomposition algorithm. Details 
 on the dommain decomposition algorithm is presented in the later section of this document. 
@@ -61,13 +60,13 @@ In the function :yref:`yade.mpy.splitScene`, called at the beginning of mpi exec
 with solid coloured lines for the subdomain :yref:`Aabb`. At this time, the min and max of other subdomains are unknown. 
 
 .. _fig-regularbounds:
-.. figure:: fig/mpy_schema1a.*
+.. figure:: fig/mpy_schema1a.png
 	:width: 25%
 	:align: center
 
 
 .. _fig-subDBounds:
-.. figure:: fig/mpy_schema1b.*
+.. figure:: fig/mpy_schema1b.png
 	:width: 25%
 	:align: center
 
@@ -76,7 +75,7 @@ with solid coloured lines for the subdomain :yref:`Aabb`. At this time, the min 
 its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdomain-bounds`_  shows a schematic in which each subdomain has received the :yref:`Aabb.min` and :yref:`Aabb.max` of the other subdomains. 
 
 .. _fig-subdomain-bounds:
-.. figure:: fig/mpy_schema2.*
+.. figure:: fig/mpy_schema2.png
     :width: 40%
     :align: center
     
@@ -86,7 +85,7 @@ its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdo
   then used to build the :yref:`Subdomain.intersections` list. 
 
  .. _fig-schema-localIntersections:
- .. figure:: fig/mpy_schema3.*
+ .. figure:: fig/mpy_schema3.png
     :width: 40%
     :align: center
 
@@ -95,7 +94,7 @@ its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdo
   in which subdomain=1 receives three bodies from subdomain=2, and 1 body from subdomain=0. subdomain=2 receives three bodies from subdomain=1. subdomain=0 only sends its bodies and does *not* receive from the worker subdomains. This operation sets the stage for communication of the body states to/from the other subdomains. 
 
  .. _fig-mirrorIntersections:
- .. figure:: fig/mpy_sendBodies.*
+ .. figure:: fig/mpy_sendBodies.png
     :width: 40%
     :align: center
 
@@ -105,7 +104,7 @@ its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdo
 Once the subdomains and the associated intersecting bodies, and remote bodies are identified, :yref:`State` of these bodies are sent and received every timestep, by peer-to-peer communications between the interacting subdomains. In the case of an interaction with the master subdomain (subdomain=0), only the total force and torque exerted on master's bodies by a given subdomain are sent. Figure `fig-sendRecvStates`_ shows a schematic in which the states of the remote bodies between subdomain=1 and subdomain=2 are communicated. Subdomain=0 receives forces and torques from subdomain=1 and subdomain=2. 
 
 .. _fig-sendRecvStates:
-.. figure:: fig/mpy_schema4.*
+.. figure:: fig/mpy_schema4.png
     :width: 40%
     :align: center
 
@@ -435,14 +434,14 @@ Initial split
  This process is continued until the number of levels are reached.
    
  .. _fig-bisectionAlgo:
- .. figure:: fig/mpy_recursuveBisection.*
+ .. figure:: fig/mpy_recursuveBisection.png
     :width: 40%
     :align: center
 
  Figure `fig-domainDecompose`_ shows the resulting partitioning obtained using the ORB algorithm : (a) for 4 subdomains, (b) for 8 subdomains. Odd number of worker subdomains are also supported with the present implementation.
  
  .. _fig-domainDecompose:
- .. figure:: fig/mpy_ddcmp.*
+ .. figure:: fig/mpy_ddcmp.png
     :width: 40%
     :align: center
 
@@ -564,6 +563,6 @@ _________
 
 
 .. _fig-mpy-benchmark:
-.. figure:: fig/mpy_benchmarkDahu.*
+.. figure:: fig/mpy_benchmarkDahu.png
     :width: 60%
     :align: center
