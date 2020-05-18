@@ -398,7 +398,7 @@ The decomposition can be prescribed on users's side (first section below), but m
 Split by yourself
 -----------------
 
-In order to impose a decomposition it is enough to assign :yref:`Body.subdomain` a value corresponding to the process rank it should belong to. This can be done either in one centralized scene that is later splitted, or by inserting the correct subsets of bodies independently in each subdomain (see section on :ref:`scene construction <sect_mpi_construction>`)
+In order to impose a decomposition it is enough to assign :yref:`Body.subdomain` a value corresponding to the process rank it should belong to. This can be done either in one centralized scene that is later splitted, or by inserting the correct subsets of bodies independently in each subdomain (see section on `scene construction <sect_mpi_construction>`_)
 
 
 In the example script :ysrc:`examples/mpi/testMPI_2D.py` the spheres are generated as follows (centralized construction in this example, easily turned into distributed one). For each available worker a bloc of spheres is generated with a different position in space. The spheres in each block are assigned a subdomain rank (and a color for visualisation) so that they will be picked up by the right worker after mpirun(). 
@@ -512,8 +512,6 @@ The possibility of a "merge" emerged in previous example, as an optional argumen
 If withMerge=True in mpirun then the bodies in master scene are updated to reflect the evolution of their distributed clones. This is done once after finishing the required number of iterations in mpirun. This *merge* operation can include updating interactions. :yref:`mpy.mergeScene <yade.mpy.mergeScene>` does the same within current iteration.
 Merging is an expensive task which requires the communication of large messages and, therefore, it should be done purposely and at a reasonable frequency. It can even be the main bottleneck for massively parallel scenes. Nevertheless it can be usefull for debugging using the 3D view, or for various post-processing tasks. 
 The *MERGE_W_INTERACTIONS* provides full merge, i.e. the interactions in the worker subdomains and between the subdomains are included, else only the position and states of the bodies are use. Merging with interactions should result in a usual yade scene, ready for further time-stepping in non-mpi mode or (more usefull) for some post-processing. The merge operation is not required for a proper time integration in general.
-
-.. _sect_mpi_construction:
 
 Hints and problems to expect
 ____________________________
