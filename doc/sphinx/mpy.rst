@@ -8,6 +8,8 @@ The shared memory and the distributed memory approaches are compatible, i.e. it 
 
 Most calls to OpenMPI library are done in Python using `mpi4py <https://mpi4py.readthedocs.io>`_. For the sake of efficiency some critical communications are triggered via python wrappers of C++ functions, wherein messages are produced, sent/received, and processed.
 
+.. note:: mpy module also has a :yref:`reference documentation<yade.mpy>`.
+
 .. note:: Disclaimer: even though the `yade.mpy` module provides the function :yref:`mpirun<yade.mpy.mpirun>`, which may seem as a simple replacement for `O.run()`, setting up a simulation with mpy might be deceptively triavial.
     As of now, it is anticipated that, in general, a simple replacement of "run" by "mpirun" in an arbitrary script will not speedup anything and may even fail miserably (it could be improved in the future). To understand why, and to tackle the problems, basic knowledge of how MPI works will certainly help (specifically `mpi4py <https://mpi4py.readthedocs.io>`_).
 
@@ -559,4 +561,11 @@ _________________
  - FLUID_COUPLING : Flag for coupling with OpenFOAM. 
  
 
+Benchmark
+_________
 
+
+.. _fig-mpy-benchmark:
+ .. figure:: fig/mpy_benchmarkDahu.*
+    :width: 60%
+    :align: center
