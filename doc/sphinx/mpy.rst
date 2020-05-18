@@ -44,58 +44,58 @@ ___________
 
 For demonstrating the main internal steps in the implemented parallel algorithm let us consider the example script :ysrc:`examples/mpi/testMPI_2D.py`. Executing this script (interactive or passive mode) with three MPI processes generates the scene as shown in `fig-scene-mpi`_. It then executes :yref:`mpirun<yade.mpy.mpirun>`, which triggers the steps described hereafter.
 
-.. _fig-scene-mpi:
-.. figure:: fig/mpy_schema0.png
-	:width: 12cm
-	:align: center
-
-In this scene, we have three MPI processes (three subdomains) and the raw bodies are partitioned among the subdomains/ranks 1 and 2. The master process with subdomain=0 holds the boundary/wall type body. Bodies can be manually assigned or automatically assigned via a domain decomposition algorithm. Details 
-on the dommain decomposition algorithm is presented in the later section of this document. 
-
-**Scene splitting** :
-
-In the function :yref:`yade.mpy.splitScene`, called at the beginning of mpi execution, specific engines are added silently to the scene in order to handle what will happen next. That very intrusive operation can even change settings of some pre-existing engines, in particular :yref:`InsertionSortCollider`, to make them behave with MPI-friendlyness. :yref:`InsertionSortCollider.verletDist` is an important factor controlling the efficiency of the simulations. The reason for this will become evident in the later steps. 
-
-**Bounds dispatching** : In the next step, the :yref:`Body.bound` is dispatched with the :yref:`Aabb` extended as shown in figure `fig-regularbounds`_ (in dotted lines). Note that the :yref:`Subdomain` :yref:`Aabb` is obtained from taking the min and max of the owned bodies, see figure `fig-subDBounds`_  
-with solid coloured lines for the subdomain :yref:`Aabb`. At this time, the min and max of other subdomains are unknown. 
-
-.. _fig-regularbounds:
-.. figure:: fig/mpy_schema1a.png
-	:width: 12cm
-	:align: center
-
-
-.. _fig-subDBounds:
-.. figure:: fig/mpy_schema1b.png
-	:width: 12cm
-	:align: center
-
-
-**Update of Domain bounds** : Once the bounds for the regular bodies and the *local subdomain* has been dispatched, information on the other subdomain bounds are obtained via the function :yref:`yade.mpy.updateDomainBounds`. In this collective communication, each subdomain broadcasts 
-its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdomain-bounds`_  shows a schematic in which each subdomain has received the :yref:`Aabb.min` and :yref:`Aabb.max` of the other subdomains. 
-
-.. _fig-subdomain-bounds:
-.. figure:: fig/mpy_schema2.png
-    :width: 12cm
-    :align: center
-    
-**Parallel Collision detection** : 
-
-- Once the  :yref:`Aabb.min` and :yref:`Aabb.max` of the other subdomains are obtained, the collision detection algorithm is used to determine the bodies that have intersections with the remote subdomains. The ids of the identified bodies are then used to build the :yref:`Subdomain.intersections` list. 
-
- .. _fig-schema-localIntersections:
- .. figure:: fig/mpy_schema3.png
-    :width: 12cm
-    :align: center
-
-- Next step involves obtaining the ids of the remote bodies intersecting with the current subdomain (:yref:`Subdomain.mirrorIntersections`). Each subdomain sends its list of local body intersections to the respective remote subdomains and also receives the list of intersecting ids from the other subdomains. 
-  If the remote bodies do not exist within the current subdomain's :yref:`BodyContainer`, the subdomain then *requests* these remote bodies from the respective subdomain.  A schematic of this operation is shown in figure `fig-mirrorIntersections`_, 
-  in which subdomain=1 receives three bodies from subdomain=2, and 1 body from subdomain=0. subdomain=2 receives three bodies from subdomain=1. subdomain=0 only sends its bodies and does *not* receive from the worker subdomains. This operation sets the stage for communication of the body states to/from the other subdomains. 
-
- .. _fig-mirrorIntersections:
- .. figure:: fig/mpy_sendBodies.png
-    :width: 12cm
-    :align: center
+.. .. _fig-scene-mpi:
+.. .. figure:: fig/mpy_schema0.png
+.. 	:width: 12cm
+.. 	:align: center
+.. 
+.. In this scene, we have three MPI processes (three subdomains) and the raw bodies are partitioned among the subdomains/ranks 1 and 2. The master process with subdomain=0 holds the boundary/wall type body. Bodies can be manually assigned or automatically assigned via a domain decomposition algorithm. Details 
+.. on the dommain decomposition algorithm is presented in the later section of this document. 
+.. 
+.. **Scene splitting** :
+.. 
+.. In the function :yref:`yade.mpy.splitScene`, called at the beginning of mpi execution, specific engines are added silently to the scene in order to handle what will happen next. That very intrusive operation can even change settings of some pre-existing engines, in particular :yref:`InsertionSortCollider`, to make them behave with MPI-friendlyness. :yref:`InsertionSortCollider.verletDist` is an important factor controlling the efficiency of the simulations. The reason for this will become evident in the later steps. 
+.. 
+.. **Bounds dispatching** : In the next step, the :yref:`Body.bound` is dispatched with the :yref:`Aabb` extended as shown in figure `fig-regularbounds`_ (in dotted lines). Note that the :yref:`Subdomain` :yref:`Aabb` is obtained from taking the min and max of the owned bodies, see figure `fig-subDBounds`_  
+.. with solid coloured lines for the subdomain :yref:`Aabb`. At this time, the min and max of other subdomains are unknown. 
+.. 
+.. .. _fig-regularbounds:
+.. .. figure:: fig/mpy_schema1a.png
+.. 	:width: 12cm
+.. 	:align: center
+.. 
+.. 
+.. .. _fig-subDBounds:
+.. .. figure:: fig/mpy_schema1b.png
+.. 	:width: 12cm
+.. 	:align: center
+.. 
+.. 
+.. **Update of Domain bounds** : Once the bounds for the regular bodies and the *local subdomain* has been dispatched, information on the other subdomain bounds are obtained via the function :yref:`yade.mpy.updateDomainBounds`. In this collective communication, each subdomain broadcasts 
+.. its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdomain-bounds`_  shows a schematic in which each subdomain has received the :yref:`Aabb.min` and :yref:`Aabb.max` of the other subdomains. 
+.. 
+.. .. _fig-subdomain-bounds:
+.. .. figure:: fig/mpy_schema2.png
+..     :width: 12cm
+..     :align: center
+..     
+.. **Parallel Collision detection** : 
+.. 
+.. - Once the  :yref:`Aabb.min` and :yref:`Aabb.max` of the other subdomains are obtained, the collision detection algorithm is used to determine the bodies that have intersections with the remote subdomains. The ids of the identified bodies are then used to build the :yref:`Subdomain.intersections` list. 
+.. 
+..  .. _fig-schema-localIntersections:
+..  .. figure:: fig/mpy_schema3.png
+..     :width: 12cm
+..     :align: center
+.. 
+.. - Next step involves obtaining the ids of the remote bodies intersecting with the current subdomain (:yref:`Subdomain.mirrorIntersections`). Each subdomain sends its list of local body intersections to the respective remote subdomains and also receives the list of intersecting ids from the other subdomains. 
+..   If the remote bodies do not exist within the current subdomain's :yref:`BodyContainer`, the subdomain then *requests* these remote bodies from the respective subdomain.  A schematic of this operation is shown in figure `fig-mirrorIntersections`_, 
+..   in which subdomain=1 receives three bodies from subdomain=2, and 1 body from subdomain=0. subdomain=2 receives three bodies from subdomain=1. subdomain=0 only sends its bodies and does *not* receive from the worker subdomains. This operation sets the stage for communication of the body states to/from the other subdomains. 
+.. 
+..  .. _fig-mirrorIntersections:
+..  .. figure:: fig/mpy_sendBodies.png
+..     :width: 12cm
+..     :align: center
 .. 
 .. 
 .. **Update states** :  
