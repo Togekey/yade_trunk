@@ -69,33 +69,33 @@ with solid coloured lines for the subdomain :yref:`Aabb`. At this time, the min 
 .. figure:: fig/mpy_schema1b.png
 	:width: 12cm
 	:align: center
-.. 
-.. 
-.. **Update of Domain bounds** : Once the bounds for the regular bodies and the *local subdomain* has been dispatched, information on the other subdomain bounds are obtained via the function :yref:`yade.mpy.updateDomainBounds`. In this collective communication, each subdomain broadcasts 
-.. its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdomain-bounds`_  shows a schematic in which each subdomain has received the :yref:`Aabb.min` and :yref:`Aabb.max` of the other subdomains. 
-.. 
-.. .. _fig-subdomain-bounds:
-.. .. figure:: fig/mpy_schema2.png
-..     :width: 12cm
-..     :align: center
-..     
-.. **Parallel Collision detection** : 
-.. 
-.. - Once the  :yref:`Aabb.min` and :yref:`Aabb.max` of the other subdomains are obtained, the collision detection algorithm is used to determine the bodies that have intersections with the remote subdomains. The ids of the identified bodies are then used to build the :yref:`Subdomain.intersections` list. 
-.. 
-..  .. _fig-schema-localIntersections:
-..  .. figure:: fig/mpy_schema3.png
-..     :width: 12cm
-..     :align: center
-.. 
-.. - Next step involves obtaining the ids of the remote bodies intersecting with the current subdomain (:yref:`Subdomain.mirrorIntersections`). Each subdomain sends its list of local body intersections to the respective remote subdomains and also receives the list of intersecting ids from the other subdomains. 
-..   If the remote bodies do not exist within the current subdomain's :yref:`BodyContainer`, the subdomain then *requests* these remote bodies from the respective subdomain.  A schematic of this operation is shown in figure `fig-mirrorIntersections`_, 
-..   in which subdomain=1 receives three bodies from subdomain=2, and 1 body from subdomain=0. subdomain=2 receives three bodies from subdomain=1. subdomain=0 only sends its bodies and does *not* receive from the worker subdomains. This operation sets the stage for communication of the body states to/from the other subdomains. 
-.. 
-..  .. _fig-mirrorIntersections:
-..  .. figure:: fig/mpy_sendBodies.png
-..     :width: 12cm
-..     :align: center
+
+
+**Update of Domain bounds** : Once the bounds for the regular bodies and the *local subdomain* has been dispatched, information on the other subdomain bounds are obtained via the function :yref:`yade.mpy.updateDomainBounds`. In this collective communication, each subdomain broadcasts 
+its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdomain-bounds`_  shows a schematic in which each subdomain has received the :yref:`Aabb.min` and :yref:`Aabb.max` of the other subdomains. 
+
+.. _fig-subdomain-bounds:
+.. figure:: fig/mpy_schema2.png
+    :width: 12cm
+    :align: center
+    
+**Parallel Collision detection** : 
+
+- Once the  :yref:`Aabb.min` and :yref:`Aabb.max` of the other subdomains are obtained, the collision detection algorithm is used to determine the bodies that have intersections with the remote subdomains. The ids of the identified bodies are then used to build the :yref:`Subdomain.intersections` list. 
+
+ .. _fig-schema-localIntersections:
+ .. figure:: fig/mpy_schema3.png
+    :width: 12cm
+    :align: center
+
+- Next step involves obtaining the ids of the remote bodies intersecting with the current subdomain (:yref:`Subdomain.mirrorIntersections`). Each subdomain sends its list of local body intersections to the respective remote subdomains and also receives the list of intersecting ids from the other subdomains. 
+  If the remote bodies do not exist within the current subdomain's :yref:`BodyContainer`, the subdomain then *requests* these remote bodies from the respective subdomain.  A schematic of this operation is shown in figure `fig-mirrorIntersections`_, 
+  in which subdomain=1 receives three bodies from subdomain=2, and 1 body from subdomain=0. subdomain=2 receives three bodies from subdomain=1. subdomain=0 only sends its bodies and does *not* receive from the worker subdomains. This operation sets the stage for communication of the body states to/from the other subdomains. 
+
+ .. _fig-mirrorIntersections:
+ .. figure:: fig/mpy_sendBodies.png
+    :width: 12cm
+    :align: center
 .. 
 .. 
 .. **Update states** :  
