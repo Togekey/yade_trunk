@@ -27,9 +27,7 @@ stages:
 
 # If you want to compile everything also on merge_request, change this template.
 .plaftorms_template: &platforms_definition
-  only:
-    - master
-    - merge_request
+
 
 # stage: cmake uses ccache for faster compilation. ccache works only with -DCHUNKSIZE=1
 # Important: to get ccache to work an external volume must be mounted by gitlab-runner (in config file: /etc/gitlab-runner/config.toml)
@@ -147,11 +145,6 @@ stages:
       - install
     expire_in: 2 weeks
 
-# 2.1 build stage: ubuntu 16.04
-make_16_04:
-  <<: *make_definition
-  <<: *artifacts_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04
 
 make_18_04:
   <<: *make_definition
@@ -162,118 +155,6 @@ make_18_04:
     expire_in: 2 weeks
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
 
-make_20_04:
-  <<: *make_definition
-  <<: *artifacts_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu20.04
-
-make_stretch:
-  <<: *make_definition
-  <<: *artifacts_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
-
-make_buster:
-  <<: *make_definition
-  <<: *artifacts_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
-
-make_bullseye:
-  <<: *make_definition
-  <<: *artifacts_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye
-
-make_32bit_bullseye:
-  <<: *make_definition
-  <<: *artifacts_definition
-  before_script:
-    # there can be only one before_script:, so the line below cannot be in a separate template
-    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-32bit-bullseye
-
-make_no_mpi:
-  <<: *make_definition
-  <<: *artifacts_definition
-  before_script:
-    # there can be only one before_script:, so the line below cannot be in a separate template
-    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
-    - export EXTRA_CMAKE_ARGS="-DENABLE_MPI=OFF $EXTRA_CMAKE_ARGS"
-    - echo $EXTRA_CMAKE_ARGS
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye
-
-make_no_vtk:
-  <<: *make_definition
-  <<: *artifacts_definition
-  before_script:
-    # there can be only one before_script:, so the line below cannot be in a separate template
-    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
-    - export EXTRA_CMAKE_ARGS="-DENABLE_VTK=OFF $EXTRA_CMAKE_ARGS"
-    - echo $EXTRA_CMAKE_ARGS
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye
-
-make_debug:
-  <<: *make_definition
-  artifacts:
-    when: always
-    paths:
-      - screenshots
-  before_script:
-    # there can be only one before_script:, so the line below cannot be in a separate template
-    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else export TESTS_AFTER_MAKE="TESTS_AFTER_MAKE"; fi
-    - export EXTRA_CMAKE_ARGS="-DDEBUG=ON $EXTRA_CMAKE_ARGS"
-    - echo $EXTRA_CMAKE_ARGS
-    - export CXXFLAGS="-O2 $CXXFLAGS"
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye
-
-
-
-make_minimal:
-  <<: *make_definition
-  <<: *artifacts_definition
-  before_script:
-    # there can be only one before_script:, so the line below cannot be in a separate template
-    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
-    - export EXTRA_CMAKE_ARGS="-DENABLE_VTK=OFF -DENABLE_MPI=OFF -DENABLE_GUI=OFF -DENABLE_GTS=OFF -DENABLE_TWOPHASEFLOW=OFF -DENABLE_CGAL=OFF -DENABLE_FEMLIKE=OFF -DENABLE_LBMFLOW=OFF -DENABLE_POTENTIAL_BLOCKS=OFF -DENABLE_POTENTIAL_PARTICLES=OFF -DENABLE_GL2PS=OFF -DENABLE_LOGGER=OFF -DENABLE_OPENMP=OFF $EXTRA_CMAKE_ARGS"
-    - echo $EXTRA_CMAKE_ARGS
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye
-
-# _opposite means that all non-minimal options (options that do not reduce significantly amount of compiled code) are set to the setting opposite to the default one
-make_opposite:
-  <<: *make_definition
-  <<: *artifacts_definition
-  before_script:
-    # there can be only one before_script:, so the line below cannot be in a separate template
-    - if [[ ${CI_MERGE_REQUEST_TITLE:0:4} == "WIP:" ]] ; then export SKIP_TEST="SKIP_TEST"; else echo "non-WIP merge request detected"; fi
-    - export EXTRA_CMAKE_ARGS="-DENABLE_LOGGER=OFF -DENABLE_MASK_ARBITRARY=ON -DENABLE_OPENMP=OFF -DENABLE_LIQMIGRATION=ON -DENABLE_PROFILING=ON -DENABLE_SPH=ON -DENABLE_DEFORM=ON $EXTRA_CMAKE_ARGS"
-    - echo $EXTRA_CMAKE_ARGS
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye
-
-make_suse15:
-  <<: *make_definition
-  <<: *artifacts_definition
-  before_script:
-    - export CXXFLAGS="-Wno-int-in-bool-context -Wno-comment $CXXFLAGS"
-    - echo $CXXFLAGS
-  image: registry.gitlab.com/yade-dev/docker-yade:suse15
-
-make_18_04_nogui:
-  <<: *make_definition
-  <<: *artifacts_definition
-  before_script:
-    - export EXTRA_CMAKE_ARGS="-DENABLE_GUI=OFF $EXTRA_CMAKE_ARGS"
-    - echo $EXTRA_CMAKE_ARGS
-  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04_nogui
-
-make_clang:
-  <<: *make_definition
-  <<: *artifacts_definition
-  before_script:
-    - export CC="/usr/bin/clang-9"
-    - export CXX="/usr/bin/clang++-9"
-    # We should escape disabling features for the clang-build. Clang should work exactly like gcc.
-    - export EXTRA_CMAKE_ARGS="-DENABLE_USEFUL_ERRORS=0 $EXTRA_CMAKE_ARGS"
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye
-
-## High precision - testing debian bullseye
 
 # 3.1. test stage
 .test_template: &test_definition
