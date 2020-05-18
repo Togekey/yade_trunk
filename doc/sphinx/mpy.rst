@@ -81,8 +81,7 @@ its :yref:`Aabb.min` and :yref:`Aabb.max` to other subdomains. Figure `fig-subdo
     
 **Parallel Collision detection** : 
 
-- Once the  :yref:`Aabb.min` and :yref:`Aabb.max` of the other subdomains are obtained, the collision detection algorithm is used to determine the bodies that have intersections with the remote subdomains. The ids of the identified bodies are 
-  then used to build the :yref:`Subdomain.intersections` list. 
+- Once the  :yref:`Aabb.min` and :yref:`Aabb.max` of the other subdomains are obtained, the collision detection algorithm is used to determine the bodies that have intersections with the remote subdomains. The ids of the identified bodies are then used to build the :yref:`Subdomain.intersections` list. 
 
  .. _fig-schema-localIntersections:
  .. figure:: fig/mpy_schema3.png
@@ -128,31 +127,31 @@ Explicit initialization from python prompt
 
 A pool of yade instances can be spawned with mpy.initialize() as illustrated hereafter. Mind that the next sequences of commands are supposed to be typed directly in the python prompt after starting yade, it will not give exactly the same result if it is pasted into a script executed by Yade (see the next section on automatic initialization).
 
-.. initialize the context for next "ipython" sections
-.. ipython::
-	:suppress:
-
-	Yade [0]: O.reset()
-
-	Yade [1]: from yade.utils import *
-	
-.. Note: most of the blocks in next ipython directives executes correctly, however it gives slightly different output through sphinx pipeline, unfortunately. Comment out the verbatim to make sphinx effectively execute these mpi sections. 
-	
-.. ipython::
-	:verbatim:
-
-	Yade [2]: wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
-
-	Yade [3]: for x in range(-1,2):
-	   ...:    O.bodies.append(sphere((x,0.5,0),0.5))
-	   ...:
-
-	Yade [5]: from yade import mpy as mp
-
-	@doctest
-	Yade [6]: mp.initialize(4)
-	Master: I will spawn  3  workers
-	->  [6]: (0, 4)
+.. .. initialize the context for next "ipython" sections
+.. .. ipython::
+.. 	:suppress:
+.. 
+.. 	Yade [0]: O.reset()
+.. 
+.. 	Yade [1]: from yade.utils import *
+.. 	
+.. .. Note: most of the blocks in next ipython directives executes correctly, however it gives slightly different output through sphinx pipeline, unfortunately. Comment out the verbatim to make sphinx effectively execute these mpi sections. 
+.. 	
+.. .. ipython::
+.. 	:verbatim:
+.. 
+.. 	Yade [2]: wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
+.. 
+.. 	Yade [3]: for x in range(-1,2):
+.. 	   ...:    O.bodies.append(sphere((x,0.5,0),0.5))
+.. 	   ...:
+.. 
+.. 	Yade [5]: from yade import mpy as mp
+.. 
+.. 	@doctest
+.. 	Yade [6]: mp.initialize(4)
+.. 	Master: I will spawn  3  workers
+.. 	->  [6]: (0, 4)
 
 
 .. .. ipython::
@@ -165,45 +164,45 @@ A pool of yade instances can be spawned with mpy.initialize() as illustrated her
 After mp.initialize(np) the parent instance of yade takes the role of master process (rank=0). It is the only one executing the commands typed directly in the prompt.
 The other instances (rank=1 to rank=np-1) are idle and they wait for commands sent from master. Sending commands to the other instances can be done with `mpy.sendCommand()`, which by default returns the result or the list of results. We use that command below to verify that the spawned workers point to different (still empty) scenes:
 
-.. ipython::
-	:verbatim:
-	
-	Yade [8]: len(O.bodies)
-	 ->  [8]: 4
-
-	Yade [9]: mp.sendCommand(executors="all",command="str(O)") # check scene pointers
-	->  [9]: ['<yade.wrapper.Omega object at 0x7f6db7012300>', '<yade.wrapper.Omega object at 0x7f94c79ec300>', '<yade.wrapper.Omega object at 0x7f5519742300>', '<yade.wrapper.Omega object at 0x7f264dd80300>']
-
-	Yade [10]: mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) #check content
-	->  [10]: [4, 0, 0, 0]
+.. .. ipython::
+.. 	:verbatim:
+.. 	
+.. 	Yade [8]: len(O.bodies)
+.. 	 ->  [8]: 4
+.. 
+.. 	Yade [9]: mp.sendCommand(executors="all",command="str(O)") # check scene pointers
+.. 	->  [9]: ['<yade.wrapper.Omega object at 0x7f6db7012300>', '<yade.wrapper.Omega object at 0x7f94c79ec300>', '<yade.wrapper.Omega object at 0x7f5519742300>', '<yade.wrapper.Omega object at 0x7f264dd80300>']
+.. 
+.. 	Yade [10]: mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) #check content
+.. 	->  [10]: [4, 0, 0, 0]
 
 Sending commands makes it possible to manage all types of message passing using calls to the underlying mpi4py (see mpi4py documentation for more functionalities).
 
-.. ipython::
-	:verbatim:
-	
-	Yade [3]: mp.sendCommand(executors=1,command="message=comm.recv(source=0); print('received',message)")
-
-	Yade [4]: mp.comm.send("hello",dest=1)
-	received hello
+.. .. ipython::
+.. 	:verbatim:
+.. 	
+.. 	Yade [3]: mp.sendCommand(executors=1,command="message=comm.recv(source=0); print('received',message)")
+.. 
+.. 	Yade [4]: mp.comm.send("hello",dest=1)
+.. 	received hello
 
 Every picklable python object (namely, nearly all Yade objects) can be transmitted this way. Remark hereafter the use of :yref:`mpy.mprint <yade.mpy.mprint>` (identifies the worker by number and by font colors). Note also that the commands passed via `sendCommand` are executed in the context of the mpy module, for this reason `comm`, `mprint`, `rank` and all objects of the module are accessed without the `mp.` prefix.
 
-.. ipython::
-	:verbatim:
-
-	Yade [3]: mp.sendCommand(executors=1,command="O.bodies.append(comm.recv(source=0))",wait=False) # leaves the worker idle waiting for an argument to append()
-
-	Yade [4]: b=Body(shape=Sphere(radius=0.7))  # now create body in the context of master
-
-	Yade [5]: mp.comm.send(b,dest=1) # send it to worker 1
-
-	Yade [6]: mp.sendCommand(executors="all",command="mprint('received',[b.shape.radius if hasattr(b.shape,'radius') else None for b in O.bodies])")
-	Master: received [None, 0.5, 0.5, 0.5] 
-	Worker1: received [0.7] 
-	Worker3: received [] 
-	Worker2: received [] 
-	->  [5]: [None, None, None, None] # printing yields no return value, hence that empty list, "wait=False" argument to sendCommand would suppress it
+.. .. ipython::
+.. 	:verbatim:
+.. 
+.. 	Yade [3]: mp.sendCommand(executors=1,command="O.bodies.append(comm.recv(source=0))",wait=False) # leaves the worker idle waiting for an argument to append()
+.. 
+.. 	Yade [4]: b=Body(shape=Sphere(radius=0.7))  # now create body in the context of master
+.. 
+.. 	Yade [5]: mp.comm.send(b,dest=1) # send it to worker 1
+.. 
+.. 	Yade [6]: mp.sendCommand(executors="all",command="mprint('received',[b.shape.radius if hasattr(b.shape,'radius') else None for b in O.bodies])")
+.. 	Master: received [None, 0.5, 0.5, 0.5] 
+.. 	Worker1: received [0.7] 
+.. 	Worker3: received [] 
+.. 	Worker2: received [] 
+.. 	->  [5]: [None, None, None, None] # printing yields no return value, hence that empty list, "wait=False" argument to sendCommand would suppress it
 
 
 Explicit initialization from python script
@@ -215,17 +214,17 @@ Whenever Yade is started with a script as argument the script name will be remem
 
 If the first commands above are pasted into a script used to start Yade, there is a small surprise: all instances insert the same bodies as master (with interactive execution only master was inserting). Here is the script:
 
-.. ipython::
-	:verbatim:
-
-	# script 'test1.py'
-	wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
-	for x in range(-1,2):
-		O.bodies.append(sphere((x,0.5,0),0.5))
-	from yade import mpy as mp
-	mp.initialize(4)
-	print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
-	print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) )
+.. .. ipython::
+.. 	:verbatim:
+.. 
+.. 	# script 'test1.py'
+.. 	wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
+.. 	for x in range(-1,2):
+.. 		O.bodies.append(sphere((x,0.5,0),0.5))
+.. 	from yade import mpy as mp
+.. 	mp.initialize(4)
+.. 	print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
+.. 	print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) )
 
 and the output reads:
 
