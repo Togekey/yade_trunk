@@ -1028,13 +1028,13 @@ def mpirun(nSteps,np=None,withMerge=False):
 	Parallel version of O.run() using MPI domain decomposition.
 	
 	Parameters
-        ----------
-        nSteps : int
-            The numer of steps to compute
-        np : int
-            number of mpi workers (master+subdomains), if=1 the function fallback to O.run()
-        withMerge : bool
-            wether subdomains should be merged into master at the end of the run (default False). If True the scene in the master process is exactly in the same state as after O.run(nSteps,True). The merge can be time consumming, it is recommended to activate only if post-processing or other similar tasks require it.
+	
+	nSteps : 
+		The numer of steps to compute
+	np : int
+		number of mpi workers (master+subdomains), if=1 the function fallback to O.run()
+	withMerge : bool
+		wether subdomains should be merged into master at the end of the run (default False). If True the scene in the master process is exactly in the same state as after O.run(nSteps,True). The merge can be time consumming, it is recommended to activate only if post-processing or other similar tasks require it.
 	'''
 	
 	# Detect evironment (interactive or not, initialized or not...)
