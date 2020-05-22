@@ -3,12 +3,14 @@
 MPI parallelization
 ===================
 
-The module :yref:`yade.mpy` implements parallelization by domain decomposition (distributed memory) using the Message Passing Interface (MPI) implemented by OpenMPI. It aims at exploiting large numbers of cores, where shared memory techniques (OpenMP) are helpess.
-The shared memory and the distributed memory approaches are compatible, i.e. it is possible to run hybrid jobs using both, as shown below (and it may well be the optimal solution in many cases).
+The module :yref:`yade.mpy` implements parallelization by domain decomposition (distributed memory) using the Message Passing Interface (MPI) implemented by OpenMPI. It aims at exploiting large numbers of compute nodes by running independent instances of yade on them.
+The shared memory and the distributed memory approaches are compatible, i.e. it is possible to run hybrid jobs using both, and it may well be the optimal solution in some cases.
 
-Most calls to OpenMPI library are done in Python using `mpi4py <https://mpi4py.readthedocs.io>`_. For the sake of efficiency some critical communications are triggered via python wrappers of C++ functions, wherein messages are produced, sent/received, and processed.
+Most (initially *all*) calls to OpenMPI library are done in Python using `mpi4py <https://mpi4py.readthedocs.io>`_. However for the sake of efficiency some critical communications are triggered via python wrappers of C++ functions, wherein messages are produced, sent/received, and processed.
 
-.. note:: mpy module also has a :yref:`reference documentation<yade.mpy>`.
+This module development was started in 2018. It received contributions during a `HPC hackathon <http://geomec.net/newsletter/?p=432>`_. An extension enables :ref:`parallel coupling with OpenFoam <FoamCouplingEngine>`.
+
+.. note:: see also :yref:`reference documentation of the mpy <yade.mpy>` module.
 
 .. note:: Disclaimer: even though the `yade.mpy` module provides the function :yref:`mpirun<yade.mpy.mpirun>`, which may seem as a simple replacement for `O.run()`, setting up a simulation with mpy might be deceptively triavial.
     As of now, it is anticipated that, in general, a simple replacement of "run" by "mpirun" in an arbitrary script will not speedup anything and may even fail miserably (it could be improved in the future). To understand why, and to tackle the problems, basic knowledge of how MPI works will certainly help (specifically `mpi4py <https://mpi4py.readthedocs.io>`_).
@@ -124,7 +126,15 @@ The interactive mode aims primarily at inspecting the simulation after some MPI 
 Explicit initialization from python prompt
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A pool of yade instances can be spawned with mpy.initialize() as illustrated hereafter. Mind that the next sequences of commands are supposed to be typed directly in the python prompt after starting yade, it will not give exactly the same result if it is pasted into a script executed by Yade (see the next section on automatic initialization)::
+A pool of yade instances can be spawned with mpy.initialize() as illustrated hereafter. Mind that the next sequences of commands are supposed to be typed directly in the python prompt after starting yade, it will not give exactly the same result if it is pasted into a script executed by Yade (see the next section on automatic initialization):
+
+.. ipython::
+	
+	@suppress
+	Yade [1]: from yade.utils import *
+	
+	@suppress
+	Yade [1]: O.engines=yade.utils.defaultEngines
 
 	Yade [2]: wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
 
@@ -133,43 +143,56 @@ A pool of yade instances can be spawned with mpy.initialize() as illustrated her
 	   ...:
 
 	Yade [5]: from yade import mpy as mp
-
+	
+	@suppress
+	Yade [5]: mp.COLOR_OUTPUT=False
+	
 	@doctest
 	Yade [6]: mp.initialize(4)
 	Master: I will spawn  3  workers
 	->  [6]: (0, 4)
 
-	
-.. Note: most of the python blocks execute correctly as ipython directives on mpy-friendly platform (e.g. ubuntu16 but there are problems in some pipelines, hence everything is turned into literal blocks.
-
-
-.. .. ipython::
-.. 
-.. 	@doctest
-.. 	Yade [1]: 1+1
-.. 	->  [1]: 4
-
-
 After mp.initialize(np) the parent instance of yade takes the role of master process (rank=0). It is the only one executing the commands typed directly in the prompt.
-The other instances (rank=1 to rank=np-1) are idle and they wait for commands sent from master. Sending commands to the other instances can be done with `mpy.sendCommand()`, which by default returns the result or the list of results. We use that command below to verify that the spawned workers point to different (still empty) scenes::
-	
+The other instances (rank=1 to rank=np-1) are idle and they wait for commands sent from master. Sending commands to the other instances can be done with `mpy.sendCommand()`, which by default returns the result or the list of results. We use that command below to verify that the spawned workers point to different (still empty) scenes:
+
+.. note: the ipython directive works fine but the stdout from workers is not captured unfortunately
+.. it appears mangled with sphinx output at build time instead, so we use verbatim to get correct display
+
+.. ipython::
+
+	:verbatim:
+
 	Yade [8]: len(O.bodies)
 	 ->  [8]: 4
-
-	Yade [9]: mp.sendCommand(executors="all",command="str(O)") # check scene pointers
-	->  [9]: ['<yade.wrapper.Omega object at 0x7f6db7012300>', '<yade.wrapper.Omega object at 0x7f94c79ec300>', '<yade.wrapper.Omega object at 0x7f5519742300>', '<yade.wrapper.Omega object at 0x7f264dd80300>']
-
+	 
 	Yade [10]: mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) #check content
 	->  [10]: [4, 0, 0, 0]
+	
+	Yade [9]: mp.sendCommand(executors="all",command="str(O)") # check scene pointers
+	 ->  [9]: 
+	['<yade.wrapper.Omega object at 0x7f9c0a399490>',
+	'<yade.wrapper.Omega object at 0x7f9231213490>',
+	'<yade.wrapper.Omega object at 0x7f20086a1490>',
+	'<yade.wrapper.Omega object at 0x7f622b47f490>']
 
-Sending commands makes it possible to manage all types of message passing using calls to the underlying mpi4py (see mpi4py documentation for more functionalities)::
+Sending commands makes it possible to manage all types of message passing using calls to the underlying mpi4py (see mpi4py documentation).
+Be carefull with sendCommand "blocking" behavior by default. Next example would hang without "wait=False" since both master and worker would be waiting for a message from each other.
 
-	Yade [3]: mp.sendCommand(executors=1,command="message=comm.recv(source=0); print('received',message)")
+
+.. ipython::
+
+	:verbatim:
+
+	Yade [3]: mp.sendCommand(executors=1,command="message=comm.recv(source=0); print('received',message)",wait=False)
 
 	Yade [4]: mp.comm.send("hello",dest=1)
 	received hello
 
-Every picklable python object (namely, nearly all Yade objects) can be transmitted this way. Remark hereafter the use of :yref:`mpy.mprint <yade.mpy.mprint>` (identifies the worker by number and by font colors). Note also that the commands passed via `sendCommand` are executed in the context of the mpy module, for this reason `comm`, `mprint`, `rank` and all objects of the module are accessed without the `mp.` prefix.::
+Every picklable python object (namely, nearly all Yade objects) can be transmitted this way. Remark hereafter the use of :yref:`mpy.mprint <yade.mpy.mprint>` (identifies the worker by number and by font colors). Note also that the commands passed via `sendCommand` are executed in the context of the mpy module, for this reason `comm`, `mprint`, `rank` and all objects of the module are accessed without the `mp.` prefix.
+
+.. ipython::
+
+	:verbatim:
 
 	Yade [3]: mp.sendCommand(executors=1,command="O.bodies.append(comm.recv(source=0))",wait=False) # leaves the worker idle waiting for an argument to append()
 
@@ -182,7 +205,7 @@ Every picklable python object (namely, nearly all Yade objects) can be transmitt
 	Worker1: received [0.7] 
 	Worker3: received [] 
 	Worker2: received [] 
-	->  [5]: [None, None, None, None] # printing yields no return value, hence that empty list, "wait=False" argument to sendCommand would suppress it
+	->  [5]: [None, None, None, None] # printing yields no return value, hence that empty list of returns, "wait=False" argument to sendCommand would suppress it
 
 
 Explicit initialization from python script
@@ -194,7 +217,7 @@ Whenever Yade is started with a script as argument the script name will be remem
 
 This behaviour is what happens usually with MPI: all processes execute the same program. It is also what happens with "mpiexec -np N yade ...".
 
-If the first commands above are pasted into a script used to start Yade, there is a small surprise: all instances insert the same bodies as master (with interactive execution only master was inserting). Here is the script::
+If the first commands above are pasted into a script used to start Yade, all workers insert the same bodies as master (with interactive execution only master was inserting). Here is the script::
 
 	# script 'test1.py'
 	wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
@@ -205,7 +228,11 @@ If the first commands above are pasted into a script used to start Yade, there i
 	print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
 	print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) )
 
-and the output reads::
+and the output reads:
+
+.. ipython::
+
+	:verbatim:
 	
 	yade test1.py 
 	...
@@ -250,6 +277,31 @@ We could also use `rank` to assign bodies from different regions of space to dif
 	# rank is accessed without "mp." prefix as it is interpreted in mpy module's scope
 	mp.sendCommand(executors=[1,2],command= "ids=O.bodies.append([sphere((xx,1.5+rank,0),0.5) for xx in range(-1,2)])")
 	
+Keep in mind that the position of the call *mp.initialize(N)* relative to the other commands has no consequence for the execution by the workers (for them initialize() just returns), hence program logic should not rely on it. The workers execute the script from begin to end with the same MPI context, already set when the first line is executed. It can lead to counter intuitive behavior, here is a script::
+
+	# testInit.py
+	# script.py
+	O.bodies.append([Body() for i in range(100)])
+
+	from yade import mpy as mp
+	mp.mprint("before initialize: rank ", mp.rank,"/", mp.numThreads,"; ",len(O.bodies)," bodies")
+	mp.initialize(2)
+	mp.mprint("after initialize: rank ", mp.rank,"/", mp.numThreads,"; ",len(O.bodies)," bodies")
+
+and the output:
+	
+.. ipython::
+
+	:verbatim:
+	
+	Running script testInit.py
+	Master: before initialize: rank  0 / 1 ;  100  bodies 
+	Master: will spawn  1  workers 
+	Master: after initialize: rank  0 / 4 ;  100  bodies 
+	Worker1: before initialize: rank  2 / 4 ;  100  bodies 
+	Worker1: after initialize: rank  2 / 4 ;  100  bodies 
+
+
 
 
 mpirun (automatic initialization)
@@ -262,11 +314,12 @@ The subdomains will be merged into a centralized scene on master process at the 
 
 Here is a concrete example where a floor is assigned to master and multiple groups of spheres are assigned to subdomains::
 
-	NSTEPS=5000 #turn it >0 to see time iterations, else only initilization 
-	numThreads = 4 # number of threads to be spawned, (in interactive mode).
 
 	import os
 	from yade import mpy as mp
+	
+	NSTEPS=5000 #turn it >0 to see time iterations, else only initilization 
+	numThreads = 4 # number of threads to be spawned, (in interactive mode).
 
 	#materials 
 	young = 5e6
@@ -331,7 +384,7 @@ For running further timesteps, the mp.mpirun command has to be executed in yade 
 	
 	Yade [1]: mp.sendCommand([1,2],"kineticEnergy()",True) # get kineticEnergy from workers 1 and 2. 
 	
-	Yade [2]: mp.mpirun(1,4,withMerge=True) #run for 1 step and merge scene into master. 
+	Yade [2]: mp.mpirun(1,4,withMerge=True) # run for 1 step and merge scene into master. Repeat multiple time to watch evolution in QGL view
 	
 
 Non-interactive execution
@@ -460,8 +513,8 @@ The relevant fragment, where the filtering is done by skipping all steps of a lo
 					ids.append(id)
 		for id in ids: O.bodies[id].subdomain = subdNo
 		
-		if mp.rank==0: #the wall belongs to master
-			WALL_ID=O.bodies.insertAtId(box(center=(Nx*L/2,-0.5,Nz*N/2),extents=(2*Nx*L,0,2*Nz*N),fixed=True),(N*M*L*(numThreads-1)))
+	if mp.rank==0: #the wall belongs to master
+		WALL_ID=O.bodies.insertAtId(box(center=(Nx*L/2,-0.5,Nz*N/2),extents=(2*Nx*L,0,2*Nz*N),fixed=True),(N*M*L*(numThreads-1)))
 
 
 The bissection algorithm can be used for defining the initial split, in the distributed case too, since it takes a points dataset as input. Provided that all workers work with the same dataset (e.g. the same sequence of a random number generator) they will all reach the same partitioning, and they can instanciate their bodies on this basis. 
