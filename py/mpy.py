@@ -179,16 +179,14 @@ def colorDomains():
 		b.shape.color=colorScale[b.subdomain]
 
 def initialize(np):
-	global comm,rank,numThreads,userScriptInCheckList,caller_name
+	global comm,rank,numThreads,userScriptInCheckList
 	process_count = comm.Get_size()
 
 	if(process_count<np):
 	
-		# DIRTY HACK 1: this is to detect when we run regression tests and prevent mpirun to enter a parallel testing spree
-		stack=inspect.stack()
-		if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
-			userScriptInCheckList=stack[1][1]
-		caller_name = stack[2][3]
+		# HACK 1: this is to detect when we run regression tests and prevent mpirun to enter a parallel testing spree
+		if "--check" in sys.yade_argv:
+			userScriptInCheckList=inspect.stack()[2][1]
 		# END HACK 1 (continued below)
 		
 		# HACK 2: yadeSphinx.py itself must not run parallel (only examples in it may run parallel), remove it from argv so workers will not run it
@@ -1065,7 +1063,7 @@ def mpirun(nSteps,np=None,withMerge=False):
 	#global userScriptInCheckList
 	#if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
 		#userScriptInCheckList=stack[1][1]
-	#caller_name = stack[2][3]
+	caller_name = inspect.stack()[2][3]
 	#mprint("stack", stack)
 	
 	if (np>numThreads):  
