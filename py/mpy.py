@@ -52,7 +52,6 @@ import yade.bisectionDecomposition as dd
 ##  Initialization
 
 this = sys.modules[__name__]
-sys.stderr.write=sys.stdout.write # so we see error messages from workers
 
 worldComm = MPI.COMM_WORLD
 color = 3; key =0;
@@ -63,15 +62,20 @@ if parent!=MPI.COMM_NULL: 	# if executor is a spawned worker merge comm with mas
 	comm=parent.Merge()
 
 rank = comm.Get_rank()		# set rank and numThreads
+if rank>0:
+	sys.stderr.write=sys.stdout.write # so we see error messages from workers in terminal
 numThreads = comm.Get_size()
 waitingCommands=False		# are workers currently interactive?
 userScriptInCheckList=""	# detect if mpy is executed by checkList.py
+caller_name=""			# name of the executed script (typically user script, alternatively yadeSphinx.py or checkList.py)
+
 
 ## Config flags
 
 ACCUMULATE_FORCES=True #control force summation on master's body. FIXME: if false master goes out of sync since nothing is blocking rank=0 thread
 VERBOSE_OUTPUT=False
 NO_OUTPUT=False
+COLOR_OUTPUT=True # color mprint output per rank / turn off here for sphinx build mainly
 MAX_RANK_OUTPUT=5 #: larger ranks will be skipped in mprint
 SEND_SHAPES=False #if false only bodies' states are communicated between threads, else shapes as well (to be implemented)
 ERASE_REMOTE = True # True is MANDATORY. Erase bodies not interacting wit a given subdomain? else keep dead clones of all bodies in each scene
@@ -118,7 +122,7 @@ _REALLOC_COUNT=0
 
 
 # for coloring processes outputs differently
-bcolors=['\033[95m','\033[94m','\033[93m','\033[92m','\033[91m','\033[90m','\033[95m','\033[93m','\033[91m','\033[1m','\033[4m','\033[0m']
+bcolors=['\x1b[95m','\x1b[94m','\x1b[93m','\x1b[92m','\x1b[91m','\x1b[90m','\x1b[95m','\x1b[93m','\x1b[91m','\x1b[1m','\x1b[4m','\x1b[0m']
 
 
 
@@ -127,8 +131,8 @@ def mprint(*args): #this one will print regardless of VERBOSE_OUTPUT
 	Print with rank-reflecting color regardless of mpy.VERBOSE_OUTPUT, still limited to rank<=mpy.MAX_RANK_OUTPUT
 	"""
 	if NO_OUTPUT or rank>MAX_RANK_OUTPUT: return
-	m=bcolors[min(rank,len(bcolors)-2)]
-	resetFont='\033[0m'
+	m=bcolors[min(rank,len(bcolors)-2)]  if COLOR_OUTPUT else ''
+	resetFont='\x1b[0m' if COLOR_OUTPUT else ''
 	if rank==0:
 		m+='Master: '
 	else:
@@ -136,6 +140,7 @@ def mprint(*args): #this one will print regardless of VERBOSE_OUTPUT
 	for a in args:
 		m+=str(a)+" "
 	print (m+resetFont)
+	# sys.stdout.flush() # maybe?
 
 def wprint(*args):
 	"""
@@ -174,17 +179,31 @@ def colorDomains():
 		b.shape.color=colorScale[b.subdomain]
 
 def initialize(np):
-	global comm,rank,numThreads
+	global comm,rank,numThreads,userScriptInCheckList,caller_name
 	process_count = comm.Get_size()
 
 	if(process_count<np):
+	
+		# DIRTY HACK 1: this is to detect when we run regression tests and prevent mpirun to enter a parallel testing spree
+		stack=inspect.stack()
+		if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
+			userScriptInCheckList=stack[1][1]
+		caller_name = stack[2][3]
+		# END HACK 1 (continued below)
+		
+		# HACK 2: yadeSphinx.py itself must not run parallel (only examples in it may run parallel), remove it from argv so workers will not run it
+		# they will wait after being initialized, responding to messages sent trhough ipython directives within *.rst source
+		yadeArgv = sys.yade_argv.copy()
+		if yadeArgv.count("yadeSphinx.py"): yadeArgv.remove("yadeSphinx.py")
+		# END HACK 2
+		
 		numThreads=np
 		if not yade.runtime.opts.mpi_mode: #MASTER only, the workers will be already in mpi_mode
 			mprint("will spawn ",numThreads-process_count," workers")
 			if (userScriptInCheckList==""): #normal case
-				comm = MPI.COMM_WORLD.Spawn(sys.yade_argv[0], args=sys.yade_argv[1:],maxprocs=numThreads-process_count).Merge()
-			else: #HACK, otherwise, handle execution from checkList.py otherwise will we run checkList.py in parallel
-				os.environ['OMPI_MCA_rmaps_base_oversubscribe'] = "1" #else spawn fails randomly
+				comm = MPI.COMM_WORLD.Spawn(yadeArgv[0], args=yadeArgv[1:],maxprocs=numThreads-process_count).Merge()
+			else: #HACK 1 (continued) handle execution by checkList.py, otherwise would we run checkList.py in parallel
+				os.environ['OMPI_MCA_rmaps_base_oversubscribe'] = "1" #else mpi would fail in case of insufficient cores
 				comm = MPI.COMM_WORLD.Spawn(sys.yade_argv[0], args=[userScriptInCheckList],maxprocs=numThreads-process_count).Merge()
 			#TODO: if process_count>numThreads, free some workers
 			yade.runtime.opts.mpi_mode=True
@@ -1035,17 +1054,19 @@ def mpirun(nSteps,np=None,withMerge=False):
 	withMerge : wether subdomains should be merged into master at the end of the run (default False). If True the scene in the master process is exactly in the same state as after O.run(nSteps,True). The merge can be time consumming, it is recommended to activate only if post-processing or other similar tasks require it.
 	'''
 	
-	# Detect evironment (interactive or not, initialized or not...)
 	if np==None: np=numThreads
 	if(np==1):
 		mprint("single-core, fall back to O.run()")
 		O.run(nSteps,True)
 		return
-	stack=inspect.stack()
-	global userScriptInCheckList
-	if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
-		userScriptInCheckList=stack[1][1]
-	caller_name = stack[2][3]
+	
+	# DIRTY HACK: this is to detect when we run regression tests and prevent mpirun to enter a parallel testing spree
+	#stack=inspect.stack()
+	#global userScriptInCheckList
+	#if len(stack[3][1])>12 and stack[3][1][-12:]=="checkList.py":
+		#userScriptInCheckList=stack[1][1]
+	#caller_name = stack[2][3]
+	#mprint("stack", stack)
 	
 	if (np>numThreads):  
 		if numThreads==1: initialize(np) #this will set numThreads
