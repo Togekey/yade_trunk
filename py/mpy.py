@@ -189,10 +189,14 @@ def initialize(np):
 			userScriptInCheckList=inspect.stack()[2][1]
 		# END HACK 1 (continued below)
 		
-		# HACK 2: yadeSphinx.py itself must not run parallel (only examples in it may run parallel), remove it from argv so workers will not run it
-		# they will wait after being initialized, responding to messages sent trhough ipython directives within *.rst source
+		# HACK 2:
 		yadeArgv = sys.yade_argv.copy()
-		if yadeArgv.count("yadeSphinx.py"): yadeArgv.remove("yadeSphinx.py")
+		if yadeArgv.count("yadeSphinx.py"):
+			# yadeSphinx.py itself must not run parallel (only examples in it may run parallel), remove it from argv so workers will not run it
+			# they will wait after being initialized, responding to messages sent trhough ipython directives within *.rst source
+			yadeArgv.remove("yadeSphinx.py")
+			# suppress (harmless?) messages on newer versions of linux (docker specific) - https://github.com/open-mpi/ompi/issues/4948
+			os.environ['OMPI_MCA_btl_vader_single_copy_mechanism']=none
 		# END HACK 2
 		
 		numThreads=np
@@ -201,7 +205,8 @@ def initialize(np):
 			if (userScriptInCheckList==""): #normal case
 				comm = MPI.COMM_WORLD.Spawn(yadeArgv[0], args=yadeArgv[1:],maxprocs=numThreads-process_count).Merge()
 			else: #HACK 1 (continued) handle execution by checkList.py, otherwise would we run checkList.py in parallel
-				os.environ['OMPI_MCA_rmaps_base_oversubscribe'] = "1" #else mpi would fail in case of insufficient cores
+				os.environ['OMPI_MCA_rmaps_base_oversubscribe'] = "1" # else mpi would fail in case of insufficient cores
+				os.environ['OMPI_MCA_btl_vader_single_copy_mechanism']=none # suppress (harmless?) messages on newer versions of linux (docker specific)
 				comm = MPI.COMM_WORLD.Spawn(sys.yade_argv[0], args=[userScriptInCheckList],maxprocs=numThreads-process_count).Merge()
 			#TODO: if process_count>numThreads, free some workers
 			yade.runtime.opts.mpi_mode=True
@@ -776,7 +781,7 @@ def splitScene():
 	Precondition: the bodies have subdomain no. set in user script
 	'''
 	if not COPY_MIRROR_BODIES_WHEN_COLLIDE: mprint("COPY_MIRROR_BODIES_WHEN_COLLIDE=False is not supported")
-	if not ERASE_REMOTE: mprint("ERASE_REMOTE=False is not supported")
+	#if not ERASE_REMOTE: mprint("ERASE_REMOTE=False is not supported")
 	if not O.splittedOnce:
 		O.initialEngines = O.engines
 		if DOMAIN_DECOMPOSITION: #if not already partitionned by the user we partition here
