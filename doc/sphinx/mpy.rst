@@ -128,7 +128,8 @@ Explicit initialization from python prompt
 
 A pool of yade instances can be spawned with mpy.initialize() as illustrated hereafter. Mind that the next sequences of commands are supposed to be typed directly in the python prompt after starting yade, it will not give exactly the same result if it is pasted into a script executed by Yade (see the next section on automatic initialization):
 
-.. ipython::
+.. .. ipython:: # avoid issues in gitlab for now
+.. code-block:: python
 	
 	@suppress
 	Yade [1]: from yade.utils import *
@@ -158,9 +159,12 @@ The other instances (rank=1 to rank=np-1) are idle and they wait for commands se
 .. note: the ipython directive works fine but the stdout from workers is not captured unfortunately
 .. it appears mangled with sphinx output at build time instead, so we use verbatim to get correct display
 
-.. ipython::
 
-	:verbatim:
+.. .. ipython:: 
+
+.. 	:verbatim:
+
+.. code-block:: python
 
 	Yade [8]: len(O.bodies)
 	 ->  [8]: 4
@@ -179,9 +183,11 @@ Sending commands makes it possible to manage all types of message passing using 
 Be carefull with sendCommand "blocking" behavior by default. Next example would hang without "wait=False" since both master and worker would be waiting for a message from each other.
 
 
-.. ipython::
-
-	:verbatim:
+.. .. ipython::
+.. 
+.. 	:verbatim:
+	
+.. code-block:: python
 
 	Yade [3]: mp.sendCommand(executors=1,command="message=comm.recv(source=0); print('received',message)",wait=False)
 
@@ -190,9 +196,11 @@ Be carefull with sendCommand "blocking" behavior by default. Next example would 
 
 Every picklable python object (namely, nearly all Yade objects) can be transmitted this way. Remark hereafter the use of :yref:`mpy.mprint <yade.mpy.mprint>` (identifies the worker by number and by font colors). Note also that the commands passed via `sendCommand` are executed in the context of the mpy module, for this reason `comm`, `mprint`, `rank` and all objects of the module are accessed without the `mp.` prefix.
 
-.. ipython::
-
-	:verbatim:
+.. .. ipython::
+.. 
+.. 	:verbatim:
+	
+.. code-block:: python
 
 	Yade [3]: mp.sendCommand(executors=1,command="O.bodies.append(comm.recv(source=0))",wait=False) # leaves the worker idle waiting for an argument to append()
 
@@ -230,10 +238,12 @@ If the first commands above are pasted into a script used to start Yade, all wor
 
 and the output reads:
 
-.. ipython::
+.. .. ipython::
+.. 
+.. 	:verbatim:
 
-	:verbatim:
-	
+.. code-block:: python
+
 	yade test1.py 
 	...
 	Running script test1.py
@@ -290,9 +300,11 @@ Keep in mind that the position of the call *mp.initialize(N)* relative to the ot
 
 and the output:
 	
-.. ipython::
-
-	:verbatim:
+.. .. ipython::
+.. 
+.. 	:verbatim:
+	
+.. code-block:: python
 	
 	Running script testInit.py
 	Master: before initialize: rank  0 / 1 ;  100  bodies 
