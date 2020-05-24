@@ -45,7 +45,10 @@ Hints:
 
 import sys,os,inspect
 import time
+
+os.environ["OMPI_MCA_rmaps_base_oversubscribe"]="1" # needed here, after importing MPI is too late (or there is a way to update flags before the spawn?)
 from mpi4py import MPI
+
 import numpy as np
 import yade.bisectionDecomposition as dd
 
@@ -205,7 +208,6 @@ def initialize(np):
 			if (userScriptInCheckList==""): #normal case
 				comm = MPI.COMM_WORLD.Spawn(yadeArgv[0], args=yadeArgv[1:],maxprocs=numThreads-process_count).Merge()
 			else: #HACK 1 (continued) handle execution by checkList.py, otherwise would we run checkList.py in parallel
-				os.environ['OMPI_MCA_rmaps_base_oversubscribe'] = "1" # else mpi would fail in case of insufficient cores
 				os.environ['OMPI_MCA_btl_vader_single_copy_mechanism']='none' # suppress (harmless?) messages on newer versions of linux (docker specific)
 				comm = MPI.COMM_WORLD.Spawn(sys.yade_argv[0], args=[userScriptInCheckList],maxprocs=numThreads-process_count).Merge()
 			#TODO: if process_count>numThreads, free some workers
