@@ -3,7 +3,7 @@
 # mpiexec -n 4 ./yadempi script.py #non interactive
 
 # Only if MPI is enabled and is not using openmpi v2 (too unstable, see https://gitlab.com/yade-dev/trunk/-/merge_requests/489#note_347864439)
-if 'MPI' in yade.config.features and yade.libVersions.getVersion("mpi")[0]!=2: # how could we just "return", in one line, instead of indenting an entire script?...
+if 'MPI' in yade.config.features and yade.libVersions.getAllVersionsCpp()['mpi'][0][0]!=2: # how could we just "return", in one line, instead of indenting an entire script?...
 		
 	NSTEPS=100 #turn it >0 to see time iterations, else only initilization TODO!HACK
 	#NSTEPS=50 #turn it >0 to see time iterations, else only initilization
