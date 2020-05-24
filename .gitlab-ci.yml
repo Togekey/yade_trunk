@@ -782,6 +782,7 @@ pages:
   <<: *gitlab_runner_retry_definition
   only:
     - master
+    - merge-requests
   script:
     - cd $CI_PROJECT_DIR/deb/yadedaily
     # see comments in make_template, but here give smaller JOBSNUM because this runs on master only, so the cores can be better utilized on merge_request
