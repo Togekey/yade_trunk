@@ -69,4 +69,6 @@ if 'MPI' in yade.config.features and yade.libVersions.getAllVersionsCpp()['mpi']
 		refEk=1120803.9955506378
 		if (abs(Ek-refEk)/refEk)>1e-10:
 			raise YadeCheckError("kinetic energy changed by"+str((Ek-refEk)/refEk))
+else:
+	print("openMPI v2 found, too unstable, this test is skipped")
 
