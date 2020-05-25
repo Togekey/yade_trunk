@@ -45,33 +45,20 @@ Hints:
 
 import sys,os,inspect
 import time
-
-os.environ["OMPI_MCA_rmaps_base_oversubscribe"]="1" # needed here, after importing MPI is too late (or there is a way to update flags before the spawn?)
-from mpi4py import MPI
-
 import numpy as np
-import yade.bisectionDecomposition as dd
-
-##  Initialization
-
+import yade.runtime
 this = sys.modules[__name__]
 
-worldComm = MPI.COMM_WORLD
-color = 3; key =0;
-comm = worldComm.Split(color, key)  # if OFOAM coupled, split communicator
 
-parent = comm.Get_parent()
-if parent!=MPI.COMM_NULL: 	# if executor is a spawned worker merge comm with master 
-	comm=parent.Merge()
+#from yade import *
+from yade.utils import *
+from yade.wrapper import *
+import yade.bisectionDecomposition as dd
+#import yade.runtime
+from yade import timing; timing.mpi={} #prepare a dictionnary for mpi-related stats
 
-rank = comm.Get_rank()		# set rank and numThreads
-if rank>0:
-	sys.stderr.write=sys.stdout.write # so we see error messages from workers in terminal
-numThreads = comm.Get_size()
-waitingCommands=False		# are workers currently interactive?
-userScriptInCheckList=""	# detect if mpy is executed by checkList.py
-caller_name=""			# name of the executed script (typically user script, alternatively yadeSphinx.py or checkList.py)
-
+# for coloring bodies
+import colorsys
 
 ## Config flags
 
@@ -106,6 +93,22 @@ fluidBodies = []
 USE_CPP_REALLOC = True
 USE_CPP_INTERS = False #sending intersections using mpi4py sometimes fails (dependent on mpi4py version, needs confirmation) (ERR : MPI_ERR_TRUNCATE)
 
+
+### Internals
+
+comm = None
+rank = None
+numThreads = None
+MPI = None # will be mpi4py.MPI after configure()
+
+waitingCommands=False		# are workers currently interactive?
+userScriptInCheckList=""	# detect if mpy is executed by checkList.py
+caller_name=""			# name of the executed script (typically user script, alternatively yadeSphinx.py or checkList.py)
+_REALLOC_COUNT=0
+colorScale=None
+# for coloring processes outputs differently
+bcolors=['\x1b[95m','\x1b[94m','\x1b[93m','\x1b[92m','\x1b[91m','\x1b[90m','\x1b[95m','\x1b[93m','\x1b[91m','\x1b[1m','\x1b[4m','\x1b[0m']
+
 #tags for mpi messages
 _SCENE_=11
 _SUBDOMAINSIZE_=12
@@ -120,14 +123,38 @@ _RETURN_VALUE_ = 20
 _ASSIGNED_IDS_ = 21
 _GET_CONNEXION_= 22
 
-#local vars
-_REALLOC_COUNT=0
 
+## Initialization
 
-# for coloring processes outputs differently
-bcolors=['\x1b[95m','\x1b[94m','\x1b[93m','\x1b[92m','\x1b[91m','\x1b[90m','\x1b[95m','\x1b[93m','\x1b[91m','\x1b[1m','\x1b[4m','\x1b[0m']
+def configure(): # calling this function will import mpi4py.MPI, 
+	'''
+	Import MPI and define context, configure will no spawn workers by itself, that is done by initialize()
+	openmpi environment variables needs to be set before calling configure()
+	'''
+	global comm, rank, numThreads, colorScale, MPI
+	#os.environ["OMPI_MCA_rmaps_base_oversubscribe"]="1" # needed here, after importing MPI is too late (or there is a way to update flags before the spawn?)
+	from mpi4py import MPI
+	worldComm = MPI.COMM_WORLD
+	color = 3; key =0;
+	comm = worldComm.Split(color, key)  # if OFOAM coupled, split communicator
 
+	parent = comm.Get_parent()
+	if parent!=MPI.COMM_NULL: 	# if executor is a spawned worker merge comm with master 
+		comm=parent.Merge()
 
+	rank = comm.Get_rank()		# set rank and numThreads
+	if rank>0:
+		sys.stderr.write=sys.stdout.write # so we see error messages from workers in terminal
+	numThreads = comm.Get_size()
+	colorScale= makeColorScale(numThreads)
+	
+	
+def makeColorScale(n=numThreads):
+	scale= [(0.3+random.random())*Vector3(colorsys.hsv_to_rgb(value*1.0/n, 1, 1)) for value in range(0, n)]
+	from random import shuffle
+	random.seed(1)
+	shuffle(scale)
+	return scale
 
 def mprint(*args): #this one will print regardless of VERBOSE_OUTPUT
 	"""
@@ -151,25 +178,10 @@ def wprint(*args):
 	"""
 	if not VERBOSE_OUTPUT: return
 	mprint(*args)
-
-#from yade import *
-from yade.utils import *
-from yade.wrapper import *
-import yade.runtime
-from yade import timing; timing.mpi={} #prepare a dictionnary for mpi-related stats
-
-# for coloring bodies
-import colorsys
-
-def makeColorScale(n=numThreads):
-	scale= [(0.3+random.random())*Vector3(colorsys.hsv_to_rgb(value*1.0/n, 1, 1)) for value in range(0, n)]
-	from random import shuffle
-	random.seed(1)
-	shuffle(scale)
-	return scale
-
-
-colorScale= makeColorScale(numThreads)
+	
+### Here we detect current MPI context *only if needed*, i.e. importing mpy without actually using it will not call configure() (then no MPI related warnings)
+#if yade.runtime.opts.mpi_mode:
+	#configure()
 
 def colorDomains():
 	'''
@@ -183,6 +195,9 @@ def colorDomains():
 
 def initialize(np):
 	global comm,rank,numThreads,userScriptInCheckList
+	
+	if comm==None: configure()
+	
 	process_count = comm.Get_size()
 
 	if(process_count<np):
@@ -199,7 +214,7 @@ def initialize(np):
 			# they will wait after being initialized, responding to messages sent trhough ipython directives within *.rst source
 			yadeArgv.remove("yadeSphinx.py")
 			# suppress (harmless?) messages on newer versions of linux (docker specific) - https://github.com/open-mpi/ompi/issues/4948
-			os.environ['OMPI_MCA_btl_vader_single_copy_mechanism']='none'
+			#os.environ['OMPI_MCA_btl_vader_single_copy_mechanism']='none'
 		# END HACK 2
 		
 		numThreads=np
@@ -208,7 +223,7 @@ def initialize(np):
 			if (userScriptInCheckList==""): #normal case
 				comm = MPI.COMM_WORLD.Spawn(yadeArgv[0], args=yadeArgv[1:],maxprocs=numThreads-process_count).Merge()
 			else: #HACK 1 (continued) handle execution by checkList.py, otherwise would we run checkList.py in parallel
-				os.environ['OMPI_MCA_btl_vader_single_copy_mechanism']='none' # suppress (harmless?) messages on newer versions of linux (docker specific)
+				#os.environ['OMPI_MCA_btl_vader_single_copy_mechanism']='none' # suppress (harmless?) messages on newer versions of linux (docker specific)
 				comm = MPI.COMM_WORLD.Spawn(sys.yade_argv[0], args=[userScriptInCheckList],maxprocs=numThreads-process_count).Merge()
 			#TODO: if process_count>numThreads, free some workers
 			yade.runtime.opts.mpi_mode=True
@@ -225,7 +240,8 @@ def initialize(np):
 def spawnedProcessWaitCommand():
 	global waitingCommands
 	if waitingCommands: return
-	waitingCommands = True
+	if comm==None: configure()
+	
 	sys.stderr.write=sys.stdout.write
 	wprint("I'm now waiting")
 	s=MPI.Status()
@@ -243,6 +259,7 @@ def spawnedProcessWaitCommand():
 			comm.send(None,dest=s.source,tag=_RETURN_VALUE_)
 			mprint(sys.exc_info())
 			raise
+	waitingCommands = True
 		
 def sendCommand(executors,command,wait=True,workerToWorker=False):
 	'''
@@ -1059,6 +1076,7 @@ def mpirun(nSteps,np=None,withMerge=False):
 	withMerge : wether subdomains should be merged into master at the end of the run (default False). If True the scene in the master process is exactly in the same state as after O.run(nSteps,True). The merge can be time consumming, it is recommended to activate only if post-processing or other similar tasks require it.
 	'''
 	
+	if comm==None: configure()
 	if np==None: np=numThreads
 	if(np==1):
 		mprint("single-core, fall back to O.run()")
