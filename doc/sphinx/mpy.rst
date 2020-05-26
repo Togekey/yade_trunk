@@ -429,7 +429,7 @@ The decomposition can be prescribed on users's side (first section below), but m
 Split by yourself
 -----------------
 
-In order to impose a decomposition it is enough to assign :yref:`Body.subdomain` a value corresponding to the process rank it should belong to. This can be done either in one centralized scene that is later splitted, or by inserting the correct subsets of bodies independently in each subdomain (see section on `scene construction <sect_mpi_construction>`_)
+In order to impose a decomposition it is enough to assign :yref:`Body.subdomain` a value corresponding to the process rank it should belong to. This can be done either in one centralized scene that is later splitted, or by inserting the correct subsets of bodies independently in each subdomain (see section on `scene construction <sect-mpi-construction>`_)
 
 
 In the example script :ysrc:`examples/mpi/testMPI_2D.py` the spheres are generated as follows (centralized construction in this example, easily turned into distributed one). For each available worker a bloc of spheres is generated with a different position in space. The spheres in each block are assigned a subdomain rank (and a color for visualisation) so that they will be picked up by the right worker after mpirun().::
@@ -492,7 +492,7 @@ The criterion for re-allocating bodies in the median filter involves finding the
 .. note::  This is not a load balancing in the sense of achieving an equal amount of work per core. In fact that sort of balancing is achieved by definition already as soon as each worker is assigned the same amount of bodies (and because a subdomain is really ultimately a list of bodies, not a specific region of space). Instead the objective is to decrease the communication times overall.
 
 
-.. _sect_mpi_construction:
+.. _sect-mpi-construction:
 
 Centralized versus distributed scene construction
 -------------------------------------------------
@@ -500,7 +500,8 @@ Centralized versus distributed scene construction
 In the centralized method of scene construction, the master process creates all the bodies of a scene and assigns subdomains to them. As part of mpy initialization some engines will be modified or inserted, then the scene is broadcasted to the workers.
 Each worker receives the entire scene, identifies its assigned bodies via :yref:`Body.subdomain` (if worker's :code:`rank==b.subdomain` the bodies are retained) and erase the others. Such a scene construction was used in the previous example and it is by far the simplest. It makes no real difference with building a scene for non-MPI execution besides calling `mp.mpirun` instead or jusr `O.run`.
 
-For large number of bodies and processes, though, the centralized scene construction and distribution can take a significant time. It can also be memory bound since the memory usage is quadratic: suppose N bodies per thread on a 32-core node, centralized construction implies that 32 copies of the entire scene exist simultaneously in memory at some point in time (during the split), i.e. :math:`32^2 N` bodies on one single node. For massively parallel applications distributed construction should be prefered.
+For large number of bodies and processes, though, the centralized scene construction and distribution can take a significant time. It can also be memory bound. Suppose :math:`N_d` nodes, 32 cores on each node, and :math:`N_b` bodies per core; centralized construction implies that at some point the memory attached to the master process contains simultaneously :math:`32` copies of the entire scene, which itself has a size proportional to :math:`32 N_d N_b`. The total number of bodies on one node is thus of the order of :math:`32^2 N_d N_b`; for a realistic scenario of 1024 cores and just 20k bodies par core it leads to a total of :math:`20.9e9` bodies on the master node at split time (not counting temporary copies used internally or for mpi messenging).
+For massively parallel applications it is to be avoided, and distributed construction should be prefered.
 
 In distributed mode each worker instantiates its own bodies and insert them in the local :yref:`BodyContainer`. Attention need to be paid to properly assign bodies ids since no index should be owned by two different workers initially. Insertion of bodies  in :yref:`BodyContainer` with imposed ids is done with 
 :yref:`BodyContainer.insertAtId`. The distributed mode is activated by setting the :code:`DISTRIBUTED_INSERT` flag ON, the user is in charge of setting up the subdomains and partitioning the bodies, an example showing the use of distributed insertion can be found in :ysrc:`examples/mpi/parallelBodyInsert3D.py`. 
