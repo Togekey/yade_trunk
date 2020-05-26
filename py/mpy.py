@@ -43,16 +43,18 @@ Hints:
 
 '''
 
+import sys,os,inspect
 print("________________________________________________________________________________________________________")
 print("________________________________________________________________________________________________________")
 print("________________________________________________________________________________________________________")
 
 print("______________________________MPY IMPORTED HERE____________________________________________")
+s=inspect.stack()
+for x in s:
+	print(x[1:])
+
 print("________________________________________________________________________________________________________")
 print("________________________________________________________________________________________________________")
-
-
-import sys,os,inspect
 import time
 import numpy as np
 import yade.runtime
@@ -108,7 +110,7 @@ USE_CPP_INTERS = False #sending intersections using mpi4py sometimes fails (depe
 comm = None
 rank = None
 numThreads = None
-MPI = None # will be mpi4py.MPI after configure()
+MPI = None # will be mpi4py.MPI after myConfigure()
 
 waitingCommands=False		# are workers currently interactive?
 userScriptInCheckList=""	# detect if mpy is executed by checkList.py
@@ -135,11 +137,13 @@ _GET_CONNEXION_= 22
 
 ## Initialization
 
-def configure(): # calling this function will import mpi4py.MPI, 
+def myConfigure(): # calling this function will import mpi4py.MPI, 
 	'''
-	Import MPI and define context, configure will no spawn workers by itself, that is done by initialize()
-	openmpi environment variables needs to be set before calling configure()
+	Import MPI and define context, myConfigure will no spawn workers by itself, that is done by initialize()
+	openmpi environment variables needs to be set before calling myConfigure()
 	'''
+	print("============ configure ")
+	
 	global comm, rank, numThreads, colorScale, MPI
 	#os.environ["OMPI_MCA_rmaps_base_oversubscribe"]="1" # needed here, after importing MPI is too late (or there is a way to update flags before the spawn?)
 	from mpi4py import MPI
@@ -188,9 +192,9 @@ def wprint(*args):
 	if not VERBOSE_OUTPUT: return
 	mprint(*args)
 	
-### Here we detect current MPI context *only if needed*, i.e. importing mpy without actually using it will not call configure() (then no MPI related warnings)
+### Here we detect current MPI context *only if needed*, i.e. importing mpy without actually using it will not call myConfigure() (then no MPI related warnings)
 #if yade.runtime.opts.mpi_mode:
-	#configure()
+	#myConfigure()
 
 def colorDomains():
 	'''
@@ -204,8 +208,8 @@ def colorDomains():
 
 def initialize(np):
 	global comm,rank,numThreads,userScriptInCheckList
-	
-	if comm==None: configure()
+	print("============ initialize ")
+	if comm==None: myConfigure()
 	
 	process_count = comm.Get_size()
 
@@ -249,7 +253,7 @@ def initialize(np):
 def spawnedProcessWaitCommand():
 	global waitingCommands
 	if waitingCommands: return
-	if comm==None: configure()
+	if comm==None: myConfigure()
 	
 	sys.stderr.write=sys.stdout.write
 	wprint("I'm now waiting")
@@ -1084,8 +1088,8 @@ def mpirun(nSteps,np=None,withMerge=False):
 	np :  number of mpi workers (master+subdomains), if=1 the function fallback to O.run()
 	withMerge : wether subdomains should be merged into master at the end of the run (default False). If True the scene in the master process is exactly in the same state as after O.run(nSteps,True). The merge can be time consumming, it is recommended to activate only if post-processing or other similar tasks require it.
 	'''
-	
-	if comm==None: configure()
+	print("============ mpirun ")
+	if comm==None: myConfigure()
 	if np==None: np=numThreads
 	if(np==1):
 		mprint("single-core, fall back to O.run()")
