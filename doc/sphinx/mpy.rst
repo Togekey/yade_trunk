@@ -128,190 +128,190 @@ Explicit initialization from python prompt
 
 A pool of yade instances can be spawned with mpy.initialize() as illustrated hereafter. Mind that the next sequences of commands are supposed to be typed directly in the python prompt after starting yade, it will not give exactly the same result if it is pasted into a script executed by Yade (see the next section on automatic initialization):
 
-.. .. ipython:: # avoid issues in gitlab for now
-.. code-block:: python
-	
-	@suppress
-	Yade [1]: from yade.utils import *
-	
-	@suppress
-	Yade [1]: O.engines=yade.utils.defaultEngines
-
-	Yade [2]: wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
-
-	Yade [3]: for x in range(-1,2):
-	   ...:    O.bodies.append(sphere((x,0.5,0),0.5))
-	   ...:
-
-	Yade [5]: from yade import mpy as mp
-	
-	@suppress
-	Yade [5]: mp.COLOR_OUTPUT=False
-	
-	@doctest
-	Yade [6]: mp.initialize(4)
-	Master: I will spawn  3  workers
-	->  [6]: (0, 4)
-
-After mp.initialize(np) the parent instance of yade takes the role of master process (rank=0). It is the only one executing the commands typed directly in the prompt.
-The other instances (rank=1 to rank=np-1) are idle and they wait for commands sent from master. Sending commands to the other instances can be done with `mpy.sendCommand()`, which by default returns the result or the list of results. We use that command below to verify that the spawned workers point to different (still empty) scenes:
-
-.. note: the ipython directive works fine but the stdout from workers is not captured unfortunately
-.. it appears mangled with sphinx output at build time instead, so we use verbatim to get correct display
-
-
-.. .. ipython:: 
-
-.. 	:verbatim:
-
-.. code-block:: python
-
-	Yade [8]: len(O.bodies)
-	 ->  [8]: 4
-	 
-	Yade [10]: mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) #check content
-	->  [10]: [4, 0, 0, 0]
-	
-	Yade [9]: mp.sendCommand(executors="all",command="str(O)") # check scene pointers
-	 ->  [9]: 
-	['<yade.wrapper.Omega object at 0x7f9c0a399490>',
-	'<yade.wrapper.Omega object at 0x7f9231213490>',
-	'<yade.wrapper.Omega object at 0x7f20086a1490>',
-	'<yade.wrapper.Omega object at 0x7f622b47f490>']
-
-Sending commands makes it possible to manage all types of message passing using calls to the underlying mpi4py (see mpi4py documentation).
-Be carefull with sendCommand "blocking" behavior by default. Next example would hang without "wait=False" since both master and worker would be waiting for a message from each other.
-
-
-.. .. ipython::
+.. .. .. ipython:: # avoid issues in gitlab for now
+.. .. code-block:: python
+.. 	
+.. 	@suppress
+.. 	Yade [1]: from yade.utils import *
+.. 	
+.. 	@suppress
+.. 	Yade [1]: O.engines=yade.utils.defaultEngines
 .. 
-.. 	:verbatim:
-	
-.. code-block:: python
-
-	Yade [3]: mp.sendCommand(executors=1,command="message=comm.recv(source=0); print('received',message)",wait=False)
-
-	Yade [4]: mp.comm.send("hello",dest=1)
-	received hello
-
-Every picklable python object (namely, nearly all Yade objects) can be transmitted this way. Remark hereafter the use of :yref:`mpy.mprint <yade.mpy.mprint>` (identifies the worker by number and by font colors). Note also that the commands passed via `sendCommand` are executed in the context of the mpy module, for this reason `comm`, `mprint`, `rank` and all objects of the module are accessed without the `mp.` prefix.
-
-.. .. ipython::
+.. 	Yade [2]: wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
 .. 
-.. 	:verbatim:
-	
-.. code-block:: python
-
-	Yade [3]: mp.sendCommand(executors=1,command="O.bodies.append(comm.recv(source=0))",wait=False) # leaves the worker idle waiting for an argument to append()
-
-	Yade [4]: b=Body(shape=Sphere(radius=0.7))  # now create body in the context of master
-
-	Yade [5]: mp.comm.send(b,dest=1) # send it to worker 1
-
-	Yade [6]: mp.sendCommand(executors="all",command="mprint('received',[b.shape.radius if hasattr(b.shape,'radius') else None for b in O.bodies])")
-	Master: received [None, 0.5, 0.5, 0.5] 
-	Worker1: received [0.7] 
-	Worker3: received [] 
-	Worker2: received [] 
-	->  [5]: [None, None, None, None] # printing yields no return value, hence that empty list of returns, "wait=False" argument to sendCommand would suppress it
-
-
-Explicit initialization from python script
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Though usefull for advanced operations, the function sendCommand() is limited. Basic features of the python language are missing, e.g. function definitions and loops are a problem - in fact every code fragment which can't fit on a single line is. In practice the mpy module provides a mechanism to initialize from a script, where functions and variables will be declared.
-
-Whenever Yade is started with a script as argument the script name will be remembered, and if mpy.initialize() is called (by the script itself or interactively in the prompt) all Yade instances will be initialized with that same script. It makes distributing function definitions and simulation parameters trivial (and even distributing scene constructions as seen below).
-
-This behaviour is what happens usually with MPI: all processes execute the same program. It is also what happens with "mpiexec -np N yade ...".
-
-If the first commands above are pasted into a script used to start Yade, all workers insert the same bodies as master (with interactive execution only master was inserting). Here is the script::
-
-	# script 'test1.py'
-	wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
-	for x in range(-1,2):
-		O.bodies.append(sphere((x,0.5,0),0.5))
-	from yade import mpy as mp
-	mp.initialize(4)
-	print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
-	print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) )
-
-and the output reads:
-
-.. .. ipython::
+.. 	Yade [3]: for x in range(-1,2):
+.. 	   ...:    O.bodies.append(sphere((x,0.5,0),0.5))
+.. 	   ...:
 .. 
-.. 	:verbatim:
-
-.. code-block:: python
-
-	yade test1.py 
-	...
-	Running script test1.py
-	Master: will spawn  3  workers 
-	None
-	None
-	None
-	None
-	None
-	None
-	['<yade.wrapper.Omega object at 0x7feb979403a0>', '<yade.wrapper.Omega object at 0x7f5b61ae9440>', '<yade.wrapper.Omega object at 0x7fdd466b8440>', '<yade.wrapper.Omega object at 0x7f8dc7b73440>']
-	[4, 4, 4, 4]
-
-That's because all instances execute the script in the initialize() phase. "None" is printed 2x3 times because the script contains `print( mp.sendCommand(...))` twice, the workers try to execute that too, but for them `sendCommand` returns by default, hence the None.
-
-
-Though logical, this result is not what we want if we try to split a simulation into pieces. The solution (typical of all mpi programs) is to use the `rank` of the process in conditionals. Different parts of the script can then be executed, differently, by each worker, depending on its rank. In order to produce the same result as before for instance, the script can be modified as follows::
-
-	# script 'test2.py'
-	from yade import mpy as mp
-	mp.initialize(4)
-	if mp.rank==0: # only master
-		wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
-		for x in range(-1,2):
-		O.bodies.append(sphere((x,0.5,0),0.5))
-
-		print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
-		print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) )
-		print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
-		
-Resulting in::
-
-	Running script test2.py
-	Master: will spawn  3  workers 
-	['<yade.wrapper.Omega object at 0x7f21a8c8d3a0>', '<yade.wrapper.Omega object at 0x7f3142e43440>', '<yade.wrapper.Omega object at 0x7fb699b1a440>', '<yade.wrapper.Omega object at 0x7f1e4231e440>']
-	[4, 0, 0, 0]
-
-
-We could also use `rank` to assign bodies from different regions of space to different workers, as found in example :ysrc:`examples/mpi/helloMPI.py`, with rank-dependent positions::
-
-	# rank is accessed without "mp." prefix as it is interpreted in mpy module's scope
-	mp.sendCommand(executors=[1,2],command= "ids=O.bodies.append([sphere((xx,1.5+rank,0),0.5) for xx in range(-1,2)])")
-	
-Keep in mind that the position of the call *mp.initialize(N)* relative to the other commands has no consequence for the execution by the workers (for them initialize() just returns), hence program logic should not rely on it. The workers execute the script from begin to end with the same MPI context, already set when the first line is executed. It can lead to counter intuitive behavior, here is a script::
-
-	# testInit.py
-	# script.py
-	O.bodies.append([Body() for i in range(100)])
-
-	from yade import mpy as mp
-	mp.mprint("before initialize: rank ", mp.rank,"/", mp.numThreads,"; ",len(O.bodies)," bodies")
-	mp.initialize(2)
-	mp.mprint("after initialize: rank ", mp.rank,"/", mp.numThreads,"; ",len(O.bodies)," bodies")
-
-and the output:
-	
-.. .. ipython::
+.. 	Yade [5]: from yade import mpy as mp
+.. 	
+.. 	@suppress
+.. 	Yade [5]: mp.COLOR_OUTPUT=False
+.. 	
+.. 	@doctest
+.. 	Yade [6]: mp.initialize(4)
+.. 	Master: I will spawn  3  workers
+.. 	->  [6]: (0, 4)
 .. 
-.. 	:verbatim:
-	
-.. code-block:: python
-	
-	Running script testInit.py
-	Master: before initialize: rank  0 / 1 ;  100  bodies 
-	Master: will spawn  1  workers 
-	Master: after initialize: rank  0 / 4 ;  100  bodies 
-	Worker1: before initialize: rank  2 / 4 ;  100  bodies 
-	Worker1: after initialize: rank  2 / 4 ;  100  bodies 
+.. After mp.initialize(np) the parent instance of yade takes the role of master process (rank=0). It is the only one executing the commands typed directly in the prompt.
+.. The other instances (rank=1 to rank=np-1) are idle and they wait for commands sent from master. Sending commands to the other instances can be done with `mpy.sendCommand()`, which by default returns the result or the list of results. We use that command below to verify that the spawned workers point to different (still empty) scenes:
+.. 
+.. .. note: the ipython directive works fine but the stdout from workers is not captured unfortunately
+.. .. it appears mangled with sphinx output at build time instead, so we use verbatim to get correct display
+.. 
+.. 
+.. .. .. ipython:: 
+.. 
+.. .. 	:verbatim:
+.. 
+.. .. code-block:: python
+.. 
+.. 	Yade [8]: len(O.bodies)
+.. 	 ->  [8]: 4
+.. 	 
+.. 	Yade [10]: mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) #check content
+.. 	->  [10]: [4, 0, 0, 0]
+.. 	
+.. 	Yade [9]: mp.sendCommand(executors="all",command="str(O)") # check scene pointers
+.. 	 ->  [9]: 
+.. 	['<yade.wrapper.Omega object at 0x7f9c0a399490>',
+.. 	'<yade.wrapper.Omega object at 0x7f9231213490>',
+.. 	'<yade.wrapper.Omega object at 0x7f20086a1490>',
+.. 	'<yade.wrapper.Omega object at 0x7f622b47f490>']
+.. 
+.. Sending commands makes it possible to manage all types of message passing using calls to the underlying mpi4py (see mpi4py documentation).
+.. Be carefull with sendCommand "blocking" behavior by default. Next example would hang without "wait=False" since both master and worker would be waiting for a message from each other.
+.. 
+.. 
+.. .. .. ipython::
+.. .. 
+.. .. 	:verbatim:
+.. 	
+.. .. code-block:: python
+.. 
+.. 	Yade [3]: mp.sendCommand(executors=1,command="message=comm.recv(source=0); print('received',message)",wait=False)
+.. 
+.. 	Yade [4]: mp.comm.send("hello",dest=1)
+.. 	received hello
+.. 
+.. Every picklable python object (namely, nearly all Yade objects) can be transmitted this way. Remark hereafter the use of :yref:`mpy.mprint <yade.mpy.mprint>` (identifies the worker by number and by font colors). Note also that the commands passed via `sendCommand` are executed in the context of the mpy module, for this reason `comm`, `mprint`, `rank` and all objects of the module are accessed without the `mp.` prefix.
+.. 
+.. .. .. ipython::
+.. .. 
+.. .. 	:verbatim:
+.. 	
+.. .. code-block:: python
+.. 
+.. 	Yade [3]: mp.sendCommand(executors=1,command="O.bodies.append(comm.recv(source=0))",wait=False) # leaves the worker idle waiting for an argument to append()
+.. 
+.. 	Yade [4]: b=Body(shape=Sphere(radius=0.7))  # now create body in the context of master
+.. 
+.. 	Yade [5]: mp.comm.send(b,dest=1) # send it to worker 1
+.. 
+.. 	Yade [6]: mp.sendCommand(executors="all",command="mprint('received',[b.shape.radius if hasattr(b.shape,'radius') else None for b in O.bodies])")
+.. 	Master: received [None, 0.5, 0.5, 0.5] 
+.. 	Worker1: received [0.7] 
+.. 	Worker3: received [] 
+.. 	Worker2: received [] 
+.. 	->  [5]: [None, None, None, None] # printing yields no return value, hence that empty list of returns, "wait=False" argument to sendCommand would suppress it
+.. 
+.. 
+.. Explicit initialization from python script
+.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. 
+.. Though usefull for advanced operations, the function sendCommand() is limited. Basic features of the python language are missing, e.g. function definitions and loops are a problem - in fact every code fragment which can't fit on a single line is. In practice the mpy module provides a mechanism to initialize from a script, where functions and variables will be declared.
+.. 
+.. Whenever Yade is started with a script as argument the script name will be remembered, and if mpy.initialize() is called (by the script itself or interactively in the prompt) all Yade instances will be initialized with that same script. It makes distributing function definitions and simulation parameters trivial (and even distributing scene constructions as seen below).
+.. 
+.. This behaviour is what happens usually with MPI: all processes execute the same program. It is also what happens with "mpiexec -np N yade ...".
+.. 
+.. If the first commands above are pasted into a script used to start Yade, all workers insert the same bodies as master (with interactive execution only master was inserting). Here is the script::
+.. 
+.. 	# script 'test1.py'
+.. 	wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
+.. 	for x in range(-1,2):
+.. 		O.bodies.append(sphere((x,0.5,0),0.5))
+.. 	from yade import mpy as mp
+.. 	mp.initialize(4)
+.. 	print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
+.. 	print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) )
+.. 
+.. and the output reads:
+.. 
+.. .. .. ipython::
+.. .. 
+.. .. 	:verbatim:
+.. 
+.. .. code-block:: python
+.. 
+.. 	yade test1.py 
+.. 	...
+.. 	Running script test1.py
+.. 	Master: will spawn  3  workers 
+.. 	None
+.. 	None
+.. 	None
+.. 	None
+.. 	None
+.. 	None
+.. 	['<yade.wrapper.Omega object at 0x7feb979403a0>', '<yade.wrapper.Omega object at 0x7f5b61ae9440>', '<yade.wrapper.Omega object at 0x7fdd466b8440>', '<yade.wrapper.Omega object at 0x7f8dc7b73440>']
+.. 	[4, 4, 4, 4]
+.. 
+.. That's because all instances execute the script in the initialize() phase. "None" is printed 2x3 times because the script contains `print( mp.sendCommand(...))` twice, the workers try to execute that too, but for them `sendCommand` returns by default, hence the None.
+.. 
+.. 
+.. Though logical, this result is not what we want if we try to split a simulation into pieces. The solution (typical of all mpi programs) is to use the `rank` of the process in conditionals. Different parts of the script can then be executed, differently, by each worker, depending on its rank. In order to produce the same result as before for instance, the script can be modified as follows::
+.. 
+.. 	# script 'test2.py'
+.. 	from yade import mpy as mp
+.. 	mp.initialize(4)
+.. 	if mp.rank==0: # only master
+.. 		wallId=O.bodies.append(box(center=(0,0,0),extents=(2,0,1),fixed=True))
+.. 		for x in range(-1,2):
+.. 		O.bodies.append(sphere((x,0.5,0),0.5))
+.. 
+.. 		print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
+.. 		print( mp.sendCommand(executors="all",command="len(O.bodies)",wait=True) )
+.. 		print( mp.sendCommand(executors="all",command="str(O)",wait=True) )
+.. 		
+.. Resulting in::
+.. 
+.. 	Running script test2.py
+.. 	Master: will spawn  3  workers 
+.. 	['<yade.wrapper.Omega object at 0x7f21a8c8d3a0>', '<yade.wrapper.Omega object at 0x7f3142e43440>', '<yade.wrapper.Omega object at 0x7fb699b1a440>', '<yade.wrapper.Omega object at 0x7f1e4231e440>']
+.. 	[4, 0, 0, 0]
+.. 
+.. 
+.. We could also use `rank` to assign bodies from different regions of space to different workers, as found in example :ysrc:`examples/mpi/helloMPI.py`, with rank-dependent positions::
+.. 
+.. 	# rank is accessed without "mp." prefix as it is interpreted in mpy module's scope
+.. 	mp.sendCommand(executors=[1,2],command= "ids=O.bodies.append([sphere((xx,1.5+rank,0),0.5) for xx in range(-1,2)])")
+.. 	
+.. Keep in mind that the position of the call *mp.initialize(N)* relative to the other commands has no consequence for the execution by the workers (for them initialize() just returns), hence program logic should not rely on it. The workers execute the script from begin to end with the same MPI context, already set when the first line is executed. It can lead to counter intuitive behavior, here is a script::
+.. 
+.. 	# testInit.py
+.. 	# script.py
+.. 	O.bodies.append([Body() for i in range(100)])
+.. 
+.. 	from yade import mpy as mp
+.. 	mp.mprint("before initialize: rank ", mp.rank,"/", mp.numThreads,"; ",len(O.bodies)," bodies")
+.. 	mp.initialize(2)
+.. 	mp.mprint("after initialize: rank ", mp.rank,"/", mp.numThreads,"; ",len(O.bodies)," bodies")
+.. 
+.. and the output:
+.. 	
+.. .. .. ipython::
+.. .. 
+.. .. 	:verbatim:
+.. 	
+.. .. code-block:: python
+.. 	
+.. 	Running script testInit.py
+.. 	Master: before initialize: rank  0 / 1 ;  100  bodies 
+.. 	Master: will spawn  1  workers 
+.. 	Master: after initialize: rank  0 / 4 ;  100  bodies 
+.. 	Worker1: before initialize: rank  2 / 4 ;  100  bodies 
+.. 	Worker1: after initialize: rank  2 / 4 ;  100  bodies 
 
 
 
