@@ -108,7 +108,7 @@ USE_CPP_INTERS = False #sending intersections using mpi4py sometimes fails (depe
 ### Internals
 
 comm = None
-rank = None
+rank = os.getenv('OMPI_COMM_WORLD_RANK')
 numThreads = None
 MPI = None # will be mpi4py.MPI after myConfigure()
 

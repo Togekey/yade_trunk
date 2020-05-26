@@ -353,7 +353,8 @@ def userSession(gui='none',qapp=None):
 	else: # if mpi_mode start shell on master, waiting loops on workers, and exit mpi properly
 		print("____________IMPORT in MAIN____________", mp.rank ,"  _______________________________")
 		from yade import mpy as mp
-		if mp.rank==0:
+		if mp.rank==None: raise Exception("mp.rank not initialized")
+		if mp.rank==0: # rank is set on import, it will be null 
 			if not yade.runtime.opts.exitAfter:
 				mp.waitingCommands=True
 				ipshell()
