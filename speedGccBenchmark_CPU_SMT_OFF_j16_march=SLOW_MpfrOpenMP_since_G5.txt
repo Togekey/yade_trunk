@@ -1,0 +1,1347 @@
+czw, 9 kwi 2020, 22:08:08 UTC
+rm -rf /tmp/15-YADE/24-yade-kompilacja/yade/build-trunk
+rm -rf /tmp/15-YADE/23-yade-install-bin/yade/trunk
+test -d /tmp/15-YADE/24-yade-kompilacja/yade/build-trunk || make prepare_nodebug
+make[1]: Entering directory '/home/ytest/yade/trunk'
+mkdir -p /tmp/15-YADE/24-yade-kompilacja/yade && \
+cd       /tmp/15-YADE/24-yade-kompilacja/yade && \
+mkdir -p build-trunk && \
+cd       build-trunk && \
+export CC="gcc" && \
+export CXX="g++" && \
+cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_INSTALL_PREFIX=/tmp/15-YADE/23-yade-install-bin/yade/trunk /home/ytest/yade/trunk \
+-DDEBUG=0 -DDANGEROUSLY_FAST=ON -DMAX_LOG_LEVEL=6 -DENABLE_POTENTIAL_BLOCKS=OFF  -DENABLE_POTENTIAL_PARTICLES=OFF -DENABLE_GUI=OFF -DENABLE_CGAL=OFF \
+-DCMAKE_VERBOSE_MAKEFILE=0 -DREAL_PRECISION_BITS= -DREAL_DECIMAL_PLACES=62 \
+-DENABLE_MPFR=0 -DALLOW_CRASHES=0 -DVECTORIZE=1 -DENABLE_USEFUL_ERRORS=0
+-- The C compiler identification is GNU 9.2.1
+-- The CXX compiler identification is GNU 9.2.1
+-- Check for working C compiler: /usr/bin/gcc
+-- Check for working C compiler: /usr/bin/gcc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/g++
+-- Check for working CXX compiler: /usr/bin/g++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Version is set to 2020-04-04.git-1cb5838
+-- GCC Version >= 4.8. Adding -ftrack-macro-expansion=0
+-- ccache detected, will not use -save-temps
+-- Found Eigen3: /usr/include/eigen3 (Required is at least version "2.91.0") 
+-- [91mEnabling DANGEROUSLY_FAST:[0m -Ofast 
+-- [91mEnabling DANGEROUSLY_FAST: Due diligence.[0m
+-- [91mEnabling DANGEROUSLY_FAST: Be careful, this is an experimental option and you should confirm yourself that your calculations produce correct results before using it for anything serious.[0m
+-- [36mLog filtering: enabled[0m
+-- Enabling boost::log library and DEBUG=OFF. Logging will work nicely, backtraces will not have debug info, files will be small.
+Loop on the following python versions and check available dependencies:3.8;3.7;3.6;3.5;3.4;3.3;3.2;3.1;3.0;2.7;2.6
+-- Found PythonInterp: /usr/bin/python3.8 (found version "3.8") 
+Python version 3.8 found, try to import dependencies...
+-- Found NumPy: version "1.17.4" /usr/lib/python3/dist-packages/numpy/core/include
+-- Found IPython: /usr/lib/python3/dist-packages/IPython  
+-- Found matplotlib: /usr/lib/python3/dist-packages/matplotlib  
+-- Found pygraphviz: /usr/lib/python3/dist-packages/pygraphviz  
+-- Found Xlib: /usr/lib/python3/dist-packages/Xlib  
+-- Found minieigen: /usr/lib/python3/dist-packages/minieigen.cpython-38-x86_64-linux-gnu.so  
+-- Found future: /usr/lib/python3/dist-packages/future  
+-- Found past: /usr/lib/python3/dist-packages/past  
+-- Found tkinter: /usr/lib/python3.8/tkinter  
+--   Boost_VERSION: 106700
+--   Boost_LIB_VERSION: 1_67
+--   Boost_INCLUDE_DIRS: /usr/include
+--   Boost_LIBRARIES: /usr/lib/x86_64-linux-gnu/libboost_python38.so/usr/lib/x86_64-linux-gnu/libboost_thread.so-lpthread/usr/lib/x86_64-linux-gnu/libboost_filesystem.so/usr/lib/x86_64-linux-gnu/libboost_iostreams.so/usr/lib/x86_64-linux-gnu/libboost_regex.so/usr/lib/x86_64-linux-gnu/libboost_serialization.so/usr/lib/x86_64-linux-gnu/libboost_system.so/usr/lib/x86_64-linux-gnu/libboost_date_time.so/usr/lib/x86_64-linux-gnu/libboost_log.so/usr/lib/x86_64-linux-gnu/libboost_chrono.so/usr/lib/x86_64-linux-gnu/libboost_atomic.so/usr/lib/x86_64-linux-gnu/libboost_log_setup.so
+Found all python dependencies with version 3.8, will compile yade with that.
+-- [36mChosen compiler flags are: CMAKE_CXX_FLAGS =  -Wformat -Wformat-security -Werror=format-security -Wall -fstack-protector-strong [0m
+-- Determining preferred precision of Real numbers
+-- To use faster higher precision use -DENABLE_MPFR=ON cmake option. Currently a simple type boost::multiprecision::cpp_bin_float will be used.
+-- Will now try to find python-mpmath using /usr/bin/python3.8
+-- python-mpmath found, version: 1.1.0
+-- Checking /usr/include/minieigen provided by newer version of package python3-minieigen
+-- Checking compiler version for PrecisionBoostBinFloat62
+-- mpfr disabled
+-- Will use [93mPrecisionBoostBinFloat62[0m as Real type with [36m62[0m decimal places precision and use [36m205[0m bits of storage.
+-- ENABLE_TWOPHASEFLOW OR ENABLE_LINSOLV OR ENABLE_PFVFLOW were disabled automatically because they use double precision external library: cholesky linear solver. It can be replaced with native Eigen solvers, then it will work.
+-- ENABLE_MPI was disabled because it hasn't been tested. It is possible that a pure python-only library will correctly send mpmath.mpf(…) high precision Real type over network, but this was not tested.
+-- Found BZip2: /usr/lib/x86_64-linux-gnu/libbz2.so (found version "1.0.8") 
+-- Looking for BZ2_bzCompressInit
+-- Looking for BZ2_bzCompressInit - found
+-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found version "1.2.11") 
+-- Found Eigen3, version: 3.3.7
+-- Enable vectorization
+-- The imported target "vtkHashSource" references the file
+   "/usr/bin/vtkHashSource-6.3"
+but this file does not exist.  Possible reasons include:
+* The file was deleted, renamed, or moved to another location.
+* An install or uninstall procedure did not complete successfully.
+* The installation package was faulty and contained
+   "/usr/lib/cmake/vtk-6.3/VTKTargets.cmake"
+but not all the files it references.
+
+-- The imported target "vtkParseOGLExt" references the file
+   "/usr/bin/vtkParseOGLExt-6.3"
+but this file does not exist.  Possible reasons include:
+* The file was deleted, renamed, or moved to another location.
+* An install or uninstall procedure did not complete successfully.
+* The installation package was faulty and contained
+   "/usr/lib/cmake/vtk-6.3/VTKTargets.cmake"
+but not all the files it references.
+
+-- The imported target "vtkEncodeString" references the file
+   "/usr/bin/vtkEncodeString-6.3"
+but this file does not exist.  Possible reasons include:
+* The file was deleted, renamed, or moved to another location.
+* An install or uninstall procedure did not complete successfully.
+* The installation package was faulty and contained
+   "/usr/lib/cmake/vtk-6.3/VTKTargets.cmake"
+but not all the files it references.
+
+-- The imported target "vtkGUISupportQt" references the file
+   "/usr/lib/x86_64-linux-gnu/libvtkGUISupportQt-6.3.so.6.3.0"
+but this file does not exist.  Possible reasons include:
+* The file was deleted, renamed, or moved to another location.
+* An install or uninstall procedure did not complete successfully.
+* The installation package was faulty and contained
+   "/usr/lib/cmake/vtk-6.3/VTKTargets.cmake"
+but not all the files it references.
+
+-- The imported target "vtkGUISupportQtOpenGL" references the file
+   "/usr/lib/x86_64-linux-gnu/libvtkGUISupportQtOpenGL-6.3.so.6.3.0"
+but this file does not exist.  Possible reasons include:
+* The file was deleted, renamed, or moved to another location.
+* An install or uninstall procedure did not complete successfully.
+* The installation package was faulty and contained
+   "/usr/lib/cmake/vtk-6.3/VTKTargets.cmake"
+but not all the files it references.
+
+-- The imported target "vtkGUISupportQtSQL" references the file
+   "/usr/lib/x86_64-linux-gnu/libvtkGUISupportQtSQL-6.3.so.6.3.0"
+but this file does not exist.  Possible reasons include:
+* The file was deleted, renamed, or moved to another location.
+* An install or uninstall procedure did not complete successfully.
+* The installation package was faulty and contained
+   "/usr/lib/cmake/vtk-6.3/VTKTargets.cmake"
+but not all the files it references.
+
+-- The imported target "vtkViewsQt" references the file
+   "/usr/lib/x86_64-linux-gnu/libvtkViewsQt-6.3.so.6.3.0"
+but this file does not exist.  Possible reasons include:
+* The file was deleted, renamed, or moved to another location.
+* An install or uninstall procedure did not complete successfully.
+* The installation package was faulty and contained
+   "/usr/lib/cmake/vtk-6.3/VTKTargets.cmake"
+but not all the files it references.
+
+-- The imported target "vtkGUISupportQtWebkit" references the file
+   "/usr/lib/x86_64-linux-gnu/libvtkGUISupportQtWebkit-6.3.so.6.3.0"
+but this file does not exist.  Possible reasons include:
+* The file was deleted, renamed, or moved to another location.
+* An install or uninstall procedure did not complete successfully.
+* The installation package was faulty and contained
+   "/usr/lib/cmake/vtk-6.3/VTKTargets.cmake"
+but not all the files it references.
+
+-- The imported target "vtkRenderingQt" references the file
+   "/usr/lib/x86_64-linux-gnu/libvtkRenderingQt-6.3.so.6.3.0"
+but this file does not exist.  Possible reasons include:
+* The file was deleted, renamed, or moved to another location.
+* An install or uninstall procedure did not complete successfully.
+* The installation package was faulty and contained
+   "/usr/lib/cmake/vtk-6.3/VTKTargets.cmake"
+but not all the files it references.
+
+-- Found VTK
+-- Found OpenMP_C: -fopenmp (found version "4.5") 
+-- Found OpenMP_CXX: -fopenmp (found version "4.5") 
+-- Found OpenMP: TRUE (found version "4.5")  
+-- Found OpenMP
+-- GTS using gts-config /usr/bin/gts-config
+-- Using GTS from /usr
+-- Found PkgConfig: /usr/bin/pkg-config (found version "0.29") 
+-- Checking for one of the modules 'glib-2.0'
+-- Found GLib2: glib-2.0 /usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include
+-- Looking for include file glib/gregex.h
+-- Looking for include file glib/gregex.h - not found
+-- Found GTS
+-- PFVFLOW, TWOPHASEFLOW and THERMAL depends on CGAL, but CGAL is disabled (not found or turned OFF)
+-- Found GL2PS: /usr/lib/x86_64-linux-gnu/libgl2ps.so  
+-- Found GL2PS
+LBMFLOW is still experimental, building and running LBM engine are at your own risk!
+Yade will be installed to /tmp/15-YADE/23-yade-install-bin/yade/trunk
+-- Suffix is set to -2020-04-04.git-1cb5838
+-- LIBRARY_OUTPUT_PATH is set to lib/x86_64-linux-gnu
+-- runtimePREFIX is set to /tmp/15-YADE/23-yade-install-bin/yade/trunk
+-- Could NOT find gts (missing: PY_gts) 
+-- Use embedded version of gts. Please, consider installing the corresponding package
+-- VTK version >5 and <8 is found
+-- ===========================================================
+-- Yade configured with following features:[36m DANGEROUSLY_FAST BoostLog mpmath PrecisionBoostBinFloat62 VECTORIZE Odeint VTK OpenMP GTS FEMLIKE GL2PS LBMFLOW[0m
+-- Disabled features:[33m MPFR GUI CGAL PFVFLOW LINSOLV MPI TWOPHASEFLOW SPH DEFORM LIQMIGRATION MASK_ARBITRARY THERMAL PROFILING PotentialParticles PotentialBlocks[0m
+-- [36mUsing MAX_LOG_LEVEL=6, ENABLE_LOGGER=ON[0m
+-- [32mOptimized build[0m
+-- C++ standard version: 17
+-- ===========================================================
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /tmp/15-YADE/24-yade-kompilacja/yade/build-trunk
+make[1]: Leaving directory '/home/ytest/yade/trunk'
+cd      /tmp/15-YADE/24-yade-kompilacja/yade/build-trunk && \
+make install -j 16 \
+|| { echo "\e[91mERROR. \e[93mIf it's immediate try calling 'make prepare', or 'make clean'\e[0m, otherwise look for compilation errors." ; exit 1; }
+make[1]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[2]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[35m[1mScanning dependencies of target _packObb[0m
+[35m[1mScanning dependencies of target _gts[0m
+[35m[1mScanning dependencies of target _polyhedra_utils[0m
+[35m[1mScanning dependencies of target WeightedAverage2d[0m
+[35m[1mScanning dependencies of target yade[0m
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[  0%] [32mBuilding CXX object py/CMakeFiles/_polyhedra_utils.dir/_polyhedra_utils.cpp.o[0m
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[  0%] [32mBuilding CXX object py/CMakeFiles/WeightedAverage2d.dir/WeightedAverage2d.cpp.o[0m
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[  1%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/_polyhedra_utils.so[0m
+[  1%] [32mBuilding CXX object py/CMakeFiles/_packObb.dir/pack/_packObb.cpp.o[0m
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[  1%] Built target _polyhedra_utils
+[  2%] [32mBuilding CXX object py/CMakeFiles/_gts.dir/3rd-party/pygts-0.3.1/face.cpp.o[0m
+[  4%] [32mBuilding CXX object py/CMakeFiles/_gts.dir/3rd-party/pygts-0.3.1/object.cpp.o[0m
+[  4%] [32mBuilding CXX object py/CMakeFiles/_gts.dir/3rd-party/pygts-0.3.1/edge.cpp.o[0m
+[  4%] [32mBuilding CXX object py/CMakeFiles/_gts.dir/3rd-party/pygts-0.3.1/point.cpp.o[0m
+[  4%] [32mBuilding CXX object py/CMakeFiles/_gts.dir/3rd-party/pygts-0.3.1/cleanup.cpp.o[0m
+[  5%] [32mBuilding CXX object py/CMakeFiles/_gts.dir/3rd-party/pygts-0.3.1/segment.cpp.o[0m
+[  5%] [32mBuilding CXX object py/CMakeFiles/_gts.dir/3rd-party/pygts-0.3.1/pygts.cpp.o[0m
+[  5%] [32mBuilding CXX object py/CMakeFiles/_gts.dir/3rd-party/pygts-0.3.1/surface.cpp.o[0m
+[  6%] [32mBuilding CXX object py/CMakeFiles/_gts.dir/3rd-party/pygts-0.3.1/triangle.cpp.o[0m
+[  6%] [32mBuilding CXX object py/CMakeFiles/_gts.dir/3rd-party/pygts-0.3.1/vertex.cpp.o[0m
+[  6%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/WeightedAverage2d.so[0m
+[  7%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/_gts.so[0m
+[  8%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/_packObb.so[0m
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[  8%] Built target _gts
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[  8%] Built target WeightedAverage2d
+[  8%] Built target _packObb
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[  9%] [32mBuilding CXX object CMakeFiles/yade.dir/core/Cell.cpp.o[0m
+[  9%] [32mBuilding CXX object CMakeFiles/yade.dir/core/Body.cpp.o[0m
+[  9%] [32mBuilding CXX object CMakeFiles/yade.dir/core/Clump.cpp.o[0m
+[ 10%] [32mBuilding CXX object CMakeFiles/yade.dir/core/Engine.cpp.o[0m
+[ 10%] [32mBuilding CXX object CMakeFiles/yade.dir/core/ForceContainerParallel.cpp.o[0m
+[ 10%] [32mBuilding CXX object CMakeFiles/yade.dir/core/ForceContainerSerial.cpp.o[0m
+[ 10%] [32mBuilding CXX object CMakeFiles/yade.dir/core/FileGenerator.cpp.o[0m
+[ 10%] [32mBuilding CXX object CMakeFiles/yade.dir/core/InteractionContainer.cpp.o[0m
+[ 11%] [32mBuilding CXX object CMakeFiles/yade.dir/core/Interaction.cpp.o[0m
+[ 12%] [32mBuilding CXX object CMakeFiles/yade.dir/core/MPIBodyContainer.cpp.o[0m
+[ 13%] [32mBuilding CXX object CMakeFiles/yade.dir/core/BodyContainer.cpp.o[0m
+[ 13%] [32mBuilding CXX object CMakeFiles/yade.dir/core/Material.cpp.o[0m
+[ 14%] [32mBuilding CXX object CMakeFiles/yade.dir/core/Omega.cpp.o[0m
+[ 14%] [32mBuilding CXX object CMakeFiles/yade.dir/core/Scene.cpp.o[0m
+[ 15%] [32mBuilding CXX object CMakeFiles/yade.dir/core/SimulationFlow.cpp.o[0m
+[ 15%] [32mBuilding CXX object CMakeFiles/yade.dir/core/State.cpp.o[0m
+[ 16%] [32mBuilding CXX object CMakeFiles/yade.dir/core/Subdomain.cpp.o[0m
+[ 16%] [32mBuilding CXX object CMakeFiles/yade.dir/core/ThreadRunner.cpp.o[0m
+[ 17%] [32mBuilding CXX object CMakeFiles/yade.dir/core/ThreadWorker.cpp.o[0m
+[ 17%] [32mBuilding CXX object CMakeFiles/yade.dir/core/corePlugins.cpp.o[0m
+[ 18%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/Bo1_Aabb.cpp.o[0m
+[ 18%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/Collider.cpp.o[0m
+[ 19%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/Cylinder.cpp.o[0m
+[ 19%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/Dispatching.cpp.o[0m
+[ 20%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/ForceEngine.cpp.o[0m
+[ 20%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/Facet.cpp.o[0m
+[93m[K/home/ytest/yade/trunk/core/InteractionContainer.cpp:74:3:[m[K [01;35m[Kwarning: [m[K#warning ("is cpu cost of this mutex known?") [[01;35m[K-Wcpp[m[K]
+   74 |  #[01;35m[Kwarning[m[K("is cpu cost of this mutex known?")
+      |   [01;35m[K^~~~~~~[m[K
+[ 21%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/Gl1_NormPhys.cpp.o[0m
+[ 21%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/Gl1_PFacet.cpp.o[0m
+[ 22%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/Gl1_PotentialBlock.cpp.o[0m
+[ 22%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/Gl1_PotentialParticle.cpp.o[0m
+[ 23%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/Gl1_Primitives.cpp.o[0m
+[ 24%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/Grid.cpp.o[0m
+[ 24%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/GravityEngines.cpp.o[0m
+[ 24%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/Grid_GUI.cpp.o[0m
+[ 25%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/HydroForceEngine.cpp.o[0m
+[ 26%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/InteractionLoop.cpp.o[0m
+[ 26%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/InsertionSortCollider.cpp.o[0m
+[ 26%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/KinematicEngines.cpp.o[0m
+[ 27%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/MatchMaker.cpp.o[0m
+[ 27%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/OpenGLRenderer.cpp.o[0m
+[ 28%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/PFacet.cpp.o[0m
+[ 28%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/ParallelEngine.cpp.o[0m
+[ 29%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/ResetRandomPosition.cpp.o[0m
+[ 29%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/SPHEngine.cpp.o[0m
+[ 30%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/SpatialQuickSortCollider.cpp.o[0m
+[ 30%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/Wall.cpp.o[0m
+[ 31%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/common/common.cpp.o[0m
+[ 31%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/BlockGen.cpp.o[0m
+[ 32%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/BubbleMat.cpp.o[0m
+[ 32%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/CapillaryPhys.cpp.o[0m
+[ 33%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/CapillaryPhys1.cpp.o[0m
+[ 33%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/CapillaryStressRecorder.cpp.o[0m
+[ 34%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/ConcretePM.cpp.o[0m
+[ 34%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/CohesiveFrictionalContactLaw.cpp.o[0m
+[ 35%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Disp2DPropLoadEngine.cpp.o[0m
+[ 35%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/DomainLimiter.cpp.o[0m
+[ 36%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/ElasticContactLaw.cpp.o[0m
+[ 36%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/FacetTopologyAnalyzer.cpp.o[0m
+[ 36%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/FlatGridCollider.cpp.o[0m
+[ 37%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/ForceTorqueRecorder.cpp.o[0m
+[ 38%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/FrictPhys.cpp.o[0m
+[ 38%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/FrictViscoPM.cpp.o[0m
+[ 39%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/GeneralIntegratorInsertionSortCollider.cpp.o[0m
+[ 39%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/GlobalStiffnessTimeStepper.cpp.o[0m
+[ 39%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/HertzMindlin.cpp.o[0m
+[ 40%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Ig2_Box_Sphere_ScGeom.cpp.o[0m
+[ 40%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Ig2_Facet_Sphere_ScGeom.cpp.o[0m
+[ 41%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Ig2_PB_PB_ScGeom.cpp.o[0m
+[ 41%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Ig2_PP_PP_ScGeom.cpp.o[0m
+[ 42%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Ig2_Sphere_Sphere_ScGeom.cpp.o[0m
+[ 42%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/InelastCohFrictPM.cpp.o[0m
+[ 42%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Ip2_ElastMat.cpp.o[0m
+[ 43%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Integrator.cpp.o[0m
+[ 44%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/JointedCohesiveFrictionalPM.cpp.o[0m
+[ 44%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/KinemC__Engine.cpp.o[0m
+[ 45%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/KinemSimpleShearBox.cpp.o[0m
+[ 45%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/KnKsLaw.cpp.o[0m
+[ 46%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/KnKsPBLaw.cpp.o[0m
+[ 47%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/L3Geom.cpp.o[0m
+[ 47%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Law2_ScGeom_CapillaryPhys_Capillarity1.cpp.o[0m
+[ 47%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Law2_ScGeom_CapillaryPhys_Capillarity.cpp.o[0m
+[ 48%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Lubrication.cpp.o[0m
+[ 49%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/MicroMacroAnalyser.cpp.o[0m
+[ 49%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/MeasureCapStress.cpp.o[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/LudingPM.cpp.o[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/LubricationWithPotential.cpp.o[0m
+[ 51%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/NewtonIntegrator.cpp.o[0m
+[ 51%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/MortarMat.cpp.o[0m
+[ 51%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/PDFEngine.cpp.o[0m
+[ 51%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Polyhedra.cpp.o[0m
+[ 52%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/PeriIsoCompressor.cpp.o[0m
+[ 53%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Polyhedra_Ig2.cpp.o[0m
+[ 53%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Polyhedra_splitter.cpp.o[0m
+[ 54%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Polyhedra_support.cpp.o[0m
+[ 54%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/PotentialBlock.cpp.o[0m
+[ 55%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/PotentialBlock2AABB.cpp.o[0m
+[ 55%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/PotentialParticle.cpp.o[0m
+[ 56%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/PotentialParticle2AABB.cpp.o[0m
+[ 57%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/RockLiningGlobal.cpp.o[0m
+[ 57%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/RockBolt.cpp.o[0m
+[ 57%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/RungeKuttaCashKarp54Integrator.cpp.o[0m
+[ 57%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/SampleCapillaryPressureEngine.cpp.o[0m
+[ 58%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/STLImporter.cpp.o[0m
+[ 59%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/ScGeom.cpp.o[0m
+[ 60%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Shop_02.cpp.o[0m
+[ 60%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/SimpleShear.cpp.o[0m
+[ 60%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Shop_01.cpp.o[0m
+[ 61%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/SnapshotEngine.cpp.o[0m
+[ 61%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/SpherePack.cpp.o[0m
+[ 61%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/SpheresFactory.cpp.o[0m
+[ 62%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/TesselationWrapper.cpp.o[0m
+[ 63%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/Tetra.cpp.o[0m
+[ 63%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/ThreeDTriaxialEngine.cpp.o[0m
+[ 63%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/TriaxialCompressionEngine.cpp.o[0m
+[ 64%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/TriaxialStressController.cpp.o[0m
+[ 64%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/TriaxialStateRecorder.cpp.o[0m
+[ 65%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/TriaxialTest.cpp.o[0m
+[ 65%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/UnbalancedForceCallbacks.cpp.o[0m
+[ 66%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/UniaxialStrainer.cpp.o[0m
+[ 66%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/VTKRecorder.cpp.o[0m
+[ 67%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/ViscoelasticCapillarPM.cpp.o[0m
+[ 68%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/Bo1_DeformableElement_Aabb.cpp.o[0m
+[ 68%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/WirePM.cpp.o[0m
+[ 68%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/dem/ViscoelasticPM.cpp.o[0m
+[ 69%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/CohesiveMat.cpp.o[0m
+[ 69%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/Bo1_Node_Aabb.cpp.o[0m
+[ 70%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/DeformableCohesiveElement.cpp.o[0m
+[ 70%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/DeformableElement.cpp.o[0m
+[ 71%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/FEInternalForceDispatchers.cpp.o[0m
+[ 71%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/FEInternalForceEngine.cpp.o[0m
+[ 72%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/Gl1_DeformableElement.cpp.o[0m
+[ 72%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/Gl1_Node.cpp.o[0m
+[ 73%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat.cpp.o[0m
+[ 73%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/If2_Lin4NodeTetra_LinIsoRayleighDampElast.cpp.o[0m
+[ 74%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/Lin4NodeTetra.cpp.o[0m
+[ 74%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/Lin4NodeTetra_Lin4NodeTetra_InteractionElement.cpp.o[0m
+[ 75%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/LinElastMat.cpp.o[0m
+[ 75%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/fem/Node.cpp.o[0m
+In file included from [93m[K/usr/include/vtk-6.3/vtkTriangle.h:26[m[K,
+                 from [93m[K/home/ytest/yade/trunk/pkg/dem/VTKRecorder.cpp:32[m[K:
+[93m[K/usr/include/vtk-6.3/vtkMath.h:664:3:[m[K [01;35m[Kwarning: [m[Kmulti-line comment [[01;35m[K-Wcomment[m[K]
+  664 |   [01;35m[K/[m[K/ a & b \\
+      |   [01;35m[K^[m[K
+[93m[K/usr/include/vtk-6.3/vtkMath.h:668:3:[m[K [01;35m[Kwarning: [m[Kmulti-line comment [[01;35m[K-Wcomment[m[K]
+  668 |   [01;35m[K/[m[K/ 1 & 0 \\
+      |   [01;35m[K^[m[K
+[93m[K/usr/include/vtk-6.3/vtkMath.h:671:3:[m[K [01;35m[Kwarning: [m[Kmulti-line comment [[01;35m[K-Wcomment[m[K]
+  671 |   [01;35m[K/[m[K/ a & b \\
+      |   [01;35m[K^[m[K
+[ 76%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/lbm/HydrodynamicsLawLBM.cpp.o[0m
+[ 76%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/lbm/LBMnode.cpp.o[0m
+[ 77%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/openfoam/FoamCoupling.cpp.o[0m
+[ 77%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/pfv/DFNFlow.cpp.o[0m
+[ 78%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/pfv/DummyFlowEngine.cpp.o[0m
+[ 78%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/pfv/FlowEngine.cpp.o[0m
+[ 79%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/pfv/PeriodicFlowEngine.cpp.o[0m
+[ 79%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/pfv/SoluteFlowEngine.cpp.o[0m
+[ 80%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/pfv/Thermal.cpp.o[0m
+[ 80%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/pfv/TwoPhaseFlowEngine.cpp.o[0m
+[ 81%] [32mBuilding CXX object CMakeFiles/yade.dir/pkg/pfv/UnsaturatedEngine.cpp.o[0m
+[ 81%] [32mBuilding CXX object CMakeFiles/yade.dir/lib/base/Math.cpp.o[0m
+[ 82%] [32mBuilding CXX object CMakeFiles/yade.dir/lib/factory/ClassFactory.cpp.o[0m
+[ 82%] [32mBuilding CXX object CMakeFiles/yade.dir/lib/factory/DynLibManager.cpp.o[0m
+[ 83%] [32mBuilding CXX object CMakeFiles/yade.dir/lib/base/Logging.cpp.o[0m
+[ 84%] [32mBuilding CXX object CMakeFiles/yade.dir/lib/compatibility/LapackCompatibility.cpp.o[0m
+[ 84%] [32mBuilding CXX object CMakeFiles/yade.dir/lib/compatibility/VTKCompatibility.cpp.o[0m
+[ 84%] [32mBuilding CXX object CMakeFiles/yade.dir/lib/serialization/Serializable.cpp.o[0m
+[ 84%] [32mBuilding CXX object CMakeFiles/yade.dir/core/main/pyboot.cpp.o[0m
+[ 85%] [32mBuilding CXX object CMakeFiles/yade.dir/lib/pyutil/gil.cpp.o[0m
+[ 86%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/libyade.so[0m
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[ 86%] Built target yade
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[35m[1mScanning dependencies of target boot[0m
+[35m[1mScanning dependencies of target _customConverters[0m
+[35m[1mScanning dependencies of target _math[0m
+[35m[1mScanning dependencies of target _log[0m
+[35m[1mScanning dependencies of target _utils[0m
+[35m[1mScanning dependencies of target wrapper[0m
+[35m[1mScanning dependencies of target _packPredicates[0m
+[35m[1mScanning dependencies of target _minieigenHP[0m
+[35m[1mScanning dependencies of target _libVersions[0m
+[35m[1mScanning dependencies of target _packSpheres[0m
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[ 86%] [32mBuilding CXX object CMakeFiles/boot.dir/core/main/pyboot.cpp.o[0m
+[ 87%] [32mBuilding CXX object py/CMakeFiles/_customConverters.dir/wrapper/customConverters.cpp.o[0m
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[ 87%] [32mBuilding CXX object py/CMakeFiles/_packSpheres.dir/pack/_packSpheres.cpp.o[0m
+[ 87%] [32mBuilding CXX object py/CMakeFiles/_log.dir/_log.cpp.o[0m
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[ 87%] [32mBuilding CXX object py/CMakeFiles/_libVersions.dir/_libVersions.cpp.o[0m
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[ 87%] [32mBuilding CXX object py/CMakeFiles/_utils.dir/_utils.cpp.o[0m
+[ 87%] [32mBuilding CXX object py/CMakeFiles/_packPredicates.dir/pack/_packPredicates.cpp.o[0m
+[ 88%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/boot.so[0m
+[ 88%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/_customConverters.so[0m
+[ 89%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/_packSpheres.so[0m
+[ 90%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/_packPredicates.so[0m
+In file included from [93m[K/usr/include/python3.8/numpy/ndarraytypes.h:1830[m[K,
+                 from [93m[K/usr/include/python3.8/numpy/ndarrayobject.h:12[m[K,
+                 from [93m[K/usr/include/python3.8/numpy/arrayobject.h:4[m[K,
+                 from [93m[K/home/ytest/yade/trunk/py/_utils.cpp:8[m[K:
+[93m[K/usr/include/python3.8/numpy/npy_1_7_deprecated_api.h:17:2:[m[K [01;35m[Kwarning: [m[K#warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [[01;35m[K-Wcpp[m[K]
+   17 | #[01;35m[Kwarning[m[K "Using deprecated NumPy API, disable it with " \
+      |  [01;35m[K^~~~~~~[m[K
+[ 91%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/_utils.so[0m
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Entering directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[ 92%] [32mBuilding CXX object py/CMakeFiles/_math.dir/high-precision/_math.cpp.o[0m
+[ 92%] [32mBuilding CXX object py/CMakeFiles/wrapper.dir/wrapper/yadeWrapper.cpp.o[0m
+[ 92%] [32mBuilding CXX object py/CMakeFiles/_math.dir/high-precision/_ExposeStorageOrdering.cpp.o[0m
+[ 93%] [32mBuilding CXX object py/CMakeFiles/_minieigenHP.dir/high-precision/_minieigenHP.cpp.o[0m
+[ 94%] [32mBuilding CXX object py/CMakeFiles/_minieigenHP.dir/high-precision/_ExposeComplex.cpp.o[0m
+[ 94%] [32mBuilding CXX object py/CMakeFiles/_minieigenHP.dir/high-precision/_ExposeConverters.cpp.o[0m
+[ 94%] [32mBuilding CXX object py/CMakeFiles/_minieigenHP.dir/high-precision/_ExposeBoxes.cpp.o[0m
+[ 95%] [32mBuilding CXX object py/CMakeFiles/_minieigenHP.dir/high-precision/_ExposeMatrices.cpp.o[0m
+[ 95%] [32mBuilding CXX object py/CMakeFiles/_minieigenHP.dir/high-precision/_ExposeQuaternion.cpp.o[0m
+[ 96%] [32mBuilding CXX object py/CMakeFiles/_minieigenHP.dir/high-precision/_ExposeStorageOrdering.cpp.o[0m
+[ 97%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/_log.so[0m
+[ 98%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/_libVersions.so[0m
+[ 98%] [32mBuilding CXX object py/CMakeFiles/_minieigenHP.dir/high-precision/_ExposeVectors.cpp.o[0m
+[ 98%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/_math.so[0m
+[ 99%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/wrapper.so[0m
+[100%] [32m[1mLinking CXX shared library lib/x86_64-linux-gnu/_minieigenHP.so[0m
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[100%] Built target boot
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[100%] Built target _packSpheres
+[100%] Built target _packPredicates
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[100%] Built target _customConverters
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[100%] Built target _libVersions
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[100%] Built target _log
+[100%] Built target _math
+[100%] Built target _utils
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[100%] Built target wrapper
+make[3]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[100%] Built target _minieigenHP
+make[2]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+[36mInstall the project...[0m
+-- Install configuration: "Release"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/bin/yade-2020-04-04.git-1cb5838-batch
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/bin/yade-2020-04-04.git-1cb5838
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/config.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/libVersions.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/__init__.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/DEM-PFV-check.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkAvoidSelfInteractionMask.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkBlockGen.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkCapillaryModels.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkClumpHopper.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkColliderConstantness.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkColliderCorrectness.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkDEM-PFVPressureInjection.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkGravity.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkJCFpm.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkLiquidMigration.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkList.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkLubrication.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkLubricationWithRoughness.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkMPI.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkPolyhedraCrush.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkPotentialBlocks.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkPotentialParticles.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkSaveLoadClumps.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkTestDummy.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkTestTriax.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkVTKRecorder.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkViscElEng.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkViscElPM.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkViscElPM2.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkWeight.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/checkWirePM.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/check_TwoPhaseFlowEngine_PressureInjection.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/gui/testGui.sh
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/gui/testGuiEmpty.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/gui/testGuiSimple.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/testGuiHelper.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/joints.csv
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/vtk_reference_8
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/vtk_reference_8/10.vtm
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/vtk_reference_8/10
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/vtk_reference_8/10/10_0.vtu
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/vtk_reference_8/10/10_2.vtp
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/vtk_reference_6
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/vtk_reference_6/10.vtm
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/vtk_reference_6/10
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/vtk_reference_6/10/10_0.vtu
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/vtk_reference_6/10/10_2.vtp
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/vtk_reference_6/10/10_1.vtu
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/checkColider.txt
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/checkTestTriax.spheres
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/checkColliderCorrect.txt
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/checkJCFpm.spheres
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/WallStressesCheckTest
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/data/100spheres
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/share/doc/yade-2020-04-04.git-1cb5838/img/yade-logo-note.png
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/math.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/minieigenHP.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/testMathHelper.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/boot.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/boot.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/libyade.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/libyade.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts/__init__.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts/pygts.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts/_gts.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts/_gts.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_extraDocs.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/bisectionDecomposition.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/bodiesHandling.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/coloring.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/deformableelementsutils.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/domaindecomposition.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/export.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/geom.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/gridpfacet.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/linterpolation.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/log.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/mpy.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/params.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/plot.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/polyhedra_utils.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/post2d.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/remote.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/runtime.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/system.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/timing.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/utils.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/ymport.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/pack.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/mtTkinter.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/__init__.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/clump.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/cohesive-chain.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/core.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/dummyTest.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/engines.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/libVersions.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/pbc.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/testColliderByGiulia.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/testMath.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/testMathHelper.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/testMinieigenHP.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/utilsModule.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/wrapper.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/performance/.checkPerf.py.swp
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/performance/checkPerf.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/tests/checks/performance/performance.db
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/FEMxDEM/mpipool.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/FEMxDEM/msFEM2D.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/FEMxDEM/msFEM3D.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/FEMxDEM/msFEMup.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/FEMxDEM/saveGauss.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/FEMxDEM/simDEM.py
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_libVersions.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_libVersions.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_log.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_log.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_math.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_math.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_minieigenHP.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_minieigenHP.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/WeightedAverage2d.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/WeightedAverage2d.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_utils.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_utils.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_polyhedra_utils.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_polyhedra_utils.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_packPredicates.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_packPredicates.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_packSpheres.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_packSpheres.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_packObb.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_packObb.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/wrapper.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/wrapper.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+-- Installing: /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_customConverters.so
+-- Set runtime path of "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/_customConverters.so" to "/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/qt:/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/gts"
+make[1]: Leaving directory '/tmp/15-YADE/24-yade-kompilacja/yade/build-trunk'
+make links
+make[1]: Entering directory '/home/ytest/yade/trunk'
+rm -f ./examples/yade-batch
+rm -f ./examples/yade
+ln -s /tmp/15-YADE/23-yade-install-bin/yade/trunk/bin/yade-2020-04-04.git-1cb5838-batch ./examples/yade-batch
+ln -s /tmp/15-YADE/23-yade-install-bin/yade/trunk/bin/yade-2020-04-04.git-1cb5838       ./examples/yade
+THE_VERSION: 2020-04-04.git-1cb5838
+make[1]: Leaving directory '/home/ytest/yade/trunk'
+[96m==gcc=G 5 ===[0m
+/usr/lib/python3/dist-packages/mpmath/ctx_mp_python.py:892: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if other is 0:
+/usr/lib/python3/dist-packages/mpmath/ctx_mp_python.py:986: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if other is 0:
+Using python version: 3.8.0+ (default, Nov 23 2019, 04:55:55) 
+[GCC 9.2.1 20191109]
+/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/__init__.py:76: RuntimeWarning: to-Python converter for boost::shared_ptr<yade::MatchMaker> already registered; second conversion method ignored.
+  boot.initialize(plugins,config.confDir)
+<frozen importlib._bootstrap>:219: RuntimeWarning: to-Python converter for Eigen::Matrix<boost::multiprecision::number<boost::multiprecision::backends::cpp_bin_float<62u, (boost::multiprecision::backends::digit_base_type)10, void, int, 0, 0>, (boost::multiprecision::expression_template_option)0>, 3, 1, 0, 3, 1> already registered; second conversion method ignored.
+
+[92mUsing PrecisionBoostBinFloat62 with 62 digits. Importing mpmath[0m
+
+Note: docstest are skipped because it checks the printed output, instead of comparing numbers. High precision output causes failures such as: Expected: 2000.0 Got: mpf('2000.0')
+testDummySomething (yade.tests.dummyTest.TestDummy) ... ok
+testDummySomethingElse (yade.tests.dummyTest.TestDummy) ... ok
+testMatrix3 (yade.TestEigenWrapper)
+Math: Matrix3 operations ... ok
+testQuaternion (yade.TestEigenWrapper)
+Math: Quaternion operations ... ok
+testVector2 (yade.TestEigenWrapper)
+Math: Vector2 operations ... ok
+testVector3 (yade.TestEigenWrapper)
+Math: Vector3 operations ... ok
+testClassCtors (yade.TestObjectInstantiation)
+Core: correct types are instantiated ... ok
+testDispatcherCtor (yade.TestObjectInstantiation)
+Core: dispatcher ctors with functors ... ok
+testHidden (yade.TestObjectInstantiation)
+Core: Attr::hidden ... ok
+testInteractionLoopCtor (yade.TestObjectInstantiation)
+Core: InteractionLoop special ctor ... ok
+testInvalidAttr (yade.TestObjectInstantiation)
+Core: invalid attribute access raises AttributeError ... ok
+testNoSave (yade.TestObjectInstantiation)
+Core: Attr::noSave ... ok
+testParallelEngineCtor (yade.TestObjectInstantiation)
+Core: ParallelEngine special ctor ... ok
+testRootDerivedCtors_attrs_few (yade.TestObjectInstantiation)
+Core: class ctor's attributes ... ok
+testTriggerPostLoad (yade.TestObjectInstantiation)
+Core: Attr::triggerPostLoad ... ok
+testWrongFunctorType (yade.TestObjectInstantiation)
+Core: dispatcher and functor type mismatch is detected ... ok
+testErase (yade.TestBodies)
+Bodies: erased bodies are None in python ... ok
+testErasedAndNewlyCreatedSphere (yade.TestBodies)
+Bodies: The bug is described in LP:1001194. If the new body was created after deletion of previous, it has no bounding box ... ok
+testErasedIterate (yade.TestBodies)
+Bodies: Iterator silently skips erased ones ... ok
+testIterate (yade.TestBodies)
+Bodies: Iteration ... ok
+testLen (yade.TestBodies)
+Bodies: len(O.bodies) ... ok
+testNegativeIndex (yade.TestBodies)
+Bodies: Negative index counts backwards (like python sequences). ... ok
+testSaveAllClasses (yade.TestIO)
+I/O: All classes can be saved and loaded with boost::serialization ... Entered the initialization functionWARNING: cannot open files used for capillary law, all forces will be null. Instructions on how to download and install them is found here : https://yade-dem.org/wiki/CapillaryTriaxialTest.
+ok
+testEraseBodiesInInteraction (yade.TestInteractions) ... ok
+testDead (yade.TestLoop)
+Loop: dead engines are not run ... ok
+testEnginesModificationInsideLoop (yade.TestLoop)
+Loop: O.engines can be modified inside the loop transparently. ... ok
+testSubstepping (yade.TestLoop)
+Loop: substepping ... ok
+testMatchMakerCollisions (yade.TestMatchMaker) ... ok
+testMaterialReturnsState (yade.TestMaterialStateAssociativity)
+Material+State: CpmMat returns CpmState when asked for newAssocState ... ok
+testThrowsAtBadCombination (yade.TestMaterialStateAssociativity)
+Material+State: throws when body has material and state that don't work together. ... ok
+testThrowsAtNullState (yade.TestMaterialStateAssociativity)
+Material+State: throws when body has material but NULL state. ... ok
+testAccess (yade.TestMaterials)
+Material: find by index or label; KeyError raised for invalid label. ... ok
+testIterate (yade.TestMaterials)
+Material: iteration over O.materials ... ok
+testLen (yade.TestMaterials)
+Material: len(O.materials) ... ok
+testNegativeIndex (yade.TestMaterials)
+Material: negative index counts backwards. ... ok
+testShared (yade.TestMaterials)
+Material: shared_ptr's makes change in material immediate everywhere ... ok
+testSharedAfterReload (yade.TestMaterials)
+Material: shared_ptr's are preserved when saving/loading ... ok
+testDegenerate (yade.TestPBC)
+PBC: degenerate cell raises exception ... ok
+testHomotheticResizeVel (yade.TestPBC)
+PBC: homothetic cell deformation adjusts particle velocity ... ok
+testKineticEnergy (yade.TestPBC)
+PBC: utils.kineticEnergy considers only fluctuation velocity, not the velocity gradient ... ok
+testL3GeomIncidentVelocity (yade.TestPBC)
+PBC: L3Geom computes incident velocity correctly ... ok
+testScGeomIncidentVelocity (yade.TestPBC)
+PBC: ScGeom computes incident velocity correctly ... ok
+testSetBox (yade.TestPBC)
+PBC: setBox modifies hSize correctly ... ok
+testTrsfChange (yade.TestPBC)
+PBC: chaing trsf changes hSize0, but does not modify hSize ... ok
+testVelGrad (yade.TestPBC)
+PBC: velGrad changes hSize, accumulates in trsf ... ok
+testConsistency (yade.TestSimpleClump)
+Clump: ids and flags consistency ... ok
+testStaticProperties (yade.TestSimpleClump)
+Clump: mass, centroid, intertia ... ok
+testVelocity (yade.TestSimpleClump)
+Clump: velocities of member assigned by NewtonIntegrator ... ok
+testMotion (yade.tests.cohesive-chain.TestCohesiveChain)
+CohesiveChain: velocity/positions tested in transient dynamics and equilibrium state ... /tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/gridpfacet.py:57: UserWarning: [1;31mchainedCylinder is deprecated and will be removed in the future, use GridConnection instead. See examples/grids/CohesiveGridConnectionSphere.py.[1;0m
+  warnings.warn('\033[1;31mchainedCylinder is deprecated and will be removed in the future, use GridConnection instead. See examples/grids/CohesiveGridConnectionSphere.py.\033[1;0m',category=UserWarning)
+ok
+testKinematicEngines (yade.TestKinematicEngines)
+Engines: kinematic engines ... ok
+testLabels (yade.TestLabelsOfEngines) ... ok
+testUserCreatedInteraction (yade.TestUtils) ... ok
+testLibVersions (yade.tests.libVersions.TestLibVersions) ... cmake versions:  {'cmake': [(3, 15, 4), '3.15.4'], 'compiler': [(9, 2, 1), '/usr/bin/g++ 9.2.1'], 'boost': [(1, 67, 0), '106700'], 'python': [(3, 8, 0), '3.8'], 'eigen': [(3, 3, 7), '3.3.7'], 'vtk': [(6, 3, 0), '6.3.0'], 'ipython': [(5, 8, 0), '5.8.0'], 'sphinx': [(1, 8, 5), '1.8.5-final-0'], 'mpi4py': [(3, 0, 3), '3.0.3'], 'mpmath': [(1, 1, 0), '1.1.0']}
+C++ versions:  {'compiler': [(9, 2, 1), 'gcc 9.2.1'], 'boost': [(1, 67, 0), '1.67.0'], 'qt': [], 'gl': [], 'qglviewer': [], 'python': [(3, 8, 0), '3.8.0'], 'eigen': [(3, 3, 7), '3.3.7'], 'sqlite': [(3, 31, 0), '3.31.0'], 'vtk': [(6, 3, 0), '6.3.0'], 'cgal': [], 'suitesparse': [], 'openblas': [], 'metis': [], 'mpi': [], 'clp': [], 'coinutils': [], 'mpfr': []}
+
+
+
+```
+Yade version   :  2020-04-04.git-1cb5838
+Yade features  :  DANGEROUSLY_FAST BoostLog mpmath PrecisionBoostBinFloat62 VECTORIZE Odeint VTK OpenMP GTS FEMLIKE GL2PS LBMFLOW
+Yade config dir:  ~/.yade-2020-04-04.git-1cb5838
+Yade precision :  205 bits, 62 decimal places, with mpmath
+```
+
+Libraries used :
+
+| library       | cmake                | C++         |
+| ------------- | -------------------- | ----------- |
+| boost         | 106700               | 1.67.0      |
+| cmake         | 3.15.4               |             |
+| compiler      | /usr/bin/g++ 9.2.1   | gcc 9.2.1   |
+| eigen         | 3.3.7                | 3.3.7       |
+| ipython       | 5.8.0                |             |
+| mpi4py        | 3.0.3                |             |
+| mpmath        | 1.1.0                |             |
+| python        | 3.8                  | 3.8.0       |
+| sphinx        | 1.8.5-final-0        |             |
+| sqlite        |                      | 3.31.0      |
+| vtk           | 6.3.0                | 6.3.0       |
+
+Linux version: Debian GNU/Linux bullseye/sid
+
+compiler version reported by by cmake is  [(9, 2, 1), '/usr/bin/g++ 9.2.1']  and by C++ is  [(9, 2, 1), 'gcc 9.2.1']
+boost version reported by by cmake is  [(1, 67, 0), '106700']  and by C++ is  [(1, 67, 0), '1.67.0']
+python version reported by by cmake is  [(3, 8, 0), '3.8']  and by C++ is  [(3, 8, 0), '3.8.0']
+eigen version reported by by cmake is  [(3, 3, 7), '3.3.7']  and by C++ is  [(3, 3, 7), '3.3.7']
+vtk version reported by by cmake is  [(6, 3, 0), '6.3.0']  and by C++ is  [(6, 3, 0), '6.3.0']
+ok
+testMatrix3Test (yade.tests.testMinieigenHP.ExtendedMinieigenTests) ... ok
+testMatrix3cTest (yade.tests.testMinieigenHP.ExtendedMinieigenTests) ... ok
+testMpmath (yade.tests.testMinieigenHP.ExtendedMinieigenTests) ... ok
+testQuaternion (yade.tests.testMinieigenHP.ExtendedMinieigenTests) ... ok
+testVector2 (yade.tests.testMinieigenHP.ExtendedMinieigenTests) ... ok
+testVector2c (yade.tests.testMinieigenHP.ExtendedMinieigenTests) ... ok
+testVector2i (yade.tests.testMinieigenHP.ExtendedMinieigenTests) ... ok
+testVector3 (yade.tests.testMinieigenHP.ExtendedMinieigenTests) ... ok
+testVector3c (yade.tests.testMinieigenHP.ExtendedMinieigenTests) ... ok
+testVector3i (yade.tests.testMinieigenHP.ExtendedMinieigenTests) ... ok
+testVector3na (yade.tests.testMinieigenHP.ExtendedMinieigenTests) ... ok
+testVector4 (yade.tests.testMinieigenHP.ExtendedMinieigenTests) ... ok
+testArray (yade.tests.testMath.SimpleTests) ... ok
+testBasicVariable (yade.tests.testMath.SimpleTests) ... ok
+testCgalNumTraits (yade.tests.testMath.SimpleTests) ... Skipping test of CgalNumTraits
+ok
+testInfinityNaN (yade.tests.testMath.SimpleTests) ... ok
+testMathFunctions (yade.tests.testMath.SimpleTests) ... sin             : mpf('-0.78595560037632111607971334048814445360480911137965445949091270502')
+sinh            : mpf('-1343214.12920559367390340625231929476365887695884051106217537602992')
+cos             : mpf('-0.618282940276615284435686442606968477365732999560279012037675986003')
+cosh            : mpf('1343214.12920596591537193193086883238656552040103034675082730776993')
+tan             : mpf('1.27119082409857581498148912115443339350884552292226598128884731007')
+tanh            : mpf('-0.999999999999722872578219730931347293532010819925600652613367205971')
+abs             : mpf('14.8037230843133551401781294219723314148495191122827598664557982005')
+acos            : mpf('1.37323679962495136166389702038973298547344639776793396061332351995')
+acosh           : mpf('3.45239025453084473611892887907087600975489780389501399701822492001')
+asin            : mpf('0.197559527169945257567424671250018456625138301919618949874148770993')
+asinh           : mpf('-3.38916471237530671480463622018479684858154301786016643880535572008')
+atan            : mpf('-1.50334821807114060515131690628439868424945665623347557024209232')
+atanh           : mpf('0.198857327604742283323425429127776689898112247624082763537988258993')
+cbrt            : mpf('2.45540791179551876129440672104544346863408869199797707982443993986')
+erf             : mpf('-1.0')
+erfc            : mpf('2.0')
+exp             : mpf('0.000000372241468525678549537622906643442189835688651931727820171773440999')
+sqrt            : mpf('3.8475606667489149728740437988167905935040902912048736533305038901')
+exp2            : mpf('0.0000349651426269477208412718162193865803402462682642469717896581327003')
+expm1           : mpf('-0.999999627758531474321450462377093356557810164311348068272179828023')
+lgamma          : mpf('-25.6700989376923207551556536518887827275414516692963961589030560998')
+log             : mpf('2.69487870888512304276273710049346005668555354316042458803222127998')
+log10           : mpf('1.17037095266736871957638569702124016661591875103154058880369886996')
+log1p           : mpf('2.76024555052227047038609443724031597778905228397262206698078531998')
+log2            : mpf('3.88788814910581950305574222304873469939581494730117092708226290014')
+tgamma          : mpf('-0.00000000000710587692967506121173522861090510119838212720172933326807517440001')
+fabs            : mpf('14.8037230843133551401781294219723314148495191122827598664557982005')
+frexp           : mpf('14.8037230843133551401781294219723314148495191122827598664557982005')
+modf            : mpf('0.803723084313355140178129421972331414849519112282759866455798207982')
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+csin            : mpc(real='-1274492.45425671659063002884157638100062952696564038924723277173993', imag='1002597.27343472580420527317811403659130510867971604389861344361')
+csinh           : mpc(real='1013456.69929469675612241001984876217069420430732511403613650382999', imag='-881549.610375202094203219102928088866570330331870809093006110668964')
+ccos            : mpc(real='-1002597.27343491644595364311732873736631581753683848072620170236998', imag='-1274492.45425647424858881086522350054679694275879290370009950372994')
+ccosh           : mpc(real='-1013456.69929497761276457157842771909127755335492239211397853622998', imag='881549.610374957792632524422435909914209537107070220105846082736012')
+ctan            : mpc(real='0.000000000000184802041765347815142904686498402407033894194306035230081466193002', imag='-1.00000000000004477077744028018294518278287286686401099284941767')
+ctanh           : mpc(real='-0.999999999999961605607995207486900578560323968563946305935754623007', imag='0.000000000000274454875280399802050587171369909031117332435255163791614172506003')
+cexp            : mpc(real='-0.000000280856642161558578956920583349047597278077842032396488935054947989', imag='-0.000000244301570694680492178952360793224800588987160027926392366296556997')
+clog            : mpc(real='3.04781328758722345591702816907931843764122505896981109571634584003', imag='-2.34987362454352649571536636402038840228141348948723981599031087985')
+cabs            : mpf('21.0692216837532990520670606998682346114700360287934436083504323994')
+cconj           : mpc(real='-14.8037230843133551401781294219723314148495191122827598664557982005', imag='14.9920607390080995973667814579813497046097242097838589685026133')
+creal           : mpf('-14.8037230843133551401781294219723314148495191122827598664557982005')
+cimag           : mpf('-14.9920607390080995973667814579813497046097242097838589685026133')
+atan2           : mpf('-2.36251535584116336197859871089886592401434060957541891547210601993')
+fmod            : mpf('14.8037230843133551401781294219723314148495191122827598664557982005')
+hypot           : mpf('21.0692216837532990520670606998682346114700360287934436083504323994')
+max             : mpf('-14.8037230843133551401781294219723314148495191122827598664557982005')
+min             : mpf('-14.9920607390080995973667814579813497046097242097838589685026133')
+pow             : mpf('0.00000000000000000284267748949233887070311734639066740691907153728859599455426884005')
+remainder       : mpf('-0.188337654694744457188652036009018289760205097501099102046815124006')
+remquo          : mpf('-0.188337654694744457188652036009018289760205097501099102046815124006')
+ldexp           : mpf('-0.000903547551532797554942512782102803431082123969255539542630358777037')
+fma             : mpf('210.339497592933843573669972523870330962152837692864100424997602007')
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+Skipping test of CgalNumTraits
+ok
+testWrongInput (yade.tests.testMath.SimpleTests) ... ok
+
+----------------------------------------------------------------------
+Ran 71 tests in 5.435s
+
+OK
+[92m*** ALL TESTS PASSED ***[0m
+Entered the initialization function/usr/lib/python3/dist-packages/mpmath/ctx_mp_python.py:892: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if other is 0:
+/usr/lib/python3/dist-packages/mpmath/ctx_mp_python.py:986: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if other is 0:
+Welcome to Yade 2020-04-04.git-1cb5838 
+Using python version: 3.8.0+ (default, Nov 23 2019, 04:55:55) 
+[GCC 9.2.1 20191109]
+/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/__init__.py:76: RuntimeWarning: to-Python converter for boost::shared_ptr<yade::MatchMaker> already registered; second conversion method ignored.
+  boot.initialize(plugins,config.confDir)
+<frozen importlib._bootstrap>:219: RuntimeWarning: to-Python converter for Eigen::Matrix<boost::multiprecision::number<boost::multiprecision::backends::cpp_bin_float<62u, (boost::multiprecision::backends::digit_base_type)10, void, int, 0, 0>, (boost::multiprecision::expression_template_option)0>, 3, 1, 0, 3, 1> already registered; second conversion method ignored.
+###################################
+Skipping checkColliderConstantness.py, because it is in SkipScripts
+###################################
+Skipping check_TwoPhaseFlowEngine_PressureInjection.py, because it is in SkipScripts
+###################################
+Skipping checkViscElEng.py, because it is in SkipScripts
+###################################
+Skipping performance, because it is in SkipScripts
+###################################
+Skipping checkTestDummy.py, because it is in SkipScripts
+###################################
+Skipping checkVTKRecorder.py, because it is in SkipScripts
+###################################
+Skipping DEM-PFV-check.py, because it is in SkipScripts
+###################################
+running:  checkLubricationWithRoughness.py
+Status:[92m success[0m, time spent on this check:[91m 4:08:06.418020[0m
+___________________________________
+###################################
+Skipping checkPotentialParticles.py, because it is in SkipScripts
+###################################
+Skipping checkLiquidMigration.py, because it is in SkipScripts
+###################################
+Skipping checkViscElPM.py, because it is in SkipScripts
+###################################
+Skipping checkSaveLoadClumps.py, because it is in SkipScripts
+###################################
+Skipping checkWeight.py, because it is in SkipScripts
+###################################
+Skipping checkViscElPM2.py, because it is in SkipScripts
+###################################
+Skipping checkPolyhedraCrush.py, because it is in SkipScripts
+###################################
+Skipping checkColliderCorrectness.py, because it is in SkipScripts
+###################################
+Skipping checkJCFpm.py, because it is in SkipScripts
+###################################
+Skipping checkAvoidSelfInteractionMask.py, because it is in SkipScripts
+###################################
+Skipping checkBlockGen.py, because it is in SkipScripts
+###################################
+Skipping checkLubrication.py, because it is in SkipScripts
+###################################
+Skipping checkWirePM.py, because it is in SkipScripts
+###################################
+Skipping checkMPI.py, because it is in SkipScripts
+###################################
+Skipping checkTestTriax.py, because it is in SkipScripts
+###################################
+Skipping data, because it is in SkipScripts
+###################################
+Skipping checkList.py, because it is in SkipScripts
+###################################
+Skipping checkClumpHopper.py, because it is in SkipScripts
+###################################
+Skipping checkCapillaryModels.py, because it is in SkipScripts
+###################################
+Skipping checkPotentialBlocks.py, because it is in SkipScripts
+###################################
+Skipping checkDEM-PFVPressureInjection.py, because it is in SkipScripts
+###################################
+Skipping checkGravity.py, because it is in SkipScripts
+[95mWARNING: some checks took longer than 30 seconds.[0m
+Most time spend on a single check: 4:08:06.418020
+[92m*** ALL CHECKS PASSED ***[0m
+/usr/lib/python3/dist-packages/mpmath/ctx_mp_python.py:892: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if other is 0:
+/usr/lib/python3/dist-packages/mpmath/ctx_mp_python.py:986: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if other is 0:
+Welcome to Yade 2020-04-04.git-1cb5838 
+Using python version: 3.8.0+ (default, Nov 23 2019, 04:55:55) 
+[GCC 9.2.1 20191109]
+/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/__init__.py:76: RuntimeWarning: to-Python converter for boost::shared_ptr<yade::MatchMaker> already registered; second conversion method ignored.
+  boot.initialize(plugins,config.confDir)
+<frozen importlib._bootstrap>:219: RuntimeWarning: to-Python converter for Eigen::Matrix<boost::multiprecision::number<boost::multiprecision::backends::cpp_bin_float<62u, (boost::multiprecision::backends::digit_base_type)10, void, int, 0, 0>, (boost::multiprecision::expression_template_option)0>, 3, 1, 0, 3, 1> already registered; second conversion method ignored.
+[93m Running --quickperformance test: 5000 spheres, [2000] iterations, average over 2 runs. Threads: 16[0m
+4416
+number of bodies 4428
+
+Elapsed  14.866195678710938  sec
+Performance  134.53341010868638  iter/sec
+Extrapolation on 1e5 iters  0.20647493998209634  hours
+=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+Name                                                    Count                 Time            Rel. time
+-------------------------------------------------------------------------------------------------------
+ForceResetter                                      2000         587649.252us                3.96%      
+InsertionSortCollider                                19         342021.421us                2.30%      
+InteractionLoop                                    2000         7541469.22us               50.81%      
+NewtonIntegrator                                   2000        6372784.652us               42.93%      
+  forces sync                                        2000        1873581.909us               29.40%    
+  motion integration                                 2000         4496270.32us               70.55%    
+  sync max vel                                       2000           1746.111us                0.03%    
+  terminate                                          2000            122.941us                0.00%    
+  TOTAL                                              8000        6371721.281us               99.98%    
+TOTAL                                                         14843924.545us              100.00%      
+
+4416
+number of bodies 4428
+
+Elapsed  16.308932542800903  sec
+Performance  122.63218299243263  iter/sec
+Extrapolation on 1e5 iters  0.22651295198334587  hours
+=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+Name                                                    Count                 Time            Rel. time
+-------------------------------------------------------------------------------------------------------
+ForceResetter                                      2000          595351.15us                3.66%      
+InsertionSortCollider                                19          373502.47us                2.30%      
+InteractionLoop                                    2000        7976293.889us               49.05%      
+NewtonIntegrator                                   2000        7315987.285us               44.99%      
+  forces sync                                        2000        2263378.223us               30.94%    
+  motion integration                                 2000        5047919.489us               69.00%    
+  sync max vel                                       2000           2087.212us                0.03%    
+  terminate                                          2000            169.835us                0.00%    
+  TOTAL                                              8000        7313554.759us               99.97%    
+TOTAL                                                         16261134.794us              100.00%      
+
+Common time  38.749579429626465 s
+
+
+___________________________________________________
+
+[93m SUMMARY[0m
+
+4428  spheres,[93m calculation velocity= 128.58279655055952 iter/sec +/- 4.62784580656329 %[0m
+
+Summary saved to 2020-04-04.git-1cb5838_j16.dat
+
+SCORE: 1168
+Number of threads:  16
+___________________________________________________
+
+/usr/lib/python3/dist-packages/mpmath/ctx_mp_python.py:892: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if other is 0:
+/usr/lib/python3/dist-packages/mpmath/ctx_mp_python.py:986: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if other is 0:
+Welcome to Yade 2020-04-04.git-1cb5838 
+Using python version: 3.8.0+ (default, Nov 23 2019, 04:55:55) 
+[GCC 9.2.1 20191109]
+/tmp/15-YADE/23-yade-install-bin/yade/trunk/lib/x86_64-linux-gnu/yade-2020-04-04.git-1cb5838/py/yade/__init__.py:76: RuntimeWarning: to-Python converter for boost::shared_ptr<yade::MatchMaker> already registered; second conversion method ignored.
+  boot.initialize(plugins,config.confDir)
+<frozen importlib._bootstrap>:219: RuntimeWarning: to-Python converter for Eigen::Matrix<boost::multiprecision::number<boost::multiprecision::backends::cpp_bin_float<62u, (boost::multiprecision::backends::digit_base_type)10, void, int, 0, 0>, (boost::multiprecision::expression_template_option)0>, 3, 1, 0, 3, 1> already registered; second conversion method ignored.
+[93m Running --stdperformance test: 10000 spheres, [7000] iterations, average over 10 runs. Threads: 16[0m
+10009
+number of bodies 10021
+
+Elapsed  413.0443625450134  sec
+Performance  16.947332138535465  iter/sec
+Extrapolation on 1e5 iters  1.6390649307341802  hours
+=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+Name                                                    Count                 Time            Rel. time
+-------------------------------------------------------------------------------------------------------
+ForceResetter                                      7000        4870688.685us                1.18%      
+InsertionSortCollider                               149        4942566.673us                1.20%      
+InteractionLoop                                    7000       209549522.92us               50.75%      
+NewtonIntegrator                                   7000       193532316.612us               46.87%      
+  forces sync                                        7000       37964022.059us               19.62%    
+  motion integration                                 7000      155537906.388us               80.37%    
+  sync max vel                                       7000          16374.046us                0.01%    
+  terminate                                          7000           1109.222us                0.00%    
+  TOTAL                                             28000      193519411.715us               99.99%    
+TOTAL                                                         412895094.89us              100.00%      
+
+10009
+number of bodies 10021
+
+Elapsed  407.4393575191498  sec
+Performance  17.180470837727054  iter/sec
+Extrapolation on 1e5 iters  1.6168228472982136  hours
+=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+Name                                                    Count                 Time            Rel. time
+-------------------------------------------------------------------------------------------------------
+ForceResetter                                      7000        4860735.696us                1.19%      
+InsertionSortCollider                               149        5052835.147us                1.24%      
+InteractionLoop                                    7000       206349186.518us               50.66%      
+NewtonIntegrator                                   7000       191041613.674us               46.90%      
+  forces sync                                        7000       36779569.397us               19.25%    
+  motion integration                                 7000      154230933.234us               80.73%    
+  sync max vel                                       7000          16198.489us                0.01%    
+  terminate                                          7000            792.749us                0.00%    
+  TOTAL                                             28000      191027493.869us               99.99%    
+TOTAL                                                         407304371.035us              100.00%      
+
+10009
+number of bodies 10021
+
+Elapsed  416.78230714797974  sec
+Performance  16.79533866948587  iter/sec
+Extrapolation on 1e5 iters  1.653898044238015  hours
+=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+Name                                                    Count                 Time            Rel. time
+-------------------------------------------------------------------------------------------------------
+ForceResetter                                      7000        4874447.502us                1.17%      
+InsertionSortCollider                               150        5164967.319us                1.24%      
+InteractionLoop                                    7000       210748894.213us               50.58%      
+NewtonIntegrator                                   7000       195860581.758us               47.01%      
+  forces sync                                        7000       38476256.785us               19.64%    
+  motion integration                                 7000      157352694.134us               80.34%    
+  sync max vel                                       7000          15671.145us                0.01%    
+  terminate                                          7000            868.777us                0.00%    
+  TOTAL                                             28000      195845490.841us               99.99%    
+TOTAL                                                         416648890.792us              100.00%      
+
+10009
+number of bodies 10021
+
+Elapsed  417.8555328845978  sec
+Performance  16.75220129712448  iter/sec
+Extrapolation on 1e5 iters  1.6581568765261816  hours
+=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+Name                                                    Count                 Time            Rel. time
+-------------------------------------------------------------------------------------------------------
+ForceResetter                                      7000        4816770.368us                1.15%      
+InsertionSortCollider                               149        4995664.217us                1.20%      
+InteractionLoop                                    7000       210378217.956us               50.36%      
+NewtonIntegrator                                   7000       197534032.099us               47.29%      
+  forces sync                                        7000       38678621.278us               19.58%    
+  motion integration                                 7000      158825785.849us               80.40%    
+  sync max vel                                       7000          15566.848us                0.01%    
+  terminate                                          7000            949.949us                0.00%    
+  TOTAL                                             28000      197520923.924us               99.99%    
+TOTAL                                                         417724684.64us              100.00%      
+
+10009
+number of bodies 10021
+
+Elapsed  421.5018050670624  sec
+Performance  16.60728356521813  iter/sec
+Extrapolation on 1e5 iters  1.672626210583581  hours
+=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+Name                                                    Count                 Time            Rel. time
+-------------------------------------------------------------------------------------------------------
+ForceResetter                                      7000        4870335.767us                1.16%      
+InsertionSortCollider                               148        4984243.454us                1.18%      
+InteractionLoop                                    7000       213995698.549us               50.79%      
+NewtonIntegrator                                   7000       197514731.042us               46.87%      
+  forces sync                                        7000       38930513.517us               19.71%    
+  motion integration                                 7000      158553864.477us               80.27%    
+  sync max vel                                       7000          16229.983us                0.01%    
+  terminate                                          7000            885.106us                0.00%    
+  TOTAL                                             28000      197501493.083us               99.99%    
+TOTAL                                                         421365008.812us              100.00%      
+
+10009
+number of bodies 10021
+
+Elapsed  415.12734746932983  sec
+Performance  16.862295492390245  iter/sec
+Extrapolation on 1e5 iters  1.6473307439259122  hours
+=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+Name                                                    Count                 Time            Rel. time
+-------------------------------------------------------------------------------------------------------
+ForceResetter                                      7000        4889097.342us                1.18%      
+InsertionSortCollider                               148        5126494.501us                1.24%      
+InteractionLoop                                    7000       210400043.511us               50.70%      
+NewtonIntegrator                                   7000       194579209.685us               46.89%      
+  forces sync                                        7000       37400138.246us               19.22%    
+  motion integration                                 7000      157146145.135us               80.76%    
+  sync max vel                                       7000          17703.743us                0.01%    
+  terminate                                          7000            771.179us                0.00%    
+  TOTAL                                             28000      194564758.303us               99.99%    
+TOTAL                                                         414994845.039us              100.00%      
+
+10009
+number of bodies 10021
+
+Elapsed  420.54746770858765  sec
+Performance  16.64497003903148  iter/sec
+Extrapolation on 1e5 iters  1.6688391575737604  hours
+=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+Name                                                    Count                 Time            Rel. time
+-------------------------------------------------------------------------------------------------------
+ForceResetter                                      7000        4858627.837us                1.16%      
+InsertionSortCollider                               148        5075594.463us                1.21%      
+InteractionLoop                                    7000       213748201.501us               50.84%      
+NewtonIntegrator                                   7000       196729853.02us               46.79%      
+  forces sync                                        7000       38496176.328us               19.57%    
+  motion integration                                 7000      158203877.277us               80.42%    
+  sync max vel                                       7000          15571.027us                0.01%    
+  terminate                                          7000            902.777us                0.00%    
+  TOTAL                                             28000      196716527.409us               99.99%    
+TOTAL                                                         420412276.821us              100.00%      
+
+10009
+number of bodies 10021
+
+Elapsed  418.0123884677887  sec
+Performance  16.745915176481446  iter/sec
+Extrapolation on 1e5 iters  1.6587793193166218  hours
+=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+Name                                                    Count                 Time            Rel. time
+-------------------------------------------------------------------------------------------------------
+ForceResetter                                      7000         4893779.77us                1.17%      
+InsertionSortCollider                               148        5090784.687us                1.22%      
+InteractionLoop                                    7000       212041711.385us               50.74%      
+NewtonIntegrator                                   7000       195848560.963us               46.87%      
+  forces sync                                        7000       37964903.707us               19.38%    
+  motion integration                                 7000      157849987.424us               80.60%    
+  sync max vel                                       7000          18151.279us                0.01%    
+  terminate                                          7000            793.548us                0.00%    
+  TOTAL                                             28000      195833835.958us               99.99%    
+TOTAL                                                         417874836.805us              100.00%      
+
+10009
+number of bodies 10021
+
+Elapsed  417.45388531684875  sec
+Performance  16.768319199345765  iter/sec
+Extrapolation on 1e5 iters  1.656563036971622  hours
+=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+Name                                                    Count                 Time            Rel. time
+-------------------------------------------------------------------------------------------------------
+ForceResetter                                      7000        4852891.886us                1.16%      
+InsertionSortCollider                               149        4898963.574us                1.17%      
+InteractionLoop                                    7000       212326956.505us               50.88%      
+NewtonIntegrator                                   7000       195258531.405us               46.79%      
+  forces sync                                        7000       37864968.541us               19.39%    
+  motion integration                                 7000      157361273.472us               80.59%    
+  sync max vel                                       7000          17680.253us                0.01%    
+  terminate                                          7000            840.675us                0.00%    
+  TOTAL                                             28000      195244762.941us               99.99%    
+TOTAL                                                         417337343.37us              100.00%      
+
+10009
+number of bodies 10021
+
+Elapsed  418.18088555336  sec
+Performance  16.739167766449235  iter/sec
+Extrapolation on 1e5 iters  1.6594479585450792  hours
+=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+Name                                                    Count                 Time            Rel. time
+-------------------------------------------------------------------------------------------------------
+ForceResetter                                      7000        4893441.177us                1.17%      
+InsertionSortCollider                               149        4984803.956us                1.19%      
+InteractionLoop                                    7000       212616815.692us               50.86%      
+NewtonIntegrator                                   7000       195544301.443us               46.78%      
+  forces sync                                        7000        37877589.09us               19.37%    
+  motion integration                                 7000      157633018.924us               80.61%    
+  sync max vel                                       7000          17814.403us                0.01%    
+  terminate                                          7000            869.665us                0.00%    
+  TOTAL                                             28000      195529292.082us               99.99%    
+TOTAL                                                         418039362.268us              100.00%      
+
+Common time  4246.657878398895 s
+
+
+___________________________________________________
+
+[93m SUMMARY[0m
+
+10021  spheres,[93m calculation velocity= 16.804329418178916 iter/sec +/- 0.9243332060334623 %[0m
+
+Summary saved to 2020-04-04.git-1cb5838_j16.dat
+
+SCORE: 1867
+Number of threads:  16
+___________________________________________________
+
+CPU info:
+Architecture:                    x86_64
+CPU op-mode(s):                  32-bit, 64-bit
+Byte Order:                      Little Endian
+Address sizes:                   46 bits physical, 48 bits virtual
+CPU(s):                          32
+On-line CPU(s) list:             0-15
+Off-line CPU(s) list:            16-31
+Thread(s) per core:              1
+Core(s) per socket:              8
+Socket(s):                       2
+NUMA node(s):                    2
+Vendor ID:                       GenuineIntel
+CPU family:                      6
+Model:                           62
+Model name:                      Intel(R) Xeon(R) CPU E5-2687W v2 @ 3.40GHz
+Stepping:                        4
+CPU MHz:                         2517.081
+CPU max MHz:                     4000.0000
+CPU min MHz:                     1200.0000
+BogoMIPS:                        6799.99
+Virtualization:                  VT-x
+L1d cache:                       512 KiB
+L1i cache:                       512 KiB
+L2 cache:                        4 MiB
+L3 cache:                        50 MiB
+NUMA node0 CPU(s):               0-7
+NUMA node1 CPU(s):               8-15
+Vulnerability Itlb multihit:     KVM: Mitigation: Split huge pages
+Vulnerability L1tf:              Mitigation; PTE Inversion; VMX conditional cache flushes, SMT disabled
+Vulnerability Mds:               Mitigation; Clear CPU buffers; SMT disabled
+Vulnerability Meltdown:          Mitigation; PTI
+Vulnerability Spec store bypass: Mitigation; Speculative Store Bypass disabled via prctl and seccomp
+Vulnerability Spectre v1:        Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:        Mitigation; Full generic retpoline, IBPB conditional, IBRS_FW, RSB filling
+Vulnerability Tsx async abort:   Not affected
+Flags:                           fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm cpuid_fault epb pti ssbd ibrs ibpb stibp tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms xsaveopt dtherm ida arat pln pts md_clear flush_l1d
+
+
+
+
+=====
+
+
+
+pią, 10 kwi 2020, 03:28:31 UTC
