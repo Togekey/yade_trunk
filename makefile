@@ -70,6 +70,7 @@ MPFR       := 0
 FETS       := 18
 CRASH      := 0
 SSE        := 0
+NAT        := 0
 THE_FAST   :=
 
 ifeq ($(FETS),-16) # No PP PB GUI No CGAL
@@ -197,7 +198,7 @@ prepare_debug prepare_nodebug prepare_nodebug_fast:
 	cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) $(SOURCE_DIR) \
 	-DDEBUG=$(USE_DEBUG) -D$(THE_FAST) -DMAX_LOG_LEVEL=$(MAX_LOG) $(OTHER_CMAKE_ARGUMENTS) \
 	-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE} -DREAL_PRECISION_BITS=${BITS} -DREAL_DECIMAL_PLACES=${DECI} \
-	-DENABLE_MPFR=${MPFR} -DALLOW_CRASHES=${CRASH} -DVECTORIZE=${SSE} -DENABLE_USEFUL_ERRORS=0
+	-DENABLE_MPFR=${MPFR} -DALLOW_CRASHES=${CRASH} -DVECTORIZE=${SSE} -DARCHNATIVE=${NAT} -DENABLE_USEFUL_ERRORS=0
 
 # declare an alias for "prepare" to invoke "prepare_nodebug"
 prepare: prepare_nodebug
