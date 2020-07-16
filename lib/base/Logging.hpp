@@ -19,6 +19,8 @@
  *
  */
 
+#include <lib/base/Math.hpp>
+
 // boost::log inspired by git show 014b11496
 #ifdef YADE_BOOST_LOG
 	#include <string>
