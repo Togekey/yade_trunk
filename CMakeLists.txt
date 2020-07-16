@@ -171,6 +171,7 @@ ELSE (DEBUG)
   ENDIF (NOT(CMAKE_BUILD_TYPE))
 ENDIF (DEBUG)
 
+SET(CMAKE_VERBOSE_MAKEFILE 1)
 IF(EXPERIMENTALLY_FAST)
   # https://stackoverflow.com/questions/47703436/isnan-does-not-work-correctly-with-ofast-flags
   # https://stackoverflow.com/questions/14492436/g-optimization-beyond-o3-ofast
