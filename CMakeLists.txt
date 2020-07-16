@@ -171,17 +171,25 @@ ELSE (DEBUG)
   ENDIF (NOT(CMAKE_BUILD_TYPE))
 ENDIF (DEBUG)
 
+SET(CMAKE_VERBOSE_MAKEFILE 1)
 IF(EXPERIMENTALLY_FAST)
   # https://stackoverflow.com/questions/47703436/isnan-does-not-work-correctly-with-ofast-flags
   # https://stackoverflow.com/questions/14492436/g-optimization-beyond-o3-ofast
   # -fno-finite-math-only   - NaN is used by checkJCFpm.py, checkWirePM.py and few other places
   # -fsigned-zeros          - signed zeros are used by CGAL
   # -fno-associative-math   - is required by -fsigned-zeros -fno-finite-math-only
+   IF(ARCHNATIVE)
     IF (VECTORIZE)
       SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -march=native -mtune=native -fno-associative-math -fno-finite-math-only -fsigned-zeros")
     ELSE (VECTORIZE)
       SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -march=native -mtune=native -fno-associative-math -fno-finite-math-only -fsigned-zeros")
     ENDIF (VECTORIZE)
+   ELSE(ARCHNATIVE)
+      SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast                             -fno-associative-math -fno-finite-math-only -fsigned-zeros")
+   ENDIF(ARCHNATIVE)
+
+
+
     MESSAGE(STATUS "${Esc}[91mEnabling EXPERIMENTALLY_FAST:${Esc}[0m -Ofast -march=native -mtune=native -fno-associative-math -fno-finite-math-only -fsigned-zeros, due diligence")
     MESSAGE(STATUS "${Esc}[91mEnabling EXPERIMENTALLY_FAST: Due diligence.${Esc}[0m")
     MESSAGE(STATUS "${Esc}[91mEnabling EXPERIMENTALLY_FAST: Be careful, this is an experimental option. It passes tests, but you should confirm yourself that your calculations produce correct results before using it for anything serious.${Esc}[0m")
@@ -191,11 +199,17 @@ IF(DANGEROUSLY_FAST)
   IF(ENABLE_CGAL)
     MESSAGE(FATAL_ERROR "${Esc}[91m* Cannot enable DANGEROUSLY_FAST when ENABLE_CGAL=ON, you need to disable CGAL *${Esc}[0m")
   ELSE()
+   IF(ARCHNATIVE)
     IF (VECTORIZE)
       SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -march=native -mtune=native -faligned-new")
     ELSE (VECTORIZE)
       SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -march=native -mtune=native")
     ENDIF (VECTORIZE)
+   ELSE(ARCHNATIVE)
+      SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast                            ")
+   ENDIF(ARCHNATIVE)
+
+
     #ADD_DEFINITIONS("-DYADE_IGNORE_IEEE_INFINITY_NAN")
     MESSAGE(STATUS "${Esc}[91mEnabling DANGEROUSLY_FAST:${Esc}[0m -Ofast  -march=native -mtune=native")
     MESSAGE(STATUS "${Esc}[91mEnabling DANGEROUSLY_FAST: Due diligence.${Esc}[0m")
@@ -637,16 +651,17 @@ INCLUDE_DIRECTORIES(${BZIP2_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIRS})
 SET(LINKLIBS  "${LINKLIBS};${BZIP2_LIBRARIES};${ZLIB_LIBRARIES};")
 #===========================================================
-IF((Boost_MAJOR_VERSION EQUAL 1) OR (Boost_MAJOR_VERSION GREATER 1) AND
-  ((Boost_MINOR_VERSION EQUAL 53) OR (Boost_MINOR_VERSION GREATER 53)))
-  SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} Odeint")
-  ADD_DEFINITIONS("-DYADE_ODEINT")
-ELSE((Boost_MAJOR_VERSION EQUAL 1) OR (Boost_MAJOR_VERSION GREATER 1) AND
-    ((Boost_MINOR_VERSION EQUAL 53) OR (Boost_MINOR_VERSION GREATER 53)))
+# FIXME
+#IF((Boost_MAJOR_VERSION EQUAL 1) OR (Boost_MAJOR_VERSION GREATER 1) AND
+#  ((Boost_MINOR_VERSION EQUAL 53) OR (Boost_MINOR_VERSION GREATER 53)))
+#  SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} Odeint")
+#  ADD_DEFINITIONS("-DYADE_ODEINT")
+#ELSE((Boost_MAJOR_VERSION EQUAL 1) OR (Boost_MAJOR_VERSION GREATER 1) AND
+#    ((Boost_MINOR_VERSION EQUAL 53) OR (Boost_MINOR_VERSION GREATER 53)))
   SET(DISABLED_FEATS "${DISABLED_FEATS} Odeint")
   MESSAGE(STATUS "Boost Odeint can be enabled, only if Boost>=1.53 is used")
-ENDIF((Boost_MAJOR_VERSION EQUAL 1) OR (Boost_MAJOR_VERSION GREATER 1) AND
-     ((Boost_MINOR_VERSION EQUAL 53) OR (Boost_MINOR_VERSION GREATER 53)))
+#ENDIF((Boost_MAJOR_VERSION EQUAL 1) OR (Boost_MAJOR_VERSION GREATER 1) AND
+#     ((Boost_MINOR_VERSION EQUAL 53) OR (Boost_MINOR_VERSION GREATER 53)))
 #===========================================================
 IF(ENABLE_VTK)
   FIND_PACKAGE(VTK COMPONENTS vtkIOParallelXML vtkCommonCore vtkIOImage vtkIOXML vtkFiltersCore vtkImagingCore vtkRenderingCore vtkImagingGeneral vtkImagingHybrid)
