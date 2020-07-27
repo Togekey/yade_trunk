@@ -53,7 +53,7 @@ void OpenGLManager::createViewSlot()
 {
 	const std::lock_guard<std::mutex> lock(viewsMutex);
 	if (views.size() == 0) {
-		views.push_back(shared_ptr<GLViewer>(boost::make_shared<GLViewer>(0, renderer, /*shareWidget*/ (QGLWidget*)0)));
+		views.push_back(shared_ptr<GLViewer>(boost::make_shared<GLViewer>(0, renderer, /*QopenGLWidget*/ (QOpenGLWidget*)0)));
 	} else {
 		throw runtime_error("Secondary views not supported");
 		//views.push_back(shared_ptr<GLViewer>(new GLViewer(views.size(),renderer,views[0].get())));
