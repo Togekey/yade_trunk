@@ -17,8 +17,8 @@ using math::min; // using inside .cpp file is ok.
 
 py::tuple negPosExtremeIds(int axis, Real distFactor)
 {
-	py::tuple extrema  = Shop::aabbExtrema();
-	Real      minCoord = py::extract<Real>(extrema[0][axis])(), maxCoord = py::extract<Real>(extrema[1][axis])();
+	pair<Vector3r,Vector3r> extrema  = Shop::aabbExtrema();
+	Real      minCoord = extrema.first[axis], maxCoord = extrema.second[axis];
 	py::list  minIds, maxIds;
 	for (const auto& b : *Omega::instance().getScene()->bodies) {
 		shared_ptr<Sphere> s = YADE_PTR_DYN_CAST<Sphere>(b->shape);
@@ -429,6 +429,12 @@ shared_ptr<Interaction> Shop__createExplicitInteraction(Body::id_t id1, Body::id
 }
 
 Real      Shop__unbalancedForce(bool useMaxForce /*false by default*/) { return Shop::unbalancedForce(useMaxForce); }
+py::tuple Shop__aabbExtrema(Real cutoff, bool centers)
+{
+	pair<Vector3r,Vector3r> aabb = Shop::aabbExtrema(cutoff,centers);
+	return py::make_tuple(aabb.first, aabb.second);
+}
+
 py::tuple Shop__totalForceInVolume()
 {
 	Real     stiff;
@@ -655,7 +661,7 @@ try {
 	        "resolution=1600 require a 64 bit operating system, because more than 4GB of RAM is used, a resolution=800 will use 500MB of RAM.\n:param "
 	        "Vector3 start: start corner of the volume.\n:param Vector3 end: end corner of the volume.\n");
 	py::def("aabbExtrema",
-	        Shop::aabbExtrema,
+	        Shop__aabbExtrema,
 	        (py::arg("cutoff") = 0.0, py::arg("centers") = false),
 	        "Return coordinates of box enclosing all spherical bodies\n\n:param bool centers: do not take sphere radii in account, only their "
 	        "centroids\n:param float∈〈0…1〉 cutoff: relative dimension by which the box will be cut away at its boundaries.\n\n\n:return: [lower corner, "

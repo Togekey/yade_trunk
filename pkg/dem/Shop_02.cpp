@@ -343,8 +343,8 @@ void Shop::fabricTensor(Real& Fmean, Matrix3r& fabric, Matrix3r& fabricStrong, M
 	// *** Fabric tensor ***/
 	fabric          = Matrix3r::Zero();
 	int       count = 0; // number of interactions
-	py::tuple aabb  = Shop::aabbExtrema(cutoff);
-	Vector3r  bbMin = py::extract<Vector3r>(aabb[0]), bbMax = py::extract<Vector3r>(aabb[1]);
+	pair<Vector3r,Vector3r> aabb  = Shop::aabbExtrema(cutoff);
+	Vector3r  bbMin = aabb.first, bbMax = aabb.second;
 	Vector3r  cp;
 
 	Fmean = 0; // initialize average contact force for split = 1 fabric measurements
@@ -452,13 +452,8 @@ Matrix3r Shop::getStress(Real volume)
 	Scene* scene         = Omega::instance().getScene().get();
 	Real   volumeNonPeri = 0;
 	if (volume == 0 && !scene->isPeriodic) {
-		py::tuple extrema = Shop::aabbExtrema();
-#if (YADE_REAL_BIT <= 80)
-		volumeNonPeri = py::extract<Real>((extrema[1][0] - extrema[0][0]) * (extrema[1][1] - extrema[0][1]) * (extrema[1][2] - extrema[0][2]));
-#else
-		volumeNonPeri = static_cast<Real>(
-		        py::extract<Real>((extrema[1][0] - extrema[0][0]) * (extrema[1][1] - extrema[0][1]) * (extrema[1][2] - extrema[0][2])));
-#endif
+		pair<Vector3r,Vector3r> extrema = Shop::aabbExtrema();
+		volumeNonPeri = (extrema.second[0] - extrema.first[0]) * (extrema.second[1] - extrema.first[1]) * (extrema.second[2] - extrema.first[2]);
 	}
 	if (volume == 0)
 		volume = scene->isPeriodic ? scene->cell->hSize.determinant() : volumeNonPeri;
@@ -1042,7 +1037,7 @@ void Shop::growParticle(Body::id_t bodyID, Real multiplier, bool updateMass)
 	}
 }
 
-py::tuple Shop::aabbExtrema(Real cutoff, bool centers)
+pair<Vector3r,Vector3r> Shop::aabbExtrema(Real cutoff, bool centers)
 {
 	if (cutoff < 0. || cutoff > 1.)
 		throw invalid_argument("Cutoff must be >=0 and <=1.");
@@ -1057,7 +1052,8 @@ py::tuple Shop::aabbExtrema(Real cutoff, bool centers)
 		maximum = maximum.cwiseMax(b->state->pos + (centers ? Vector3r::Zero() : rrr));
 	}
 	Vector3r dim = maximum - minimum;
-	return py::make_tuple(Vector3r(minimum + .5 * cutoff * dim), Vector3r(maximum - .5 * cutoff * dim));
+	pair<Vector3r,Vector3r> ret(minimum + .5 * cutoff * dim,maximum - .5 * cutoff * dim);
+	return ret;
 }
 
 /*! Added function for 2D calculation: sphere volume. Optional. By Ning Guo */

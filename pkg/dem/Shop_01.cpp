@@ -385,13 +385,8 @@ Real Shop::getPorosity(const shared_ptr<Scene>& _scene, Real _volume)
 	Real                    V;
 	if (!scene->isPeriodic) {
 		if (_volume <= 0) { // throw std::invalid_argument("utils.porosity must be given (positive) *volume* for aperiodic simulations.");
-			py::tuple extrema = aabbExtrema();
-#if (YADE_REAL_BIT <= 80)
-			V = py::extract<Real>((extrema[1][0] - extrema[0][0]) * (extrema[1][1] - extrema[0][1]) * (extrema[1][2] - extrema[0][2]));
-#else
-			V = static_cast<Real>(
-			        py::extract<Real>((extrema[1][0] - extrema[0][0]) * (extrema[1][1] - extrema[0][1]) * (extrema[1][2] - extrema[0][2])));
-#endif
+			pair<Vector3r,Vector3r> extrema = aabbExtrema();
+			V = (extrema.second[0] - extrema.first[0]) * (extrema.second[1] - extrema.first[1]) * (extrema.second[2] - extrema.first[2]);
 		} else
 			V = _volume;
 	} else {

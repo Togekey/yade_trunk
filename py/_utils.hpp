@@ -140,6 +140,7 @@ py::tuple spiralProject(const Vector3r& pt, Real dH_dTheta, int axis = 2, Real p
 
 shared_ptr<Interaction> Shop__createExplicitInteraction(Body::id_t id1, Body::id_t id2, bool virtualI);
 
+py::tuple  Shop__aabbExtrema(Real cutoff = 0.0, bool centers = false);
 Real       Shop__unbalancedForce(bool useMaxForce /*false by default*/);
 py::tuple  Shop__totalForceInVolume();
 Real       Shop__getSpheresVolume(int mask = -1);
