@@ -68,13 +68,8 @@ void MeasureCapStress::action()
 	if (scene->isPeriodic)
 		volume = scene->cell->hSize.determinant();
 	else {
-		boost::python::tuple extrema = Shop::aabbExtrema();
-#if (YADE_REAL_BIT <= 80)
-		volume = boost::python::extract<Real>((extrema[1][0] - extrema[0][0]) * (extrema[1][1] - extrema[0][1]) * (extrema[1][2] - extrema[0][2]));
-#else
-		volume = static_cast<Real>(
-		        boost::python::extract<Real>((extrema[1][0] - extrema[0][0]) * (extrema[1][1] - extrema[0][1]) * (extrema[1][2] - extrema[0][2])));
-#endif
+		pair<Vector3r,Vector3r> extrema = Shop::aabbExtrema();
+		volume = (extrema.second[0] - extrema.first[0]) * (extrema.second[1] - extrema.first[1]) * (extrema.second[2] - extrema.first[2]);
 	}
 	if (debug)
 		cout << "c++ : volume = " << volume << endl;
