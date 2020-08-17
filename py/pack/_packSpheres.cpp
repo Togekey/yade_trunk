@@ -98,7 +98,8 @@ try {
 	              boost::python::arg("maxCorner"),
 	              boost::python::arg("clumps"),
 	              boost::python::arg("periodic") = false,
-	              boost::python::arg("num")      = -1),
+	              boost::python::arg("num")      = -1,
+								boost::python::arg("seed")           = -1),
 	             "Create random loose packing of clumps within box given by *minCorner* and *maxCorner*. Clumps are selected with equal probability. At "
 	             "most *num* clumps will be positioned if *num* is positive; otherwise, as many clumps as possible will be put in space, until maximum "
 	             "number of attempts to place a new clump randomly is achieved.")

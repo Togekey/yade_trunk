@@ -456,7 +456,7 @@ py::tuple SpherePack::psd(int bins, bool mass) const
 	return py::make_tuple(edges, cumm);
 }
 
-long SpherePack::makeClumpCloud(const Vector3r& mn, const Vector3r& mx, const vector<shared_ptr<SpherePack>>& _clumps, bool periodic, int num)
+long SpherePack::makeClumpCloud(const Vector3r& mn, const Vector3r& mx, const vector<shared_ptr<SpherePack>>& _clumps, bool periodic, int num, int seed)
 {
 	// recenter given clumps and compute their margins
 	vector<SpherePack> clumps; /* vector<Vector3r> margins; */
@@ -485,7 +485,7 @@ long SpherePack::makeClumpCloud(const Vector3r& mn, const Vector3r& mx, const ve
 	const auto                       maxTry = 200;
 	int                              nGen   = 0; // number of clumps generated
 	std::random_device               rd;
-	std::mt19937                     gen(rd());
+	std::mt19937                     gen(seed >= 0 ? seed : rd());
 	std::uniform_real_distribution<> dis(0.0, 1.0);
 	while (nGen < num || num < 0) {
 		int clumpChoice = (int)(dis(gen) * (clumps.size() - 1e-20));
